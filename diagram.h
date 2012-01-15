@@ -33,7 +33,16 @@ class Diagram {
       std::cout << std::endl;
     };
 
-    void reduce_one(const int skip) {
+    int num_dagger() const {
+      int out = 0;
+      for (auto i = op_.begin(); i !=  op_.end(); ++i) {
+        out += i->num_dagger();
+      }
+      return out;
+    };
+
+    bool reduce_one(const int skip) {
+      bool found = false;
       // find the first dagger operator in list<Op>
       auto i = op_.begin();
       std::pair<std::shared_ptr<std::string>*, std::shared_ptr<std::string>* > data; // safe because they are held by tensors
@@ -42,7 +51,7 @@ class Diagram {
         data = i->first_dagger_noactive();
         if (data.first) break;
       }
-      if (!data.first) return;
+      if (!data.first) return false;
 
       // skip until it comes to skip
       int cnt = 0;
@@ -52,13 +61,13 @@ class Diagram {
         // all possible contraction pattern taken for *j (returned as a list).
         if (cnt + j->num_nodagger() > skip) {
           j->contract(data, skip-cnt);
+          found = true;
           break;
         } else {
           cnt += j->num_nodagger();
         }
       }
-
-      this->print();
+      return found;
     }; 
 
 };

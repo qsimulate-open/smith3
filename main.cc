@@ -27,11 +27,15 @@ int main() {
   Diagram di(d);
   di.print();
 
-  for (int i = 0; i != 10; ++i) {
+#if 1
+  for (int i = 0; i != di.num_dagger(); ++i) {
     Diagram n(di);
     cout << "i = " << i << endl;
-    for (int j = 0; j != 10; ++i) n.reduce_one(j);
+    bool done = n.reduce_one(i);
+    if (!done) break;
+    n.print();
   }
+#endif
 
   return 0;
 }
