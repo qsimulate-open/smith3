@@ -38,6 +38,7 @@ class Spin {
     Spin() : num_(0) {};
     ~Spin() {};
 
+    int num() const { return num_; };
     void set_num(const int i) { num_ = i; };
 
     std::string str() const {

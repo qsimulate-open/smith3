@@ -7,27 +7,16 @@
 
 using namespace std;
 
-#if 0
-Op::Op(const Op& o) : label_(o.label()), a_(new Index(*o.a())), b_(new Index(*o.b())),
-                      rho_(new Spin(*o.rho())) {
-
-  if (o.c()) {
-    shared_ptr<Index> tmp(new Index(*o.c()));
-    c_ = tmp;
+shared_ptr<Op> Op::copy() const {
+  // in the case of two-body operators
+  if (c_) {
+    shared_ptr<Op> tmp(new Op(label_, a_->label(), b_->label(), c_->label(), d_->label()));
+    return tmp;
+  } else  {
+    shared_ptr<Op> tmp(new Op(label_, a_->label(), b_->label()));
+    return tmp;
   }
-  if (o.d()) {
-    shared_ptr<Index> tmp(new Index(*o.d()));
-    d_ = tmp;
-  }
-  if (o.sigma()) {
-    shared_ptr<Spin> tmp(new Spin(*o.sigma()));
-    sigma_ = tmp;
-  }
-  op_ = o.op();
-    
-
 }
-#endif
 
 int Op::num_nodagger() const {
   int out = 0;

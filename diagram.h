@@ -15,18 +15,21 @@
 
 class Diagram {
   protected:
-    std::list<Op> op_;
+    std::list<std::shared_ptr<Op> > op_;
     double fac_;
 
   public:
-    Diagram(std::list<Op> op) : op_(op), fac_(1.0) { };
+    Diagram(std::list<std::shared_ptr<Op> > op) : op_(op), fac_(1.0) { };
+    Diagram() : fac_(1.0) { };
     // copy constructor is complicated but preserves the same topology as this.
-//  Diagram(const Diagram& o);
     ~Diagram() {};
+
+    std::shared_ptr<Diagram> copy() const;
 
     double fac() const { return fac_; };
 
-    const std::list<Op>& op() const { return op_; };
+    const std::list<std::shared_ptr<Op> >& op() const { return op_; };
+    void set_op(const std::list<std::shared_ptr<Op> >& o) { op_ = o; };
 
     // refresh the indices
     void refresh_indices();
@@ -37,7 +40,7 @@ class Diagram {
 
     int num_dagger() const {
       int out = 0;
-      for (auto i = op_.begin(); i !=  op_.end(); ++i) out += i->num_dagger();
+      for (auto i = op_.begin(); i !=  op_.end(); ++i) out += (*i)->num_dagger();
       return out;
     };
 

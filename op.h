@@ -48,11 +48,11 @@ class Op {
       op_.push_back(std::make_tuple(&a_, 0,  &rho_));
       op_.push_back(std::make_tuple(&b_, 1, &rho_));
     };
-#if 0
-    Op(const Op& o);
-#endif
+//  Op(const Op& o);
     Op() : label_("") { };
     virtual ~Op() {};
+
+    std::shared_ptr<Op> copy() const;
 
     std::string label() const { return label_; };
 
