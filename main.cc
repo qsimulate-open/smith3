@@ -8,7 +8,7 @@
 
 #include <iostream>
 #include <list>
-#include "twoop.h"
+#include "op.h"
 #include "diagram.h"
 
 using namespace std;
@@ -26,6 +26,12 @@ int main() {
 
   Diagram di(d);
   di.print();
+
+  for (int i = 0; i != 10; ++i) {
+    Diagram n(di);
+    cout << "i = " << i << endl;
+    for (int j = 0; j != 10; ++i) n.reduce_one(j);
+  }
 
   return 0;
 }

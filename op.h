@@ -12,6 +12,7 @@
 #include <vector>
 #include <iostream>
 #include <cassert>
+#include <stdexcept>
 
 // base class for spin-summed operators
 
@@ -19,8 +20,7 @@ class Op {
   protected:
     // tensor info
     std::string label_;
-    std::list<std::tuple<std::shared_ptr<std::string>, bool, std::shared_ptr<std::string> > > tensor_;
-    std::list<std::tuple<std::shared_ptr<std::string>, bool, std::shared_ptr<std::string> > > op_;
+    std::list<std::tuple<std::shared_ptr<std::string>*, int, std::shared_ptr<std::string>* > > op_;
     
   public:
     Op(const std::string lab) : label_(lab) {};
@@ -28,35 +28,97 @@ class Op {
 
     std::string label() const { return label_; };
 
+    int num_nodagger() const {
+      int out = 0;
+      for (auto i = op_.begin(); i != op_.end(); ++i) if (std::get<1>(*i)==1) ++out;
+      return out;
+    };
+    int num_dagger() const {
+      int out = 0;
+      for (auto i = op_.begin(); i != op_.end(); ++i) if (std::get<1>(*i)==0) ++out;
+      return out;
+    };
+
+    // caution, this changes op_ and returns daggered index
+    std::pair<std::shared_ptr<std::string>*, std::shared_ptr<std::string>* > first_dagger_noactive() {
+      std::pair<std::shared_ptr<std::string>*, std::shared_ptr<std::string>* > out;
+      auto i = op_.begin(); 
+      for (; i != op_.end(); ++i) {
+        if (std::get<1>(*i)==0 && **std::get<0>(*i) != "x") { // "x" is active orbitals
+          out = std::make_pair(std::get<0>(*i), std::get<2>(*i));
+          break;
+        }
+      }
+      if (out.first) std::get<1>(*i) = -1;
+      return out;
+    };
+
+    // returns if you can contract two labels
+    bool contractable(std::string a, std::string b) { return a == b || a == "g" || b == "g"; };
+
+    std::shared_ptr<std::string>* survive(std::shared_ptr<std::string>* a, std::shared_ptr<std::string>* b) {
+      if (**a == **b) return a;
+      else if (**a == "g" && **b != "g") return b;
+      else if (**a != "g" && **b == "g") return a;
+      else throw std::runtime_error("strange in survive");
+    };
+
+    double contract(std::pair<std::shared_ptr<std::string>*, std::shared_ptr<std::string>* >& dat, const int skip) {
+      int cnt = 0;
+      auto i = op_.begin();
+      double fac = 0.0;
+      for (; i != op_.end(); ++i) {
+        if (std::get<1>(*i)!=1) continue;
+        if (contractable(**std::get<0>(*i), **dat.first)) {
+          if (cnt == skip) {
+            *std::get<0>(*i) = *survive(std::get<0>(*i), dat.first); 
+            *dat.first = *std::get<0>(*i);
+            if (*dat.second == *std::get<2>(*i)) {
+              fac = 2.0;
+            } else {
+              fac = 1.0;
+              *dat.second = *std::get<2>(*i);
+            }
+            break;
+          } else {
+            ++cnt;
+          }
+        }
+      }
+      std::get<1>(*i) = -1;
+      return fac;
+    }; 
+
     void print(std::map<std::shared_ptr<std::string>, int>& dict, std::map<std::shared_ptr<std::string>, int>& spin) const {
       // tensor
       std::cout << label_ << "(";
-      for (auto i = tensor_.begin(); i != tensor_.end(); ++i) {
-        auto iter = dict.find(std::get<0>(*i));
+      for (auto i = op_.begin(); i != op_.end(); ++i) {
+        auto iter = dict.find(*std::get<0>(*i));
         // if this pointer is not registered...
         if (iter == dict.end()) {
           const int c = dict.size();
-          dict.insert(make_pair(std::get<0>(*i), c));
-          std::cout << *std::get<0>(*i) << (std::get<1>(*i) ? "+_" : "_") << c << " "; 
+          dict.insert(make_pair(*std::get<0>(*i), c));
+          std::cout << **std::get<0>(*i) << c << " "; 
         } else {
-          std::cout << *std::get<0>(*i) << (std::get<1>(*i) ? "+_" : "_") << iter->second << " ";
+          std::cout << **std::get<0>(*i) << iter->second << " ";
         }
       }
       std::cout << ") {";
       for (auto i = op_.begin(); i != op_.end(); ++i) {
-        auto iter = dict.find(std::get<0>(*i));
+        if (std::get<1>(*i) < 0) continue;
+        auto iter = dict.find(*std::get<0>(*i));
         if (iter == dict.end()) {
           const int c = dict.size();
-          dict.insert(make_pair(std::get<0>(*i), c));
-          std::cout << *std::get<0>(*i) << (std::get<1>(*i) ? "+_" : "_") << c << " "; 
+          dict.insert(make_pair(*std::get<0>(*i), c));
+          std::cout << **std::get<0>(*i) << (std::get<1>(*i)==0 ? "+_" : "_") << c << " "; 
         } else {
-          std::cout << *std::get<0>(*i) << (std::get<1>(*i) ? "+_" : "_") << iter->second << " ";
+          std::cout << **std::get<0>(*i) << (std::get<1>(*i)==0 ? "+_" : "_") << iter->second << " ";
         }
 
-        auto siter = spin.find(std::get<2>(*i));
+        auto siter = spin.find(*std::get<2>(*i));
         if (siter == spin.end()) {
           const int c = spin.size();
-          spin.insert(make_pair(std::get<2>(*i), c));
+          spin.insert(make_pair(*std::get<2>(*i), c));
           std::cout << "(" << c << ") ";
         } else {
           std::cout << "(" << siter->second << ") ";
@@ -84,11 +146,10 @@ class TwoOp : public Op {
 
     void init() {
       // for convinience
-      op_.push_back(std::make_tuple(a_, true,  rho_));
-      op_.push_back(std::make_tuple(b_, true,  sigma_));
-      op_.push_back(std::make_tuple(c_, false, sigma_));
-      op_.push_back(std::make_tuple(d_, false, rho_));
-      tensor_ = op_;
+      op_.push_back(std::make_tuple(&a_, 0, &rho_));
+      op_.push_back(std::make_tuple(&b_, 0, &sigma_));
+      op_.push_back(std::make_tuple(&c_, 1, &sigma_));
+      op_.push_back(std::make_tuple(&d_, 1, &rho_));
     };
 
   public:
@@ -124,9 +185,8 @@ class OneOp : public Op {
 
     void init() {
       // for convinience
-      op_.push_back(std::make_tuple(a_, true,  rho_));
-      op_.push_back(std::make_tuple(b_, false, rho_));
-      tensor_ = op_;
+      op_.push_back(std::make_tuple(&a_, 0,  &rho_));
+      op_.push_back(std::make_tuple(&b_, 1, &rho_));
     };
 
   public:
@@ -142,6 +202,7 @@ class OneOp : public Op {
     std::shared_ptr<std::string> rho() const { return rho_; };
     std::shared_ptr<std::string> a() const { return a_; };
     std::shared_ptr<std::string> b() const { return b_; };
+
 };
 
 #endif
