@@ -41,6 +41,14 @@ shared_ptr<Diagram> Diagram::copy() const {
     outop.push_back(a);
   }
   out->set_op(outop);
+  out->set_fac(fac_);
+#if 0
+cout << " ========= " << endl;
+out->print();
+cout << " --------- " << endl;
+print();
+cout << " ========= " << endl;
+#endif
   return out;
 }
 
@@ -57,6 +65,12 @@ void Diagram::refresh_indices() {
 // this is not a const function because it refreshes the indices
 void Diagram::print() {
   refresh_indices();
+  cout << setw(4) << setprecision(1) << fixed <<  fac_ << " ";
+  for (auto i = op_.begin(); i != op_.end(); ++i) (*i)->print();
+  cout << endl;
+}
+
+void Diagram::print() const {
   cout << setw(4) << setprecision(1) << fixed <<  fac_ << " ";
   for (auto i = op_.begin(); i != op_.end(); ++i) (*i)->print();
   cout << endl;
@@ -84,7 +98,8 @@ bool Diagram::reduce_one_noactive(const int skip) {
     if (i == j) continue;
     // all possible contraction pattern taken for *j (returned as a list).
     if (cnt + (*j)->num_nodagger() > skip) {
-      fac_ *= (*j)->contract(data, skip-cnt);
+      const double tmp = (*j)->contract(data, skip-cnt);
+      fac_ *= tmp;
       found = true;
       break;
     } else {
@@ -92,4 +107,24 @@ bool Diagram::reduce_one_noactive(const int skip) {
     }
   }
   return found;
-} 
+}
+
+
+bool Diagram::valid() const {
+  int out = 0;
+  for (auto i = op_.begin(); i != op_.end(); ++i) {
+    if (!(*i)->contracted()) ++out;
+  }
+  return out > 1;
+}
+
+
+bool Diagram::done() const {
+  int out = 0;
+  for (auto i = op_.begin(); i != op_.end(); ++i) {
+    if (!(*i)->contracted()) ++out;
+  }
+  return out == 0; 
+}
+
+

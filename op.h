@@ -34,7 +34,7 @@ class Op {
     std::shared_ptr<Index> c_;
     std::shared_ptr<Index> d_;
 
-    
+
   public:
     Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td)
       : label_(lab), a_(new Index(ta)), b_(new Index(tb)), c_(new Index(tc)), d_(new Index(td)), rho_(new Spin()), sigma_(new Spin()) {
@@ -48,9 +48,11 @@ class Op {
       op_.push_back(std::make_tuple(&a_, 0,  &rho_));
       op_.push_back(std::make_tuple(&b_, 1, &rho_));
     };
-//  Op(const Op& o);
     Op() : label_("") { };
     virtual ~Op() {};
+
+    // returns if this operator is completely contracted
+    bool contracted() const;
 
     std::shared_ptr<Op> copy() const;
 
@@ -64,14 +66,14 @@ class Op {
     std::shared_ptr<Index> c() const { return c_; };
     std::shared_ptr<Index> d() const { return d_; };
 
-    const std::list<std::tuple<std::shared_ptr<Index>*, int, std::shared_ptr<Spin>* > >& op() const { return op_; }; 
-    std::list<std::tuple<std::shared_ptr<Index>*, int, std::shared_ptr<Spin>* > >& op() { return op_; }; 
+    const std::list<std::tuple<std::shared_ptr<Index>*, int, std::shared_ptr<Spin>* > >& op() const { return op_; };
+    std::list<std::tuple<std::shared_ptr<Index>*, int, std::shared_ptr<Spin>* > >& op() { return op_; };
 
     int num_nodagger() const;
     int num_dagger() const;
 
     // CAUTION:: this function returns the first daggered operator
-    //           **AND** deletes the corresponding entry from this->op_. 
+    //           **AND** deletes the corresponding entry from this->op_.
     std::pair<std::shared_ptr<Index>*, std::shared_ptr<Spin>* > first_dagger_noactive();
 
     // returns if you can contract two labels
@@ -80,7 +82,7 @@ class Op {
     // returns which index to be kept when contraction is performed
     std::shared_ptr<Index>* survive(std::shared_ptr<Index>* a, std::shared_ptr<Index>* b);
 
-    // perform a contraction (skipping first "skip" possibilities) and returns the factor to be multiplied. 
+    // perform a contraction (skipping first "skip" possibilities) and returns the factor to be multiplied.
     // Should be called from Diagram objects
     double contract(std::pair<std::shared_ptr<Index>*, std::shared_ptr<Spin>* >& dat, const int skip);
 

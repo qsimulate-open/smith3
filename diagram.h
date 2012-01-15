@@ -30,6 +30,7 @@ class Diagram {
 
     const std::list<std::shared_ptr<Op> >& op() const { return op_; };
     void set_op(const std::list<std::shared_ptr<Op> >& o) { op_ = o; };
+    void set_fac(const double a) { fac_ = a; };
 
     // refresh the indices
     void refresh_indices();
@@ -37,6 +38,7 @@ class Diagram {
     // printing function
     // CAUTION: it also refreshes the indices
     void print();
+    void print() const;
 
     int num_dagger() const {
       int out = 0;
@@ -46,6 +48,10 @@ class Diagram {
 
     // this function performs one contraction ** IN PLACE **
     bool reduce_one_noactive(const int skip);
+
+    // returns if this diagram is still valid
+    bool valid() const;
+    bool done() const;
 
 };
 

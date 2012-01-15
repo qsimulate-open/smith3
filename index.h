@@ -24,7 +24,7 @@ class Index {
 
     std::string str() const {
       std::stringstream ss;
-      ss << label_ << num_; 
+      ss << label_ << num_;
       return ss.str();
     };
 
