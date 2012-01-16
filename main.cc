@@ -17,6 +17,7 @@ int main() {
 
   shared_ptr<Op> proj(new Op("proj", "c", "c", "a", "a"));
   shared_ptr<Op> f(new Op("f", "g", "g"));
+  shared_ptr<Op> v(new Op("v", "g", "g", "g", "g"));
   shared_ptr<Op> T(new Op("T", "a", "a", "c", "c"));
 
   list<shared_ptr<Op> > d;
@@ -27,79 +28,24 @@ int main() {
   shared_ptr<Diagram> di(new Diagram(d));
   di->print();
 
-  cout << "first generation" << endl;
-
   list<shared_ptr<Diagram> > out;
-  for (int i = 0; i != di->num_dagger(); ++i) {
-    shared_ptr<Diagram> n = di->copy();
-    bool done = n->reduce_one_noactive(i);
-    if (!done) break;
-    if (n->valid()) {
-      n->print();
-      out.push_back(n);
-    }
-  }
+  out.push_back(di);
 
-  cout << "second generation" << endl;
-
-  list<shared_ptr<Diagram> > out2;
-  for (auto j = out.begin(); j != out.end(); ++j) {
-    for (int i = 0; i != (*j)->num_dagger(); ++i) {
-      shared_ptr<Diagram> n = (*j)->copy();
-      bool done = n->reduce_one_noactive(i);
-      if (!done) break;
-      if (n->valid()) {
-        n->print();
-        out2.push_back(n);
+  while (out.front()->num_dagger()) {
+    list<shared_ptr<Diagram> > out2;
+    for (auto j = out.begin(); j != out.end(); ++j) {
+      for (int i = 0; i != (*j)->num_dagger(); ++i) {
+        shared_ptr<Diagram> n = (*j)->copy();
+        bool done = n->reduce_one_noactive(i);
+        if (!done) break;
+        if (n->valid() || n->done()) {
+          out2.push_back(n);
+        }
       }
     }
+    out = out2;
   }
 
-  cout << "third generation" << endl;
+  for (auto iter = out.begin(); iter != out.end(); ++iter) (*iter)->print();
 
-  out = out2;
-  out2.clear();
-  for (auto j = out.begin(); j != out.end(); ++j) {
-    for (int i = 0; i != (*j)->num_dagger(); ++i) {
-      shared_ptr<Diagram> n = (*j)->copy();
-      bool done = n->reduce_one_noactive(i);
-      if (!done) break;
-      if (n->valid()) {
-        n->print();
-        out2.push_back(n);
-      }
-    }
-  }
-
-  cout << "fourth generation" << endl;
-
-  out = out2;
-  out2.clear();
-  for (auto j = out.begin(); j != out.end(); ++j) {
-    for (int i = 0; i != (*j)->num_dagger(); ++i) {
-      shared_ptr<Diagram> n = (*j)->copy();
-      bool done = n->reduce_one_noactive(i);
-      if (!done) break;
-      if (n->valid()) {
-        n->print();
-        out2.push_back(n);
-      }
-    }
-  }
-
-  cout << "fifth generation" << endl;
-
-  out = out2;
-  out2.clear();
-  for (auto j = out.begin(); j != out.end(); ++j) {
-    for (int i = 0; i != (*j)->num_dagger(); ++i) {
-      shared_ptr<Diagram> n = (*j)->copy();
-      bool done = n->reduce_one_noactive(i);
-      n->print();
-      out2.push_back(n);
-      if (!done) break;
-    }
-  }
-  return 0;
 }
-

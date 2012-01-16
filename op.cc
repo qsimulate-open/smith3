@@ -50,7 +50,7 @@ void Op::print() const {
   cout << ") {";
   for (auto i = op_.begin(); i != op_.end(); ++i) {
     if (get<1>(*i) < 0) continue;
-    cout << (*get<0>(*i))->str() << (get<1>(*i)==0 ? "+" : "") << (*get<2>(*i))->str();
+    cout << (*get<0>(*i))->str() << (get<1>(*i)==0 ? "+" : "") << rho(get<2>(*i))->str();
   }
   cout << "}";
 }
@@ -83,12 +83,12 @@ void Op::refresh_indices(map<shared_ptr<Index>, int>& dict,
       }
     }
 
-    auto ster = spin.find(*get<2>(*i));
+    auto ster = spin.find(rho(get<2>(*i)));
     if (get<1>(*i) >= 0) {
       if (ster == spin.end()) {
         const int c = spin.size();
-        spin.insert(make_pair(*get<2>(*i), c));
-        (*get<2>(*i))->set_num(c);
+        spin.insert(make_pair(rho(get<2>(*i)), c));
+        rho(get<2>(*i))->set_num(c);
       }
     }
   }
@@ -100,7 +100,7 @@ pair<shared_ptr<Index>*, shared_ptr<Spin>* > Op::first_dagger_noactive() {
   auto i = op_.begin();
   for (; i != op_.end(); ++i) {
     if (get<1>(*i)==0 && (*get<0>(*i))->label() != "x") { // "x" is active orbitals
-      out = make_pair(get<0>(*i), get<2>(*i));
+      out = make_pair(get<0>(*i), rho_ptr(get<2>(*i)));
       break;
     }
   }
@@ -119,10 +119,12 @@ shared_ptr<Index>* Op::survive(shared_ptr<Index>* a, shared_ptr<Index>* b) {
 };
 
 
-double Op::contract(pair<shared_ptr<Index>*, shared_ptr<Spin>* >& dat, const int skip) {
+tuple<double, shared_ptr<Spin>, shared_ptr<Spin> >
+     Op::contract(pair<shared_ptr<Index>*, shared_ptr<Spin>* >& dat, const int skip) {
   int cnt = 0;
   auto i = op_.begin();
   double fac = 0.0;
+  shared_ptr<Spin> a, b;
   for (; i != op_.end(); ++i) {
     if (get<1>(*i)!=1) continue;
     if (contractable((*get<0>(*i))->label(), (*dat.first)->label())) {
@@ -134,8 +136,10 @@ double Op::contract(pair<shared_ptr<Index>*, shared_ptr<Spin>* >& dat, const int
 
         *get<0>(*i) = *survive(get<0>(*i), dat.first);
         *dat.first = *get<0>(*i);
-        fac *= (*dat.second == *get<2>(*i)) ? 2.0 : 1.0;
-        *dat.second = *get<2>(*i);
+        fac *= (*dat.second == rho(get<2>(*i))) ? 2.0 : 1.0;
+        a = *dat.second;
+        b = rho(get<2>(*i)); 
+        set_rho(get<2>(*i), *dat.second);
         break;
       } else {
         ++cnt;
@@ -143,6 +147,6 @@ double Op::contract(pair<shared_ptr<Index>*, shared_ptr<Spin>* >& dat, const int
     }
   }
   get<1>(*i) = -1;
-  return fac;
+  return make_tuple(fac, a, b);
 }
 

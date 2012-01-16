@@ -30,11 +30,11 @@ shared_ptr<Diagram> Diagram::copy() const {
       } else {
         *get<0>(*j) = s->second; // one of the operators has s->second...
       }
-      auto z = spinmap.find(*get<2>(*i));
+      auto z = spinmap.find((*iter)->rho(get<2>(*i)));
       if (z == spinmap.end()) {
-        spinmap.insert(make_pair(*get<2>(*i), *get<2>(*j)));
+        spinmap.insert(make_pair((*iter)->rho(get<2>(*i)), a->rho(get<2>(*j))));
       } else {
-        *get<2>(*j) = z->second; // one of the operators has z->second...
+        a->set_rho(get<2>(*j), z->second); // one of the operators has z->second...
       }
       get<1>(*j) = get<1>(*i);
     }
@@ -93,18 +93,26 @@ bool Diagram::reduce_one_noactive(const int skip) {
 
   // skip until it comes to skip
   int cnt = 0;
+  shared_ptr<Spin> newspin, oldspin;
   for (auto j = op_.begin(); j != op_.end(); ++j) {
     // cannot contract with self
     if (i == j) continue;
     // all possible contraction pattern taken for *j (returned as a list).
     if (cnt + (*j)->num_nodagger() > skip) {
-      const double tmp = (*j)->contract(data, skip-cnt);
-      fac_ *= tmp;
+      tuple<double,shared_ptr<Spin>,shared_ptr<Spin> > tmp = (*j)->contract(data, skip-cnt);
+      fac_ *= get<0>(tmp);
+      newspin = get<1>(tmp);
+      oldspin = get<2>(tmp);
       found = true;
       break;
     } else {
       cnt += (*j)->num_nodagger();
     }
+  }
+  for (auto j = op_.begin(); j != op_.end(); ++j) {
+    for (auto k = (*j)->rho().begin(); k != (*j)->rho().end(); ++k) {
+      if (*k == oldspin) *k = newspin;
+    } 
   }
   return found;
 }

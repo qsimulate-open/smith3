@@ -23,11 +23,10 @@ class Op {
   protected:
     // tensor info
     std::string label_;
-    std::list<std::tuple<std::shared_ptr<Index>*, int, std::shared_ptr<Spin>* > > op_;
+    std::list<std::tuple<std::shared_ptr<Index>*, int, int> > op_;
 
     // operator info
-    std::shared_ptr<Spin> rho_;
-    std::shared_ptr<Spin> sigma_;
+    std::vector<std::shared_ptr<Spin> > rho_;
 
     std::shared_ptr<Index> a_;
     std::shared_ptr<Index> b_;
@@ -37,16 +36,22 @@ class Op {
 
   public:
     Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td)
-      : label_(lab), a_(new Index(ta)), b_(new Index(tb)), c_(new Index(tc)), d_(new Index(td)), rho_(new Spin()), sigma_(new Spin()) {
-      op_.push_back(std::make_tuple(&a_, 0, &rho_));
-      op_.push_back(std::make_tuple(&b_, 0, &sigma_));
-      op_.push_back(std::make_tuple(&c_, 1, &sigma_));
-      op_.push_back(std::make_tuple(&d_, 1, &rho_));
+      : label_(lab), a_(new Index(ta)), b_(new Index(tb)), c_(new Index(tc)), d_(new Index(td)) {
+      op_.push_back(std::make_tuple(&a_, 0, 0));
+      op_.push_back(std::make_tuple(&b_, 0, 1));
+      op_.push_back(std::make_tuple(&c_, 1, 1));
+      op_.push_back(std::make_tuple(&d_, 1, 0));
+      std::shared_ptr<Spin> tmp(new Spin());
+      rho_.push_back(tmp);
+      std::shared_ptr<Spin> tmp2(new Spin());
+      rho_.push_back(tmp2);
     };
     Op(const std::string lab, const std::string& ta, const std::string& tb)
-      : label_(lab), a_(new Index(ta)), b_(new Index(tb)), rho_(new Spin()) {
-      op_.push_back(std::make_tuple(&a_, 0,  &rho_));
-      op_.push_back(std::make_tuple(&b_, 1, &rho_));
+      : label_(lab), a_(new Index(ta)), b_(new Index(tb)) {
+      op_.push_back(std::make_tuple(&a_, 0, 0));
+      op_.push_back(std::make_tuple(&b_, 1, 0));
+      std::shared_ptr<Spin> tmp(new Spin());
+      rho_.push_back(tmp);
     };
     Op() : label_("") { };
     virtual ~Op() {};
@@ -58,16 +63,19 @@ class Op {
 
     std::string label() const { return label_; };
 
-    std::shared_ptr<Spin> rho() const { return rho_; };
-    std::shared_ptr<Spin> sigma() const { return sigma_; };
+    void set_rho(const int i, std::shared_ptr<Spin> a) { rho_[i] = a; };
+    std::vector<std::shared_ptr<Spin> >& rho() { return rho_; };
+    std::shared_ptr<Spin> rho(const int i) const { return rho_.at(i); };
+    const std::shared_ptr<Spin>* rho_ptr(const int i) const { return &rho_.at(i); };
+    std::shared_ptr<Spin>* rho_ptr(const int i) { return &rho_.at(i); };
 
     std::shared_ptr<Index> a() const { return a_; };
     std::shared_ptr<Index> b() const { return b_; };
     std::shared_ptr<Index> c() const { return c_; };
     std::shared_ptr<Index> d() const { return d_; };
 
-    const std::list<std::tuple<std::shared_ptr<Index>*, int, std::shared_ptr<Spin>* > >& op() const { return op_; };
-    std::list<std::tuple<std::shared_ptr<Index>*, int, std::shared_ptr<Spin>* > >& op() { return op_; };
+    const std::list<std::tuple<std::shared_ptr<Index>*, int, int> >& op() const { return op_; };
+    std::list<std::tuple<std::shared_ptr<Index>*, int, int> >& op() { return op_; };
 
     int num_nodagger() const;
     int num_dagger() const;
@@ -84,7 +92,9 @@ class Op {
 
     // perform a contraction (skipping first "skip" possibilities) and returns the factor to be multiplied.
     // Should be called from Diagram objects
-    double contract(std::pair<std::shared_ptr<Index>*, std::shared_ptr<Spin>* >& dat, const int skip);
+    // fac, new, old
+    std::tuple<double, std::shared_ptr<Spin>, std::shared_ptr<Spin> >
+      contract(std::pair<std::shared_ptr<Index>*, std::shared_ptr<Spin>* >& dat, const int skip);
 
     // function to update num_ fields in Index and Spin. Should be called from Diagram objects
     void refresh_indices(std::map<std::shared_ptr<Index>, int>& dict,
