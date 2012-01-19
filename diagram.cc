@@ -8,6 +8,22 @@
 using namespace std;
 
 
+list<shared_ptr<Diagram> > Diagram::get_all() const {
+  list<shared_ptr<Diagram> > out;
+
+  const int max = 1 << num_general();
+  for (int i = 0; i != max; ++i) {
+    int j = i;
+    shared_ptr<Diagram> d = copy();
+    for (auto k = d->op().begin(); k != d->op().end(); ++k) (*k)->mutate_general(j);
+    if (d->consistent_indices()) {
+      out.push_back(d);
+      d->print();
+    }
+  }
+  return out;
+}
+
 // copying diagram with the same connectivity and so on.
 shared_ptr<Diagram> Diagram::copy() const {
   // mapping of indices and spins. map<old, new>
@@ -136,3 +152,21 @@ int Diagram::num_dagger() const {
   return out;
 }
 
+
+int Diagram::num_general() const {
+  int cnt = 0;
+  for (auto i = op_.begin(); i != op_.end(); ++i) cnt += (*i)->num_general(); 
+  return cnt;
+}
+
+
+bool Diagram::consistent_indices() const {
+  int cnt1 = 0;
+  int cnt2 = 0;
+  for (auto i = op_.begin(); i != op_.end(); ++i) {
+    cnt1 += (*i)->num_active_dagger(); 
+    cnt2 += (*i)->num_active_nodagger(); 
+  }
+cout << cnt1 << cnt2 << endl;
+  return cnt1 == cnt2;
+}

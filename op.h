@@ -51,6 +51,14 @@ class Op {
 
     // returns if this operator is completely contracted
     bool contracted() const;
+    // returns if this operator is a general operator (i.e., Hamiltonian)
+    bool general() const; 
+    int num_general() const;
+    int num_active_nodagger() const;
+    int num_active_dagger() const;
+    void mutate_general(int& i);
+    int num_nodagger() const;
+    int num_dagger() const;
 
     std::shared_ptr<Op> copy() const;
 
@@ -70,8 +78,6 @@ class Op {
     const std::list<std::tuple<std::shared_ptr<Index>*, int, int> >& op() const { return op_; };
     std::list<std::tuple<std::shared_ptr<Index>*, int, int> >& op() { return op_; };
 
-    int num_nodagger() const;
-    int num_dagger() const;
 
     // CAUTION:: this function returns the first daggered operator
     //           **AND** deletes the corresponding entry from this->op_.

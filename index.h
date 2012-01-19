@@ -21,6 +21,7 @@ class Index {
     const int num() const { return num_; };
     void set_num(const int i) { num_ = i; };
     const std::string label() const { return label_; };
+    void set_label(const std::string& a) { label_ = a; };
 
     std::string str() const {
       std::stringstream ss;

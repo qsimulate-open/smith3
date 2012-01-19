@@ -25,6 +25,7 @@ class Diagram {
     ~Diagram() {};
 
     std::shared_ptr<Diagram> copy() const;
+    std::list<std::shared_ptr<Diagram> > get_all() const;
 
     double fac() const { return fac_; };
 
@@ -41,6 +42,8 @@ class Diagram {
     void print() const;
 
     int num_dagger() const;
+    int num_general() const;
+    bool consistent_indices() const;
 
     // this function performs one contraction ** IN PLACE **
     bool reduce_one_noactive(const int skip);

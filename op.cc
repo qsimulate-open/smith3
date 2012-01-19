@@ -56,6 +56,48 @@ int Op::num_dagger() const {
 }
 
 
+int Op::num_active_dagger() const {
+  int out = 0;
+  for (auto i = op_.begin(); i != op_.end(); ++i)
+    if (get<1>(*i)==2) ++out;
+  return out;
+}
+
+
+int Op::num_active_nodagger() const {
+  int out = 0;
+  for (auto i = op_.begin(); i != op_.end(); ++i)
+    if (get<1>(*i)==3) ++out;
+  return out;
+}
+
+
+bool Op::general() const {
+  return num_general() != 0;
+}
+
+
+int Op::num_general() const {
+  int out = 0;
+  for (auto i = op_.begin(); i != op_.end(); ++i)
+    if((*get<0>(*i))->label() ==  "g") ++out; 
+  return out;
+}
+
+
+void Op::mutate_general(int& in) {
+  for (auto i = op_.begin(); i != op_.end(); ++i) {
+    if ((*get<0>(*i))->label() ==  "g") {
+      if (in & 1) {
+        (*get<0>(*i))->set_label("x");
+        get<1>(*i) += 2;
+      }
+      in >>= 1;
+    }
+  } 
+}
+
+
 bool Op::contracted() const {
   int out = 0;
   for (auto i = op_.begin(); i != op_.end(); ++i)

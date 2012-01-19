@@ -16,7 +16,7 @@ using namespace std;
 int main() {
 
   shared_ptr<Op> proj(new Op("proj", "c", "x", "a", "a"));
-  shared_ptr<Op> f(new Op("f", "x", "x"));
+  shared_ptr<Op> f(new Op("f", "g", "g"));
   shared_ptr<Op> T(new Op("T", "a", "a", "c", "x"));
 
   list<shared_ptr<Op> > d;
@@ -25,10 +25,7 @@ int main() {
   d.push_back(T);
 
   shared_ptr<Diagram> di(new Diagram(d));
-  di->print();
-
-  list<shared_ptr<Diagram> > out;
-  out.push_back(di);
+  list<shared_ptr<Diagram> > out = di->get_all();
 
 int cnt = 0;
   while (out.front()->num_dagger()) {
