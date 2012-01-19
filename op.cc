@@ -7,6 +7,28 @@
 
 using namespace std;
 
+Op::Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td)
+  : label_(lab), a_(new Index(ta)), b_(new Index(tb)), c_(new Index(tc)), d_(new Index(td)) {
+  op_.push_back(std::make_tuple(&a_, 0, 0));
+  op_.push_back(std::make_tuple(&b_, 0, 1));
+  op_.push_back(std::make_tuple(&c_, 1, 1));
+  op_.push_back(std::make_tuple(&d_, 1, 0));
+  std::shared_ptr<Spin> tmp(new Spin());
+  rho_.push_back(tmp);
+  std::shared_ptr<Spin> tmp2(new Spin());
+  rho_.push_back(tmp2);
+}
+
+
+Op::Op(const std::string lab, const std::string& ta, const std::string& tb)
+  : label_(lab), a_(new Index(ta)), b_(new Index(tb)) {
+  op_.push_back(std::make_tuple(&a_, 0, 0));
+  op_.push_back(std::make_tuple(&b_, 1, 0));
+  std::shared_ptr<Spin> tmp(new Spin());
+  rho_.push_back(tmp);
+}
+
+
 shared_ptr<Op> Op::copy() const {
   // in the case of two-body operators
   if (c_) {
@@ -37,7 +59,7 @@ int Op::num_dagger() const {
 bool Op::contracted() const {
   int out = 0;
   for (auto i = op_.begin(); i != op_.end(); ++i)
-    if (get<1>(*i)!=-1) ++out;
+    if (get<1>(*i) >= 0) ++out;
   return out == 0;
 }
 
@@ -60,7 +82,7 @@ void Op::refresh_indices(map<shared_ptr<Index>, int>& dict,
                          map<shared_ptr<Index>, int>& done,
                          map<shared_ptr<Spin>, int>& spin) {
   //
-  // Note: the labeling is independent for those still in the operators and those
+  // Note: seperate labeling for those still in the operators and those
   //       already contracted. This is to make it easy to get the minus sign in the
   //       Wick theorem evaluator.
   //
@@ -74,13 +96,17 @@ void Op::refresh_indices(map<shared_ptr<Index>, int>& dict,
         (*get<0>(*i))->set_num(c);
       }
     // if this is already contracted, we use negative values (does not have to be, though - just for print out)
-    } else {
+    } else if (get<1>(*i) == -1) {
       auto iter = done.find(*get<0>(*i));
       if (iter == done.end()) {
         const int c = done.size();
         done.insert(make_pair(*get<0>(*i), -c-1));
         (*get<0>(*i))->set_num(-c-1);
       }
+    // if this is active labels  
+    } else {
+      // not yet implemented
+      throw runtime_error("not yet");
     }
 
     auto ster = spin.find(rho(get<2>(*i)));
@@ -115,7 +141,7 @@ shared_ptr<Index>* Op::survive(shared_ptr<Index>* a, shared_ptr<Index>* b) {
   if (alab == blab) return a;
   else if (alab == "g" && blab != "g") return b;
   else if (alab != "g" && blab == "g") return a;
-  else throw runtime_error("strange in survive");
+  else throw logic_error("A strange thing happened in Op::survive");
 };
 
 

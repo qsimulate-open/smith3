@@ -35,24 +35,8 @@ class Op {
 
 
   public:
-    Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td)
-      : label_(lab), a_(new Index(ta)), b_(new Index(tb)), c_(new Index(tc)), d_(new Index(td)) {
-      op_.push_back(std::make_tuple(&a_, 0, 0));
-      op_.push_back(std::make_tuple(&b_, 0, 1));
-      op_.push_back(std::make_tuple(&c_, 1, 1));
-      op_.push_back(std::make_tuple(&d_, 1, 0));
-      std::shared_ptr<Spin> tmp(new Spin());
-      rho_.push_back(tmp);
-      std::shared_ptr<Spin> tmp2(new Spin());
-      rho_.push_back(tmp2);
-    };
-    Op(const std::string lab, const std::string& ta, const std::string& tb)
-      : label_(lab), a_(new Index(ta)), b_(new Index(tb)) {
-      op_.push_back(std::make_tuple(&a_, 0, 0));
-      op_.push_back(std::make_tuple(&b_, 1, 0));
-      std::shared_ptr<Spin> tmp(new Spin());
-      rho_.push_back(tmp);
-    };
+    Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td);
+    Op(const std::string lab, const std::string& ta, const std::string& tb);
     Op() : label_("") { };
     virtual ~Op() {};
 

@@ -40,11 +40,7 @@ class Diagram {
     void print();
     void print() const;
 
-    int num_dagger() const {
-      int out = 0;
-      for (auto i = op_.begin(); i !=  op_.end(); ++i) out += (*i)->num_dagger();
-      return out;
-    };
+    int num_dagger() const;
 
     // this function performs one contraction ** IN PLACE **
     bool reduce_one_noactive(const int skip);

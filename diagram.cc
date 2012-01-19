@@ -42,13 +42,6 @@ shared_ptr<Diagram> Diagram::copy() const {
   }
   out->set_op(outop);
   out->set_fac(fac_);
-#if 0
-cout << " ========= " << endl;
-out->print();
-cout << " --------- " << endl;
-print();
-cout << " ========= " << endl;
-#endif
   return out;
 }
 
@@ -135,4 +128,10 @@ bool Diagram::done() const {
   return out == 0; 
 }
 
+
+int Diagram::num_dagger() const {
+  int out = 0;
+  for (auto i = op_.begin(); i !=  op_.end(); ++i) out += (*i)->num_dagger();
+  return out;
+}
 
