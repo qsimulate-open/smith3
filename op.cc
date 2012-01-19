@@ -9,10 +9,10 @@ using namespace std;
 
 Op::Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td)
   : label_(lab), a_(new Index(ta)), b_(new Index(tb)), c_(new Index(tc)), d_(new Index(td)) {
-  op_.push_back(std::make_tuple(&a_, 0, 0));
-  op_.push_back(std::make_tuple(&b_, 0, 1));
-  op_.push_back(std::make_tuple(&c_, 1, 1));
-  op_.push_back(std::make_tuple(&d_, 1, 0));
+  op_.push_back(std::make_tuple(&a_, ta!="x"?0:2, 0)); // index, dagger, spin
+  op_.push_back(std::make_tuple(&b_, tb!="x"?0:2, 1));
+  op_.push_back(std::make_tuple(&c_, tc!="x"?1:3, 1));
+  op_.push_back(std::make_tuple(&d_, td!="x"?1:3, 0));
   std::shared_ptr<Spin> tmp(new Spin());
   rho_.push_back(tmp);
   std::shared_ptr<Spin> tmp2(new Spin());
@@ -22,8 +22,8 @@ Op::Op(const std::string lab, const std::string& ta, const std::string& tb, cons
 
 Op::Op(const std::string lab, const std::string& ta, const std::string& tb)
   : label_(lab), a_(new Index(ta)), b_(new Index(tb)) {
-  op_.push_back(std::make_tuple(&a_, 0, 0));
-  op_.push_back(std::make_tuple(&b_, 1, 0));
+  op_.push_back(std::make_tuple(&a_, ta!="x"?0:2, 0)); // index, dagger, spin
+  op_.push_back(std::make_tuple(&b_, tb!="x"?1:3, 0));
   std::shared_ptr<Spin> tmp(new Spin());
   rho_.push_back(tmp);
 }
@@ -59,7 +59,7 @@ int Op::num_dagger() const {
 bool Op::contracted() const {
   int out = 0;
   for (auto i = op_.begin(); i != op_.end(); ++i)
-    if (get<1>(*i) >= 0) ++out;
+    if (get<1>(*i) == 0 || get<1>(*i) == 1) ++out;
   return out == 0;
 }
 
@@ -71,8 +71,8 @@ void Op::print() const {
   }
   cout << ") {";
   for (auto i = op_.begin(); i != op_.end(); ++i) {
-    if (get<1>(*i) < 0) continue;
-    cout << (*get<0>(*i))->str() << (get<1>(*i)==0 ? "+" : "") << rho(get<2>(*i))->str();
+    if (get<1>(*i) == -1) continue;
+    cout << (*get<0>(*i))->str() << (get<1>(*i)==0||get<1>(*i)==2 ? "+" : "") << rho(get<2>(*i))->str();
   }
   cout << "}";
 }
@@ -88,7 +88,7 @@ void Op::refresh_indices(map<shared_ptr<Index>, int>& dict,
   //
   for (auto i = op_.begin(); i != op_.end(); ++i) {
     // if this is not still contracted
-    if (get<1>(*i) >= 0) {
+    if (get<1>(*i) == 0 || get<1>(*i) == 1 || get<1>(*i) == 2 || get<1>(*i) == 3) {
       auto iter = dict.find(*get<0>(*i));
       if (iter == dict.end()) {
         const int c = dict.size();
@@ -104,13 +104,10 @@ void Op::refresh_indices(map<shared_ptr<Index>, int>& dict,
         (*get<0>(*i))->set_num(-c-1);
       }
     // if this is active labels  
-    } else {
-      // not yet implemented
-      throw runtime_error("not yet");
     }
 
     auto ster = spin.find(rho(get<2>(*i)));
-    if (get<1>(*i) >= 0) {
+    if (get<1>(*i) == 0 || get<1>(*i) == 1) {
       if (ster == spin.end()) {
         const int c = spin.size();
         spin.insert(make_pair(rho(get<2>(*i)), c));
@@ -125,7 +122,7 @@ pair<shared_ptr<Index>*, shared_ptr<Spin>* > Op::first_dagger_noactive() {
   pair<shared_ptr<Index>*, shared_ptr<Spin>* > out;
   auto i = op_.begin();
   for (; i != op_.end(); ++i) {
-    if (get<1>(*i)==0 && (*get<0>(*i))->label() != "x") { // "x" is active orbitals
+    if (get<1>(*i)==0) { // "x" is active orbitals
       out = make_pair(get<0>(*i), rho_ptr(get<2>(*i)));
       break;
     }

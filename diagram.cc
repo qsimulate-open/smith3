@@ -8,6 +8,7 @@
 using namespace std;
 
 
+// copying diagram with the same connectivity and so on.
 shared_ptr<Diagram> Diagram::copy() const {
   // mapping of indices and spins. map<old, new>
   map<shared_ptr<Index>, shared_ptr<Index> > indexmap;

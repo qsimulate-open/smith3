@@ -23,6 +23,15 @@ class Op {
   protected:
     // tensor info
     std::string label_;
+    // this op_ is very important (and does not seem clear...).
+    // Here is the convention
+    // get<0>  :  Index object
+    // get<1>  :  Operator info.
+    //              -1: no operator (i.e., already contracted)
+    //               0: creation operator
+    //               1: annihilation operator,  
+    //               0+2: active creation operator 
+    //               1+2: active annihilation operator 
     std::list<std::tuple<std::shared_ptr<Index>*, int, int> > op_;
 
     // operator info

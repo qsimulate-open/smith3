@@ -15,10 +15,9 @@ using namespace std;
 
 int main() {
 
-  shared_ptr<Op> proj(new Op("proj", "c", "c", "a", "a"));
+  shared_ptr<Op> proj(new Op("proj", "c", "x", "a", "a"));
   shared_ptr<Op> f(new Op("f", "g", "g"));
-  shared_ptr<Op> v(new Op("v", "g", "g", "g", "g"));
-  shared_ptr<Op> T(new Op("T", "a", "a", "c", "c"));
+  shared_ptr<Op> T(new Op("T", "a", "a", "c", "x"));
 
   list<shared_ptr<Op> > d;
   d.push_back(proj);
@@ -31,6 +30,7 @@ int main() {
   list<shared_ptr<Diagram> > out;
   out.push_back(di);
 
+int cnt = 0;
   while (out.front()->num_dagger()) {
     list<shared_ptr<Diagram> > out2;
     for (auto j = out.begin(); j != out.end(); ++j) {
@@ -44,6 +44,10 @@ int main() {
       }
     }
     out = out2;
+if (cnt == 5) break;
+++cnt;
+for (auto iter = out.begin(); iter != out.end(); ++iter) (*iter)->print();
+cout << "----------------" << endl;
   }
 
   for (auto iter = out.begin(); iter != out.end(); ++iter) (*iter)->print();
