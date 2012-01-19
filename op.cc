@@ -107,7 +107,7 @@ void Op::refresh_indices(map<shared_ptr<Index>, int>& dict,
     }
 
     auto ster = spin.find(rho(get<2>(*i)));
-    if (get<1>(*i) == 0 || get<1>(*i) == 1) {
+    if (get<1>(*i) == 0 || get<1>(*i) == 1 || get<1>(*i) == 2 || get<1>(*i) == 3) {
       if (ster == spin.end()) {
         const int c = spin.size();
         spin.insert(make_pair(rho(get<2>(*i)), c));
