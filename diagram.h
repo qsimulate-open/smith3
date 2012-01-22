@@ -17,6 +17,9 @@ class Diagram {
   protected:
     std::list<std::shared_ptr<Op> > op_;
     double fac_;
+//  std::list<std::shared_ptr<RDM> > rdm_;
+
+    std::list<std::shared_ptr<Index> > active_indices() const; 
 
   public:
     Diagram(std::list<std::shared_ptr<Op> > op) : op_(op), fac_(1.0) { };

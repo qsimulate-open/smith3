@@ -84,7 +84,7 @@ void Diagram::print() {
     if (o->num_active_nodagger() + o->num_active_dagger() != 0) {
       for (auto j = o->op().begin(); j != o->op().end(); ++j) {
         if (get<1>(*j) == -1 || get<1>(*j) == 0 || get<1>(*j) == 1) continue;
-        cout << (*get<0>(*j))->str() << (get<1>(*j)==0||get<1>(*j)==2 ? "+" : "") << o->rho(get<2>(*j))->str();
+        cout << (*get<0>(*j))->str() << o->rho(get<2>(*j))->str();
       }
     }
   }
@@ -92,6 +92,12 @@ void Diagram::print() {
 
   cout << endl;
 }
+
+
+list<shared_ptr<Index> > Diagram::active_indices() const {
+
+}
+
 
 void Diagram::print() const {
   cout << setw(4) << setprecision(1) << fixed <<  fac_ << " ";

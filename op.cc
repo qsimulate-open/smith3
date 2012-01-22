@@ -8,7 +8,7 @@
 using namespace std;
 
 Op::Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td)
-  : label_(lab), a_(new Index(ta)), b_(new Index(tb)), c_(new Index(tc)), d_(new Index(td)) {
+  : label_(lab), a_(new Index(ta,true)), b_(new Index(tb,true)), c_(new Index(tc,false)), d_(new Index(td,false)) {
   op_.push_back(std::make_tuple(&a_, ta!="x"?0:2, 0)); // index, dagger, spin
   op_.push_back(std::make_tuple(&b_, tb!="x"?0:2, 1));
   op_.push_back(std::make_tuple(&c_, tc!="x"?1:3, 1));
@@ -21,7 +21,7 @@ Op::Op(const std::string lab, const std::string& ta, const std::string& tb, cons
 
 
 Op::Op(const std::string lab, const std::string& ta, const std::string& tb)
-  : label_(lab), a_(new Index(ta)), b_(new Index(tb)) {
+  : label_(lab), a_(new Index(ta,true)), b_(new Index(tb,false)) {
   op_.push_back(std::make_tuple(&a_, ta!="x"?0:2, 0)); // index, dagger, spin
   op_.push_back(std::make_tuple(&b_, tb!="x"?1:3, 0));
   std::shared_ptr<Spin> tmp(new Spin());
@@ -110,7 +110,7 @@ void Op::print() const {
   // tensor
   cout << label_ << "(";
   for (auto i = op_.begin(); i != op_.end(); ++i) {
-    cout << (*get<0>(*i))->str() << " ";
+    cout << (*get<0>(*i))->str(false) << " ";
   }
   cout << ") ";
   // (non active) operator
@@ -118,7 +118,7 @@ void Op::print() const {
     cout << "{";
     for (auto i = op_.begin(); i != op_.end(); ++i) {
       if (get<1>(*i) == -1 || get<1>(*i) == 2 || get<1>(*i) == 3) continue;
-      cout << (*get<0>(*i))->str() << (get<1>(*i)==0||get<1>(*i)==2 ? "+" : "") << rho(get<2>(*i))->str();
+      cout << (*get<0>(*i))->str() << rho(get<2>(*i))->str();
     }
     cout << "} ";
   }
