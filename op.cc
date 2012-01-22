@@ -105,18 +105,23 @@ bool Op::contracted() const {
   return out == 0;
 }
 
+
 void Op::print() const {
   // tensor
   cout << label_ << "(";
   for (auto i = op_.begin(); i != op_.end(); ++i) {
     cout << (*get<0>(*i))->str() << " ";
   }
-  cout << ") {";
-  for (auto i = op_.begin(); i != op_.end(); ++i) {
-    if (get<1>(*i) == -1) continue;
-    cout << (*get<0>(*i))->str() << (get<1>(*i)==0||get<1>(*i)==2 ? "+" : "") << rho(get<2>(*i))->str();
+  cout << ") ";
+  // (non active) operator
+  if (num_nodagger() + num_dagger() != 0) {
+    cout << "{";
+    for (auto i = op_.begin(); i != op_.end(); ++i) {
+      if (get<1>(*i) == -1 || get<1>(*i) == 2 || get<1>(*i) == 3) continue;
+      cout << (*get<0>(*i))->str() << (get<1>(*i)==0||get<1>(*i)==2 ? "+" : "") << rho(get<2>(*i))->str();
+    }
+    cout << "} ";
   }
-  cout << "}";
 }
 
 

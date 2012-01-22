@@ -18,7 +18,6 @@ list<shared_ptr<Diagram> > Diagram::get_all() const {
     for (auto k = d->op().begin(); k != d->op().end(); ++k) (*k)->mutate_general(j);
     if (d->consistent_indices()) {
       out.push_back(d);
-      d->print();
     }
   }
   return out;
@@ -77,6 +76,20 @@ void Diagram::print() {
   refresh_indices();
   cout << setw(4) << setprecision(1) << fixed <<  fac_ << " ";
   for (auto i = op_.begin(); i != op_.end(); ++i) (*i)->print();
+
+  // active operators
+  cout << "[";
+  for (auto i = op_.begin(); i != op_.end(); ++i) {
+    shared_ptr<Op> o = *i;
+    if (o->num_active_nodagger() + o->num_active_dagger() != 0) {
+      for (auto j = o->op().begin(); j != o->op().end(); ++j) {
+        if (get<1>(*j) == -1 || get<1>(*j) == 0 || get<1>(*j) == 1) continue;
+        cout << (*get<0>(*j))->str() << (get<1>(*j)==0||get<1>(*j)==2 ? "+" : "") << o->rho(get<2>(*j))->str();
+      }
+    }
+  }
+  cout << "]";
+
   cout << endl;
 }
 
@@ -146,6 +159,15 @@ bool Diagram::done() const {
 }
 
 
+bool Diagram::done_noactive() const {
+  int out = 0;
+  for (auto i = op_.begin(); i != op_.end(); ++i) {
+    out += (*i)->num_nodagger() + (*i)->num_dagger();
+  }
+  return out == 0; 
+}
+
+
 int Diagram::num_dagger() const {
   int out = 0;
   for (auto i = op_.begin(); i !=  op_.end(); ++i) out += (*i)->num_dagger();
@@ -167,6 +189,5 @@ bool Diagram::consistent_indices() const {
     cnt1 += (*i)->num_active_dagger(); 
     cnt2 += (*i)->num_active_nodagger(); 
   }
-cout << cnt1 << cnt2 << endl;
   return cnt1 == cnt2;
 }

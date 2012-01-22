@@ -51,6 +51,7 @@ class Diagram {
     // returns if this diagram is still valid
     bool valid() const;
     bool done() const;
+    bool done_noactive() const;
 
 };
 
