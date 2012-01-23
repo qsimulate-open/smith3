@@ -9,12 +9,14 @@ using namespace std;
 
 Op::Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td)
   : label_(lab), a_(new Index(ta,true)), b_(new Index(tb,true)), c_(new Index(tc,false)), d_(new Index(td,false)) {
-  op_.push_back(std::make_tuple(&a_, ta!="x"?0:2, 0)); // index, dagger, spin
+  op_.push_back(std::make_tuple(&a_, ta!="x"?0:2, 0)); // index, no-active/active, spin
+  op_.push_back(std::make_tuple(&d_, td!="x"?0:2, 0)); // from historical reasons, it is 0 and 2. -1 when contracted.
   op_.push_back(std::make_tuple(&b_, tb!="x"?0:2, 1));
-  op_.push_back(std::make_tuple(&c_, tc!="x"?1:3, 1));
-  op_.push_back(std::make_tuple(&d_, td!="x"?1:3, 0));
+  op_.push_back(std::make_tuple(&c_, tc!="x"?0:2, 1));
+
   std::shared_ptr<Spin> tmp(new Spin());
   rho_.push_back(tmp);
+
   std::shared_ptr<Spin> tmp2(new Spin());
   rho_.push_back(tmp2);
 }
@@ -23,7 +25,7 @@ Op::Op(const std::string lab, const std::string& ta, const std::string& tb, cons
 Op::Op(const std::string lab, const std::string& ta, const std::string& tb)
   : label_(lab), a_(new Index(ta,true)), b_(new Index(tb,false)) {
   op_.push_back(std::make_tuple(&a_, ta!="x"?0:2, 0)); // index, dagger, spin
-  op_.push_back(std::make_tuple(&b_, tb!="x"?1:3, 0));
+  op_.push_back(std::make_tuple(&b_, tb!="x"?0:2, 0));
   std::shared_ptr<Spin> tmp(new Spin());
   rho_.push_back(tmp);
 }
@@ -43,7 +45,7 @@ shared_ptr<Op> Op::copy() const {
 int Op::num_nodagger() const {
   int out = 0;
   for (auto i = op_.begin(); i != op_.end(); ++i)
-    if (get<1>(*i)==1) ++out;
+    if (get<1>(*i)==0 && !(*get<0>(*i))->dagger()) ++out;
   return out;
 }
 
@@ -51,7 +53,7 @@ int Op::num_nodagger() const {
 int Op::num_dagger() const {
   int out = 0;
   for (auto i = op_.begin(); i != op_.end(); ++i)
-    if (get<1>(*i)==0) ++out;
+    if (get<1>(*i)==0 && (*get<0>(*i))->dagger()) ++out;
   return out;
 }
 
@@ -59,7 +61,7 @@ int Op::num_dagger() const {
 int Op::num_active_dagger() const {
   int out = 0;
   for (auto i = op_.begin(); i != op_.end(); ++i)
-    if (get<1>(*i)==2) ++out;
+    if (get<1>(*i)==2 && (*get<0>(*i))->dagger()) ++out;
   return out;
 }
 
@@ -67,7 +69,7 @@ int Op::num_active_dagger() const {
 int Op::num_active_nodagger() const {
   int out = 0;
   for (auto i = op_.begin(); i != op_.end(); ++i)
-    if (get<1>(*i)==3) ++out;
+    if (get<1>(*i)==2 && !(*get<0>(*i))->dagger()) ++out;
   return out;
 }
 
@@ -101,7 +103,7 @@ void Op::mutate_general(int& in) {
 bool Op::contracted() const {
   int out = 0;
   for (auto i = op_.begin(); i != op_.end(); ++i)
-    if (get<1>(*i) == 0 || get<1>(*i) == 1) ++out;
+    if (get<1>(*i) == 0) ++out;
   return out == 0;
 }
 
@@ -117,7 +119,7 @@ void Op::print() const {
   if (num_nodagger() + num_dagger() != 0) {
     cout << "{";
     for (auto i = op_.begin(); i != op_.end(); ++i) {
-      if (get<1>(*i) == -1 || get<1>(*i) == 2 || get<1>(*i) == 3) continue;
+      if (get<1>(*i) == -1 || get<1>(*i) == 2) continue;
       cout << (*get<0>(*i))->str() << rho(get<2>(*i))->str();
     }
     cout << "} ";
@@ -135,7 +137,7 @@ void Op::refresh_indices(map<shared_ptr<Index>, int>& dict,
   //
   for (auto i = op_.begin(); i != op_.end(); ++i) {
     // if this is not still contracted
-    if (get<1>(*i) == 0 || get<1>(*i) == 1 || get<1>(*i) == 2 || get<1>(*i) == 3) {
+    if (get<1>(*i) != -1) {
       auto iter = dict.find(*get<0>(*i));
       if (iter == dict.end()) {
         const int c = dict.size();
@@ -143,24 +145,26 @@ void Op::refresh_indices(map<shared_ptr<Index>, int>& dict,
         (*get<0>(*i))->set_num(c);
       }
     // if this is already contracted, we use negative values (does not have to be, though - just for print out)
-    } else if (get<1>(*i) == -1) {
+    } else {
       auto iter = done.find(*get<0>(*i));
       if (iter == done.end()) {
         const int c = done.size();
         done.insert(make_pair(*get<0>(*i), -c-1));
         (*get<0>(*i))->set_num(-c-1);
       }
-    // if this is active labels  
     }
 
     auto ster = spin.find(rho(get<2>(*i)));
-    if (get<1>(*i) == 0 || get<1>(*i) == 1 || get<1>(*i) == 2 || get<1>(*i) == 3) {
+    if (get<1>(*i) != -1) {
       if (ster == spin.end()) {
         const int c = spin.size();
         spin.insert(make_pair(rho(get<2>(*i)), c));
         rho(get<2>(*i))->set_num(c);
       }
     }
+
+    // set all the spins into operators
+    (*get<0>(*i))->set_spin(rho(get<2>(*i)));
   }
 }
 
@@ -169,7 +173,7 @@ pair<shared_ptr<Index>*, shared_ptr<Spin>* > Op::first_dagger_noactive() {
   pair<shared_ptr<Index>*, shared_ptr<Spin>* > out;
   auto i = op_.begin();
   for (; i != op_.end(); ++i) {
-    if (get<1>(*i)==0) { // "x" is active orbitals
+    if (get<1>(*i)==0 && (*get<0>(*i))->dagger()) { // "x" is active orbitals
       out = make_pair(get<0>(*i), rho_ptr(get<2>(*i)));
       break;
     }
@@ -196,7 +200,7 @@ tuple<double, shared_ptr<Spin>, shared_ptr<Spin> >
   double fac = 0.0;
   shared_ptr<Spin> a, b;
   for (; i != op_.end(); ++i) {
-    if (get<1>(*i)!=1) continue;
+    if (get<1>(*i)!=0 || (*get<0>(*i))->dagger()) continue;
     if (contractable((*get<0>(*i))->label(), (*dat.first)->label())) {
       if (cnt == skip) {
         const int n1 = (*dat.first)->num();
@@ -210,6 +214,7 @@ tuple<double, shared_ptr<Spin>, shared_ptr<Spin> >
         a = *dat.second;
         b = rho(get<2>(*i)); 
         set_rho(get<2>(*i), *dat.second);
+
         break;
       } else {
         ++cnt;
