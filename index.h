@@ -50,6 +50,7 @@ class Index {
     const std::shared_ptr<Spin> spin() const { assert(spin_); return spin_; };
 
     bool same_spin(const std::shared_ptr<Index>& o) const { return o->spin() == spin(); };
+    bool same_num(const std::shared_ptr<Index>& o) const { return o->num() == num(); };
 
     std::string str(const bool& opr = true) const {
       std::stringstream ss;
@@ -60,6 +61,12 @@ class Index {
         ss << spin_->str();
       }
       return ss.str();
+    };
+
+    std::shared_ptr<Index> clone() { // note that this does not set spin.
+      std::shared_ptr<Index> out(new Index(label_, dagger_));
+      out->set_num(num_);
+      return out;
     };
 
     void print() const { std::cout << str() << std::endl; };

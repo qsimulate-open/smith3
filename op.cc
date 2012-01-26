@@ -10,9 +10,9 @@ using namespace std;
 Op::Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td)
   : label_(lab), a_(new Index(ta,true)), b_(new Index(tb,true)), c_(new Index(tc,false)), d_(new Index(td,false)) {
   op_.push_back(std::make_tuple(&a_, ta!="x"?0:2, 0)); // index, no-active/active, spin
-  op_.push_back(std::make_tuple(&d_, td!="x"?0:2, 0)); // from historical reasons, it is 0 and 2. -1 when contracted.
   op_.push_back(std::make_tuple(&b_, tb!="x"?0:2, 1));
   op_.push_back(std::make_tuple(&c_, tc!="x"?0:2, 1));
+  op_.push_back(std::make_tuple(&d_, td!="x"?0:2, 0)); // from historical reasons, it is 0 and 2. -1 when contracted.
 
   std::shared_ptr<Spin> tmp(new Spin());
   rho_.push_back(tmp);

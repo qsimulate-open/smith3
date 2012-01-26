@@ -33,15 +33,22 @@ class RDM {
 
     void print() const;
 
+    std::shared_ptr<RDM> copy() const;
+
     // returns private members
     double factor() const { return fac_; };
+    double& fac() { return fac_; };
+    const std::list<std::shared_ptr<Index> >& index() const { return index_; };
+    std::list<std::shared_ptr<Index> >& index() { return index_; };
+    const std::list<std::pair<std::shared_ptr<Index>, std::shared_ptr<Index> > >& delta() const { return delta_; };
+    std::list<std::pair<std::shared_ptr<Index>, std::shared_ptr<Index> > >& delta() { return delta_; };
 
     // returns if this is in the final form
     bool done() const;
-    bool reduce_done(const std::list<std::shared_ptr<Index> >& done) const;
+    bool reduce_done(const std::list<int>& done) const;
 
     // One index is going to be annihilated. done is updated inside the function
-    std::list<std::shared_ptr<RDM> > reduce_one(std::list<std::shared_ptr<Index> >& done) const;
+    std::list<std::shared_ptr<RDM> > reduce_one(std::list<int>& done) const;
 };
 
 

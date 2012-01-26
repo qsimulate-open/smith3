@@ -25,65 +25,103 @@ void RDM::print() const {
 }
 
 
+shared_ptr<RDM> RDM::copy() const {
+  // first clone all the indices
+  list<shared_ptr<Index> > in;
+  for (auto i = index_.begin(); i != index_.end(); ++i) in.push_back((*i)->clone());
+
+  map<shared_ptr<Spin>, shared_ptr<Spin> > dict;
+  auto j = in.begin();
+  for (auto i = index_.begin(); i != index_.end(); ++i, ++j) {
+    // get the original spin 
+    shared_ptr<Spin> o = (*i)->spin();
+    if (dict.find(o) == dict.end()) {
+      (*j)->set_spin(o);
+    } else {
+      shared_ptr<Spin> s(new Spin());
+      s->set_num(o->num());
+      dict.insert(make_pair(o,s));
+      (*j)->set_spin(s);
+    }
+  }
+
+  // lastly clone all the delta functions
+  list<pair<shared_ptr<Index>, shared_ptr<Index> > > d;
+  for (auto i = delta_.begin(); i != delta_.end(); ++i) d.push_back(make_pair(i->first->clone(), i->second->clone())); 
+
+  shared_ptr<RDM> out(new RDM(in, d)); 
+  return out;
+}
+
+//
 // An application of "Wick's theorem"
-list<shared_ptr<RDM> > RDM::reduce_one(list<shared_ptr<Index> >& done) const {
+// This function is controlled by Index::num_. Not a great code, it could have been driven by pointers... lazy me.
+//
+list<shared_ptr<RDM> > RDM::reduce_one(list<int>& done) const {
   // first find non-daggered operator which is not aligned
   list<shared_ptr<RDM> > out;
 
   for (auto i = index_.begin(); i != index_.end(); ++i) {
 
     // looking for a non-daggered index that is not registered in done
-    if ((*i)->dagger() || find(done.begin(), done.end(), *i) != done.end())
+    if ((*i)->dagger() || find(done.begin(), done.end(), (*i)->num()) != done.end())
       continue;
+
+    // again this function is controlled by numbers... sorry... 
+    const int inum = (*i)->num();
 
     for (auto j = i; j != index_.end(); ++j) {
       if (!(*j)->dagger() || j==i) continue;
+
       // if you find daggered object in the right hand side...
-      list<shared_ptr<Index> > indx = index_;
+      shared_ptr<RDM> tmp = this->copy(); 
 
       // find the indices to be deleted.
       vector<list<shared_ptr<Index> >::iterator> rml;
-      for (auto k = indx.begin(); k != indx.end(); ++k)
-        if (*k == *i || *k == *j) rml.push_back(k);
+      int cnt0 = -1;
+      int cnt = 0;
+      for (auto k = tmp->index().begin(); k != tmp->index().end(); ++k, ++cnt) {
+        if ((*k)->same_num(*i) || (*k)->same_num(*j)) {
+          cnt0 = cnt0 >= 0 ? cnt-cnt0 : cnt;
+          rml.push_back(k);
+        }
+      }
       assert(rml.size() == 2);
 
-      list<pair<shared_ptr<Index>, shared_ptr<Index> > > dl = delta_;
-      dl.push_back(make_pair(*rml[0],*rml[1]));
-      double f = fac_;
+      tmp->delta().push_back(make_pair(*rml[0],*rml[1]));
       // Please note that this procedure does not change the sign (you can prove it in 30sec)
+      tmp->fac() *= ((cnt0-1)&1 ? -1.0 : 1.0);
       if ((*i)->same_spin(*j)) {
-        f *= 2.0;
+        tmp->fac() *= 2.0;
       } else {
         // this case we need to replace a spin 
         const shared_ptr<Spin> s0 = (*rml[0])->spin();
         const shared_ptr<Spin> s1 = (*rml[1])->spin();
-        for (auto k = indx.begin(); k != indx.end(); ++k) {
+        for (auto k = tmp->index().begin(); k != tmp->index().end(); ++k) {
           if ((*k)->spin() == s0) {
-//          (*k)->set_spin(s1);
+            (*k)->set_spin(s1);
           }
         }
       }
 
       // erasing indices which are push-backed in delta
-      indx.erase(rml[0]);
-      indx.erase(rml[1]);
-      // create an RDM object
-      shared_ptr<RDM> tmp(new RDM(indx,dl,f));
+      tmp->index().erase(rml[0]);
+      tmp->index().erase(rml[1]);
       out.push_back(tmp);
     }
-    done.push_back(*i);
+    done.push_back((*i)->num());
     break;
   }
   return out;
 }
 
 
-bool RDM::reduce_done(const list<shared_ptr<Index> >& done) const {
+bool RDM::reduce_done(const list<int>& done) const {
   // check if there is a annihilation operator which has creation operators in his right side
   bool out = true;
   for (auto i = index_.begin(); i != index_.end(); ++i) {
     // if non-dagger and not registered in done
-    if (!(*i)->dagger() && find(done.begin(), done.end(), (*i)) == done.end()) {
+    if (!(*i)->dagger() && find(done.begin(), done.end(), (*i)->num()) == done.end()) {
       for (auto j = i; j != index_.end(); ++j) {
         if ((*j)->dagger()) out = false;
       } 
@@ -140,15 +178,15 @@ Active::Active(const list<shared_ptr<Index> >& in) {
 
 
 void Active::reduce(shared_ptr<RDM> in) {
-  list<shared_ptr<Index> > d;
-  list<std::pair<shared_ptr<RDM>, list<shared_ptr<Index> > > > buf(1, make_pair(in,d));
+  list<int> d;
+  list<pair<shared_ptr<RDM>, list<int> > > buf(1, make_pair(in,d));
 
   while (buf.size() != 0) {
-    list<std::pair<shared_ptr<RDM>, list<shared_ptr<Index> > > > buf2;
+    list<pair<shared_ptr<RDM>, list<int> > > buf2;
 
     for (auto iter = buf.begin(); iter != buf.end(); ++iter) { 
       shared_ptr<RDM> tmp = iter->first;
-      list<shared_ptr<Index> > done = iter->second; 
+      list<int> done = iter->second; 
       
       // taking delta
       list<shared_ptr<RDM> > out = tmp->reduce_one(done);
