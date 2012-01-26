@@ -10,6 +10,7 @@
 #include <list>
 #include "op.h"
 #include "diagram.h"
+#include "active.h"
 
 using namespace std;
 
@@ -46,5 +47,10 @@ int main() {
   }
 
   for (auto iter = final.begin(); iter != final.end(); ++iter) (*iter)->print();
+
+  for (auto iter = final.begin(); iter != final.end(); ++iter) {
+    shared_ptr<Active> ac(new Active((*iter)->active_indices()));
+    ac->print();
+  }
 
 }

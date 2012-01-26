@@ -8,6 +8,7 @@
 
 #include <string>
 #include <sstream>
+#include <cassert>
 
 class Spin {
   protected:
@@ -45,16 +46,23 @@ class Index {
     void set_label(const std::string& a) { label_ = a; };
 
     void set_spin(const std::shared_ptr<Spin> s) { spin_ = s; };
-    std::shared_ptr<Spin> spin() { return spin_; };
+    std::shared_ptr<Spin> spin() { assert(spin_); return spin_; };
+    const std::shared_ptr<Spin> spin() const { assert(spin_); return spin_; };
+
+    bool same_spin(const std::shared_ptr<Index>& o) const { return o->spin() == spin(); };
 
     std::string str(const bool& opr = true) const {
       std::stringstream ss;
       ss << label_ << num_;
       if (dagger_ && opr) ss << "+";
-      if (opr) ss << spin_->str();
+      if (opr) {
+        assert(spin_);
+        ss << spin_->str();
+      }
       return ss.str();
     };
 
+    void print() const { std::cout << str() << std::endl; };
 };
 
 

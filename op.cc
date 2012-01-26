@@ -31,6 +31,15 @@ Op::Op(const std::string lab, const std::string& ta, const std::string& tb)
 }
 
 
+// Constructing one-body tensor. No operator is created. Careful...
+Op::Op(const string lab, shared_ptr<Index> ta, shared_ptr<Index> tb, shared_ptr<Spin> ts)
+ : label_(lab), a_(ta), b_(tb) {
+  rho_.push_back(ts); // just to prevent seg fault.
+  op_.push_back(std::make_tuple(&a_, -1, 0));
+  op_.push_back(std::make_tuple(&b_, -1, 0));
+}
+
+
 shared_ptr<Op> Op::copy() const {
   // in the case of two-body operators
   if (c_) {

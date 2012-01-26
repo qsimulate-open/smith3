@@ -95,7 +95,16 @@ void Diagram::print() {
 
 
 list<shared_ptr<Index> > Diagram::active_indices() const {
-
+  list<shared_ptr<Index> > out;
+  for (auto i = op_.begin(); i != op_.end(); ++i) {
+    shared_ptr<Op> o = *i;
+    if (o->num_active_nodagger() + o->num_active_dagger() != 0) {
+      for (auto j = o->op().begin(); j != o->op().end(); ++j) {
+        if (get<1>(*j) == 2) out.push_back(*get<0>(*j));
+      }
+    }
+  }
+  return out;
 }
 
 

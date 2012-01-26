@@ -46,6 +46,8 @@ class Op {
   public:
     Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td);
     Op(const std::string lab, const std::string& ta, const std::string& tb);
+    // creating tensor..
+    Op(const std::string lab, std::shared_ptr<Index> ta, std::shared_ptr<Index> tb, std::shared_ptr<Spin> ts = std::make_shared<Spin>());
     Op() : label_("") { };
     virtual ~Op() {};
 
