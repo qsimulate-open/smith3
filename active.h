@@ -32,6 +32,7 @@ class RDM {
     ~RDM() {};
 
     void print() const;
+    void sort();
 
     std::shared_ptr<RDM> copy() const;
 

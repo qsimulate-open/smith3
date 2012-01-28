@@ -16,9 +16,9 @@ using namespace std;
 
 int main() {
 
-  shared_ptr<Op> proj(new Op("proj", "v", "x", "x", "x"));
+  shared_ptr<Op> proj(new Op("proj", "v", "v", "x", "x"));
   shared_ptr<Op> f(new Op("f", "g", "g"));
-  shared_ptr<Op> T(new Op("T", "a", "x", "v", "x"));
+  shared_ptr<Op> T(new Op("T", "a", "x", "v", "v"));
 
   list<shared_ptr<Op> > d;
   d.push_back(proj);
@@ -27,6 +27,8 @@ int main() {
 
   shared_ptr<Diagram> di(new Diagram(d));
   list<shared_ptr<Diagram> > out = di->get_all();
+
+  assert(out.size() != 0);
 
   list<shared_ptr<Diagram> > final;
 

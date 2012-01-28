@@ -132,32 +132,79 @@ bool RDM::reduce_done(const list<int>& done) const {
 }
 
 
-bool RDM::done() const {
-  // if operators are aligned as a0+ a1+ .. a1 a0
+void RDM::sort() {
 
+  // of course this is not the fastest code, but I am fine. 
+
+  // first we align indices so that
+  // 0+ 0 1+ 1 2+ 2...
+  // actually this might be better for actually implementation. 
+  vector<shared_ptr<Spin> > done_spin;
+  while (!done()) {
+
+    list<shared_ptr<Index> > buf;
+
+    for (auto i = index_.begin(); i != index_.end(); ++i) {
+      // now we have a non-daggered opeartor; getting the current spin
+      shared_ptr<Spin> cs = (*i)->spin();
+
+      // first find an unprocessed non-daggered operator, if not, push_back and continue
+      if ((*i)->dagger() || done_spin.end() != find(done_spin.begin(), done_spin.end(), cs)) {
+        buf.push_back(*i);
+        continue;
+      }
+
+      // first check if daggered operator with the same spin is already in the left side; if so continue
+      bool done_same_spin = false;
+      for (auto j = buf.begin(); j != buf.end(); ++j) done_same_spin = (*j)->spin() == cs;
+      if (done_same_spin) continue;
+
+      // then move it to a place 
+      // need to go through a+ with the same spin, and a+ and a in done_spin. 
+      auto j = i; ++j;
+
+      // int cnt is for the determination of sign changes
+      for (int cnt = 0; j != index_.end(); ++j, ++cnt) {
+        buf.push_back(*j);
+
+        // if (*j) has the same spin, set the flag to true.
+        if ((*j)->spin() == cs) { 
+          buf.push_back(*i);
+          fac_ *= cnt&1 ? 1 : -1;
+        }
+      }
+
+      // register this spin
+      done_spin.push_back(cs);
+      break;
+    }
+    assert(index_.size() == buf.size());
+    index_ = buf;
+  }
+  assert(done_spin.size() == index_.size()/2);
+}
+
+
+bool RDM::done() const {
+  // if operators are aligned as a0+ a0 a1+ a1...
   bool out = true;
-  // ann = false when we encounter annihilation operator:w
-  bool ann = true;
-  vector<shared_ptr<Spin> > dag;
-  vector<shared_ptr<Spin> > nodag;
-  for (auto i = index_.begin(); i != index_.end(); ++i) {
-    bool idag = (*i)->dagger();
-    ann &= idag; 
-    if (idag) {
-      if (!ann) {
+  assert((index_.size()&1) == 0); // for sure..
+
+  int cnt = 0;
+  shared_ptr<Spin> prev;
+  for (auto i = index_.begin(); i != index_.end(); ++i, ++cnt) {
+    // even number, then (*i) should be daggered.
+    if ((cnt & 1) == 0) {
+      if (!(*i)->dagger()) {
         out = false;
         break;
       }
-      dag.push_back((*i)->spin());
-    } else if (!idag) {
-      nodag.push_back((*i)->spin());
-    }
-  }
-  out &= dag.size() == nodag.size();
-  if (out) {
-    auto j = dag.rbegin();
-    for (auto i = dag.begin(); i != dag.end(); ++i, ++j) {
-      out &= *i == *j;
+      prev = (*i)->spin();
+    } else {
+      if ((*i)->dagger() || (*i)->spin() != prev) {
+        out = false;
+        break;
+      }
     }
   }
   return out;
@@ -170,8 +217,6 @@ Active::Active(const list<shared_ptr<Index> >& in) {
   shared_ptr<RDM> tmp(new RDM(in, t, 1.0));
 
   // this sets list<RDM>
-  cout << "====" << endl;
-  tmp->print();
   reduce(tmp);
 
 }
@@ -202,6 +247,9 @@ void Active::reduce(shared_ptr<RDM> in) {
     }
     buf = buf2;
   }
+
+  for (auto i = rdm_.begin(); i != rdm_.end(); ++i)
+    (*i)->sort();
 }
 
 
