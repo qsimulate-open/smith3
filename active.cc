@@ -6,13 +6,14 @@
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
+#include <stdexcept>
 #include "active.h"
 
 using namespace std;
 
-void RDM::print() const {
+void RDM::print(const string& indent) const {
 
-  cout << setw(5) << setprecision(2) << fac_ << " [";
+  cout << indent << fixed << setw(5) << setprecision(1) << fac_ << " [";
   for (auto i = index_.begin(); i != index_.end(); ++i)
     cout << (*i)->str();
   for (auto i = delta_.begin(); i != delta_.end(); ++i)
@@ -50,6 +51,7 @@ shared_ptr<RDM> RDM::copy() const {
   for (auto i = delta_.begin(); i != delta_.end(); ++i) d.push_back(make_pair(i->first->clone(), i->second->clone())); 
 
   shared_ptr<RDM> out(new RDM(in, d)); 
+  out->fac() = fac_;
   return out;
 }
 
@@ -151,26 +153,27 @@ void RDM::sort() {
       // first find an unprocessed non-daggered operator, if not, push_back and continue
       if ((*i)->dagger() || done_spin.end() != find(done_spin.begin(), done_spin.end(), cs)) {
         buf.push_back(*i);
-        continue;
-      }
 
-      // first check if daggered operator with the same spin is already in the left side; if so continue
-      bool done_same_spin = false;
-      for (auto j = buf.begin(); j != buf.end(); ++j) done_same_spin = (*j)->spin() == cs;
-      if (done_same_spin) continue;
+      } else {
 
-      // then move it to a place 
-      // need to go through a+ with the same spin, and a+ and a in done_spin. 
-      auto j = i; ++j;
+        // first check if daggered operator with the same spin is already in the left side; if so continue
+        bool done_same_spin = false;
+        for (auto j = buf.begin(); j != buf.end(); ++j) done_same_spin = (*j)->spin() == cs;
+        if (done_same_spin) continue;
 
-      // int cnt is for the determination of sign changes
-      for (int cnt = 0; j != index_.end(); ++j, ++cnt) {
-        buf.push_back(*j);
+        // then move it to a place 
+        // need to go through a+ with the same spin, and a+ and a in done_spin. 
+        auto j = i; ++j;
 
-        // if (*j) has the same spin, set the flag to true.
-        if ((*j)->spin() == cs) { 
-          buf.push_back(*i);
-          fac_ *= cnt&1 ? 1 : -1;
+        // int cnt is for the determination of sign changes
+        for (int cnt = 0; j != index_.end(); ++j, ++cnt) {
+          buf.push_back(*j);
+
+          // if (*j) has the same spin, set the flag to true.
+          if ((*j)->spin() == cs) { 
+            buf.push_back(*i);
+            fac_ *= cnt&1 ? 1 : -1;
+          }
         }
       }
 
@@ -181,7 +184,6 @@ void RDM::sort() {
     assert(index_.size() == buf.size());
     index_ = buf;
   }
-  assert(done_spin.size() == index_.size()/2);
 }
 
 
@@ -253,6 +255,6 @@ void Active::reduce(shared_ptr<RDM> in) {
 }
 
 
-void Active::print() const {
-  for (auto i = rdm_.begin(); i != rdm_.end(); ++i) (*i)->print();
+void Active::print(const string& indent) const {
+  for (auto i = rdm_.begin(); i != rdm_.end(); ++i) (*i)->print(indent);
 }

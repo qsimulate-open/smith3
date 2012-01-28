@@ -11,6 +11,7 @@
 #ifndef __ACTIVE_H
 #define __ACTIVE_H
 
+#include <string>
 #include <list>
 #include <memory>
 #include "op.h"
@@ -31,7 +32,7 @@ class RDM {
       : index_(in), delta_(in2), fac_(f) { };
     ~RDM() {};
 
-    void print() const;
+    void print(const std::string& indent = "") const;
     void sort();
 
     std::shared_ptr<RDM> copy() const;
@@ -62,7 +63,7 @@ class Active {
     Active(const std::list<std::shared_ptr<Index> >& in);
     ~Active() {};
 
-    void print() const;
+    void print(const std::string& indent = "") const;
 
 };
 

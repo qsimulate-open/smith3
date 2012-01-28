@@ -16,9 +16,9 @@ using namespace std;
 
 int main() {
 
-  shared_ptr<Op> proj(new Op("proj", "v", "v", "x", "x"));
+  shared_ptr<Op> proj(new Op("proj", "c", "c", "x", "x"));
   shared_ptr<Op> f(new Op("f", "g", "g"));
-  shared_ptr<Op> T(new Op("T", "a", "x", "v", "v"));
+  shared_ptr<Op> T(new Op("T", "x", "x", "c", "c"));
 
   list<shared_ptr<Op> > d;
   d.push_back(proj);
@@ -48,11 +48,7 @@ int main() {
     out = out2;
   }
 
+  for (auto iter = final.begin(); iter != final.end(); ++iter) (*iter)->active();
   for (auto iter = final.begin(); iter != final.end(); ++iter) (*iter)->print();
-
-  for (auto iter = final.begin(); iter != final.end(); ++iter) {
-    shared_ptr<Active> ac(new Active((*iter)->active_indices()));
-    ac->print();
-  }
 
 }

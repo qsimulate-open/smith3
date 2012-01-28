@@ -91,6 +91,8 @@ void Diagram::print() {
   cout << "]";
 
   cout << endl;
+  if (rdm_) rdm_->print("   ");
+  cout << endl;
 }
 
 
@@ -206,3 +208,15 @@ bool Diagram::consistent_indices() const {
   }
   return cnt1 == cnt2;
 }
+
+void Diagram::active() {
+  // Index should be updated.
+  refresh_indices();
+  // Performs Wick in constructor of an Active object
+  shared_ptr<Active> tmp(new Active(active_indices()));
+  // Sets to member
+  rdm_ = tmp; 
+}
+
+
+

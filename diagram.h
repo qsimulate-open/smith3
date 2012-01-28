@@ -6,6 +6,7 @@
 #ifndef __DIAGRAM_H
 #define __DIAGRAM_H
 
+#include "active.h"
 #include "op.h"
 #include <iostream>
 #include <iomanip>
@@ -17,7 +18,7 @@ class Diagram {
   protected:
     std::list<std::shared_ptr<Op> > op_;
     double fac_;
-//  std::list<std::shared_ptr<RDM> > rdm_;
+    std::shared_ptr<Active> rdm_;
 
   public:
     Diagram(std::list<std::shared_ptr<Op> > op) : op_(op), fac_(1.0) { };
@@ -36,6 +37,9 @@ class Diagram {
 
     // refresh the indices
     void refresh_indices();
+
+    // processes the active part
+    void active();
 
     // printing function
     // CAUTION: it also refreshes the indices
