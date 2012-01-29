@@ -8,9 +8,7 @@
 
 #include <iostream>
 #include <list>
-#include "op.h"
-#include "diagram.h"
-#include "active.h"
+#include "equation.h"
 
 using namespace std;
 
@@ -26,28 +24,13 @@ int main() {
   d.push_back(T);
 
   shared_ptr<Diagram> di(new Diagram(d));
-  list<shared_ptr<Diagram> > out = di->get_all();
+  shared_ptr<Equation> eq(new Equation(di));
+  eq->print();
+  eq->active();
+  eq->factorize();
+  eq->print();
 
-  assert(out.size() != 0);
-
-  list<shared_ptr<Diagram> > final;
-
-  while (out.front()->num_dagger()) {
-    list<shared_ptr<Diagram> > out2;
-    for (auto j = out.begin(); j != out.end(); ++j) {
-      for (int i = 0; i != (*j)->num_dagger(); ++i) {
-        shared_ptr<Diagram> n = (*j)->copy();
-        bool done = n->reduce_one_noactive(i);
-        if (!done) break;
-        if (n->valid() || n->done()) {
-          out2.push_back(n);
-          if (n->done_noactive()) final.push_back(n);
-        }
-      }
-    }
-    out = out2;
-  }
-
+#if 0
   for (auto iter = final.begin(); iter != final.end(); ++iter) {
     (*iter)->print();
     (*iter)->refresh_indices();
@@ -59,5 +42,6 @@ cout << a << endl;
   for (auto iter = final.begin(); iter != final.end(); ++iter) {
     (*iter)->print();
   }
+#endif
 
 }

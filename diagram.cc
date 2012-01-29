@@ -219,4 +219,11 @@ void Diagram::active() {
 }
 
 
+bool Diagram::permute() {
+  return false;
+}
 
+
+bool Diagram::identical(shared_ptr<Diagram> o) const {
+  return false;
+}

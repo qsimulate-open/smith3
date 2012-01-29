@@ -29,7 +29,8 @@ class Diagram {
     std::shared_ptr<Diagram> copy() const;
     std::list<std::shared_ptr<Diagram> > get_all() const;
 
-    double fac() const { return fac_; };
+    double& fac() { return fac_; };
+    const double fac() const { return fac_; };
 
     const std::list<std::shared_ptr<Op> >& op() const { return op_; };
     void set_op(const std::list<std::shared_ptr<Op> >& o) { op_ = o; };
@@ -40,6 +41,10 @@ class Diagram {
 
     // processes the active part
     void active();
+
+    // permute indices in operators. return false when finished
+    bool permute(); 
+    bool identical(std::shared_ptr<Diagram> o) const;
 
     // printing function
     // CAUTION: it also refreshes the indices
