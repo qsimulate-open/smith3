@@ -51,7 +51,8 @@ int main() {
   for (auto iter = final.begin(); iter != final.end(); ++iter) {
     (*iter)->print();
     (*iter)->refresh_indices();
-    (*iter)->op().back()->permute();
+const double a =    (*iter)->op().back()->permute();
+cout << a << endl;
     (*iter)->print();
   }
   for (auto iter = final.begin(); iter != final.end(); ++iter) (*iter)->active();

@@ -45,6 +45,8 @@ class Index {
     const std::string label() const { return label_; };
     void set_label(const std::string& a) { label_ = a; };
 
+    bool active() const { return label_ == "x"; };
+
     void set_spin(const std::shared_ptr<Spin> s) { spin_ = s; };
     std::shared_ptr<Spin> spin() { assert(spin_); return spin_; };
     const std::shared_ptr<Spin> spin() const { assert(spin_); return spin_; };

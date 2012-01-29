@@ -63,7 +63,7 @@ class Op {
     int num_dagger() const;
 
     std::shared_ptr<Op> copy() const;
-    bool permute();
+    double permute();
 
     std::string label() const { return label_; };
 
