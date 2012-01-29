@@ -20,9 +20,11 @@ class Diagram {
     double fac_;
     std::shared_ptr<Active> rdm_;
 
+    bool dagger_;
+
   public:
-    Diagram(std::list<std::shared_ptr<Op> > op) : op_(op), fac_(1.0) { };
-    Diagram() : fac_(1.0) { };
+    Diagram(std::list<std::shared_ptr<Op> > op) : op_(op), fac_(1.0), dagger_(false) { };
+    Diagram() : fac_(1.0), dagger_(false) { };
     // copy constructor is complicated but preserves the same topology as this.
     ~Diagram() {};
 
@@ -42,8 +44,11 @@ class Diagram {
     // processes the active part
     void active();
 
+    // daggered Diagram added to the sum
+    void add_dagger() { dagger_ = true; };
+
     // permute indices in operators. return false when finished
-    bool permute(); 
+    bool permute(const bool proj = false); 
     bool identical(std::shared_ptr<Diagram> o) const;
 
     // printing function

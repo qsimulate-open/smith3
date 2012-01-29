@@ -58,6 +58,7 @@ shared_ptr<Diagram> Diagram::copy() const {
   }
   out->set_op(outop);
   out->set_fac(fac_);
+  if (dagger_) out->add_dagger();
   return out;
 }
 
@@ -89,6 +90,7 @@ void Diagram::print() {
     }
   }
   cout << "]";
+  if (dagger_) cout << " ** Daggered object added **" << endl;
 
   cout << endl;
   if (rdm_) rdm_->print("   ");
@@ -219,12 +221,12 @@ void Diagram::active() {
 }
 
 
-bool Diagram::permute() {
+bool Diagram::permute(const bool proj) {
   bool found = false;
  
   // try the last one. If it returns zero, then go up.
   for (auto i = op_.rbegin(); i != op_.rend(); ++i) {
-    pair<bool, double> a = (*i)->permute();
+    pair<bool, double> a = (*i)->permute(proj);
     fac_ *= a.second; 
     if (!a.first) {
       continue;

@@ -243,9 +243,10 @@ tuple<double, shared_ptr<Spin>, shared_ptr<Spin> >
 
 
 // this function make a possible permutation of indices.
-pair<bool, double> Op::permute() {
+pair<bool, double> Op::permute(const bool proj) {
   // if there is active daggered and no-daggered operators, you cannot do this as it changes the expression
-  if (num_active_nodagger() && num_active_dagger() || label_ == "proj") return make_pair(false, 1.0);
+  if (num_active_nodagger() && num_active_dagger() || (!proj && label_ == "proj"))
+    return make_pair(false, 1.0);
 
   const vector<int> prev = perm_;
   const int size = prev.size();

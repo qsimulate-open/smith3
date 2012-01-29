@@ -12,6 +12,7 @@
 class Equation {
   protected:
     std::list<std::shared_ptr<Diagram> > diagram_;
+    void factorize_(const bool);
 
   public:
     Equation(std::shared_ptr<Diagram>);

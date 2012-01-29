@@ -63,7 +63,7 @@ class Op {
     int num_dagger() const;
 
     std::shared_ptr<Op> copy() const;
-    std::pair<bool, double> permute();
+    std::pair<bool, double> permute(const bool proj = false);
 
     bool identical(std::shared_ptr<Op> o) const;
 

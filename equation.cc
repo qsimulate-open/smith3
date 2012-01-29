@@ -45,6 +45,11 @@ void Equation::active() {
 
 // find identical terms
 void Equation::factorize() {
+  factorize_(false);
+  factorize_(true);
+}
+
+void Equation::factorize_(const bool proj) {
   list<list<shared_ptr<Diagram> >::iterator> rm;
   for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
     bool found = false;
@@ -55,14 +60,21 @@ void Equation::factorize() {
       for (++j ; j != diagram_.end(); ++j) {
         if ((*i)->identical(*j)) {
           found = true;
-          (*j)->fac() += (*i)->fac();
-          rm.push_back(i);
-          if ((*j)->fac() == 0) throw logic_error("I don't think that this happens. Check!");
+          if (!proj) {
+            (*j)->fac() += (*i)->fac();
+            rm.push_back(i);
+            if ((*j)->fac() == 0) throw logic_error("I don't think that this happens. Check! Equation::factorize1_");
+          } else {
+            (*i)->add_dagger();
+            rm.push_back(i);
+            if ((*j)->fac() != (*i)->fac()) throw logic_error("I don't think that this happens. Check! Equation::factorize2_");
+          }
         }
       }
       if (found) break;
-    } while ((*i)->permute());
+    } while ((*i)->permute(proj));
   }
   for (auto iter = rm.begin(); iter != rm.end(); ++iter) diagram_.erase(*iter);
 }
+
 
