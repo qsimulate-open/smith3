@@ -43,9 +43,17 @@ void Equation::active() {
   for (auto i = diagram_.begin(); i != diagram_.end(); ++i) (*i)->active();
 }
 
+
+void Equation::refresh_indices() {
+  for (auto i = diagram_.begin(); i != diagram_.end(); ++i) (*i)->refresh_indices();
+}
+
 // find identical terms
 void Equation::factorize() {
   factorize_(false);
+  refresh_indices();
+  // TODO this is only valid for projection up to doubles
+  // For any-order algorithm, we need to use a generic algorithm.
   factorize_(true);
 }
 
@@ -65,7 +73,7 @@ void Equation::factorize_(const bool proj) {
             rm.push_back(i);
             if ((*j)->fac() == 0) throw logic_error("I don't think that this happens. Check! Equation::factorize1_");
           } else {
-            (*i)->add_dagger();
+            (*j)->add_dagger();
             rm.push_back(i);
             if ((*j)->fac() != (*i)->fac()) throw logic_error("I don't think that this happens. Check! Equation::factorize2_");
           }

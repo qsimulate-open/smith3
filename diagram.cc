@@ -90,7 +90,7 @@ void Diagram::print() {
     }
   }
   cout << "]";
-  if (dagger_) cout << " ** Daggered object added **" << endl;
+  if (dagger_) cout << " ** Daggered object added **";
 
   cout << endl;
   if (rdm_) rdm_->print("   ");
@@ -249,8 +249,9 @@ bool Diagram::identical(shared_ptr<Diagram> o) const {
   if (op_.size() != o->op().size()) out = false;
   // second, each indices should be the same (spin is not checked here)
   if (out) {
-    for (auto i = op_.begin(), j = o->op().begin(); i != op_.end(); ++i, ++j)
+    for (auto i = op_.begin(), j = o->op().begin(); i != op_.end(); ++i, ++j) {
       out &= (*i)->identical(*j);
+    }
   }
   // then, we check spins.
   if (out) {

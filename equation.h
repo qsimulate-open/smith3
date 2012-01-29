@@ -21,6 +21,7 @@ class Equation {
     void print();
     void active();
     void factorize();
+    void refresh_indices();
 
 };
 

@@ -48,7 +48,7 @@ class Diagram {
     void add_dagger() { dagger_ = true; };
 
     // permute indices in operators. return false when finished
-    bool permute(const bool proj = false); 
+    bool permute(const bool proj); 
     bool identical(std::shared_ptr<Diagram> o) const;
 
     // printing function
