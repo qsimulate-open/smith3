@@ -44,6 +44,7 @@ void Equation::active() {
 
 // find identical terms
 void Equation::factorize() {
+  list<list<shared_ptr<Diagram> >::iterator> rm;
   for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
     bool found = false;
     // all possible permutations generated here
@@ -54,11 +55,13 @@ void Equation::factorize() {
         if ((*i)->identical(*j)) {
           found = true;
           (*j)->fac() += (*i)->fac();
+          rm.push_back(i);
           if ((*j)->fac() == 0) throw logic_error("I don't think that this happens. Check!");
         }
       }
       if (found) break;
     }
   }
+  for (auto iter = rm.begin(); iter != rm.end(); ++iter) diagram_.erase(*iter);
 }
 
