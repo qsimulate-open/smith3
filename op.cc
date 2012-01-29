@@ -4,21 +4,26 @@
 //
 
 #include "op.h"
+#include <algorithm>
 
 using namespace std;
 
 Op::Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td)
   : label_(lab), a_(new Index(ta,true)), b_(new Index(tb,true)), c_(new Index(tc,false)), d_(new Index(td,false)) {
   op_.push_back(std::make_tuple(&a_, ta!="x"?0:2, 0)); // index, no-active/active, spin
+  op_.push_back(std::make_tuple(&d_, td!="x"?0:2, 0)); // from historical reasons, it is 0 and 2. -1 when contracted.
   op_.push_back(std::make_tuple(&b_, tb!="x"?0:2, 1));
   op_.push_back(std::make_tuple(&c_, tc!="x"?0:2, 1));
-  op_.push_back(std::make_tuple(&d_, td!="x"?0:2, 0)); // from historical reasons, it is 0 and 2. -1 when contracted.
 
   std::shared_ptr<Spin> tmp(new Spin());
   rho_.push_back(tmp);
 
   std::shared_ptr<Spin> tmp2(new Spin());
   rho_.push_back(tmp2);
+
+  perm_.push_back(0);
+  perm_.push_back(1);
+
 }
 
 
@@ -28,6 +33,8 @@ Op::Op(const std::string lab, const std::string& ta, const std::string& tb)
   op_.push_back(std::make_tuple(&b_, tb!="x"?0:2, 0));
   std::shared_ptr<Spin> tmp(new Spin());
   rho_.push_back(tmp);
+
+  perm_.push_back(0);
 }
 
 
@@ -232,5 +239,49 @@ tuple<double, shared_ptr<Spin>, shared_ptr<Spin> >
   }
   get<1>(*i) = -1;
   return make_tuple(fac, a, b);
+}
+
+
+// this function make a possible permutation of indices.
+bool Op::permute() {
+print();
+  bool out = true;
+  const vector<int> prev = perm_;
+  const int size = prev.size();
+  if (next_permutation(perm_.begin(), perm_.end())) {
+    vector<int> map(size);
+    for (int i = 0; i != size; ++i) {
+      const int ii = prev.at(i);
+      for (int j = 0; j != size; ++j) {
+        const int jj = perm_.at(j);
+        if (ii == jj) {
+          map[i] = j; break;
+        }
+      }
+    }
+    // now map is made
+#if 0
+    // permute spin
+    vector<shared_ptr<Spin> > stmp(size);
+    for (int i = 0; i != size; ++i) {
+      stmp[map[i]] = rho_[i];
+    }
+    rho_ = stmp;
+#endif
+    // permute indices (I don't remember why op_ is list...)
+    vector<tuple<shared_ptr<Index>*, int, int> > tmp(size*2);
+    auto oiter = op_.begin();
+    for (int i = 0; i != size; ++i, ++oiter) {
+      tmp[map[i]*2  ] = *oiter; ++oiter; 
+      tmp[map[i]*2+1] = *oiter; 
+    }
+    oiter = op_.begin();
+    for (auto t = tmp.begin(); t != tmp.end(); ++t, ++oiter) *oiter = *t; 
+print();
+cout << endl;
+  } else {
+    out = false;
+  }
+  return out;
 }
 

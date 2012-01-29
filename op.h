@@ -28,10 +28,8 @@ class Op {
     // get<0>  :  Index object
     // get<1>  :  Operator info.
     //              -1: no operator (i.e., already contracted)
-    //               0: creation operator
-    //               1: annihilation operator,  
-    //               0+2: active creation operator 
-    //               1+2: active annihilation operator 
+    //               0: operator
+    //               2: active operator 
     std::list<std::tuple<std::shared_ptr<Index>*, int, int> > op_;
 
     // operator info
@@ -42,6 +40,8 @@ class Op {
     std::shared_ptr<Index> c_;
     std::shared_ptr<Index> d_;
 
+    // perm_count
+    std::vector<int> perm_;
 
   public:
     Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td);
@@ -63,6 +63,7 @@ class Op {
     int num_dagger() const;
 
     std::shared_ptr<Op> copy() const;
+    bool permute();
 
     std::string label() const { return label_; };
 

@@ -48,7 +48,15 @@ int main() {
     out = out2;
   }
 
+  for (auto iter = final.begin(); iter != final.end(); ++iter) {
+    (*iter)->print();
+    (*iter)->refresh_indices();
+    (*iter)->op().back()->permute();
+    (*iter)->print();
+  }
   for (auto iter = final.begin(); iter != final.end(); ++iter) (*iter)->active();
-  for (auto iter = final.begin(); iter != final.end(); ++iter) (*iter)->print();
+  for (auto iter = final.begin(); iter != final.end(); ++iter) {
+    (*iter)->print();
+  }
 
 }
