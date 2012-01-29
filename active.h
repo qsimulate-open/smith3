@@ -64,7 +64,6 @@ class Active {
     ~Active() {};
 
     void print(const std::string& indent = "") const;
-
 };
 
 #endif

@@ -28,6 +28,7 @@ Equation::Equation(shared_ptr<Diagram> in) {
     }
     out = out2;
   }
+  for (auto i = diagram_.begin(); i != diagram_.end(); ++i) (*i)->refresh_indices();
 
 }
 
@@ -48,10 +49,10 @@ void Equation::factorize() {
   for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
     bool found = false;
     // all possible permutations generated here
-    while ((*i)->permute()) {
+    do {
       // find identical
-      auto j = i; ++j;
-      for ( ; j != diagram_.end(); ++j) {
+      auto j = i;
+      for (++j ; j != diagram_.end(); ++j) {
         if ((*i)->identical(*j)) {
           found = true;
           (*j)->fac() += (*i)->fac();
@@ -60,7 +61,7 @@ void Equation::factorize() {
         }
       }
       if (found) break;
-    }
+    } while ((*i)->permute());
   }
   for (auto iter = rm.begin(); iter != rm.end(); ++iter) diagram_.erase(*iter);
 }

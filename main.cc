@@ -25,23 +25,8 @@ int main() {
 
   shared_ptr<Diagram> di(new Diagram(d));
   shared_ptr<Equation> eq(new Equation(di));
-  eq->print();
   eq->factorize();
   eq->active();
   eq->print();
-
-#if 0
-  for (auto iter = final.begin(); iter != final.end(); ++iter) {
-    (*iter)->print();
-    (*iter)->refresh_indices();
-const double a =    (*iter)->op().back()->permute();
-cout << a << endl;
-    (*iter)->print();
-  }
-  for (auto iter = final.begin(); iter != final.end(); ++iter) (*iter)->active();
-  for (auto iter = final.begin(); iter != final.end(); ++iter) {
-    (*iter)->print();
-  }
-#endif
 
 }

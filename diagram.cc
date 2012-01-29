@@ -220,10 +220,21 @@ void Diagram::active() {
 
 
 bool Diagram::permute() {
-print();
-  pair<bool, double> a = op_.back()->permute();
-print();
-  return false;
+  bool found = false;
+ 
+  // try the last one. If it returns zero, then go up.
+  for (auto i = op_.rbegin(); i != op_.rend(); ++i) {
+    pair<bool, double> a = (*i)->permute();
+    fac_ *= a.second; 
+    if (!a.first) {
+      continue;
+    } else {
+      found = true;
+      refresh_indices();
+      break;
+    }
+  }
+  return found;
 }
 
 
@@ -252,7 +263,7 @@ bool Diagram::identical(shared_ptr<Diagram> o) const {
         shared_ptr<Spin> s = (*i)->spin();
         shared_ptr<Spin> os = (*j)->spin();
         auto iter = myo.find(s);
-        if (myo.end() != iter) {
+        if (myo.end() == iter) {
           // if s appears for the first time, register it
           myo.insert(make_pair(s,os));
         } else {

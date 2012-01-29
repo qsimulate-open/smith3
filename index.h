@@ -73,8 +73,9 @@ class Index {
 
     void print() const { std::cout << str() << std::endl; };
 
+    // be careful that this does not check dagger! Should not check, actually. 
     bool identical(std::shared_ptr<Index> o) const {
-      return num() == o->num() && label() == o->label() && dagger() == o->dagger();
+      return num() == o->num() && label() == o->label();
     };
 };
 

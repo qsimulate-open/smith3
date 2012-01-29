@@ -245,7 +245,7 @@ tuple<double, shared_ptr<Spin>, shared_ptr<Spin> >
 // this function make a possible permutation of indices.
 pair<bool, double> Op::permute() {
   // if there is active daggered and no-daggered operators, you cannot do this as it changes the expression
-  if (num_active_nodagger() && num_active_dagger()) return make_pair(false, 1.0);
+  if (num_active_nodagger() && num_active_dagger() || label_ == "proj") return make_pair(false, 1.0);
 
   const vector<int> prev = perm_;
   const int size = prev.size();
@@ -304,8 +304,7 @@ bool Op::identical(shared_ptr<Op> o) const {
   bool out = true;
   auto j = o->op().begin();
   for (auto i = op_.begin(); i != op_.end(); ++i, ++j) {
-    if (get<1>(*i) != get<1>(*i) || get<2>(*i) != get<2>(*i)
-        || !(*get<0>(*i))->identical(*get<0>(*j))) {
+    if (get<1>(*i) != get<1>(*j) || !(*get<0>(*i))->identical(*get<0>(*j))) {
       out = false;
       break;
     }

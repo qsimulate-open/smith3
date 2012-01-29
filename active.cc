@@ -258,3 +258,5 @@ void Active::reduce(shared_ptr<RDM> in) {
 void Active::print(const string& indent) const {
   for (auto i = rdm_.begin(); i != rdm_.end(); ++i) (*i)->print(indent);
 }
+
+
