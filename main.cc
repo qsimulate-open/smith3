@@ -26,8 +26,8 @@ int main() {
   shared_ptr<Diagram> di(new Diagram(d));
   shared_ptr<Equation> eq(new Equation(di));
   eq->print();
-  eq->active();
   eq->factorize();
+  eq->active();
   eq->print();
 
 #if 0

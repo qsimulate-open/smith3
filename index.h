@@ -72,6 +72,10 @@ class Index {
     };
 
     void print() const { std::cout << str() << std::endl; };
+
+    bool identical(std::shared_ptr<Index> o) const {
+      return num() == o->num() && label() == o->label() && dagger() == o->dagger();
+    };
 };
 
 

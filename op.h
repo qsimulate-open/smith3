@@ -63,7 +63,9 @@ class Op {
     int num_dagger() const;
 
     std::shared_ptr<Op> copy() const;
-    double permute();
+    std::pair<bool, double> permute();
+
+    bool identical(std::shared_ptr<Op> o) const;
 
     std::string label() const { return label_; };
 
@@ -73,10 +75,12 @@ class Op {
     const std::shared_ptr<Spin>* rho_ptr(const int i) const { return &rho_.at(i); };
     std::shared_ptr<Spin>* rho_ptr(const int i) { return &rho_.at(i); };
 
+#if 0
     std::shared_ptr<Index> a() const { return a_; };
     std::shared_ptr<Index> b() const { return b_; };
     std::shared_ptr<Index> c() const { return c_; };
     std::shared_ptr<Index> d() const { return d_; };
+#endif
 
     const std::list<std::tuple<std::shared_ptr<Index>*, int, int> >& op() const { return op_; };
     std::list<std::tuple<std::shared_ptr<Index>*, int, int> >& op() { return op_; };

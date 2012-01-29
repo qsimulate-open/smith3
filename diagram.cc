@@ -220,10 +220,52 @@ void Diagram::active() {
 
 
 bool Diagram::permute() {
+print();
+  pair<bool, double> a = op_.back()->permute();
+print();
   return false;
 }
+
+
 
 
 bool Diagram::identical(shared_ptr<Diagram> o) const {
-  return false;
+
+  bool out = true;
+  // first, they should be same size
+  if (op_.size() != o->op().size()) out = false;
+  // second, each indices should be the same (spin is not checked here)
+  if (out) {
+    for (auto i = op_.begin(), j = o->op().begin(); i != op_.end(); ++i, ++j) out &= (*i)->identical(*j);
+  }
+  // then, we check spins.
+  if (out) {
+    list<shared_ptr<Index> > act = active_indices();
+    list<shared_ptr<Index> > oact = o->active_indices();
+    map<shared_ptr<Spin>, shared_ptr<Spin> > myo;
+    if (act.size() != oact.size()) {
+      out = false;
+    } else {
+      for (auto i = act.begin(), j = oact.begin(); i != act.end(); ++i, ++j) {
+        assert((*i)->identical(*j)); 
+        shared_ptr<Spin> s = (*i)->spin();
+        shared_ptr<Spin> os = (*j)->spin();
+        auto iter = myo.find(s);
+        if (myo.end() != iter) {
+          // if s appears for the first time, register it
+          myo.insert(make_pair(s,os));
+        } else {
+          if (os != iter->second) {
+            out =false;
+            break;
+          }
+        }
+      }
+    }
+  } 
+
+  return out;
 }
+
+
+
