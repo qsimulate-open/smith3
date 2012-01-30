@@ -14,7 +14,7 @@ class Equation {
     // list of diagrams
     std::list<std::shared_ptr<Diagram> > diagram_;
     // internal function used by factorize()
-    void factorize_(const bool);
+    void duplicates_(const bool);
 
   public:
     Equation(std::shared_ptr<Diagram>);
@@ -25,9 +25,11 @@ class Equation {
     // active parts are processed
     void active();
     // identifys the same terms
-    void factorize();
+    void duplicates();
     // refresh indices in each diagram
     void refresh_indices();
+
+    std::list<std::shared_ptr<Diagram> > diagram() { return diagram_; };
 
 };
 

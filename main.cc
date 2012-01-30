@@ -9,6 +9,7 @@
 #include <iostream>
 #include <list>
 #include "equation.h"
+#include "tree.h"
 
 using namespace std;
 
@@ -25,8 +26,11 @@ int main() {
 
   shared_ptr<Diagram> di(new Diagram(d));
   shared_ptr<Equation> eq(new Equation(di));
-  eq->factorize();
+  eq->duplicates();
   eq->active();
   eq->print();
+
+  shared_ptr<Tree> res(new Tree(eq));
+  res->print();
 
 }

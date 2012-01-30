@@ -41,6 +41,8 @@ class Diagram {
     // get functions
     double& fac() { return fac_; };
     const double fac() const { return fac_; };
+    std::shared_ptr<Active> rdm() { return rdm_; };
+    bool dagger() const { return dagger_; };
 
     // careful returns a const reference
     const std::list<std::shared_ptr<Op> >& op() const { return op_; };

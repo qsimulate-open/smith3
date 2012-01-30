@@ -49,15 +49,15 @@ void Equation::refresh_indices() {
 }
 
 // find identical terms
-void Equation::factorize() {
-  factorize_(false);
+void Equation::duplicates() {
+  duplicates_(false);
   refresh_indices();
   // TODO this is only valid for projection up to doubles
   // For any-order algorithm, we need to use a generic algorithm.
-  factorize_(true);
+  duplicates_(true);
 }
 
-void Equation::factorize_(const bool proj) {
+void Equation::duplicates_(const bool proj) {
   list<list<shared_ptr<Diagram> >::iterator> rm;
   for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
     bool found = false;
