@@ -145,43 +145,56 @@ void RDM::sort() {
   while (!done()) {
 
     list<shared_ptr<Index> > buf;
-
-    for (auto i = index_.begin(); i != index_.end(); ++i) {
-      // now we have a non-daggered opeartor; getting the current spin
-      shared_ptr<Spin> cs = (*i)->spin();
-
-      // first find an unprocessed non-daggered operator, if not, push_back and continue
-      if ((*i)->dagger() || done_spin.end() != find(done_spin.begin(), done_spin.end(), cs)) {
-        buf.push_back(*i);
-
+    auto i = index_.begin();
+    // continue to spin which is not processed
+    for (; i != index_.end(); ++i) {
+      if (find(done_spin.begin(), done_spin.end(), (*i)->spin()) != done_spin.end()) {
+        buf.push_back(*i); 
       } else {
+        break;
+      }
+    }
+    {
+      shared_ptr<Spin> cs = (*i)->spin();
+      const bool dagger = (*i)->dagger();
+      auto j = i;
+      int cnt = 0;
+      bool found = false;
 
-        // first check if daggered operator with the same spin is already in the left side; if so continue
-        bool done_same_spin = false;
-        for (auto j = buf.begin(); j != buf.end(); ++j) done_same_spin = (*j)->spin() == cs;
-        if (done_same_spin) continue;
-
-        // then move it to a place 
-        // need to go through a+ with the same spin, and a+ and a in done_spin. 
-        auto j = i; ++j;
-
-        // int cnt is for the determination of sign changes
-        for (int cnt = 0; j != index_.end(); ++j, ++cnt) {
-          buf.push_back(*j);
-
-          // if (*j) has the same spin, set the flag to true.
-          if ((*j)->spin() == cs) { 
-            buf.push_back(*i);
-            fac_ *= cnt&1 ? 1 : -1;
+      if (dagger) {
+        // if dagger, move it to right before the nondagger of the same spin
+        for (++j; j != index_.end(); ++j) {
+          if ((*j)->spin() == cs) {
+            buf.push_back(*i); 
+            buf.push_back(*j); 
+            assert(!(*j)->dagger()); 
+            found = true;
+          } else {
+            buf.push_back(*j); 
+            if (!found) ++cnt;
+          }
+        }
+      } else {
+        // if nodagger, move it to right after the dagger of the same spin
+        for (++j; j != index_.end(); ++j) {
+          if ((*j)->spin() == cs) {
+            buf.push_back(*j);
+            assert((*j)->dagger()); 
+            buf.push_back(*i); 
+            found = true;
+          } else {
+            buf.push_back(*j); 
+            if (!found) ++cnt;
           }
         }
       }
-
-      // register this spin
+      fac_ *= cnt&1 ? 1 : -1;
       done_spin.push_back(cs);
-      break;
     }
-    assert(index_.size() == buf.size());
+    if (index_.size() != buf.size()) {
+      for (auto z = buf.begin(); z != buf.end(); ++z) (*z)->print();
+      throw logic_error("RDM::sort()");
+    }
     index_ = buf;
   }
 }
