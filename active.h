@@ -33,6 +33,7 @@ class RDM {
     ~RDM() {};
 
     void print(const std::string& indent = "") const;
+    // sort indices so that it will be 0+0 1+1 ... (spin ordering is arbitrary)
     void sort();
 
     std::shared_ptr<RDM> copy() const;
@@ -40,9 +41,13 @@ class RDM {
     // returns private members
     double factor() const { return fac_; };
     double& fac() { return fac_; };
-    const std::list<std::shared_ptr<Index> >& index() const { return index_; };
+    // returns a reference of index_
     std::list<std::shared_ptr<Index> >& index() { return index_; };
+    // returns a const reference of index_
+    const std::list<std::shared_ptr<Index> >& index() const { return index_; };
+    // returns a const reference of delta_
     const std::list<std::pair<std::shared_ptr<Index>, std::shared_ptr<Index> > >& delta() const { return delta_; };
+    // returns a reference of delta_
     std::list<std::pair<std::shared_ptr<Index>, std::shared_ptr<Index> > >& delta() { return delta_; };
 
     // returns if this is in the final form

@@ -75,16 +75,8 @@ class Op {
     const std::shared_ptr<Spin>* rho_ptr(const int i) const { return &rho_.at(i); };
     std::shared_ptr<Spin>* rho_ptr(const int i) { return &rho_.at(i); };
 
-#if 0
-    std::shared_ptr<Index> a() const { return a_; };
-    std::shared_ptr<Index> b() const { return b_; };
-    std::shared_ptr<Index> c() const { return c_; };
-    std::shared_ptr<Index> d() const { return d_; };
-#endif
-
     const std::list<std::tuple<std::shared_ptr<Index>*, int, int> >& op() const { return op_; };
     std::list<std::tuple<std::shared_ptr<Index>*, int, int> >& op() { return op_; };
-
 
     // CAUTION:: this function returns the first daggered operator
     //           **AND** deletes the corresponding entry from this->op_.
