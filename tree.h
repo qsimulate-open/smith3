@@ -3,8 +3,8 @@
 // Date   : Jan 2012
 //
 
-#ifndef __TENSOR_H
-#define __TENSOR_H
+#ifndef __TREE_H
+#define __TREE_H
 
 #include <memory>
 #include "equation.h"

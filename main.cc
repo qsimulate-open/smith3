@@ -17,12 +17,12 @@ int main() {
 
   shared_ptr<Op> proj(new Op("proj", "c", "c", "x", "x"));
   shared_ptr<Op> f(new Op("f", "g", "g"));
-  shared_ptr<Op> T(new Op("T", "x", "x", "x", "c"));
+  shared_ptr<Op> T(new Op("T", "x", "x", "c", "c"));
   shared_ptr<Op> H(new Op("H", "g", "g", "g", "g"));
 
   list<shared_ptr<Op> > d;
   d.push_back(proj);
-#if 0
+#if 1
   d.push_back(f);
   d.push_back(T);
 #else
@@ -33,7 +33,6 @@ int main() {
   shared_ptr<Equation> eq(new Equation(di));
   eq->duplicates();
   eq->active();
-  eq->print();
 
   shared_ptr<Tree> res(new Tree(eq));
   res->print();

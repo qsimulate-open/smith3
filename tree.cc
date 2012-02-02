@@ -12,6 +12,7 @@ Tree::Tree(shared_ptr<Equation> eq) {
   list<shared_ptr<Diagram> > d = eq->diagram();
   for (auto i = d.begin(); i != d.end(); ++i) {
     shared_ptr<ListTensor> tmp(new ListTensor(*i));
+    tmp->absorb_all_internal();
     tensor_.push_back(tmp);
   }
 
@@ -20,11 +21,8 @@ Tree::Tree(shared_ptr<Equation> eq) {
 
 
 void Tree::print() const {
-
-  for (auto i = tensor_.begin(); i != tensor_.end(); ++i) {
+  for (auto i = tensor_.begin(); i != tensor_.end(); ++i)
     (*i)->print();
-  }
-
 }
 
 

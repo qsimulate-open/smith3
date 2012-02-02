@@ -273,3 +273,18 @@ void Active::print(const string& indent) const {
 }
 
 
+list<shared_ptr<Index> > Active::index() {
+  // first find RDM object that does not have any delta functions
+  bool done = false;
+  auto j = rdm_.begin();
+  for (auto i = rdm_.begin(); i != rdm_.end(); ++i) {
+    if (!done && (*i)->delta().size() == 0) {
+      done = true;
+      j = i; 
+    } else if ((*i)->delta().size() == 0) {
+      throw logic_error("I think this won't happen. Active::index()");
+    }
+  }
+  return (*j)->index();
+}
+

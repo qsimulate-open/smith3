@@ -69,6 +69,7 @@ class Active {
     ~Active() {};
 
     void print(const std::string& indent = "") const;
+    std::list<std::shared_ptr<Index> > index();
 };
 
 #endif
