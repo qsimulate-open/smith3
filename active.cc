@@ -273,7 +273,7 @@ void Active::print(const string& indent) const {
 }
 
 
-list<shared_ptr<Index> > Active::index() {
+const list<shared_ptr<Index> > Active::index() const {
   // first find RDM object that does not have any delta functions
   bool done = false;
   auto j = rdm_.begin();
@@ -287,4 +287,5 @@ list<shared_ptr<Index> > Active::index() {
   }
   return (*j)->index();
 }
+
 

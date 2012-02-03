@@ -1,0 +1,3 @@
+* Reorder tensors so that it minimizes the cost:
+    It will be VERY important for non-linear Ansatz.
+    For the time being, I will go without it.

@@ -56,6 +56,9 @@ class RDM {
 
     // One index is going to be annihilated. done is updated inside the function
     std::list<std::shared_ptr<RDM> > reduce_one(std::list<int>& done) const;
+
+    // generate a code
+    std::string str() const;
 };
 
 
@@ -64,12 +67,16 @@ class Active {
     std::list<std::shared_ptr<RDM> > rdm_;
     void reduce(std::shared_ptr<RDM> in);
 
+    mutable int count_;
+
   public:
     Active(const std::list<std::shared_ptr<Index> >& in);
     ~Active() {};
 
     void print(const std::string& indent = "") const;
-    std::list<std::shared_ptr<Index> > index();
+    const std::list<std::shared_ptr<Index> > index() const;
+
+    std::string generate() const;
 };
 
 #endif

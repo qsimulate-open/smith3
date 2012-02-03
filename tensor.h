@@ -50,6 +50,7 @@ class Tensor {
 
     void merge(std::shared_ptr<Tensor> o);
 
+    std::string generate() const;
 };
 
 #endif

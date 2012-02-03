@@ -29,6 +29,8 @@ class ListTensor {
     void absorb_all_internal();
 
     int length() const { return list_.size(); };
+
+    std::string generate() const;
 };
 
 

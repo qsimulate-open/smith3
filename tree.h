@@ -23,6 +23,8 @@ class Tree {
     bool done() const;
     void print() const;
 
+    std::string generate() const;
+
 };
 
 

@@ -37,4 +37,5 @@ int main() {
   shared_ptr<Tree> res(new Tree(eq));
   res->print();
 
+  cout << res->generate() << endl;
 }
