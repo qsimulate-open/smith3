@@ -35,7 +35,8 @@ std::string Tensor::str() const {
   ss << label_ << "(";
   for (auto i = index_.begin(); i != index_.end(); ++i) {
     // we don't need the spin part here
-    ss << (*i)->str(false) << " ";
+    if (i != index_.begin()) ss << ", ";
+    ss << (*i)->str(false);
   }
   ss << ") ";
 

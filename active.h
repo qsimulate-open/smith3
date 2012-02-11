@@ -15,8 +15,12 @@
 #include <list>
 #include <memory>
 #include "op.h"
+#include "tensor.h"
+
+class Tensor;
 
 class RDM {
+  friend class Tensor;
   protected:
     // prefactor
     double fac_;
@@ -58,16 +62,17 @@ class RDM {
     std::list<std::shared_ptr<RDM> > reduce_one(std::list<int>& done) const;
 
     // generate a code
-    std::string str() const;
+    std::string str(std::string target, std::shared_ptr<Tensor> merged) const;
 };
 
 
 class Active {
+  friend class Tensor;
   protected:
     std::list<std::shared_ptr<RDM> > rdm_;
     void reduce(std::shared_ptr<RDM> in);
 
-    mutable int count_;
+    mutable int count__;
 
   public:
     Active(const std::list<std::shared_ptr<Index> >& in);
@@ -76,7 +81,7 @@ class Active {
     void print(const std::string& indent = "") const;
     const std::list<std::shared_ptr<Index> > index() const;
 
-    std::string generate() const;
+    std::string generate(std::shared_ptr<Tensor> merged) const;
 };
 
 #endif

@@ -6,32 +6,43 @@
 #include "constants.h"
 #include "active.h"
 #include <sstream>
+#include <algorithm>
 #include <iomanip>
 
 using namespace std;
 
-static int count;
+static int count_;
 
 // generator for Active part
-string Active::generate() const {
+string Active::generate(shared_ptr<Tensor> merged) const {
   stringstream ss;
 
-  if (!count) ss << header << endl << endl;
-  count_ = count;
+  if (!count_) ss << header << endl << endl;
+  count__ = count_;
 
   // get target indices
   const list<shared_ptr<Index> > in = index(); 
-  const int rank = in.size();
+  list<shared_ptr<Index> > m;
+  if (merged) m = merged->index();
 
-  if (!count) ss << "#include \"active_base.h\"" << endl;
+  const int rank = in.size() - m.size();
+
+  if (!count_) ss << "#include \"active_base.h\"" << endl;
   ss << "\
-class Active_" << count << " : public Active_base {\n\
+class Active_" << count_ << " : public Active_base {\n\
   public:\n\
-    Active_" << count << "() : Active_base(" << rank << ") {\n\
-      // Here nact**" << count << " storage is already created in unique_ptr<double[]> data_.\n\
+    Active_" << count_ << "() : Active_base(" << rank << ") {\n\
+      // Here nact**" << rank << " storage is already created in unique_ptr<double[]> data_.\n\
       // Index ordering is ";
-  for (auto i = in.begin(); i != in.end(); ++i) ss << (*i)->str(false) << " "; 
-  ss << endl;
+
+  stringstream target;
+  for (auto i = in.begin(); i != in.end(); ++i) {
+    if (find(m.begin(), m.end(), *i) == m.end()) {
+      if (target.str().size()) target << ", ";
+      target << (*i)->str(false);
+    }
+  }
+  ss << target.str() << endl;
 
   // making loops
   string indent = "      ";
@@ -43,24 +54,23 @@ class Active_" << count << " : public Active_base {\n\
   }
 
   for (auto i = rdm_.begin(); i != rdm_.end(); ++i) { 
-    ss << indent << (*i)->str() << endl;
+    ss << indent << (*i)->str(target.str(), merged) << endl;
   }
-  ss << indent << "++cnt" << endl; 
   for (auto i = tt.rbegin(); i != tt.rend(); ++i) ss << (*i);
   ss << "\
     };\n\
-    ~Active_" << count << "() {};\n";
+    ~Active_" << count_ << "() {};\n";
   
   ss << "\
 };" << endl << endl;
 
-  ++count;
+  ++count_;
   return ss.str();
 }
 
 
 
-string RDM::str() const {
+string RDM::str(string target, shared_ptr<Tensor> m) const {
   stringstream ss;
   if (delta_.size()) {
     ss << "if (";
@@ -71,14 +81,18 @@ string RDM::str() const {
     }
     ss << ") ";
   }
-  ss << "data_[cnt] += " << fixed << setw(5) << setprecision(2) << fac_ << " * gamma";
+  ss << "data(" << target << ") += " << fixed << setw(5) << setprecision(2) << fac_ << " * gamma";
   ss << index_.size()/2 << "(";
   int j = index_.size()-1;
   for (auto i = index_.begin(); i != index_.end(); ++i, --j) {
     ss << (*i)->str(false);
     if (j) ss << ", ";
   }
-  ss << ");";
+  if (m) {
+    ss << ") * " << m->str();
+  } else {
+    ss << ");";
+  }
   return ss.str();
 }
 

@@ -11,7 +11,7 @@ using namespace std;
 string Tensor::generate() const {
   stringstream ss;
   // active should be generated here.
-  if (active_) ss << active_->generate();
+  if (active_) ss << active_->generate(merged_);
 
   return ss.str();
 }

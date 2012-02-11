@@ -15,6 +15,8 @@ class Active_base {
   public:
     Active_base(const int n) {};
 
+    double& data() {};
+
 };
 
 #endif
