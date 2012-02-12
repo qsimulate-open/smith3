@@ -214,10 +214,13 @@ bool Diagram::consistent_indices() const {
 void Diagram::active() {
   // Index should be updated.
   refresh_indices();
-  // Performs Wick in constructor of an Active object
-  shared_ptr<Active> tmp(new Active(active_indices()));
-  // Sets to member
-  rdm_ = tmp; 
+  list<shared_ptr<Index> >  ac = active_indices();
+  if (ac.size()) {
+    // Performs Wick in constructor of an Active object
+    shared_ptr<Active> tmp(new Active(ac));
+    // Sets to member
+    rdm_ = tmp; 
+  }
 }
 
 

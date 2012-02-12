@@ -15,9 +15,9 @@ using namespace std;
 
 int main() {
 
-  shared_ptr<Op> proj(new Op("proj", "x", "x", "a", "a"));
+  shared_ptr<Op> proj(new Op("proj", "c", "c", "a", "a"));
   shared_ptr<Op> f(new Op("f", "g", "g"));
-  shared_ptr<Op> T(new Op("T", "a", "a", "x", "x"));
+  shared_ptr<Op> T(new Op("T", "a", "a", "c", "c"));
   shared_ptr<Op> H(new Op("H", "g", "g", "g", "g"));
 
   list<shared_ptr<Op> > d;
