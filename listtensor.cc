@@ -55,3 +55,10 @@ void ListTensor::absorb_all_internal() {
 }
 
 
+shared_ptr<ListTensor> ListTensor::rest() const {
+  list<shared_ptr<Tensor> > r = list_; 
+  r.pop_front();     
+  shared_ptr<ListTensor> out(new ListTensor(fac_, r, dagger_));
+  return out;
+}
+

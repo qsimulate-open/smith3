@@ -39,6 +39,7 @@ class Tensor {
   public:
     Tensor(const std::shared_ptr<Op> op);
     Tensor(const std::shared_ptr<Active> active);
+    Tensor() {assert(false);};
     ~Tensor() {};
 
     std::list<std::shared_ptr<Index> >& index() { return index_; };
@@ -47,9 +48,15 @@ class Tensor {
     std::string str() const;
     void set_factor(const double a) { factor_ = a; };
 
+    double factor() const { return factor_; };
+    std::string label() const { return label_; };
     std::shared_ptr<Active> active() { return active_; };
+    const std::shared_ptr<Active> active() const { return active_; };
 
     bool all_active() const;
+
+    // used for factorization of trees
+    bool operator==(const Tensor& o) const;
 
     void merge(std::shared_ptr<Tensor> o);
 

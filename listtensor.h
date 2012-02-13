@@ -29,6 +29,10 @@ class ListTensor {
     void absorb_all_internal();
 
     int length() const { return list_.size(); };
+    std::shared_ptr<Tensor> front() const { return list_.front(); };
+    std::shared_ptr<ListTensor> rest() const ;
+
+    bool dagger() const { return dagger_; };
 
     std::string generate() const;
 };

@@ -76,3 +76,19 @@ void Tensor::merge(shared_ptr<Tensor> a) {
   }
 }
 
+
+bool Tensor::operator==(const Tensor& o) const {
+  bool out = true;
+  out &= label_ == o.label();
+  out &= factor_ == o.factor();
+  // TODO for the time being, active is not assumed to be factorized
+  if (active() || o.active()) out = false;
+  // index
+  out &= index_.size() == o.index().size();
+  if (out) {
+    for (auto i = index_.begin(), j = o.index().begin(); i != index_.end(); ++i, ++j) {
+      out &= (*i)->identical(*j);
+    } 
+  }
+  return out;
+}

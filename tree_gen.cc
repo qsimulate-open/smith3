@@ -10,9 +10,11 @@ using namespace std;
 
 string Tree::generate() const {
   stringstream ss;
+#if 0
   for (auto i = tensor_.begin(); i != tensor_.end(); ++i) {
     ss << (*i)->generate();
   }
+#endif
   return ss.str();
 }
 
