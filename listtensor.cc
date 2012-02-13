@@ -55,6 +55,32 @@ void ListTensor::absorb_all_internal() {
 }
 
 
+shared_ptr<Tensor> ListTensor::target() const {
+  list<shared_ptr<Index> > ind;
+  for (auto t = list_.begin(); t != list_.end(); ++t) {
+    list<shared_ptr<Index> > index = (*t)->index();
+    for (auto j = index.begin(); j != index.end(); ++j) {
+      bool found = false;
+      list<shared_ptr<Index> >::iterator remove;
+      for (auto i = ind.begin(); i != ind.end(); ++i) {
+        if ((*i)->num() == (*j)->num()) {
+          found = true;
+          remove = i;
+          break;
+        }
+      }
+      if (found) {
+        ind.erase(remove);
+      } else {
+        ind.push_back(*j);
+      }
+    }
+  }
+  shared_ptr<Tensor> t(new Tensor(1.0, "I", ind));
+  return t;
+}
+
+
 shared_ptr<ListTensor> ListTensor::rest() const {
   list<shared_ptr<Tensor> > r = list_; 
   r.pop_front();     

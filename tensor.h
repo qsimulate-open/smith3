@@ -37,15 +37,17 @@ class Tensor {
     std::shared_ptr<Tensor> merged_;
 
   public:
+    Tensor(const double& d, const std::string& l, const std::list<std::shared_ptr<Index> >& i)
+      : factor_(d), label_(l), index_(i) {};
     Tensor(const std::shared_ptr<Op> op);
     Tensor(const std::shared_ptr<Active> active);
-    Tensor() {assert(false);};
     ~Tensor() {};
 
     std::list<std::shared_ptr<Index> >& index() { return index_; };
     const std::list<std::shared_ptr<Index> >& index() const { return index_; };
 
     std::string str() const;
+    void print(std::string indent = "") const { std::cout << indent << str() << std::endl; };
     void set_factor(const double a) { factor_ = a; };
 
     double factor() const { return factor_; };

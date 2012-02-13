@@ -31,6 +31,7 @@ class ListTensor {
     int length() const { return list_.size(); };
     std::shared_ptr<Tensor> front() const { return list_.front(); };
     std::shared_ptr<ListTensor> rest() const ;
+    std::shared_ptr<Tensor> target() const;
 
     bool dagger() const { return dagger_; };
 

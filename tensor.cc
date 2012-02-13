@@ -38,9 +38,9 @@ std::string Tensor::str() const {
     if (i != index_.begin()) ss << ", ";
     ss << (*i)->str(false);
   }
-  ss << ") ";
+  ss << ")";
 
-  if (merged_) ss << "<< " << merged_->str();
+  if (merged_) ss << " << " << merged_->str();
   return ss.str();
 }
 
