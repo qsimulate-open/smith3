@@ -20,7 +20,7 @@ BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor
 
 
 void BinaryContraction::print() const {
-  cout << target_->str() << " = " << tensor_->str() << endl;;
+  cout << target_->str() << " = " << tensor_->str() << " * " << subtree_.front()->target()->str() << endl;
   for (auto i = subtree_.begin(); i != subtree_.end(); ++i) {
     (*i)->print();
   }

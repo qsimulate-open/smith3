@@ -44,6 +44,8 @@ class Tree {
     bool done() const;
     void print() const;
 
+    std::shared_ptr<Tensor> target() const { return target_; };
+
     std::string generate() const;
 
 };
