@@ -33,6 +33,7 @@ class ListTensor {
     std::shared_ptr<ListTensor> rest() const ;
     std::shared_ptr<Tensor> target() const;
 
+    double fac() const { return fac_; };
     bool dagger() const { return dagger_; };
 
     std::string generate() const;

@@ -5,6 +5,7 @@
 
 #include "tensor.h"
 #include <sstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -31,7 +32,7 @@ Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0) {
 
 std::string Tensor::str() const {
   stringstream ss;
-  if (factor_ != 1.0) ss << "<" << factor_ << ">"; 
+  if (factor_ != 1.0) ss << " " << fixed << setw(4) << setprecision(2) << factor_ << " "; 
   ss << label_ << "(";
   for (auto i = index_.begin(); i != index_.end(); ++i) {
     // we don't need the spin part here

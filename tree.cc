@@ -33,7 +33,9 @@ Tree::Tree(const shared_ptr<ListTensor> l) {
     shared_ptr<BinaryContraction> bc(new BinaryContraction(target_, l)); 
     bc_.push_back(bc);
   } else {
-    op_.push_back(l->front()); 
+    shared_ptr<Tensor> t = l->front();
+    t->set_factor(l->fac());
+    op_.push_back(t); 
   }
 }
 
