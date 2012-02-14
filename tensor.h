@@ -41,6 +41,7 @@ class Tensor {
       : factor_(d), label_(l), index_(i) {};
     Tensor(const std::shared_ptr<Op> op);
     Tensor(const std::shared_ptr<Active> active);
+    Tensor() {};
     ~Tensor() {};
 
     std::list<std::shared_ptr<Index> >& index() { return index_; };
