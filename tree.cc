@@ -5,6 +5,7 @@
 
 #include "tree.h"
 #include <algorithm>
+#include <stdexcept>
 
 using namespace std;
 
@@ -27,11 +28,6 @@ void BinaryContraction::print() const {
   for (auto i = subtree_.begin(); i != subtree_.end(); ++i) {
     (*i)->print();
   }
-}
-
-
-void BinaryContraction::factorize() {
-  for (auto i = subtree_.begin(); i != subtree_.end(); ++i) (*i)->factorize();
 }
 
 
@@ -97,7 +93,7 @@ void Tree::print() const {
   for (int i = 0; i != depth(); ++i) indent += "  ";
   if (target_) {
     for (auto i = op_.begin(); i != op_.end(); ++i)
-      cout << indent << target_->str() << "+= " << (*i)->str() << dagger_ << endl;
+      cout << indent << target_->str() << " += " << (*i)->str() << (dagger_ ? " *" : "") << endl;
   }
   for (auto i = bc_.begin(); i != bc_.end(); ++i)
     (*i)->print();
@@ -114,18 +110,46 @@ bool Tree::done() const {
 }
 
 
+void BinaryContraction::factorize() {
+  list<list<shared_ptr<Tree> >::iterator> done;
+  // and then merge subtrees
+  for (auto i = subtree_.begin(); i != subtree_.end(); ++i) {
+    if (find(done.begin(), done.end(), i) != done.end()) continue;
+    auto j = i; ++j;
+    for ( ; j != subtree_.end(); ++j) {
+      if (find(done.begin(), done.end(), j) != done.end()) continue;
+      if ((*i)->merge(*j)) done.push_back(j);
+    }
+  }
+  for (auto i = done.begin(); i != done.end(); ++i) subtree_.erase(*i);
+  for (auto i = subtree_.begin(); i != subtree_.end(); ++i) (*i)->factorize();
+}
+
+
+bool Tree::merge(shared_ptr<Tree> o) {
+  bool out = false;
+  if (o->bc_.size() > 0) { 
+    shared_ptr<Tensor> a = bc_.front()->tensor();  
+    shared_ptr<Tensor> b = o->bc_.front()->tensor();
+    if (*a == *b) {
+      out = true;
+      bc_.insert(bc_.end(), o->bc_.begin(), o->bc_.end());
+      for (auto i = bc_.begin(); i != bc_.end(); ++i) (*i)->set_target(target_);
+    }
+  } else if (o->op_.size() > 0) {
+    out = true;
+    op_.insert(op_.end(), o->op_.begin(), o->op_.end());
+  }
+  return out;
+}
+
+
 void Tree::factorize() {
   list<list<shared_ptr<BinaryContraction> >::iterator> done;
-#if 0
-  for (auto i = bc_.begin(); i != bc_.end(); ++i) {
-    (*i)->factorize();
-  }
-#endif
   for (auto i = bc_.begin(); i != bc_.end(); ++i) {
     if (find(done.begin(), done.end(), i) != done.end()) continue;
     auto j = i; ++j;
     for ( ; j != bc_.end(); ++j) {
-// TODO check dagger
       if (*(*i)->tensor() == *(*j)->tensor() && (*i)->dagger() == (*j)->dagger()) {
         done.push_back(j);
         (*i)->subtree().insert((*i)->subtree().end(), (*j)->subtree().begin(), (*j)->subtree().end()); 
@@ -134,8 +158,12 @@ void Tree::factorize() {
   }
   for (auto i = done.begin(); i != done.end(); ++i)
     bc_.erase(*i);
+  for (auto i = bc_.begin(); i != bc_.end(); ++i)
+    (*i)->factorize();
 }
 
 
 int BinaryContraction::depth() const { return parent_->depth(); }
 int Tree::depth() const { return parent_ ? parent_->parent()->depth()+1 : 0; }
+
+

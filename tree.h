@@ -32,6 +32,7 @@ class BinaryContraction {
     std::list<std::shared_ptr<Tree> >& subtree() { return subtree_; };
     std::shared_ptr<Tensor> tensor() { return tensor_; };
     std::shared_ptr<Tensor> target() { return target_; };
+    void set_target(std::shared_ptr<Tensor> o) { target_ = o; };
     void print() const;
 
     void factorize();
@@ -78,6 +79,8 @@ class Tree : public std::enable_shared_from_this<Tree> {
 
     // factorize (i.e., perform factorize in BinaryContraction)
     void factorize();
+
+    bool merge(std::shared_ptr<Tree> o);
 
     int depth() const;
 
