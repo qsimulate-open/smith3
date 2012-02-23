@@ -47,6 +47,11 @@ class Tensor {
     std::list<std::shared_ptr<Index> >& index() { return index_; };
     const std::list<std::shared_ptr<Index> >& index() const { return index_; };
 
+    int rank() const {
+      if (index_.size() & 1) throw std::logic_error("Tensor::rank() cannot be called by DF tensors so far.");
+      return index_.size() >> 1;
+    };
+
     std::string str() const;
     void print(std::string indent = "") const { std::cout << indent << str() << std::endl; };
     void set_factor(const double a) { factor_ = a; };

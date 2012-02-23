@@ -32,12 +32,13 @@ class BinaryContraction {
     std::list<std::shared_ptr<Tree> >& subtree() { return subtree_; };
     std::shared_ptr<Tensor> tensor() { return tensor_; };
     std::shared_ptr<Tensor> target() { return target_; };
-    void set_target(std::shared_ptr<Tensor> o) { target_ = o; };
     void print() const;
 
     void factorize();
     void set_parent(Tree* o) { parent_ = o; };
     void set_parent_subtree();
+    void set_target_rec();
+    void set_target(std::shared_ptr<Tensor> o) { target_ = o; };
 
     bool dagger() const;
     Tree* parent() { return parent_; };
@@ -80,9 +81,19 @@ class Tree : public std::enable_shared_from_this<Tree> {
     // factorize (i.e., perform factorize in BinaryContraction)
     void factorize();
 
+    // tidy up target tensors. (for some reasons I could not do it on the fly... lazy)
+    void set_target_rec();
+    void set_target(std::shared_ptr<Tensor> o) {
+      target_ = o;
+      for (auto i = bc_.begin(); i != bc_.end(); ++i) (*i)->set_target(o);
+    };
+
     bool merge(std::shared_ptr<Tree> o);
 
     int depth() const;
+
+    // code generators!
+    std::string generate_task_list() const;
 
 };
 

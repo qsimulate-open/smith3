@@ -55,6 +55,7 @@ void ListTensor::absorb_all_internal() {
 }
 
 
+static int target_num__;
 shared_ptr<Tensor> ListTensor::target() const {
   list<shared_ptr<Index> > ind;
   for (auto t = list_.begin(); t != list_.end(); ++t) {
@@ -76,7 +77,10 @@ shared_ptr<Tensor> ListTensor::target() const {
       }
     }
   }
-  shared_ptr<Tensor> t(new Tensor(1.0, "I", ind));
+  stringstream ss;
+  ss << "I" << target_num__;
+  ++target_num__;
+  shared_ptr<Tensor> t(new Tensor(1.0, ss.str(), ind));
   return t;
 }
 

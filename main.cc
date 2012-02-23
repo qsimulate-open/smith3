@@ -37,5 +37,9 @@ int main() {
   shared_ptr<Tree> res(new Tree(eq));
   res->print();
 
+  cout << "-----" << endl;
+  cout << res->generate_task_list() << endl;
+  cout << "-----" << endl;
+
   cout << res->generate() << endl;
 }

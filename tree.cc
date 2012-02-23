@@ -85,6 +85,7 @@ Tree::Tree(shared_ptr<Equation> eq) : parent_(NULL) {
 
   factorize();
   set_parent_sub();
+  set_target_rec();
 }
 
 
@@ -167,3 +168,34 @@ int BinaryContraction::depth() const { return parent_->depth(); }
 int Tree::depth() const { return parent_ ? parent_->parent()->depth()+1 : 0; }
 
 
+void Tree::set_target_rec() {
+  if (!bc_.empty()) {
+    for (auto i = bc_.begin() ; i != bc_.end(); ++i)
+      (*i)->set_target_rec();
+  }
+}
+
+void BinaryContraction::set_target_rec() {
+  if (!subtree_.empty()) {
+    auto i = subtree_.begin();
+    shared_ptr<Tensor> first = (*i)->target();
+    for (++i ; i != subtree_.end(); ++i) {
+      (*i)->set_target(first);
+    }
+    for (i = subtree_.begin() ; i != subtree_.end(); ++i)
+      (*i)->set_target_rec();
+  }
+}
+
+
+static int icnt;
+
+string Tree::generate_task_list() const {
+  stringstream ss;
+  string indent = "       ";
+  string vectensor = "std::vector<std::shared_ptr<Tensor<T> > >";
+  ss << indent << vectensor << " tensor" << icnt
+     << " = vec(" << (target_ ? target_->label() : "r") << bc_.front()->tensor()->rank() << ",";
+
+  return ss.str();
+}
