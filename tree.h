@@ -76,7 +76,10 @@ class Tree : public std::enable_shared_from_this<Tree> {
 
     bool done() const;
     void print() const;
-    int num() const { return num_; };
+    int num() const {
+      if (num_ < 0) throw std::logic_error("it seems that the logic is broken - Tree::num_ is not initialized.");
+      return num_;
+    };
 
     std::shared_ptr<Tensor> target() const { return target_; };
 
