@@ -189,13 +189,50 @@ void BinaryContraction::set_target_rec() {
 
 
 static int icnt;
+// not a good implementation...
+vector<shared_ptr<Tensor> > ii;
+
+static string merge__(vector<shared_ptr<Tensor> > array) {
+  stringstream ss;
+  for (auto i = array.begin(); i != array.end(); ++i)
+    ss << (i != array.begin() ? ", " : "") << (((*i)->label() == "proj") ? "r" : (*i)->label());
+  return ss.str();
+}
 
 string Tree::generate_task_list() const {
   stringstream ss;
   string indent = "       ";
   string vectensor = "std::vector<std::shared_ptr<Tensor<T> > >";
-  ss << indent << vectensor << " tensor" << icnt
-     << " = vec(" << (target_ ? target_->label() : "r") << bc_.front()->tensor()->rank() << ",";
-
+  for (auto i = bc_.begin(); i != bc_.end(); ++i) {
+    vector<shared_ptr<Tensor> > strs = (*i)->tensors_str();
+    for (auto s = strs.begin(); s != strs.end(); ++s) {
+      if (find(ii.begin(), ii.end(), *s) == ii.end() && (*s)->label().find("I") != string::npos) {
+        ii.push_back(*s);
+        ss << (*s)->constructor_str(indent) << endl;
+      }
+    }
+    ss << indent << vectensor << " tensor" << icnt << " = vec(" << merge__(strs) << ");";
+    ss << endl;
+    ++icnt;
+    ss << (*i)->generate_task_list();
+  }
   return ss.str();
+}
+
+
+string BinaryContraction::generate_task_list() const {
+  stringstream ss;
+  for (auto i = subtree_.begin(); i != subtree_.end(); ++i)
+    ss << (*i)->generate_task_list();
+  return ss.str();
+}
+
+
+vector<shared_ptr<Tensor> > BinaryContraction::tensors_str() {
+  vector<shared_ptr<Tensor> > out;
+  if (target_) out.push_back(target_);
+  out.push_back(tensor_);
+  if (!subtree_.empty())
+    out.push_back(subtree_.front()->target());
+  return out;
 }

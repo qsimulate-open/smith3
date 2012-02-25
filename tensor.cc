@@ -93,3 +93,19 @@ bool Tensor::operator==(const Tensor& o) const {
   }
   return out;
 }
+
+
+string Tensor::constructor_str(std::string indent) const {
+  stringstream ss;
+  ss << indent << "std::vector<IndexRange> " << label_ << "_index";
+  if (index_.empty()) {
+    ss << ";" << endl;
+  } else {
+    ss << " = vec(";
+    for (auto i = index_.begin(); i != index_.end(); ++i)
+      ss << (i != index_.begin() ? ", " : "") << (*i)->generate();
+    ss << ");" << endl;
+  }
+  ss << indent << "std::shared_ptr<Tensor<T> > " << label_ << "(new Tensor<T>(" << label_ << "_index, false));";
+  return ss.str();
+}

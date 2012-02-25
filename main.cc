@@ -16,15 +16,15 @@ using namespace std;
 int main() {
 
   shared_ptr<Op> proj(new Op("proj", "c", "c", "a", "a"));
-  shared_ptr<Op> f(new Op("f", "g", "g"));
-  shared_ptr<Op> T(new Op("T", "a", "a", "c", "c"));
+  shared_ptr<Op> f(new Op("f1", "g", "g"));
+  shared_ptr<Op> t(new Op("t2", "a", "a", "c", "c"));
   shared_ptr<Op> H(new Op("H", "g", "g", "g", "g"));
 
   list<shared_ptr<Op> > d;
   d.push_back(proj);
 #if 1
   d.push_back(f);
-  d.push_back(T);
+  d.push_back(t);
 #else
   d.push_back(H);
 #endif

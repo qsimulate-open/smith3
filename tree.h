@@ -45,6 +45,9 @@ class BinaryContraction {
 
     int depth() const;
 
+    std::vector<std::shared_ptr<Tensor> > tensors_str();
+    std::string generate_task_list() const;
+
 };
 
 

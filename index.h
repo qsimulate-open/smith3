@@ -77,6 +77,20 @@ class Index {
     bool identical(std::shared_ptr<Index> o) const {
       return num() == o->num() && label() == o->label();
     };
+
+    std::string generate() const {
+      std::string out;
+      if (label_ == "c") {
+        out = "this->closed_";
+      } else if (label_ == "a") {
+        out = "this->virt_";
+      } else if (label_ == "x") {
+        out = "this->active_";
+      } else {
+        throw std::runtime_error("unkonwn index type in Index::generate()");
+      }
+      return out;
+    };
 };
 
 

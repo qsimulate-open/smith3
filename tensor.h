@@ -38,7 +38,7 @@ class Tensor {
 
   public:
     Tensor(const double& d, const std::string& l, const std::list<std::shared_ptr<Index> >& i)
-      : factor_(d), label_(l), index_(i) {};
+      : factor_(d), label_(l), index_(i) { };
     Tensor(const std::shared_ptr<Op> op);
     Tensor(const std::shared_ptr<Active> active);
     Tensor() {};
@@ -69,6 +69,7 @@ class Tensor {
     void merge(std::shared_ptr<Tensor> o);
 
     std::string generate() const;
+    std::string constructor_str(std::string indent) const;
 };
 
 #endif
