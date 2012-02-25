@@ -1,7 +1,28 @@
 //
-// Author : Toru Shiozaki
-// Date   : Jan 2012
+// SMITH3 - generates spin-free multireference electron correlation programs.
+// Filename: tree.cc
+// Copyright (C) 2012 Toru Shiozaki
 //
+// Author: Toru Shiozaki <shiozaki@northwestern.edu>
+// Maintainer: Shiozaki group
+//
+// This file is part of the SMITH3 package.
+//
+// The SMITH3 package is free software; you can redistribute it and\/or modify
+// it under the terms of the GNU Library General Public License as published by
+// the Free Software Foundation; either version 2, or (at your option)
+// any later version.
+//
+// The SMITH3 package is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Library General Public License for more details.
+//
+// You should have received a copy of the GNU Library General Public License
+// along with the SMITH3 package; see COPYING.  If not, write to
+// the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+
 
 #include "tree.h"
 #include <algorithm>
@@ -250,15 +271,15 @@ string Tree::generate_task_list() const {
     ss << "class " << tree_name_ << " : public SpinFreeMethod<T>, SMITH_info {" << endl;
     ss << "  protected:" << endl;
     ss << "    std::shared_ptr<Queue<T> > queue_;" << endl;
-    ss << "    std::shared_ptr<Tensor<T> > t2; " << endl;
-    ss << "    std::shared_ptr<Tensor<T> > r2; " << endl;
+    ss << "    std::shared_ptr<Tensor<T> > t2;" << endl;
+    ss << "    std::shared_ptr<Tensor<T> > r;" << endl;
     ss << endl;
 
     ss << "  public:" << endl;
     ss << "    " << tree_name_ << "(std::shared_ptr<Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info(), queue_(new Queue<T>()) {" << endl; 
     ss << indent << "std::vector<IndexRange> index = vec(this->closed_, this->act_, this->virt_);" << endl << endl;
     ss << indent << vectensor << " tensor0 = vec(r);" << endl;
-    ss << indent << "std::shared_ptr<Task0<T> > t0(new Task0<T>(tensor0, index));" << endl << endl;
+    ss << indent << "std::shared_ptr<Task0<T> > task0(new Task0<T>(tensor0, index));" << endl << endl;
     ++icnt;
   }
   for (auto i = bc_.begin(); i != bc_.end(); ++i) {
@@ -272,17 +293,17 @@ string Tree::generate_task_list() const {
       }
     }
     ss << indent << vectensor << " tensor" << icnt << " = vec(" << merge__(strs) << ");" << endl;
-    ss << indent << "std::shared_ptr<Task" << icnt << "<T> > t" << icnt << "(new Task" << icnt << "<T>(tensor" << icnt << ", index));" << endl;
+    ss << indent << "std::shared_ptr<Task" << icnt << "<T> > task" << icnt << "(new Task" << icnt << "<T>(tensor" << icnt << ", index));" << endl;
     // saving a counter to a protected member
     num_ = icnt;
     if (parent_) {
       assert(parent_->parent());
-      ss << indent << "t" << parent_->parent()->num() << "->add_dep(t" << num() << ");" << endl;
+      ss << indent << "task" << parent_->parent()->num() << "->add_dep(task" << num() << ");" << endl;
     } else {
       assert(depth() == 0);
-      ss << indent << "t0->add_dep(t" << num() << ");" << endl;
+      ss << indent << "task0->add_dep(task" << num() << ");" << endl;
     }
-    ss << indent << "queue_->add_task(t" << num() << ");" << endl;
+    ss << indent << "queue_->add_task(task" << num() << ");" << endl;
     ss << endl;
 
     // increment icnt before going to subtrees
@@ -298,9 +319,10 @@ string Tree::generate_task_list() const {
     ss << "      t2->zero();" << endl;
     ss << "      for (int iter = 0; iter != maxiter_; ++iter) {" << endl;
     ss << "        queue_->initialize();" << endl;
-    ss << "        while (!queue_->done()) queue_->next()->compute(); " << endl;
+    ss << "        while (!queue_->done())" << endl;
+    ss << "          queue_->next()->compute();" << endl;
 //  ss << "        std::cout << std::setprecision(10) << std::setw(30) << mp2_energy(t2)/2 << std::endl;" << endl;
-    ss << "        update_amplitude(t2, r2);" << endl;
+    ss << "        update_amplitude(t2, r);" << endl;
     ss << "        print_status();" << endl;
     ss << "      }" << endl;
     ss << "    };" << endl;
