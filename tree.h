@@ -42,6 +42,7 @@ class BinaryContraction {
 
     bool dagger() const;
     Tree* parent() { return parent_; };
+    const Tree* parent() const { return parent_; };
 
     int depth() const;
 
@@ -65,6 +66,9 @@ class Tree : public std::enable_shared_from_this<Tree> {
 
     // TODO raw pointer should be replaced by some better mean
     BinaryContraction* parent_;
+
+    // std::string
+    std::string tree_name_;
 
     // when we do generate, a counter is used to generate a list of tasks.
     mutable int num_;

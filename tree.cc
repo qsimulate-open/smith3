@@ -64,7 +64,7 @@ Tree::Tree(const shared_ptr<ListTensor> l) : num_(-1) {
 }
 
 
-Tree::Tree(shared_ptr<Equation> eq) : parent_(NULL), num_(-1) {
+Tree::Tree(shared_ptr<Equation> eq) : parent_(NULL), num_(-1), tree_name_(eq->name()) {
 
   // First make ListTensor for all the diagrams
   list<shared_ptr<Diagram> > d = eq->diagram();
@@ -201,11 +201,61 @@ static string merge__(vector<shared_ptr<Tensor> > array) {
 
 string Tree::generate_task_list() const {
   stringstream ss;
-  string indent = "       ";
+  string indent = "      ";
   string vectensor = "std::vector<std::shared_ptr<Tensor<T> > >";
   // if this is the top tree, we want to initialize index, as well as to create a task that zeros out the residual vector
   if (depth() == 0) {
-    assert(icnt == 0);
+    assert(icnt == 0 && tree_name_ != "");
+    ss << "//" << endl;
+    ss << "// Newint - Parallel electron correlation program." << endl;
+    ss << "// Filename: " << tree_name_ << ".h" << endl;
+    ss << "// Copyright (C) 2012 Toru Shiozaki" << endl;
+    ss << "//" << endl;
+    ss << "// Author: Toru Shiozaki <shiozaki@northwestern.edu>" << endl;
+    ss << "// Maintainer: Shiozaki group" << endl;
+    ss << "//" << endl;
+    ss << "// This file is part of the Newint package (to be renamed)." << endl;
+    ss << "//" << endl;
+    ss << "// The Newint package is free software; you can redistribute it and/or modify" << endl;
+    ss << "// it under the terms of the GNU Library General Public License as published by" << endl;
+    ss << "// the Free Software Foundation; either version 2, or (at your option)" << endl;
+    ss << "// any later version." << endl;
+    ss << "//" << endl;
+    ss << "// The Newint package is distributed in the hope that it will be useful," << endl;
+    ss << "// but WITHOUT ANY WARRANTY; without even the implied warranty of" << endl;
+    ss << "// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the" << endl;
+    ss << "// GNU Library General Public License for more details." << endl;
+    ss << "//" << endl;
+    ss << "// You should have received a copy of the GNU Library General Public License" << endl;
+    ss << "// along with the Newint package; see COPYING.  If not, write to" << endl;
+    ss << "// the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA." << endl;
+    ss << "//" << endl;
+    ss << "" << endl;
+    ss << "" << endl;
+    ss << "#ifndef __SRC_SMITH_" << tree_name_ << "_H " << endl;
+    ss << "#define __SRC_SMITH_" << tree_name_ << "_H " << endl;
+    ss << "" << endl;
+    ss << "#include <src/smith/spinfreebase.h>" << endl;
+    ss << "#include <src/scf/fock.h>" << endl;
+    ss << "#include <src/util/f77.h>" << endl;
+    ss << "#include <iostream>" << endl;
+    ss << "#include <iomanip>" << endl;
+    ss << "#include <src/smith/queue.h>" << endl;
+    ss << "#include <src/smith/" << tree_name_ << "_task.h>" << endl;
+    ss << "#include <src/smith/smith.h>" << endl;
+    ss << "" << endl;
+    ss << "namespace SMITH {" << endl;
+    ss << "" << endl;
+    ss << "template <typename T>" << endl;
+    ss << "class " << tree_name_ << " : public SpinFreeMethod<T>, SMITH_info {" << endl;
+    ss << "  protected:" << endl;
+    ss << "    std::shared_ptr<Queue<T> > queue_;" << endl;
+    ss << "    std::shared_ptr<Tensor<T> > t2; " << endl;
+    ss << "    std::shared_ptr<Tensor<T> > r2; " << endl;
+    ss << endl;
+
+    ss << "  public:" << endl;
+    ss << "    " << tree_name_ << "(std::shared_ptr<Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info(), queue_(new Queue<T>()) {" << endl; 
     ss << indent << "std::vector<IndexRange> index = vec(this->closed_, this->act_, this->virt_);" << endl << endl;
     ss << indent << vectensor << " tensor0 = vec(r);" << endl;
     ss << indent << "std::shared_ptr<Task0<T> > t0(new Task0<T>(tensor0, index));" << endl << endl;
@@ -232,12 +282,31 @@ string Tree::generate_task_list() const {
       assert(depth() == 0);
       ss << indent << "t0->add_dep(t" << num() << ");" << endl;
     }
+    ss << indent << "queue_->add_task(t" << num() << ");" << endl;
     ss << endl;
 
     // increment icnt before going to subtrees
     ++icnt;
     // triggers a recursive call
     ss << (*i)->generate_task_list();
+  }
+  if (depth() == 0) {
+    ss << "    };" << endl;
+    ss << "    ~" << tree_name_ << "() {}; " << endl;
+    ss << "" << endl;
+    ss << "    void solve() {" << endl;
+    ss << "      t2->zero();" << endl;
+    ss << "      for (int iter = 0; iter != maxiter_; ++iter) {" << endl;
+    ss << "        queue_->initialize();" << endl;
+    ss << "        while (!queue_->done()) queue_->next()->compute(); " << endl;
+//  ss << "        std::cout << std::setprecision(10) << std::setw(30) << mp2_energy(t2)/2 << std::endl;" << endl;
+    ss << "        update_amplitude(t2, r2);" << endl;
+    ss << "        print_status();" << endl;
+    ss << "      }" << endl;
+    ss << "    };" << endl;
+    ss << "};" << endl;
+    ss << endl;
+    ss << "}" << endl;
   }
   return ss.str();
 }

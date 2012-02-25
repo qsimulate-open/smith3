@@ -16,8 +16,10 @@ class Equation {
     // internal function used by factorize()
     void duplicates_(const bool);
 
+    std::string name_;
+
   public:
-    Equation(std::shared_ptr<Diagram>);
+    Equation(std::shared_ptr<Diagram>, std::string nam);
     ~Equation() {};
 
     // print function
@@ -28,6 +30,9 @@ class Equation {
     void duplicates();
     // refresh indices in each diagram
     void refresh_indices();
+
+    // returns the name of this equation
+    std::string name() const { return name_; };
 
     std::list<std::shared_ptr<Diagram> > diagram() { return diagram_; };
 

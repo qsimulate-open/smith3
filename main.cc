@@ -30,7 +30,7 @@ int main() {
 #endif
 
   shared_ptr<Diagram> di(new Diagram(d));
-  shared_ptr<Equation> eq(new Equation(di));
+  shared_ptr<Equation> eq(new Equation(di, "MP2"));
   eq->duplicates();
   eq->active();
 

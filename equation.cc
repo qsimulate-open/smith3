@@ -8,7 +8,7 @@
 
 using namespace std;
 
-Equation::Equation(shared_ptr<Diagram> in) {
+Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
 
   list<shared_ptr<Diagram> > out = in->get_all();
   assert(out.size() != 0);
