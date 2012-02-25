@@ -50,7 +50,7 @@ bool BinaryContraction::dagger() const {
 }
 
 
-Tree::Tree(const shared_ptr<ListTensor> l) {
+Tree::Tree(const shared_ptr<ListTensor> l) : num_(-1) {
   target_ = l->target();
   dagger_ = l->dagger();
   if (l->length() > 1) {
@@ -64,7 +64,7 @@ Tree::Tree(const shared_ptr<ListTensor> l) {
 }
 
 
-Tree::Tree(shared_ptr<Equation> eq) : parent_(NULL) {
+Tree::Tree(shared_ptr<Equation> eq) : parent_(NULL), num_(-1) {
 
   // First make ListTensor for all the diagrams
   list<shared_ptr<Diagram> > d = eq->diagram();
@@ -203,22 +203,44 @@ string Tree::generate_task_list() const {
   stringstream ss;
   string indent = "       ";
   string vectensor = "std::vector<std::shared_ptr<Tensor<T> > >";
+  // if this is the top tree, we want to initialize index, as well as to create a task that zeros out the residual vector
+  if (depth() == 0) {
+    assert(icnt == 0);
+    ss << indent << "std::vector<IndexRange> index = vec(this->closed_, this->act_, this->virt_);" << endl << endl;
+    ss << indent << vectensor << " tensor0 = vec(r);" << endl;
+    ss << indent << "std::shared_ptr<Task0<T> > t0(new Task0<T>(tensor0, index));" << endl << endl;
+    ++icnt;
+  }
   for (auto i = bc_.begin(); i != bc_.end(); ++i) {
     vector<shared_ptr<Tensor> > strs = (*i)->tensors_str();
     for (auto s = strs.begin(); s != strs.end(); ++s) {
+      // if it contains a new intermediate tensor, dump a constructor
+      // (while registering in ii - note that ii is a static variable here).
       if (find(ii.begin(), ii.end(), *s) == ii.end() && (*s)->label().find("I") != string::npos) {
         ii.push_back(*s);
         ss << (*s)->constructor_str(indent) << endl;
       }
     }
-    ss << indent << vectensor << " tensor" << icnt << " = vec(" << merge__(strs) << ");";
+    ss << indent << vectensor << " tensor" << icnt << " = vec(" << merge__(strs) << ");" << endl;
+    ss << indent << "std::shared_ptr<Task" << icnt << "<T> > t" << icnt << "(new Task" << icnt << "<T>(tensor" << icnt << ", index));" << endl;
+    // saving a counter to a protected member
+    num_ = icnt;
+    if (parent_) {
+      assert(parent_->parent());
+      ss << indent << "t" << parent_->parent()->num() << "->add_dep(t" << num() << ");" << endl;
+    } else {
+      assert(depth() == 0);
+      ss << indent << "t0->add_dep(t" << num() << ");" << endl;
+    }
     ss << endl;
+
+    // increment icnt before going to subtrees
     ++icnt;
+    // triggers a recursive call
     ss << (*i)->generate_task_list();
   }
   return ss.str();
 }
-
 
 string BinaryContraction::generate_task_list() const {
   stringstream ss;

@@ -47,6 +47,7 @@ class BinaryContraction {
 
     std::vector<std::shared_ptr<Tensor> > tensors_str();
     std::string generate_task_list() const;
+    std::string generate_depend() const;
 
 };
 
@@ -65,6 +66,9 @@ class Tree : public std::enable_shared_from_this<Tree> {
     // TODO raw pointer should be replaced by some better mean
     BinaryContraction* parent_;
 
+    // when we do generate, a counter is used to generate a list of tasks.
+    mutable int num_;
+
   public:
     Tree(const std::shared_ptr<Equation> eq);
     Tree(const std::shared_ptr<ListTensor> l);
@@ -72,6 +76,7 @@ class Tree : public std::enable_shared_from_this<Tree> {
 
     bool done() const;
     void print() const;
+    int num() const { return num_; };
 
     std::shared_ptr<Tensor> target() const { return target_; };
 
