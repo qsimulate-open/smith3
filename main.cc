@@ -65,8 +65,12 @@ int main() {
   cout << "-----" << endl;
 #else
   ofstream fs(res->tree_name() + ".h");
-  fs << res->generate_task_list();
+  ofstream es(res->tree_name() + "_tasks.h");
+  pair<string, string> tmp = res->generate_task_list();
+  fs << tmp.first;
+  es << tmp.second;
   fs.close();
+  es.close();
 #endif
 
   cout << res->generate() << endl;

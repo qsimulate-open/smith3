@@ -25,6 +25,7 @@
 
 
 #include "tree.h"
+#include "constants.h"
 #include <algorithm>
 #include <stdexcept>
 
@@ -220,39 +221,20 @@ static string merge__(vector<shared_ptr<Tensor> > array) {
   return ss.str();
 }
 
-string Tree::generate_task_list() const {
+pair<string, string> Tree::generate_task_list() const {
+  // ss is the driver routine
   stringstream ss;
+  // tt is the driver routine
+  stringstream tt;
+
   string indent = "      ";
   string vectensor = "std::vector<std::shared_ptr<Tensor<T> > >";
   // if this is the top tree, we want to initialize index, as well as to create a task that zeros out the residual vector
   if (depth() == 0) {
     assert(icnt == 0 && tree_name_ != "");
-    ss << "//" << endl;
-    ss << "// Newint - Parallel electron correlation program." << endl;
-    ss << "// Filename: " << tree_name_ << ".h" << endl;
-    ss << "// Copyright (C) 2012 Toru Shiozaki" << endl;
-    ss << "//" << endl;
-    ss << "// Author: Toru Shiozaki <shiozaki@northwestern.edu>" << endl;
-    ss << "// Maintainer: Shiozaki group" << endl;
-    ss << "//" << endl;
-    ss << "// This file is part of the Newint package (to be renamed)." << endl;
-    ss << "//" << endl;
-    ss << "// The Newint package is free software; you can redistribute it and/or modify" << endl;
-    ss << "// it under the terms of the GNU Library General Public License as published by" << endl;
-    ss << "// the Free Software Foundation; either version 2, or (at your option)" << endl;
-    ss << "// any later version." << endl;
-    ss << "//" << endl;
-    ss << "// The Newint package is distributed in the hope that it will be useful," << endl;
-    ss << "// but WITHOUT ANY WARRANTY; without even the implied warranty of" << endl;
-    ss << "// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the" << endl;
-    ss << "// GNU Library General Public License for more details." << endl;
-    ss << "//" << endl;
-    ss << "// You should have received a copy of the GNU Library General Public License" << endl;
-    ss << "// along with the Newint package; see COPYING.  If not, write to" << endl;
-    ss << "// the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA." << endl;
-    ss << "//" << endl;
-    ss << "" << endl;
-    ss << "" << endl;
+    ss << header(tree_name_);
+    tt << header(tree_name_ + "_tasks");
+
     ss << "#ifndef __SRC_SMITH_" << tree_name_ << "_H " << endl;
     ss << "#define __SRC_SMITH_" << tree_name_ << "_H " << endl;
     ss << "" << endl;
@@ -262,24 +244,69 @@ string Tree::generate_task_list() const {
     ss << "#include <iostream>" << endl;
     ss << "#include <iomanip>" << endl;
     ss << "#include <src/smith/queue.h>" << endl;
-    ss << "#include <src/smith/" << tree_name_ << "_task.h>" << endl;
+    ss << "#include <src/smith/" << tree_name_ << "_tasks.h>" << endl;
     ss << "#include <src/smith/smith.h>" << endl;
     ss << "" << endl;
     ss << "namespace SMITH {" << endl;
+    ss << "namespace " << tree_name_ << "{" << endl;
     ss << "" << endl;
     ss << "template <typename T>" << endl;
     ss << "class " << tree_name_ << " : public SpinFreeMethod<T>, SMITH_info {" << endl;
     ss << "  protected:" << endl;
     ss << "    std::shared_ptr<Queue<T> > queue_;" << endl;
+    ss << "    std::shared_ptr<Queue<T> > energy_;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > r;" << endl;
     ss << endl;
-
     ss << "  public:" << endl;
-    ss << "    " << tree_name_ << "(std::shared_ptr<Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info(), queue_(new Queue<T>()) {" << endl; 
+    ss << "    " << tree_name_ << "(std::shared_ptr<Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info(), ";
+    ss <<                                                             "queue_(new Queue<T>()), energy_(new Queue<T>()) {" << endl;
+    ss << "      this->eig_ = this->f1_->diag();" << endl;
+    ss << "      t2 = this->v2_->clone();" << endl;
+    ss << "      r = t2->clone();" << endl;
+
     ss << indent << "std::vector<IndexRange> index = vec(this->closed_, this->act_, this->virt_);" << endl << endl;
     ss << indent << vectensor << " tensor0 = vec(r);" << endl;
-    ss << indent << "std::shared_ptr<Task0<T> > task0(new Task0<T>(tensor0, index));" << endl << endl;
+    ss << indent << "std::shared_ptr<Task0<T> > task0(new Task0<T>(tensor0, index));" << endl;
+    ss << indent << "queue_->add_task(task0);" << endl << endl;
+
+    tt << "#ifndef __SRC_SMITH_" << tree_name_ << "_TASKS_H " << endl;
+    tt << "#define __SRC_SMITH_" << tree_name_ << "_TASKS_H " << endl;
+    tt << "" << endl;
+    tt << "#include <memory>" << endl;
+    tt << "#include <src/smith/indexrange.h>" << endl;
+    tt << "#include <src/smith/tensor.h>" << endl;
+    tt << "#include <src/smith/task.h>" << endl;
+    tt << "#include <vector>" << endl;
+    tt << "" << endl;
+    tt << "namespace SMITH {" << endl;
+    tt << "namespace " << tree_name_ << "{" << endl;
+    tt << "" << endl;
+
+    // here generate Task0 that zeros out the residual
+    tt << "template <typename T>" << endl;
+    tt << "class Task0 : public Task<T> {" << endl;
+    tt << "  protected:" << endl;
+    tt << "    std::shared_ptr<Tensor<T> > r2_;" << endl;
+    tt << "    IndexRange closed_;" << endl;
+    tt << "    IndexRange act_;" << endl;
+    tt << "    IndexRange virt_;" << endl;
+    tt << "" << endl;
+    tt << "    void compute_() {" << endl;
+    tt << "      r2_->zero();" << endl;
+    tt << "    };  " << endl;
+    tt << "" << endl;
+    tt << "  public:" << endl;
+    tt << "    Task0(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
+    tt << "      if (t.size() != 1) throw std::logic_error(\"Task0 error\");" << endl;
+    tt << "      r2_ =  t[0];" << endl;
+    tt << "      closed_ = i[0];" << endl;
+    tt << "      act_    = i[1];" << endl;
+    tt << "      virt_   = i[2];" << endl;
+    tt << "    };  " << endl;
+    tt << "    ~Task0() {}; " << endl;
+    tt << "};" << endl;
+
     ++icnt;
   }
   for (auto i = bc_.begin(); i != bc_.end(); ++i) {
@@ -309,7 +336,9 @@ string Tree::generate_task_list() const {
     // increment icnt before going to subtrees
     ++icnt;
     // triggers a recursive call
-    ss << (*i)->generate_task_list();
+    pair<string, string> tmp = (*i)->generate_task_list();
+    ss << tmp.first;
+    tt << tmp.second;
   }
   if (depth() == 0) {
     ss << "    };" << endl;
@@ -345,15 +374,26 @@ string Tree::generate_task_list() const {
     ss << "};" << endl;
     ss << endl;
     ss << "}" << endl;
+    ss << "}" << endl;
+
+    ss << "#endif" << endl << endl;
+
+    tt << endl;
+    tt << "}" << endl;
+    tt << "}" << endl;
+    tt << "#endif" << endl << endl;
   }
-  return ss.str();
+  return make_pair(ss.str(), tt.str());
 }
 
-string BinaryContraction::generate_task_list() const {
-  stringstream ss;
-  for (auto i = subtree_.begin(); i != subtree_.end(); ++i)
-    ss << (*i)->generate_task_list();
-  return ss.str();
+pair<string, string> BinaryContraction::generate_task_list() const {
+  stringstream ss, tt;
+  for (auto i = subtree_.begin(); i != subtree_.end(); ++i) {
+    pair<string, string> tmp = (*i)->generate_task_list();
+    ss << tmp.first; 
+    tt << tmp.second;
+  }
+  return make_pair(ss.str(), tt.str());
 }
 
 

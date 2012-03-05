@@ -68,7 +68,7 @@ class BinaryContraction {
     int depth() const;
 
     std::vector<std::shared_ptr<Tensor> > tensors_str();
-    std::string generate_task_list() const;
+    std::pair<std::string, std::string> generate_task_list() const;
     std::string generate_depend() const;
 
 };
@@ -131,7 +131,7 @@ class Tree : public std::enable_shared_from_this<Tree> {
     int depth() const;
 
     // code generators!
-    std::string generate_task_list() const;
+    std::pair<std::string,std::string> generate_task_list() const;
 
 };
 
