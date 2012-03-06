@@ -216,8 +216,11 @@ vector<shared_ptr<Tensor> > ii;
 
 static string merge__(vector<shared_ptr<Tensor> > array) {
   stringstream ss;
-  for (auto i = array.begin(); i != array.end(); ++i)
-    ss << (i != array.begin() ? ", " : "") << (((*i)->label() == "proj") ? "r" : (*i)->label());
+  for (auto i = array.begin(); i != array.end(); ++i) {
+    string label = (*i)->label(); 
+    if (label == "f1" || label == "v2") label = "this->" + label + "_";
+    ss << (i != array.begin() ? ", " : "") << ((label == "proj") ? "r" : label);
+  }
   return ss.str();
 }
 
@@ -305,12 +308,13 @@ pair<string, string> Tree::generate_task_list() const {
     tt << "      virt_   = i[2];" << endl;
     tt << "    };  " << endl;
     tt << "    ~Task0() {}; " << endl;
-    tt << "};" << endl;
+    tt << "};" << endl << endl;
 
     ++icnt;
   }
   for (auto i = bc_.begin(); i != bc_.end(); ++i) {
     vector<shared_ptr<Tensor> > strs = (*i)->tensors_str();
+
     for (auto s = strs.begin(); s != strs.end(); ++s) {
       // if it contains a new intermediate tensor, dump a constructor
       // (while registering in ii - note that ii is a static variable here).
@@ -321,7 +325,7 @@ pair<string, string> Tree::generate_task_list() const {
     }
     ss << indent << vectensor << " tensor" << icnt << " = vec(" << merge__(strs) << ");" << endl;
     ss << indent << "std::shared_ptr<Task" << icnt << "<T> > task" << icnt << "(new Task" << icnt << "<T>(tensor" << icnt << ", index));" << endl;
-    // saving a counter to a protected member
+    // saving a counter to a protected member for dependency checks
     num_ = icnt;
     if (parent_) {
       assert(parent_->parent());
@@ -332,6 +336,42 @@ pair<string, string> Tree::generate_task_list() const {
     }
     ss << indent << "queue_->add_task(task" << num() << ");" << endl;
     ss << endl;
+
+    // here we generate a task for this binary contraction
+    tt << "template <typename T>" << endl;
+    tt << "class Task" << num_ << " : public Task<T> {" << endl;
+    tt << "  protected:" << endl;
+    tt << "    IndexRange closed_;" << endl;
+    tt << "    IndexRange act_;" << endl;
+    tt << "    IndexRange virt_;" << endl;
+    {
+      for (auto s = strs.begin(); s != strs.end(); ++s) {
+        string label = (*s)->label();
+        tt << "    std::shared_ptr<Tensor<T> > " << (label == "proj" ? "r" : label) << ";" << endl;
+      }
+    }
+    tt << "" << endl;
+    tt << "    void compute_() {" << endl;
+    tt << "    };" << endl;
+    tt << "" << endl;
+
+    tt << "  public:" << endl;
+    tt << "    Task" << num_ << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
+    tt << "      closed_ = i[0];" << endl;
+    tt << "      act_    = i[1];" << endl;
+    tt << "      virt_   = i[2];" << endl;
+    {
+      int i = 0;
+      for (auto s = strs.begin(); s != strs.end(); ++s, ++i) {
+        string label = (*s)->label();
+        tt << "      " << (label == "proj" ? "r" : label) << " = t[" << i << "];" << endl;
+      }
+    }
+
+    tt << "    };" << endl;
+    tt << "    ~Task" << num_ << "() {};" << endl;
+    tt << "};" << endl << endl;
+
 
     // increment icnt before going to subtrees
     ++icnt;
