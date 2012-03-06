@@ -43,6 +43,11 @@ class Equation {
     Equation(std::shared_ptr<Diagram>, std::string nam);
     ~Equation() {};
 
+    // merging two set of Equation.
+    void merge(const std::shared_ptr<Equation> o) {
+      diagram_.insert(diagram_.end(), o->diagram_.begin(), o->diagram_.end());
+    };
+
     // print function
     void print();
     // active parts are processed

@@ -42,17 +42,18 @@ int main() {
   shared_ptr<Op> t(new Op("t2", "a", "a", "c", "c"));
   shared_ptr<Op> H(new Op("H", "g", "g", "g", "g"));
 
-  list<shared_ptr<Op> > d;
+  list<shared_ptr<Op> > d, e;
   d.push_back(proj);
-#if 1
   d.push_back(f);
   d.push_back(t);
-#else
-  d.push_back(H);
-#endif
+  e.push_back(proj);
+  e.push_back(H);
 
   shared_ptr<Diagram> di(new Diagram(d));
   shared_ptr<Equation> eq(new Equation(di, "MP2"));
+  shared_ptr<Diagram> dj(new Diagram(e));
+  shared_ptr<Equation> eq2(new Equation(dj, "MP2"));
+  eq->merge(eq2);
   eq->duplicates();
   eq->active();
 
