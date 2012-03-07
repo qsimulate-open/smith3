@@ -61,6 +61,9 @@ class BinaryContraction {
     void set_target_rec();
     void set_target(std::shared_ptr<Tensor> o) { target_ = o; };
 
+    std::list<std::shared_ptr<Index> > loop_indices();
+    std::list<std::shared_ptr<Index> > target_indices();
+
     bool dagger() const;
     Tree* parent() { return parent_; };
     const Tree* parent() const { return parent_; };

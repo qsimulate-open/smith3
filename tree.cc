@@ -224,6 +224,19 @@ static string merge__(vector<shared_ptr<Tensor> > array) {
   return ss.str();
 }
 
+
+list<shared_ptr<Index> > BinaryContraction::target_indices() {
+  // returns a list of target indices
+  return target_->index();
+}
+
+
+list<shared_ptr<Index> > BinaryContraction::loop_indices() {
+  // returns a list of inner loop indices.
+  assert(false);
+}
+
+
 pair<string, string> Tree::generate_task_list() const {
   // ss is the driver routine
   stringstream ss;
@@ -301,7 +314,7 @@ pair<string, string> Tree::generate_task_list() const {
     tt << "" << endl;
     tt << "  public:" << endl;
     tt << "    Task0(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
-    tt << "      if (t.size() != 1) throw std::logic_error(\"Task0 error\");" << endl;
+//  tt << "      if (t.size() != 1) throw std::logic_error(\"Task0 error\");" << endl;
     tt << "      r2_ =  t[0];" << endl;
     tt << "      closed_ = i[0];" << endl;
     tt << "      act_    = i[1];" << endl;
@@ -352,6 +365,20 @@ pair<string, string> Tree::generate_task_list() const {
     }
     tt << "" << endl;
     tt << "    void compute_() {" << endl;
+    if (depth() != 0) {
+      vector<string> close;
+      string cindent = indent;
+      list<shared_ptr<Index> > ti = (*i)->target_indices();
+      for (auto iter = ti.begin(); iter != ti.end(); ++iter, cindent += "  ") {
+        string cindex = (*iter)->str_gen();
+        tt << cindent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
+                                      << cindex << " != " << (*iter)->generate() << ".end(); "
+                                      << "++" << cindex << ") {" << endl;
+        close.push_back(cindent + "}");
+      }
+      for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
+        tt << *iter << endl;
+    }
     tt << "    };" << endl;
     tt << "" << endl;
 

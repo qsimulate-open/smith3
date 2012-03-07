@@ -85,6 +85,11 @@ class Index {
       }
       return ss.str();
     };
+    std::string str_gen() const {
+      std::stringstream ss;
+      ss << label_ << abs(num_);
+      return ss.str();
+    };
 
     std::shared_ptr<Index> clone() { // note that this does not set spin.
       std::shared_ptr<Index> out(new Index(label_, dagger_));
@@ -102,11 +107,11 @@ class Index {
     std::string generate() const {
       std::string out;
       if (label_ == "c") {
-        out = "this->closed_";
+        out = "closed_";
       } else if (label_ == "a") {
-        out = "this->virt_";
+        out = "virt_";
       } else if (label_ == "x") {
-        out = "this->active_";
+        out = "active_";
       } else {
         throw std::runtime_error("unkonwn index type in Index::generate()");
       }
