@@ -369,12 +369,34 @@ pair<string, string> Tree::generate_task_list() const {
       vector<string> close;
       string cindent = indent;
       list<shared_ptr<Index> > ti = (*i)->target_indices();
-      for (auto iter = ti.begin(); iter != ti.end(); ++iter, cindent += "  ") {
+      // note that I am using reverse_iterator
+      for (auto iter = ti.rbegin(); iter != ti.rend(); ++iter, cindent += "  ") {
         string cindex = (*iter)->str_gen();
         tt << cindent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
                                       << cindex << " != " << (*iter)->generate() << ".end(); "
                                       << "++" << cindex << ") {" << endl;
         close.push_back(cindent + "}");
+      }
+      tt << cindent << "std::vector<size_t> ohash = vec(";
+      for (auto iter = ti.begin(); iter != ti.end(); ++iter) {
+        if (iter != ti.begin()) tt << ", ";
+        tt << (*iter)->str_gen() << "->key()";
+      }
+      tt << ");" << endl; 
+      {
+        string label = target_->label();
+        tt << cindent << "std::unique_ptr<double[]> odata = " << (label == "proj" ? "r" : label) << "->move_block(ohash);" << endl;
+      }
+//TODO inner loop will show up here
+      string dindent = cindent;
+      list<shared_ptr<Index> > di = (*i)->loop_indices();
+      for (auto iter = di.rbegin(); iter != di.end(); ++iter) { 
+
+      }
+
+      {
+        string label = target_->label();
+        tt << cindent << (label == "proj" ? "r" : label) << "->put_block(ohash, odata);" << endl;
       }
       for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
         tt << *iter << endl;
