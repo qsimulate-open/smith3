@@ -123,10 +123,25 @@ string Tensor::constructor_str(std::string indent) const {
     ss << ";" << endl;
   } else {
     ss << " = vec(";
-    for (auto i = index_.begin(); i != index_.end(); ++i)
-      ss << (i != index_.begin() ? ", " : "") << (*i)->generate();
+    for (auto i = index_.rbegin(); i != index_.rend(); ++i)
+      ss << (i != index_.rbegin() ? ", this->" : "this->") << (*i)->generate();
     ss << ");" << endl;
   }
   ss << indent << "std::shared_ptr<Tensor<T> > " << label_ << "(new Tensor<T>(" << label_ << "_index, false));";
   return ss.str();
+}
+
+string Tensor::generate_get_block(const string cindent, const string lab, const bool move) const {
+  stringstream tt;
+  tt << cindent << "std::vector<size_t> " << lab << "hash = vec(";
+  for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
+    if (iter != index_.rbegin()) tt << ", ";
+    tt << (*iter)->str_gen() << "->key()";
+  }   
+  tt << ");" << endl; 
+  {   
+    tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
+                  << (label_ == "proj" ? "r" : label_) << "->" << (move ? "move" : "get") << "_block(" << lab << "hash);" << endl;
+  }   
+  return tt.str();
 }

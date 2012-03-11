@@ -91,6 +91,8 @@ class Tensor {
 
     std::string generate() const;
     std::string constructor_str(std::string indent) const;
+
+    std::string generate_get_block(const std::string, const std::string, const bool move = false) const;
 };
 
 #endif

@@ -233,7 +233,21 @@ list<shared_ptr<Index> > BinaryContraction::target_indices() {
 
 list<shared_ptr<Index> > BinaryContraction::loop_indices() {
   // returns a list of inner loop indices.
-  assert(false);
+  list<shared_ptr<Index> > out;
+  list<shared_ptr<Index> > ti = target_->index();
+  for (auto iter = tensor_->index().begin(); iter != tensor_->index().end(); ++iter) {
+    bool found = false;
+    for (auto i = ti.begin(); i != ti.end(); ++i) {
+      if ((*i)->identical(*iter)) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      out.push_back(*iter);
+    }
+  }
+  return out;
 }
 
 
@@ -314,7 +328,6 @@ pair<string, string> Tree::generate_task_list() const {
     tt << "" << endl;
     tt << "  public:" << endl;
     tt << "    Task0(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
-//  tt << "      if (t.size() != 1) throw std::logic_error(\"Task0 error\");" << endl;
     tt << "      r2_ =  t[0];" << endl;
     tt << "      closed_ = i[0];" << endl;
     tt << "      act_    = i[1];" << endl;
@@ -370,29 +383,38 @@ pair<string, string> Tree::generate_task_list() const {
       string cindent = indent;
       list<shared_ptr<Index> > ti = (*i)->target_indices();
       // note that I am using reverse_iterator
-      for (auto iter = ti.rbegin(); iter != ti.rend(); ++iter, cindent += "  ") {
+      for (auto iter = ti.begin(); iter != ti.end(); ++iter, cindent += "  ") {
         string cindex = (*iter)->str_gen();
         tt << cindent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
                                       << cindex << " != " << (*iter)->generate() << ".end(); "
                                       << "++" << cindex << ") {" << endl;
         close.push_back(cindent + "}");
       }
-      tt << cindent << "std::vector<size_t> ohash = vec(";
-      for (auto iter = ti.begin(); iter != ti.end(); ++iter) {
-        if (iter != ti.begin()) tt << ", ";
-        tt << (*iter)->str_gen() << "->key()";
-      }
-      tt << ");" << endl; 
-      {
-        string label = target_->label();
-        tt << cindent << "std::unique_ptr<double[]> odata = " << (label == "proj" ? "r" : label) << "->move_block(ohash);" << endl;
-      }
-//TODO inner loop will show up here
+
+      tt << target_->generate_get_block(cindent, "o", true);
+
+      // inner loop will show up here
+      tt << endl;
+      vector<string> close2;
       string dindent = cindent;
       list<shared_ptr<Index> > di = (*i)->loop_indices();
-      for (auto iter = di.rbegin(); iter != di.end(); ++iter) { 
-
+      for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent += "  ") { 
+        string cindex = (*iter)->str_gen();
+        tt << dindent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
+                                      << cindex << " != " << (*iter)->generate() << ".end(); "
+                                      << "++" << cindex << ") {" << endl;
+        close2.push_back(dindent + "}");
       }
+
+      // retrieving tensor_
+      tt << (*i)->tensor()->generate_get_block(dindent, "i0") << endl;
+      // retrieving subtree_
+      tt << (*i)->subtree().front()->target()->generate_get_block(dindent, "i1") << endl;
+
+      for (auto iter = close2.rbegin(); iter != close2.rend(); ++iter)
+        tt << *iter << endl;
+      tt << endl;
+      // Inner loop ends here
 
       {
         string label = target_->label();
