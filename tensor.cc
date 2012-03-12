@@ -27,6 +27,7 @@
 #include "tensor.h"
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 using namespace std;
 
@@ -144,4 +145,100 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
                   << (label_ == "proj" ? "r" : label_) << "->" << (move ? "move" : "get") << "_block(" << lab << "hash);" << endl;
   }   
   return tt.str();
+}
+
+
+// TODO replace by a standard function (since I am aboard, I cannot google..)
+static double abs__(const double& a) { return a > 0 ? a : -a; };
+
+
+string Tensor::generate_scratch_area(const string cindent, const string lab, const bool zero) const {
+  stringstream ss;
+  ss << cindent << "std::unique_ptr<double[]> " << lab << "data_sorted(new double["
+                << (label_ == "proj" ? "r" : label_) << "->get_size(" << lab << "hash)]);" << endl;
+  if (zero) {
+    ss << cindent << "std::fill(" << lab << "data_sorted.get(), " << lab << "data_sorted.get()+"
+                  << (label_ == "proj" ? "r" : label_) << "->get_size(" << lab << "hash), 0.0);" << endl;
+  }
+  return ss.str();
+}
+
+string Tensor::generate_sort_indices(const string cindent, const string lab, const list<shared_ptr<Index> >& loop) const {
+  stringstream ss;
+  ss << generate_scratch_area(cindent, lab);
+  vector<int> map(index_.size());
+  ss << cindent << "sort_indices<";
+  // determine mapping
+  // first loop indices. order as in loop
+  vector<int> done;
+  for (auto i = loop.rbegin(); i != loop.rend(); ++i) {
+    // count
+    int cnt = 0;
+    for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
+      if ((*i)->identical(*j)) break;
+    }
+    if (cnt == index_.size()) throw logic_error("should not happen.. Tensor::generate_sort_indices");
+    ss << cnt << ",";
+    done.push_back(cnt);
+  }
+  // then fill out others
+  for (int i = 0; i != index_.size(); ++i) {
+    if (find(done.begin(), done.end(), i) == done.end()) {
+      ss << i << ",";
+    }
+  }
+
+  ss << "1,1,";
+  if (abs__(factor_-1.0) < 1.0e-10) { ss << "1,1";
+  } else if (abs__(factor_+1.0) < 1.0e-10) { ss << "-1,1";
+  } else if (abs__(factor_-2.0) < 1.0e-10) { ss << "2,1";
+  } else if (abs__(factor_+2.0) < 1.0e-10) { ss << "-2,1";
+  } else if (abs__(factor_-4.0) < 1.0e-10) { ss << "4,1";
+  } else if (abs__(factor_+4.0) < 1.0e-10) { ss << "-4,1";
+  } else if (abs__(factor_-8.0) < 1.0e-10) { ss << "8,1";
+  } else if (abs__(factor_+8.0) < 1.0e-10) { ss << "-8,1";
+  } else if (abs__(factor_-0.5) < 1.0e-10) { ss << "1,2";
+  } else if (abs__(factor_+0.5) < 1.0e-10) { ss << "-1,2";
+  } else if (abs__(factor_-0.25) < 1.0e-10) { ss << "1,4";
+  } else if (abs__(factor_+0.25) < 1.0e-10) { ss << "-1,4";
+  } else {
+    stringstream tt;
+    tt << "this case is not yet considered " << factor_ << " in Tensor::generate_sort_indices()";
+    throw runtime_error(tt.str());
+  }
+  ss << ">(" << lab << "data, " << lab << "data_sorted"; 
+  for (auto i = index_.rbegin(); i != index_.rend(); ++i) ss << ", " << (*i)->str_gen() << "->size()";
+  ss << ");" << endl;
+  return ss.str();
+}
+
+
+pair<string, string> Tensor::generate_dim(const list<shared_ptr<Index> >& di) const {
+  vector<string> s, t;
+  // first indices which are not shared
+  for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
+    bool shared = false;
+    for (auto j = di.begin(); j != di.end(); ++j) {
+      if ((*i)->identical(*j)) {
+        shared = true;
+        break;
+      }
+    }
+    if (shared) {
+      t.push_back((*i)->str_gen() + "->size()");
+    } else {
+      s.push_back((*i)->str_gen() + "->size()");
+    }
+  }
+
+  stringstream ss, tt;
+  for (auto i = s.begin(); i != s.end(); ++i) {
+    if (i != s.begin()) ss << "*";
+    ss << *i;
+  }
+  for (auto i = t.begin(); i != t.end(); ++i) {
+    if (i != t.begin()) tt << "*";
+    tt << *i;
+  }
+  return make_pair(ss.str(), tt.str());
 }

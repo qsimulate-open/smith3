@@ -304,6 +304,7 @@ pair<string, string> Tree::generate_task_list() const {
     tt << "#define __SRC_SMITH_" << tree_name_ << "_TASKS_H " << endl;
     tt << "" << endl;
     tt << "#include <memory>" << endl;
+    tt << "#include <algorithm>" << endl;
     tt << "#include <src/smith/indexrange.h>" << endl;
     tt << "#include <src/smith/tensor.h>" << endl;
     tt << "#include <src/smith/task.h>" << endl;
@@ -392,6 +393,7 @@ pair<string, string> Tree::generate_task_list() const {
       }
 
       tt << target_->generate_get_block(cindent, "o", true);
+      tt << target_->generate_scratch_area(cindent, "o", true); // true means zero-out
 
       // inner loop will show up here
       tt << endl;
@@ -407,9 +409,26 @@ pair<string, string> Tree::generate_task_list() const {
       }
 
       // retrieving tensor_
-      tt << (*i)->tensor()->generate_get_block(dindent, "i0") << endl;
+      tt << (*i)->tensor()->generate_get_block(dindent, "i0");
+      tt << (*i)->tensor()->generate_sort_indices(dindent, "i0", di) << endl;
       // retrieving subtree_
-      tt << (*i)->subtree().front()->target()->generate_get_block(dindent, "i1") << endl;
+      tt << (*i)->subtree().front()->target()->generate_get_block(dindent, "i1");
+      tt << (*i)->subtree().front()->target()->generate_sort_indices(dindent, "i1", di) << endl;
+
+      // call dgemm
+      tt << dindent << "dgemm_(\"T\", \"N\", ";
+      {
+        pair<string, string> t0 = (*i)->tensor()->generate_dim(di);
+        pair<string, string> t1 = (*i)->subtree().front()->target()->generate_dim(di);
+        assert(t0.second == t1.second);
+        string tt0 = t0.first == "" ? "1" : t0.first;
+        string tt1 = t1.first == "" ? "1" : t1.first;
+        string ss0 = t1.second== "" ? "1" : t1.second;
+        tt << tt0 << ", " << tt1 << ", " << ss0 << "," << endl;
+        tt << dindent << "       1.0, i0data_sorted, " << ss0 << ", i1data_sorted, " << ss0 << "," << endl
+           << dindent << "       1.0, odata_sorted, " << tt0;
+      }
+      tt << ");" << endl;
 
       for (auto iter = close2.rbegin(); iter != close2.rend(); ++iter)
         tt << *iter << endl;

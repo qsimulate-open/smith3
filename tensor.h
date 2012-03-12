@@ -93,6 +93,10 @@ class Tensor {
     std::string constructor_str(std::string indent) const;
 
     std::string generate_get_block(const std::string, const std::string, const bool move = false) const;
+    std::string generate_scratch_area(const std::string, const std::string, const bool zero = false) const;
+    std::string generate_sort_indices(const std::string, const std::string, const std::list<std::shared_ptr<Index> >&) const;
+
+    std::pair<std::string, std::string> generate_dim(const std::list<std::shared_ptr<Index> >&) const;
 };
 
 #endif
