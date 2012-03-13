@@ -218,7 +218,6 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
 string Tensor::generate_sort_indices_target(const string cindent, const string lab, const list<shared_ptr<Index> >& loop,
                                             const shared_ptr<Tensor> a, const shared_ptr<Tensor> b) const {
   stringstream ss;
-//ss << generate_scratch_area(cindent, lab);
   vector<int> map(index_.size());
   ss << cindent << "sort_indices<";
 
