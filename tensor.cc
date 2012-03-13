@@ -150,6 +150,26 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
 
 // TODO replace by a standard function (since I am aboard, I cannot google..)
 static double abs__(const double& a) { return a > 0 ? a : -a; };
+static string prefac__(const double& factor_) {
+  stringstream ss;
+  if (abs__(factor_-1.0) < 1.0e-10) { ss << "1,1";
+  } else if (abs__(factor_+1.0) < 1.0e-10) { ss << "-1,1";
+  } else if (abs__(factor_-2.0) < 1.0e-10) { ss << "2,1";
+  } else if (abs__(factor_+2.0) < 1.0e-10) { ss << "-2,1";
+  } else if (abs__(factor_-4.0) < 1.0e-10) { ss << "4,1";
+  } else if (abs__(factor_+4.0) < 1.0e-10) { ss << "-4,1";
+  } else if (abs__(factor_-8.0) < 1.0e-10) { ss << "8,1";
+  } else if (abs__(factor_+8.0) < 1.0e-10) { ss << "-8,1";
+  } else if (abs__(factor_-0.5) < 1.0e-10) { ss << "1,2";
+  } else if (abs__(factor_+0.5) < 1.0e-10) { ss << "-1,2";
+  } else if (abs__(factor_-0.25) < 1.0e-10) { ss << "1,4";
+  } else if (abs__(factor_+0.25) < 1.0e-10) { ss << "-1,4";
+  } else {
+    ss << "this case is not yet considered " << factor_ << " in Tensor::generate_sort_indices()";
+    throw runtime_error(ss.str());
+  }
+  return ss.str();
+}
 
 
 string Tensor::generate_scratch_area(const string cindent, const string lab, const bool zero) const {
@@ -183,31 +203,60 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
   }
   // then fill out others
   for (int i = 0; i != index_.size(); ++i) {
-    if (find(done.begin(), done.end(), i) == done.end()) {
+    if (find(done.begin(), done.end(), i) == done.end())
       ss << i << ",";
-    }
   }
 
-  ss << "1,1,";
-  if (abs__(factor_-1.0) < 1.0e-10) { ss << "1,1";
-  } else if (abs__(factor_+1.0) < 1.0e-10) { ss << "-1,1";
-  } else if (abs__(factor_-2.0) < 1.0e-10) { ss << "2,1";
-  } else if (abs__(factor_+2.0) < 1.0e-10) { ss << "-2,1";
-  } else if (abs__(factor_-4.0) < 1.0e-10) { ss << "4,1";
-  } else if (abs__(factor_+4.0) < 1.0e-10) { ss << "-4,1";
-  } else if (abs__(factor_-8.0) < 1.0e-10) { ss << "8,1";
-  } else if (abs__(factor_+8.0) < 1.0e-10) { ss << "-8,1";
-  } else if (abs__(factor_-0.5) < 1.0e-10) { ss << "1,2";
-  } else if (abs__(factor_+0.5) < 1.0e-10) { ss << "-1,2";
-  } else if (abs__(factor_-0.25) < 1.0e-10) { ss << "1,4";
-  } else if (abs__(factor_+0.25) < 1.0e-10) { ss << "-1,4";
-  } else {
-    stringstream tt;
-    tt << "this case is not yet considered " << factor_ << " in Tensor::generate_sort_indices()";
-    throw runtime_error(tt.str());
-  }
+  ss << "1,1," << prefac__(factor_);
   ss << ">(" << lab << "data, " << lab << "data_sorted"; 
   for (auto i = index_.rbegin(); i != index_.rend(); ++i) ss << ", " << (*i)->str_gen() << "->size()";
+  ss << ");" << endl;
+  return ss.str();
+}
+
+
+string Tensor::generate_sort_indices_target(const string cindent, const string lab, const list<shared_ptr<Index> >& loop,
+                                            const shared_ptr<Tensor> a, const shared_ptr<Tensor> b) const {
+  stringstream ss;
+//ss << generate_scratch_area(cindent, lab);
+  vector<int> map(index_.size());
+  ss << cindent << "sort_indices<";
+
+  // determine mapping
+  // first obtain the ordering of indices from dgemm
+  list<shared_ptr<Index> > source;
+  {
+    list<shared_ptr<Index> > aind = a->index();
+    for (auto i = aind.rbegin(); i != aind.rend(); ++i) {
+      bool found = false;
+      for (auto j = loop.begin(); j != loop.end(); ++j)
+        if ((*i)->identical(*j)) found = true;
+      if (!found) source.push_back(*i);
+    }
+    aind = b->index();
+    for (auto i = aind.rbegin(); i != aind.rend(); ++i) {
+      bool found = false;
+      for (auto j = loop.begin(); j != loop.end(); ++j)
+        if ((*i)->identical(*j)) found = true;
+      if (!found) source.push_back(*i);
+    }
+  }
+  
+  // note that source is already reversed.
+  for (auto i = source.begin(); i != source.end(); ++i) {
+    // count
+    int cnt = 0;
+    // but index_ is not; that's why the reverse_iterator is used here
+    for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
+      if ((*i)->identical(*j)) break;
+    }
+    if (cnt == index_.size()) throw logic_error("should not happen.. Tensor::generate_sort_indices_target");
+    ss << cnt << ",";
+  }
+
+  ss << "1,1," << prefac__(factor_);
+  ss << ">(" << lab << "data_sorted, " << lab << "data"; 
+  for (auto i = source.begin(); i != source.end(); ++i) ss << ", " << (*i)->str_gen() << "->size()";
   ss << ");" << endl;
   return ss.str();
 }

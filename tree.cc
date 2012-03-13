@@ -435,6 +435,11 @@ pair<string, string> Tree::generate_task_list() const {
       tt << endl;
       // Inner loop ends here
 
+      // sort buffer
+      {
+        tt << (*i)->target()->generate_sort_indices_target(cindent, "o", di, (*i)->tensor(), (*i)->subtree().front()->target());
+      }
+      // put buffer
       {
         string label = target_->label();
         tt << cindent << (label == "proj" ? "r" : label) << "->put_block(ohash, odata);" << endl;
