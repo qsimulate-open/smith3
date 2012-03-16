@@ -183,9 +183,11 @@ string Tensor::generate_scratch_area(const string cindent, const string lab, con
   return ss.str();
 }
 
-string Tensor::generate_sort_indices(const string cindent, const string lab, const list<shared_ptr<Index> >& loop) const {
+string Tensor::generate_sort_indices(const string cindent, const string lab, const list<shared_ptr<Index> >& loop, const bool op) const {
   stringstream ss;
-  ss << generate_scratch_area(cindent, lab);
+  if (!op) {
+    ss << generate_scratch_area(cindent, lab);
+  }
   vector<int> map(index_.size());
   ss << cindent << "sort_indices<";
   // determine mapping
@@ -207,8 +209,10 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
       ss << i << ",";
   }
 
+  string target_label = op ? "odata" : lab + "data_sorted";
+
   ss << "1,1," << prefac__(factor_);
-  ss << ">(" << lab << "data, " << lab << "data_sorted"; 
+  ss << ">(" << lab << "data, " << target_label; 
   for (auto i = index_.rbegin(); i != index_.rend(); ++i) ss << ", " << (*i)->str_gen() << "->size()";
   ss << ");" << endl;
   return ss.str();

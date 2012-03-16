@@ -40,7 +40,7 @@ int main() {
   shared_ptr<Op> proj(new Op("proj", "c", "c", "a", "a"));
   shared_ptr<Op> f(new Op("f1", "g", "g"));
   shared_ptr<Op> t(new Op("t2", "a", "a", "c", "c"));
-  shared_ptr<Op> H(new Op("H", "g", "g", "g", "g"));
+  shared_ptr<Op> H(new Op("v2", "g", "g", "g", "g"));
 
   list<shared_ptr<Op> > d, e;
   d.push_back(proj);

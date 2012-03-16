@@ -214,15 +214,32 @@ static int icnt;
 // not a good implementation...
 vector<shared_ptr<Tensor> > ii;
 
-static string merge__(vector<shared_ptr<Tensor> > array) {
+
+static string merge__(list<shared_ptr<Tensor> > array) {
   stringstream ss;
+  vector<string> done;
   for (auto i = array.begin(); i != array.end(); ++i) {
     string label = (*i)->label(); 
+    if (find(done.begin(), done.end(), label) != done.end()) continue;
+    done.push_back(label);
     if (label == "f1" || label == "v2") label = "this->" + label + "_";
     ss << (i != array.begin() ? ", " : "") << ((label == "proj") ? "r" : label);
   }
   return ss.str();
 }
+static string merge__(vector<shared_ptr<Tensor> > array) {
+  stringstream ss;
+  vector<string> done;
+  for (auto i = array.begin(); i != array.end(); ++i) {
+    string label = (*i)->label(); 
+    if (find(done.begin(), done.end(), label) != done.end()) continue;
+    done.push_back(label);
+    if (label == "f1" || label == "v2") label = "this->" + label + "_";
+    ss << (i != array.begin() ? ", " : "") << ((label == "proj") ? "r" : label);
+  }
+  return ss.str();
+}
+
 
 
 list<shared_ptr<Index> > BinaryContraction::target_indices() {
@@ -287,6 +304,7 @@ pair<string, string> Tree::generate_task_list() const {
     ss << "    std::shared_ptr<Queue<T> > energy_;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > r;" << endl;
+    ss << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
     ss << endl;
     ss << "  public:" << endl;
     ss << "    " << tree_name_ << "(std::shared_ptr<Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info(), ";
@@ -339,6 +357,107 @@ pair<string, string> Tree::generate_task_list() const {
 
     ++icnt;
   }
+
+  /////////////////////////////////////////////////////////////////
+  // if op_ is not empty, we add a task that adds up op_. 
+  /////////////////////////////////////////////////////////////////
+  if (!op_.empty()) {
+    // step through operators
+    if (find(ii.begin(), ii.end(), target_) == ii.end()) {
+      ii.push_back(target_);
+      ss << target_->constructor_str(indent) << endl;
+    }
+    list<shared_ptr<Tensor> > op = op_;
+    op.push_front(target_);
+    ss << indent << vectensor << " tensor" << icnt << " = vec(" << merge__(op) << ");" << endl;
+    ss << indent << "std::shared_ptr<Task" << icnt << "<T> > task"
+                 << icnt << "(new Task" << icnt << "<T>(tensor" << icnt << ", index));" << endl;
+    if (parent_) {
+      assert(parent_->parent());
+      ss << indent << "task" << parent_->parent()->num() << "->add_dep(task" << icnt << ");" << endl;
+    } else {
+      assert(depth() == 0);
+      ss << indent << "task0->add_dep(task" << icnt << ");" << endl;
+    }
+    ss << indent << "queue_->add_task(task" << icnt << ");" << endl;
+    ss << endl;
+
+    tt << "template <typename T>" << endl;
+    tt << "class Task" << icnt << " : public Task<T> {" << endl;
+    tt << "  protected:" << endl;
+    tt << "    IndexRange closed_;" << endl;
+    tt << "    IndexRange act_;" << endl;
+    tt << "    IndexRange virt_;" << endl;
+    {
+      vector<string> done;
+      for (auto s = op.begin(); s != op.end(); ++s) {
+        string label = (*s)->label();
+        if (find(done.begin(), done.end(), label) != done.end()) continue;
+        done.push_back(label);
+        tt << "    std::shared_ptr<Tensor<T> > " << (label == "proj" ? "r" : label) << ";" << endl;
+      }
+    }
+    tt << "" << endl;
+    tt << "    void compute_() {" << endl;
+    {
+      vector<string> close;
+      string cindent = indent;
+      list<shared_ptr<Index> > ti = target_->index();
+      // note that I am using reverse_iterator
+      for (auto iter = ti.begin(); iter != ti.end(); ++iter, cindent += "  ") {
+        string cindex = (*iter)->str_gen();
+        tt << cindent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
+                                      << cindex << " != " << (*iter)->generate() << ".end(); "
+                                      << "++" << cindex << ") {" << endl;
+        close.push_back(cindent + "}");
+      }
+      // get data
+      tt << target_->generate_get_block(cindent, "o", true) << endl;
+
+      // add the source data to the target
+      int j = 0;
+      for (auto s = op_.begin(); s != op_.end(); ++s, ++j) {
+        stringstream uu; uu << "i" << j;
+        tt << (*s)->generate_get_block(cindent, uu.str());
+        list<shared_ptr<Index> > di = target_->index();
+        tt << (*s)->generate_sort_indices(cindent, uu.str(), di, true) << endl;
+      }
+
+      // put data
+      {
+        string label = target_->label();
+        tt << cindent << (label == "proj" ? "r" : label) << "->put_block(ohash, odata);" << endl;
+      }
+      for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
+        tt << *iter << endl;
+    }
+    tt << "    };" << endl;
+    tt << "" << endl;
+    tt << "  public:" << endl;
+    tt << "    Task" << icnt << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
+    tt << "      closed_ = i[0];" << endl;
+    tt << "      act_    = i[1];" << endl;
+    tt << "      virt_   = i[2];" << endl;
+    {
+      int i = 0;
+      vector<string> done;
+      for (auto s = op.begin(); s != op.end(); ++s, ++i) {
+        string label = (*s)->label();
+        if (find(done.begin(), done.end(), label) != done.end()) continue;
+        done.push_back(label);
+        tt << "      " << (label == "proj" ? "r" : label) << " = t[" << i << "];" << endl;
+      }
+    }
+    tt << "    };" << endl;
+    tt << "    ~Task" << icnt << "() {};" << endl;
+    tt << "};" << endl << endl;
+
+    ++icnt;
+  }
+
+  /////////////////////////////////////////////////////////////////
+  // step through BinaryContraction
+  /////////////////////////////////////////////////////////////////
   for (auto i = bc_.begin(); i != bc_.end(); ++i) {
     vector<shared_ptr<Tensor> > strs = (*i)->tensors_str();
 
@@ -351,7 +470,8 @@ pair<string, string> Tree::generate_task_list() const {
       }
     }
     ss << indent << vectensor << " tensor" << icnt << " = vec(" << merge__(strs) << ");" << endl;
-    ss << indent << "std::shared_ptr<Task" << icnt << "<T> > task" << icnt << "(new Task" << icnt << "<T>(tensor" << icnt << ", index));" << endl;
+    ss << indent << "std::shared_ptr<Task" << icnt << "<T> > task"
+                 << icnt << "(new Task" << icnt << "<T>(tensor" << icnt << ", index));" << endl;
     // saving a counter to a protected member for dependency checks
     num_ = icnt;
     if (parent_) {
@@ -449,7 +569,6 @@ pair<string, string> Tree::generate_task_list() const {
     }
     tt << "    };" << endl;
     tt << "" << endl;
-
     tt << "  public:" << endl;
     tt << "    Task" << num_ << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
     tt << "      closed_ = i[0];" << endl;

@@ -94,7 +94,7 @@ class Tensor {
 
     std::string generate_get_block(const std::string, const std::string, const bool move = false) const;
     std::string generate_scratch_area(const std::string, const std::string, const bool zero = false) const;
-    std::string generate_sort_indices(const std::string, const std::string, const std::list<std::shared_ptr<Index> >&) const;
+    std::string generate_sort_indices(const std::string, const std::string, const std::list<std::shared_ptr<Index> >&, const bool op = false) const;
     std::string generate_sort_indices_target(const std::string, const std::string, const std::list<std::shared_ptr<Index> >&,
                                              const std::shared_ptr<Tensor>, const std::shared_ptr<Tensor>) const;
 
