@@ -446,18 +446,18 @@ pair<string, string> Tree::generate_task_list() const {
     tt << "template <typename T>" << endl;
     tt << "class Task0 : public Task<T> {" << endl;
     tt << "  protected:" << endl;
-    tt << "    std::shared_ptr<Tensor<T> > r2_;" << endl;
+    tt << "    std::shared_ptr<Tensor<T> > r_;" << endl;
     tt << "    IndexRange closed_;" << endl;
     tt << "    IndexRange act_;" << endl;
     tt << "    IndexRange virt_;" << endl;
     tt << "" << endl;
     tt << "    void compute_() {" << endl;
-    tt << "      r2_->zero();" << endl;
+    tt << "      r_->zero();" << endl;
     tt << "    };  " << endl;
     tt << "" << endl;
     tt << "  public:" << endl;
     tt << "    Task0(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
-    tt << "      r2_ =  t[0];" << endl;
+    tt << "      r_ =  t[0];" << endl;
     tt << "      closed_ = i[0];" << endl;
     tt << "      act_    = i[1];" << endl;
     tt << "      virt_   = i[2];" << endl;
@@ -580,6 +580,20 @@ pair<string, string> Tree::generate_task_list() const {
       }
       for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
         tt << *iter << endl;
+
+    } else {
+      // making residual vector...
+      list<shared_ptr<Index> > proj = bc_.front()->tensor()->index();
+      list<shared_ptr<Index> > res;
+      assert(!(proj.size() & 1));
+      for (auto ii = proj.begin(); ii != proj.end(); ++ii, ++ii) {
+        auto j = ii; ++j;
+        res.push_back(*j);
+        res.push_back(*ii);
+      }
+      shared_ptr<Tensor> residual(new Tensor(1.0, "r", res));
+      list<shared_ptr<Tensor> > op2(1, (*i)->next_target());
+      tt << generate_compute_operators(indent, residual, op2);
     }
 
     tt << generate_compute_footer(num_, strs);
@@ -594,35 +608,6 @@ pair<string, string> Tree::generate_task_list() const {
   }
 
   if (depth() == 0) {
-    /////////////////////////////////////////////////////////////////
-    // if this is a depth0 tree, we add it to residual 
-    /////////////////////////////////////////////////////////////////
-    list<shared_ptr<Index> > proj = bc_.front()->tensor()->index();
-    list<shared_ptr<Index> > res;
-    assert(!(proj.size() & 1));
-    for (auto i = proj.begin(); i != proj.end(); ++i, ++i) {
-      auto j = i; ++j;
-      res.push_back(*j);
-      res.push_back(*i);
-    }
-    shared_ptr<Tensor> residual(new Tensor(1.0, "r", res));
-
-    vector<shared_ptr<Tensor> > op(1,residual);
-    list<shared_ptr<Tensor> > op2;
-    for (auto i = bc_.begin(); i != bc_.end(); ++i) {
-      op.push_back((*i)->next_target());
-      op2.push_back((*i)->next_target());
-    }
-
-    ss << generate_task(indent, icnt, op);
-    tt << generate_compute_header(icnt, op);
-    tt << generate_compute_operators(indent, residual, op2);
-    tt << generate_compute_footer(icnt, op);
-    for (auto i = bc_.begin(); i != bc_.end(); ++i) {
-      (*i)->next_target()->print();
-    }
-    ++icnt;
-
     // closing the constructor
     ss << "    };" << endl;
     ss << "    ~" << tree_name_ << "() {}; " << endl;
