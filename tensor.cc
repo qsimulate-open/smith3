@@ -211,7 +211,7 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
 
   string target_label = op ? "odata" : lab + "data_sorted";
 
-  ss << "1,1," << prefac__(factor_);
+  ss << (op ? 1 : 0) << ",1," << prefac__(factor_);
   ss << ">(" << lab << "data, " << target_label; 
   for (auto i = index_.rbegin(); i != index_.rend(); ++i) ss << ", " << (*i)->str_gen() << "->size()";
   ss << ");" << endl;

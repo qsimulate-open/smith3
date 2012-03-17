@@ -368,9 +368,10 @@ string Tree::generate_task(const string indent, const int ic, const vector<share
   if (parent_) {
     assert(parent_->parent());
     ss << indent << "task" << parent_->parent()->num() << "->add_dep(task" << ic << ");" << endl;
+    ss << indent << "task" << ic << "->add_dep(task0);" << endl;
   } else {
     assert(depth() == 0);
-    ss << indent << "task0->add_dep(task" << ic << ");" << endl;
+    ss << indent << "task" << ic << "->add_dep(task0);" << endl;
   }
   ss << indent << "queue_->add_task(task" << ic << ");" << endl;
   ss << endl;
@@ -410,18 +411,12 @@ pair<string, string> Tree::generate_task_list() const {
     ss << "template <typename T>" << endl;
     ss << "class " << tree_name_ << " : public SpinFreeMethod<T>, SMITH_info {" << endl;
     ss << "  protected:" << endl;
-    ss << "    std::shared_ptr<Queue<T> > queue_;" << endl;
-    ss << "    std::shared_ptr<Queue<T> > energy_;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > r;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
-    ss << endl;
-    ss << "  public:" << endl;
-    ss << "    " << tree_name_ << "(std::shared_ptr<Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info(), ";
-    ss <<                                                             "queue_(new Queue<T>()), energy_(new Queue<T>()) {" << endl;
-    ss << "      this->eig_ = this->f1_->diag();" << endl;
-    ss << "      t2 = this->v2_->clone();" << endl;
-    ss << "      r = t2->clone();" << endl;
+    ss << "" << endl;
+    ss << "    std::shared_ptr<Queue<T> > make_queue_() {" << endl;
+    ss << "      std::shared_ptr<Queue<T> > queue_(new Queue<T>());" << endl;
 
     ss << indent << "std::vector<IndexRange> index = vec(this->closed_, this->act_, this->virt_);" << endl << endl;
     ss << indent << vectensor << " tensor0 = vec(r);" << endl;
@@ -608,7 +603,14 @@ pair<string, string> Tree::generate_task_list() const {
   }
 
   if (depth() == 0) {
-    // closing the constructor
+    ss << "      return queue_;" << endl;
+    ss << "    };" << endl;
+    ss << endl;
+    ss << "  public:" << endl;
+    ss << "    " << tree_name_ << "(std::shared_ptr<Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info() {" << endl;
+    ss << "      this->eig_ = this->f1_->diag();" << endl;
+    ss << "      t2 = this->v2_->clone();" << endl;
+    ss << "      r = t2->clone();" << endl;
     ss << "    };" << endl;
     ss << "    ~" << tree_name_ << "() {}; " << endl;
     ss << "" << endl;
@@ -617,9 +619,9 @@ pair<string, string> Tree::generate_task_list() const {
     ss << "      this->print_iteration();" << endl;
     ss << "      int iter = 0;" << endl;
     ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
-    ss << "        queue_->initialize();" << endl;
-    ss << "        while (!queue_->done())" << endl;
-    ss << "          queue_->next()->compute();" << endl;
+    ss << "        std::shared_ptr<Queue<T> > queue = make_queue_();" << endl;
+    ss << "        while (!queue->done())" << endl;
+    ss << "          queue->next()->compute();" << endl;
     ss << "        update_amplitude(t2, r);" << endl;
     ss << "        const double en = energy();" << endl; 
     ss << "        const double err = r->rms();" << endl;
@@ -631,12 +633,14 @@ pair<string, string> Tree::generate_task_list() const {
     ss << "" << endl;
     ss << "    double energy() {" << endl;
     ss << "      double en = 0.0;" << endl;
+#if 0
     ss << "      energy_->initialize();" << endl;
     ss << "      while (!energy_->done()) {" << endl;
     ss << "        std::shared_ptr<Task<T> > c = energy_->next();" << endl;
     ss << "        c->compute();" << endl;
     ss << "        en += c->energy();" << endl;
     ss << "      }   " << endl;
+#endif
     ss << "      return en; " << endl;
     ss << "    };  " << endl;
     ss << "};" << endl;
