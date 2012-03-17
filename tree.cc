@@ -32,6 +32,10 @@
 using namespace std;
 
 
+shared_ptr<Tensor> BinaryContraction::next_target() {
+  return subtree().front()->target();
+}
+
 BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor> l) {
   // o is a target tensor NOT included in l
   target_ = o;
@@ -268,6 +272,13 @@ list<shared_ptr<Index> > BinaryContraction::loop_indices() {
 }
 
 
+static string compute_header__(const int ic) {
+  stringstream tt;
+
+  return tt.str();
+}
+
+
 pair<string, string> Tree::generate_task_list() const {
   // ss is the driver routine
   stringstream ss;
@@ -358,6 +369,7 @@ pair<string, string> Tree::generate_task_list() const {
     ++icnt;
   }
 
+
   /////////////////////////////////////////////////////////////////
   // if op_ is not empty, we add a task that adds up op_. 
   /////////////////////////////////////////////////////////////////
@@ -412,15 +424,17 @@ pair<string, string> Tree::generate_task_list() const {
         close.push_back(cindent + "}");
       }
       // get data
-      tt << target_->generate_get_block(cindent, "o", true) << endl;
+      tt << target_->generate_get_block(cindent, "o", true);
 
       // add the source data to the target
       int j = 0;
       for (auto s = op_.begin(); s != op_.end(); ++s, ++j) {
         stringstream uu; uu << "i" << j;
-        tt << (*s)->generate_get_block(cindent, uu.str());
+        tt << cindent << "{" << endl;
+        tt << (*s)->generate_get_block(cindent+"  ", uu.str());
         list<shared_ptr<Index> > di = target_->index();
-        tt << (*s)->generate_sort_indices(cindent, uu.str(), di, true) << endl;
+        tt << (*s)->generate_sort_indices(cindent+"  ", uu.str(), di, true);
+        tt << cindent << "}" << endl;
       }
 
       // put data
@@ -532,14 +546,14 @@ pair<string, string> Tree::generate_task_list() const {
       tt << (*i)->tensor()->generate_get_block(dindent, "i0");
       tt << (*i)->tensor()->generate_sort_indices(dindent, "i0", di) << endl;
       // retrieving subtree_
-      tt << (*i)->subtree().front()->target()->generate_get_block(dindent, "i1");
-      tt << (*i)->subtree().front()->target()->generate_sort_indices(dindent, "i1", di) << endl;
+      tt << (*i)->next_target()->generate_get_block(dindent, "i1");
+      tt << (*i)->next_target()->generate_sort_indices(dindent, "i1", di) << endl;
 
       // call dgemm
       tt << dindent << "dgemm_(\"T\", \"N\", ";
       {
         pair<string, string> t0 = (*i)->tensor()->generate_dim(di);
-        pair<string, string> t1 = (*i)->subtree().front()->target()->generate_dim(di);
+        pair<string, string> t1 = (*i)->next_target()->generate_dim(di);
         assert(t0.second == t1.second);
         string tt0 = t0.first == "" ? "1" : t0.first;
         string tt1 = t1.first == "" ? "1" : t1.first;
@@ -557,7 +571,7 @@ pair<string, string> Tree::generate_task_list() const {
 
       // sort buffer
       {
-        tt << (*i)->target()->generate_sort_indices_target(cindent, "o", di, (*i)->tensor(), (*i)->subtree().front()->target());
+        tt << (*i)->target()->generate_sort_indices_target(cindent, "o", di, (*i)->tensor(), (*i)->next_target());
       }
       // put buffer
       {
@@ -595,6 +609,21 @@ pair<string, string> Tree::generate_task_list() const {
     tt << tmp.second;
   }
   if (depth() == 0) {
+    /////////////////////////////////////////////////////////////////
+    // if this is a depth0 tree, we add it to residual 
+    /////////////////////////////////////////////////////////////////
+    list<shared_ptr<Tensor> > op;
+    for (auto i = bc_.begin(); i != bc_.end(); ++i) {
+      op.push_back((*i)->next_target());
+    }
+    ss << indent << vectensor << " tensor" << icnt << " = vec(" << merge__(op) << ", r);" << endl;
+    ss << indent << "std::shared_ptr<Task" << icnt << "<T> > task"
+                 << icnt << "(new Task" << icnt << "<T>(tensor" << icnt << ", index));" << endl;
+    for (auto i = bc_.begin(); i != bc_.end(); ++i) {
+      (*i)->next_target()->print();
+    }
+    ++icnt;
+
     ss << "    };" << endl;
     ss << "    ~" << tree_name_ << "() {}; " << endl;
     ss << "" << endl;

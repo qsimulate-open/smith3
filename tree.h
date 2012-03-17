@@ -53,6 +53,7 @@ class BinaryContraction {
     std::list<std::shared_ptr<Tree> >& subtree() { return subtree_; };
     std::shared_ptr<Tensor> tensor() { return tensor_; };
     std::shared_ptr<Tensor> target() { return target_; };
+    std::shared_ptr<Tensor> next_target();
     void print() const;
 
     void factorize();
