@@ -3,3 +3,5 @@
     For the time being, I will go without it.
 
     2T - T^dagger should be detected fully.
+
+    integral transformation should be done more efficiently (reuse half-transformed quantity!) 

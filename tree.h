@@ -137,6 +137,11 @@ class Tree : public std::enable_shared_from_this<Tree> {
     // code generators!
     std::pair<std::string,std::string> generate_task_list() const;
 
+    std::string generate_compute_header(const int, const std::vector<std::shared_ptr<Tensor> >) const;
+    std::string generate_compute_footer(const int, const std::vector<std::shared_ptr<Tensor> >) const;
+    std::string generate_compute_operators(const std::string, const std::shared_ptr<Tensor>, const std::list<std::shared_ptr<Tensor> >) const;
+    std::string generate_task(const std::string, const int, const std::vector<std::shared_ptr<Tensor> >) const;
+
 };
 
 
