@@ -386,20 +386,25 @@ string Tree::generate_task(const string indent, const int ic, const vector<share
   ss << indent << "std::vector<std::shared_ptr<Tensor<T> > > tensor" << ic << " = vec(" << merge__(op) << ");" << endl;
   ss << indent << "std::shared_ptr<Task" << ic << "<T> > task"
                << ic << "(new Task" << ic << "<T>(tensor" << ic << ", index));" << endl;
-  if (parent_) {
-    assert(parent_->parent());
-    if (parent_->parent()->num() != ic)
-      ss << indent << "task" << parent_->parent()->num() << "->add_dep(task" << ic << ");" << endl;
-    if (!enlist)
-      ss << indent << "task" << ic << "->add_dep(task0);" << endl;
-  } else {
-    assert(depth() == 0);
-    if (!enlist)
-      ss << indent << "task" << ic << "->add_dep(task0);" << endl;
-  }
+
   if (!enlist) {
+    if (parent_) {
+      assert(parent_->parent());
+      ss << indent << "task" << parent_->parent()->num() << "->add_dep(task" << ic << ");" << endl;
+      ss << indent << "task" << ic << "->add_dep(task0);" << endl;
+    } else {
+      assert(depth() == 0);
+      ss << indent << "task" << ic << "->add_dep(task0);" << endl;
+    }
     ss << indent << "queue_->add_task(task" << ic << ");" << endl;
   } else {
+    if (parent_) {
+      assert(parent_->parent());
+      if (parent_->parent()->num() != ic)
+        ss << indent << "task" << parent_->parent()->num() << "->add_dep(task" << ic << ");" << endl;
+    } else {
+      assert(depth() == 0);
+    }
     ss << indent << "energy_->add_task(task" << ic << ");" << endl;
   }
   ss << endl;
