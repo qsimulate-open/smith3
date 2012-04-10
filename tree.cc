@@ -625,7 +625,7 @@ pair<string, string> Tree::generate_task_list() const {
     ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
     ss << "        std::shared_ptr<Queue<T> > queue = make_queue_();" << endl;
     ss << "        while (!queue->done())" << endl;
-    ss << "          queue->next()->compute();" << endl;
+    ss << "          queue->next_compute();" << endl;
     ss << "        r->scale(0.25); // 0.5 comes from 1/2 of the operator, 0.5 comes from add_dagger." << endl;
     ss << "        *r = *(r->add_dagger());" << endl;
     ss << "        update_amplitude(t2, r);" << endl;
