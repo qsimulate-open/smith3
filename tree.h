@@ -42,7 +42,7 @@ class BinaryContraction {
 
     // Tree that has this
     // TODO in principle, I can write a very general iterator by using this.
-    // could not used shared_ptr since it creates cyclic reference 
+    // could not used shared_ptr since it creates cyclic reference
     Tree* parent_;
 
   public:
@@ -72,7 +72,7 @@ class BinaryContraction {
     int depth() const;
 
     std::vector<std::shared_ptr<Tensor> > tensors_str();
-    std::pair<std::string, std::string> generate_task_list() const;
+    std::pair<std::string, std::string> generate_task_list(const bool enlist = false) const;
     std::string generate_depend() const;
 
 };
@@ -82,7 +82,7 @@ class Tree : public std::enable_shared_from_this<Tree> {
   protected:
     // recursive structure. BinaryContraction contains Tree.
     std::list<std::shared_ptr<BinaryContraction> > bc_;
-    // note that target_ can be NULL (at the very beginning) 
+    // note that target_ can be NULL (at the very beginning)
     std::shared_ptr<Tensor> target_;
 
     std::list<std::shared_ptr<Tensor> > op_;
@@ -135,12 +135,13 @@ class Tree : public std::enable_shared_from_this<Tree> {
     int depth() const;
 
     // code generators!
-    std::pair<std::string,std::string> generate_task_list() const;
+    std::pair<std::string,std::string> generate_task_list(const bool enlist = false,
+        const std::shared_ptr<Tree> energy = std::shared_ptr<Tree>()) const;
 
-    std::string generate_compute_header(const int, const std::vector<std::shared_ptr<Tensor> >) const;
-    std::string generate_compute_footer(const int, const std::vector<std::shared_ptr<Tensor> >) const;
+    std::string generate_compute_header(const int, const std::vector<std::shared_ptr<Tensor> >, const bool) const;
+    std::string generate_compute_footer(const int, const std::vector<std::shared_ptr<Tensor> >, const bool) const;
     std::string generate_compute_operators(const std::string, const std::shared_ptr<Tensor>, const std::list<std::shared_ptr<Tensor> >) const;
-    std::string generate_task(const std::string, const int, const std::vector<std::shared_ptr<Tensor> >) const;
+    std::string generate_task(const std::string, const int, const std::vector<std::shared_ptr<Tensor> >, const bool enlist) const;
 
 };
 

@@ -133,16 +133,36 @@ string Tensor::constructor_str(std::string indent) const {
 }
 
 string Tensor::generate_get_block(const string cindent, const string lab, const bool move) const {
+  string lbl = label_;
+  if (lbl == "proj") lbl = "r";
+  size_t found = lbl.find("dagger");
+  bool trans = false;
+  if (found != string::npos) {
+    string tmp(lbl.begin(), lbl.begin()+found);
+    lbl = tmp;
+    trans = true;
+  }
+
   stringstream tt;
   tt << cindent << "std::vector<size_t> " << lab << "hash = vec(";
-  for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
-    if (iter != index_.rbegin()) tt << ", ";
-    tt << (*iter)->str_gen() << "->key()";
-  }   
+  if (!trans) {
+    for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
+      if (iter != index_.rbegin()) tt << ", ";
+      tt << (*iter)->str_gen() << "->key()";
+    }   
+  } else {
+    assert(!(index_.size() & 1));
+    for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
+      if (iter != index_.rbegin()) tt << ", ";
+      string i0 = (*iter)->str_gen() + "->key()";
+      ++iter;
+      tt << (*iter)->str_gen() << "->key()" << ", " << i0;
+    }
+  }
   tt << ");" << endl; 
-  {   
+  {
     tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
-                  << (label_ == "proj" ? "r" : label_) << "->" << (move ? "move" : "get") << "_block(" << lab << "hash);" << endl;
+                  << lbl << "->" << (move ? "move" : "get") << "_block(" << lab << "hash);" << endl;
   }   
   return tt.str();
 }
@@ -173,21 +193,28 @@ static string prefac__(const double& factor_) {
 
 
 string Tensor::generate_scratch_area(const string cindent, const string lab, const bool zero) const {
+  string lbl = label_;
+  if (lbl == "proj") lbl = "r";
+  size_t found = lbl.find("dagger");
+  if (found != string::npos) {
+    string tmp(lbl.begin(), lbl.begin()+found);
+    lbl = tmp;
+  }
+
   stringstream ss;
   ss << cindent << "std::unique_ptr<double[]> " << lab << "data_sorted(new double["
-                << (label_ == "proj" ? "r" : label_) << "->get_size(" << lab << "hash)]);" << endl;
+                << lbl << "->get_size(" << lab << "hash)]);" << endl;
   if (zero) {
     ss << cindent << "std::fill(" << lab << "data_sorted.get(), " << lab << "data_sorted.get()+"
-                  << (label_ == "proj" ? "r" : label_) << "->get_size(" << lab << "hash), 0.0);" << endl;
+                  << lbl << "->get_size(" << lab << "hash), 0.0);" << endl;
   }
   return ss.str();
 }
 
 string Tensor::generate_sort_indices(const string cindent, const string lab, const list<shared_ptr<Index> >& loop, const bool op) const {
   stringstream ss;
-  if (!op) {
-    ss << generate_scratch_area(cindent, lab);
-  }
+  if (!op) ss << generate_scratch_area(cindent, lab);
+
   vector<int> map(index_.size());
   ss << cindent << "sort_indices<";
   // determine mapping
@@ -200,20 +227,44 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
       if ((*i)->identical(*j)) break;
     }
     if (cnt == index_.size()) throw logic_error("should not happen.. Tensor::generate_sort_indices");
-    ss << cnt << ",";
     done.push_back(cnt);
   }
   // then fill out others
   for (int i = 0; i != index_.size(); ++i) {
     if (find(done.begin(), done.end(), i) == done.end())
-      ss << i << ",";
+      done.push_back(i);
   }
+  // if trans, transpose here!
+  size_t found = label_.find("dagger");
+  const bool trans = found != string::npos;
+  if (trans && index_.size() & 1) throw logic_error("transposition not possible with 3-index objects");
+  if (trans) {
+    vector<int> tmp;
+    for (int i = 0; i != done.size(); i += 2) {
+      tmp.push_back(done[i+1]);
+      tmp.push_back(done[i]);
+    }
+    done = tmp;
+  }
+
+  // then write them out.
+  for (auto i = done.begin(); i != done.end(); ++i)
+    ss << *i << ",";
 
   string target_label = op ? "odata" : lab + "data_sorted";
 
   ss << (op ? 1 : 0) << ",1," << prefac__(factor_);
   ss << ">(" << lab << "data, " << target_label; 
-  for (auto i = index_.rbegin(); i != index_.rend(); ++i) ss << ", " << (*i)->str_gen() << "->size()";
+  if (!trans) {
+    for (auto i = index_.rbegin(); i != index_.rend(); ++i)
+      ss << ", " << (*i)->str_gen() << "->size()";
+  } else {
+    for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
+      string tmp = ", " + (*i)->str_gen() + "->size()";
+      ++i;
+      ss << ", " << (*i)->str_gen() << "->size()" << tmp;
+    }
+  }
   ss << ");" << endl;
   return ss.str();
 }

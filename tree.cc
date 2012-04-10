@@ -39,7 +39,7 @@ shared_ptr<Tensor> BinaryContraction::next_target() {
 BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor> l) {
   // o is a target tensor NOT included in l
   target_ = o;
-  tensor_ = l->front(); 
+  tensor_ = l->front();
   shared_ptr<ListTensor> rest = l->rest();
   shared_ptr<Tree> tr(new Tree(rest));
   subtree_.push_back(tr);
@@ -80,12 +80,12 @@ Tree::Tree(const shared_ptr<ListTensor> l) : num_(-1) {
   target_ = l->target();
   dagger_ = l->dagger();
   if (l->length() > 1) {
-    shared_ptr<BinaryContraction> bc(new BinaryContraction(target_, l)); 
+    shared_ptr<BinaryContraction> bc(new BinaryContraction(target_, l));
     bc_.push_back(bc);
   } else {
     shared_ptr<Tensor> t = l->front();
     t->set_factor(l->fac());
-    op_.push_back(t); 
+    op_.push_back(t);
   }
 }
 
@@ -128,7 +128,7 @@ void Tree::print() const {
 
 
 bool Tree::done() const {
-  // vectensor should be really a tensor 
+  // vectensor should be really a tensor
 #if 0
   bool out = true;
   for (auto i = tensor_.begin(); i != tensor_.end(); ++i) out &= ((*i)->length() == 1);
@@ -155,8 +155,8 @@ void BinaryContraction::factorize() {
 
 bool Tree::merge(shared_ptr<Tree> o) {
   bool out = false;
-  if (o->bc_.size() > 0) { 
-    shared_ptr<Tensor> a = bc_.front()->tensor();  
+  if (o->bc_.size() > 0) {
+    shared_ptr<Tensor> a = bc_.front()->tensor();
     shared_ptr<Tensor> b = o->bc_.front()->tensor();
     if (*a == *b) {
       out = true;
@@ -179,7 +179,7 @@ void Tree::factorize() {
     for ( ; j != bc_.end(); ++j) {
       if (*(*i)->tensor() == *(*j)->tensor() && (*i)->dagger() == (*j)->dagger()) {
         done.push_back(j);
-        (*i)->subtree().insert((*i)->subtree().end(), (*j)->subtree().begin(), (*j)->subtree().end()); 
+        (*i)->subtree().insert((*i)->subtree().end(), (*j)->subtree().begin(), (*j)->subtree().end());
       }
     }
   }
@@ -218,24 +218,17 @@ static int icnt;
 // not a good implementation...
 vector<shared_ptr<Tensor> > ii;
 
-
-static string merge__(list<shared_ptr<Tensor> > array) {
-  stringstream ss;
-  vector<string> done;
-  for (auto i = array.begin(); i != array.end(); ++i) {
-    string label = (*i)->label(); 
-    if (find(done.begin(), done.end(), label) != done.end()) continue;
-    done.push_back(label);
-    if (label == "f1" || label == "v2") label = "this->" + label + "_";
-    ss << (i != array.begin() ? ", " : "") << ((label == "proj") ? "r" : label);
-  }
-  return ss.str();
-}
+// local functions... (not a good practice...) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 static string merge__(vector<shared_ptr<Tensor> > array) {
   stringstream ss;
   vector<string> done;
   for (auto i = array.begin(); i != array.end(); ++i) {
-    string label = (*i)->label(); 
+    string label = (*i)->label();
+    size_t found = label.find("dagger");
+    if (found != string::npos) {
+      string tmp(label.begin(), label.begin() + found);
+      label = tmp;
+    }
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
     if (label == "f1" || label == "v2") label = "this->" + label + "_";
@@ -243,6 +236,22 @@ static string merge__(vector<shared_ptr<Tensor> > array) {
   }
   return ss.str();
 }
+static string merge__(list<shared_ptr<Tensor> > array) {
+  vector<shared_ptr<Tensor> > arr(array.begin(), array.end());
+  return merge__(arr);
+}
+static string label__(const string& lbl) {
+  string label = lbl;
+  if (label == "proj") label = "r";
+  size_t found = label.find("dagger");
+  if (found != string::npos) {
+    string tmp(label.begin(), label.begin() + found);
+    label = tmp;
+  }
+  return label;
+}
+// local functions... (not a good practice...) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 
 
 
@@ -272,10 +281,14 @@ list<shared_ptr<Index> > BinaryContraction::loop_indices() {
 }
 
 
-string Tree::generate_compute_header(const int ic, const vector<shared_ptr<Tensor> > tensors) const {
+string Tree::generate_compute_header(const int ic, const vector<shared_ptr<Tensor> > tensors, const bool enlist) const {
   stringstream tt;
   tt << "template <typename T>" << endl;
-  tt << "class Task" << ic << " : public Task<T> {" << endl;
+  if (!enlist) {
+    tt << "class Task" << ic << " : public Task<T> {" << endl;
+  } else {
+    tt << "class Task" << ic << " : public EnergyTask<T> {" << endl;
+  }
   tt << "  protected:" << endl;
   tt << "    IndexRange closed_;" << endl;
   tt << "    IndexRange act_;" << endl;
@@ -283,35 +296,43 @@ string Tree::generate_compute_header(const int ic, const vector<shared_ptr<Tenso
 
   vector<string> done;
   for (auto s = tensors.begin(); s != tensors.end(); ++s) {
-    string label = (*s)->label();
+    string label = label__((*s)->label());
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
-    tt << "    std::shared_ptr<Tensor<T> > " << (label == "proj" ? "r" : label) << ";" << endl;
+    tt << "    std::shared_ptr<Tensor<T> > " << label << ";" << endl;
   }
 
   tt << "" << endl;
   tt << "    void compute_() {" << endl;
+  if (enlist)
+    tt << "      this->energy_ = 0.0;" << endl;
   return tt.str();
 }
 
 
-string Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tensor> > tensors) const {
+string Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tensor> > tensors, const bool enlist) const {
   stringstream tt;
   tt << "    };" << endl;
   tt << "" << endl;
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
+  if (!enlist) {
+    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
+  } else {
+    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : EnergyTask<T>() {" << endl;
+  }
   tt << "      closed_ = i[0];" << endl;
   tt << "      act_    = i[1];" << endl;
   tt << "      virt_   = i[2];" << endl;
 
   int i = 0;
   vector<string> done;
-  for (auto s = tensors.begin(); s != tensors.end(); ++s, ++i) {
-    string label = (*s)->label();
+  for (auto s = tensors.begin(); s != tensors.end(); ++s) {
+    string label = label__((*s)->label());
+
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
     tt << "      " << (label == "proj" ? "r" : label) << " = t[" << i << "];" << endl;
+    ++i;
   }
 
   tt << "    };" << endl;
@@ -360,18 +381,21 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
 }
 
 
-string Tree::generate_task(const string indent, const int ic, const vector<shared_ptr<Tensor> > op) const { 
+string Tree::generate_task(const string indent, const int ic, const vector<shared_ptr<Tensor> > op, const bool enlist) const {
   stringstream ss;
   ss << indent << "std::vector<std::shared_ptr<Tensor<T> > > tensor" << ic << " = vec(" << merge__(op) << ");" << endl;
   ss << indent << "std::shared_ptr<Task" << ic << "<T> > task"
                << ic << "(new Task" << ic << "<T>(tensor" << ic << ", index));" << endl;
   if (parent_) {
     assert(parent_->parent());
-    ss << indent << "task" << parent_->parent()->num() << "->add_dep(task" << ic << ");" << endl;
-    ss << indent << "task" << ic << "->add_dep(task0);" << endl;
+    if (parent_->parent()->num() != ic)
+      ss << indent << "task" << parent_->parent()->num() << "->add_dep(task" << ic << ");" << endl;
+    if (!enlist)
+      ss << indent << "task" << ic << "->add_dep(task0);" << endl;
   } else {
     assert(depth() == 0);
-    ss << indent << "task" << ic << "->add_dep(task0);" << endl;
+    if (!enlist)
+      ss << indent << "task" << ic << "->add_dep(task0);" << endl;
   }
   ss << indent << "queue_->add_task(task" << ic << ");" << endl;
   ss << endl;
@@ -379,11 +403,14 @@ string Tree::generate_task(const string indent, const int ic, const vector<share
 }
 
 
-pair<string, string> Tree::generate_task_list() const {
+pair<string, string> Tree::generate_task_list(const bool enlist, const shared_ptr<Tree> energy) const {
   // ss is the driver routine
   stringstream ss;
   // tt is the driver routine
   stringstream tt;
+
+  // just to make sure
+  if (energy && depth() != 0) throw logic_error("Energy tree passed in a wrong place.");
 
   string indent = "      ";
   string vectensor = "std::vector<std::shared_ptr<Tensor<T> > >";
@@ -415,7 +442,7 @@ pair<string, string> Tree::generate_task_list() const {
     ss << "    std::shared_ptr<Tensor<T> > r;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
     ss << "" << endl;
-    ss << "    std::shared_ptr<Queue<T> > make_queue_() {" << endl;
+    ss << "    std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T> > queue_(new Queue<T>());" << endl;
 
     ss << indent << "std::vector<IndexRange> index = vec(this->closed_, this->act_, this->virt_);" << endl << endl;
@@ -465,7 +492,7 @@ pair<string, string> Tree::generate_task_list() const {
 
 
   /////////////////////////////////////////////////////////////////
-  // if op_ is not empty, we add a task that adds up op_. 
+  // if op_ is not empty, we add a task that adds up op_.
   /////////////////////////////////////////////////////////////////
   if (!op_.empty()) {
 
@@ -477,12 +504,12 @@ pair<string, string> Tree::generate_task_list() const {
 
     vector<shared_ptr<Tensor> > op(1,target_);
     op.insert(op.end(), op_.begin(), op_.end());
-    ss << generate_task(indent, icnt, op);
+    ss << generate_task(indent, icnt, op, enlist);
 
     vector<shared_ptr<Tensor> > op2(op.begin(), op.end());
-    tt << generate_compute_header(icnt, op2);
+    tt << generate_compute_header(icnt, op2, enlist);
     tt << generate_compute_operators(indent, target_, op_);
-    tt << generate_compute_footer(icnt, op2); 
+    tt << generate_compute_footer(icnt, op2, enlist);
 
     ++icnt;
   }
@@ -503,33 +530,36 @@ pair<string, string> Tree::generate_task_list() const {
     }
     // saving a counter to a protected member for dependency checks
     num_ = icnt;
-    ss << generate_task(indent, icnt, strs);
+    ss << generate_task(indent, icnt, strs, enlist);
 
     // here we generate a task for this binary contraction
-    tt << generate_compute_header(num_, strs);
+    tt << generate_compute_header(num_, strs, enlist);
 
     if (depth() != 0) {
       vector<string> close;
       string cindent = indent;
       list<shared_ptr<Index> > ti = (*i)->target_indices();
       // note that I am using reverse_iterator
-      for (auto iter = ti.begin(); iter != ti.end(); ++iter, cindent += "  ") {
-        string cindex = (*iter)->str_gen();
-        tt << cindent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
-                                      << cindex << " != " << (*iter)->generate() << ".end(); "
-                                      << "++" << cindex << ") {" << endl;
-        close.push_back(cindent + "}");
-      }
+      // skip if this is the last step in energy contribution
+      if (!enlist || depth() != 1) {
+        for (auto iter = ti.begin(); iter != ti.end(); ++iter, cindent += "  ") {
+          string cindex = (*iter)->str_gen();
+          tt << cindent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
+                                        << cindex << " != " << (*iter)->generate() << ".end(); "
+                                        << "++" << cindex << ") {" << endl;
+          close.push_back(cindent + "}");
+        }
 
-      tt << target_->generate_get_block(cindent, "o", true);
-      tt << target_->generate_scratch_area(cindent, "o", true); // true means zero-out
+        tt << target_->generate_get_block(cindent, "o", true);
+        tt << target_->generate_scratch_area(cindent, "o", true); // true means zero-out
+      }
 
       // inner loop will show up here
       tt << endl;
       vector<string> close2;
       string dindent = cindent;
       list<shared_ptr<Index> > di = (*i)->loop_indices();
-      for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent += "  ") { 
+      for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent += "  ") {
         string cindex = (*iter)->str_gen();
         tt << dindent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
                                       << cindex << " != " << (*iter)->generate() << ".end(); "
@@ -545,36 +575,45 @@ pair<string, string> Tree::generate_task_list() const {
       tt << (*i)->next_target()->generate_sort_indices(dindent, "i1", di) << endl;
 
       // call dgemm
-      tt << dindent << "dgemm_(\"T\", \"N\", ";
       {
         pair<string, string> t0 = (*i)->tensor()->generate_dim(di);
         pair<string, string> t1 = (*i)->next_target()->generate_dim(di);
-        assert(t0.second == t1.second);
-        string tt0 = t0.first == "" ? "1" : t0.first;
-        string tt1 = t1.first == "" ? "1" : t1.first;
-        string ss0 = t1.second== "" ? "1" : t1.second;
-        tt << tt0 << ", " << tt1 << ", " << ss0 << "," << endl;
-        tt << dindent << "       1.0, i0data_sorted, " << ss0 << ", i1data_sorted, " << ss0 << "," << endl
-           << dindent << "       1.0, odata_sorted, " << tt0;
+        if (t0.first != "" || t1.first != "") {
+          tt << dindent << "dgemm_(\"T\", \"N\", ";
+          string tt0 = t0.first == "" ? "1" : t0.first;
+          string tt1 = t1.first == "" ? "1" : t1.first;
+          string ss0 = t1.second== "" ? "1" : t1.second;
+          tt << tt0 << ", " << tt1 << ", " << ss0 << "," << endl;
+          tt << dindent << "       1.0, i0data_sorted, " << ss0 << ", i1data_sorted, " << ss0 << "," << endl
+             << dindent << "       1.0, odata_sorted, " << tt0;
+          tt << ");" << endl;
+        } else {
+          // so far I am expecting the case of energy contribution
+          if (!enlist || depth() != 1) throw logic_error("so far I am expecting the case of energy contribution");
+          string ss0 = t1.second== "" ? "1" : t1.second;
+          tt << dindent << "this->energy_ += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
+        }
       }
-      tt << ");" << endl;
 
       for (auto iter = close2.rbegin(); iter != close2.rend(); ++iter)
         tt << *iter << endl;
       tt << endl;
       // Inner loop ends here
 
-      // sort buffer
-      {
-        tt << (*i)->target()->generate_sort_indices_target(cindent, "o", di, (*i)->tensor(), (*i)->next_target());
+      // skip if this is the last step in energy contribution
+      if (!enlist || depth() != 1) {
+        // sort buffer
+        {
+          tt << (*i)->target()->generate_sort_indices_target(cindent, "o", di, (*i)->tensor(), (*i)->next_target());
+        }
+        // put buffer
+        {
+          string label = target_->label();
+          tt << cindent << (label == "proj" ? "r" : label) << "->put_block(ohash, odata);" << endl;
+        }
+        for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
+          tt << *iter << endl;
       }
-      // put buffer
-      {
-        string label = target_->label();
-        tt << cindent << (label == "proj" ? "r" : label) << "->put_block(ohash, odata);" << endl;
-      }
-      for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-        tt << *iter << endl;
 
     } else {
       // making residual vector...
@@ -591,19 +630,30 @@ pair<string, string> Tree::generate_task_list() const {
       tt << generate_compute_operators(indent, residual, op2);
     }
 
-    tt << generate_compute_footer(num_, strs);
+    tt << generate_compute_footer(num_, strs, enlist);
 
 
     // increment icnt before going to subtrees
     ++icnt;
     // triggers a recursive call
-    pair<string, string> tmp = (*i)->generate_task_list();
+    pair<string, string> tmp = (*i)->generate_task_list(enlist);
     ss << tmp.first;
     tt << tmp.second;
   }
 
   if (depth() == 0) {
-    ss << "      return queue_;" << endl;
+    // energy queue here
+    ss << "      std::shared_ptr<Queue<T> > energy_(new Queue<T>());" << endl;
+    if (energy) {
+      energy->num_ = icnt;
+      for (auto i = energy->bc_.begin(); i != energy->bc_.end(); ++i) {
+        pair<string, string> tmp = (*i)->generate_task_list(true); // true triggers energy list
+        ss << tmp.first;
+        tt << tmp.second;
+      }
+      ++icnt;
+    }
+    ss << "      return make_pair(queue_, energy_);" << endl;
     ss << "    };" << endl;
     ss << endl;
     ss << "  public:" << endl;
@@ -619,17 +669,18 @@ pair<string, string> Tree::generate_task_list() const {
     ss << "    ~" << tree_name_ << "() {}; " << endl;
     ss << "" << endl;
     ss << "    void solve() {" << endl;
-//  ss << "      t2->zero();" << endl;
     ss << "      this->print_iteration();" << endl;
     ss << "      int iter = 0;" << endl;
     ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
-    ss << "        std::shared_ptr<Queue<T> > queue = make_queue_();" << endl;
+    ss << "        std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > q = make_queue_();" << endl;
+    ss << "        std::shared_ptr<Queue<T> > queue = q.first;" << endl;
+    ss << "        std::shared_ptr<Queue<T> > energ = q.second;" << endl;
     ss << "        while (!queue->done())" << endl;
     ss << "          queue->next_compute();" << endl;
     ss << "        r->scale(0.25); // 0.5 comes from 1/2 of the operator, 0.5 comes from add_dagger." << endl;
     ss << "        *r = *(r->add_dagger());" << endl;
     ss << "        update_amplitude(t2, r);" << endl;
-    ss << "        const double en = energy();" << endl; 
+    ss << "        const double en = energy(energ);" << endl;
     ss << "        const double err = r->rms();" << endl;
     ss << "        this->print_iteration(iter, en, err);" << endl;
     ss << "        if (err < thresh_residual()) break;" << endl;
@@ -637,16 +688,12 @@ pair<string, string> Tree::generate_task_list() const {
     ss << "      this->print_iteration(iter == maxiter_);" << endl;
     ss << "    };" << endl;
     ss << "" << endl;
-    ss << "    double energy() {" << endl;
+    ss << "    double energy(std::shared_ptr<Queue<T> > energ) {" << endl;
     ss << "      double en = 0.0;" << endl;
-#if 0
-    ss << "      energy_->initialize();" << endl;
-    ss << "      while (!energy_->done()) {" << endl;
-    ss << "        std::shared_ptr<Task<T> > c = energy_->next();" << endl;
-    ss << "        c->compute();" << endl;
+    ss << "      while (!energ->done()) {" << endl;
+    ss << "        std::shared_ptr<Task<T> > c = energ->next_compute();" << endl;
     ss << "        en += c->energy();" << endl;
     ss << "      }   " << endl;
-#endif
     ss << "      return en; " << endl;
     ss << "    };  " << endl;
     ss << "};" << endl;
@@ -664,11 +711,11 @@ pair<string, string> Tree::generate_task_list() const {
   return make_pair(ss.str(), tt.str());
 }
 
-pair<string, string> BinaryContraction::generate_task_list() const {
+pair<string, string> BinaryContraction::generate_task_list(const bool enlist) const {
   stringstream ss, tt;
   for (auto i = subtree_.begin(); i != subtree_.end(); ++i) {
-    pair<string, string> tmp = (*i)->generate_task_list();
-    ss << tmp.first; 
+    pair<string, string> tmp = (*i)->generate_task_list(enlist);
+    ss << tmp.first;
     tt << tmp.second;
   }
   return make_pair(ss.str(), tt.str());
