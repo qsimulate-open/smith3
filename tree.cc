@@ -397,7 +397,11 @@ string Tree::generate_task(const string indent, const int ic, const vector<share
     if (!enlist)
       ss << indent << "task" << ic << "->add_dep(task0);" << endl;
   }
-  ss << indent << "queue_->add_task(task" << ic << ");" << endl;
+  if (!enlist) {
+    ss << indent << "queue_->add_task(task" << ic << ");" << endl;
+  } else {
+    ss << indent << "energy_->add_task(task" << ic << ");" << endl;
+  }
   ss << endl;
   return ss.str();
 }
