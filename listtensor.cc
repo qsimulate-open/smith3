@@ -67,7 +67,7 @@ void ListTensor::absorb_all_internal() {
   }
   list<list<shared_ptr<Tensor> >::iterator> remove;
   for (auto i = list_.begin(); i != list_.end(); ++i) {
-    if ((*i)->all_active() && !(*i)->active()) {
+    if ((*i)->all_active() && !(*i)->active() && (*i)->label() != "proj") {
       (*j)->merge(*i);
       remove.push_back(i);
     }

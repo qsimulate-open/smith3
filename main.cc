@@ -38,6 +38,7 @@ using namespace std;
 int main() {
 
   shared_ptr<Op> proj(new Op("proj", "c", "c", "a", "a"));
+  shared_ptr<Op> dum(new Op("proj"));
   shared_ptr<Op> f(new Op("f1", "g", "g"));
   shared_ptr<Op> t(new Op("t2", "a", "a", "c", "c"));
   shared_ptr<Op> H(new Op("v2", "g", "g", "g", "g"));
@@ -64,8 +65,10 @@ int main() {
 
   // energy
   list<shared_ptr<Op> > en0, en1;
+  en0.push_back(dum);
   en0.push_back(tdagger);
   en0.push_back(H);
+  en1.push_back(dum);
   en1.push_back(tdagger);
   en1.push_back(R);
   shared_ptr<Diagram> e0(new Diagram(en0));

@@ -69,7 +69,7 @@ class Op {
     Op(const std::string lab, const std::string& ta, const std::string& tb);
     // creating tensor..
     Op(const std::string lab, std::shared_ptr<Index> ta, std::shared_ptr<Index> tb, std::shared_ptr<Spin> ts = std::make_shared<Spin>());
-    Op() : label_("") { };
+    Op(const std::string lab = "") : label_(lab) { };
     virtual ~Op() {};
 
     // returns if this operator is completely contracted

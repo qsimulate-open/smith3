@@ -73,8 +73,11 @@ shared_ptr<Op> Op::copy() const {
   if (c_) {
     shared_ptr<Op> tmp(new Op(label_, a_->label(), b_->label(), c_->label(), d_->label()));
     return tmp;
-  } else  {
+  } else if (a_)  {
     shared_ptr<Op> tmp(new Op(label_, a_->label(), b_->label()));
+    return tmp;
+  } else {
+    shared_ptr<Op> tmp(new Op(label_));
     return tmp;
   }
 }
