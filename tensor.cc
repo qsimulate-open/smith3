@@ -244,13 +244,12 @@ string Tensor::generate_sort_indices_target(const string cindent, const string l
       if (!found) source.push_back(*i);
     }
   }
-  
-  // note that source is already reversed.
-  for (auto i = source.begin(); i != source.end(); ++i) {
+
+  for (auto j = index_.rbegin(); j != index_.rend(); ++j) {
     // count
     int cnt = 0;
-    // but index_ is not; that's why the reverse_iterator is used here
-    for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
+    // note that source is already reversed!
+    for (auto i = source.begin(); i != source.end(); ++i, ++cnt) {
       if ((*i)->identical(*j)) break;
     }
     if (cnt == index_.size()) throw logic_error("should not happen.. Tensor::generate_sort_indices_target");
