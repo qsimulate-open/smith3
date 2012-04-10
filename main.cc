@@ -41,6 +41,8 @@ int main() {
   shared_ptr<Op> f(new Op("f1", "g", "g"));
   shared_ptr<Op> t(new Op("t2", "a", "a", "c", "c"));
   shared_ptr<Op> H(new Op("v2", "g", "g", "g", "g"));
+  shared_ptr<Op> R(new Op("r", "a", "a", "c", "c"));
+  shared_ptr<Op> tdagger(new Op("t2dagger", "c", "c", "a", "a"));
 
   list<shared_ptr<Op> > d, e;
   d.push_back(proj);
@@ -49,6 +51,7 @@ int main() {
   e.push_back(proj);
   e.push_back(H);
 
+  // amplitude equation
   shared_ptr<Diagram> di(new Diagram(d));
   shared_ptr<Equation> eq(new Equation(di, "MP2"));
   shared_ptr<Diagram> dj(new Diagram(e));
@@ -56,9 +59,24 @@ int main() {
   eq->merge(eq2);
   eq->duplicates();
   eq->active();
-
   shared_ptr<Tree> res(new Tree(eq));
   res->print();
+
+  // energy
+  list<shared_ptr<Op> > en0, en1;
+  en0.push_back(tdagger);
+  en0.push_back(H);
+  en1.push_back(tdagger);
+  en1.push_back(R);
+  shared_ptr<Diagram> e0(new Diagram(en0));
+  shared_ptr<Equation> eneq(new Equation(e0, "MP2"));
+  shared_ptr<Diagram> e1(new Diagram(en1));
+  shared_ptr<Equation> eneq1(new Equation(e1, "MP2"));
+  eneq->merge(eneq1);
+  eneq->duplicates();
+  eneq->active();
+  shared_ptr<Tree> energy(new Tree(eneq));
+  energy->print();
 
 #if 0
   cout << "-----" << endl;

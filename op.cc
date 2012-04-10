@@ -324,6 +324,7 @@ pair<bool, double> Op::permute(const bool proj) {
 // Note that spin info is not checked. 
 bool Op::identical(shared_ptr<Op> o) const {
   bool out = true;
+  out &= label_ == o->label();
   auto j = o->op().begin();
   for (auto i = op_.begin(); i != op_.end(); ++i, ++j) {
     if (get<1>(*i) != get<1>(*j) || !(*get<0>(*i))->identical(*get<0>(*j))) {
