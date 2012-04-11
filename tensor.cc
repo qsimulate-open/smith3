@@ -180,6 +180,10 @@ static string prefac__(const double& factor_) {
   } else if (abs__(factor_+4.0) < 1.0e-10) { ss << "-4,1";
   } else if (abs__(factor_-8.0) < 1.0e-10) { ss << "8,1";
   } else if (abs__(factor_+8.0) < 1.0e-10) { ss << "-8,1";
+  } else if (abs__(factor_-16.0) < 1.0e-10) { ss << "16,1";
+  } else if (abs__(factor_+16.0) < 1.0e-10) { ss << "-16,1";
+  } else if (abs__(factor_-32.0) < 1.0e-10) { ss << "32,1";
+  } else if (abs__(factor_+32.0) < 1.0e-10) { ss << "-32,1";
   } else if (abs__(factor_-0.5) < 1.0e-10) { ss << "1,2";
   } else if (abs__(factor_+0.5) < 1.0e-10) { ss << "-1,2";
   } else if (abs__(factor_-0.25) < 1.0e-10) { ss << "1,4";
