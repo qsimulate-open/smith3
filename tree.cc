@@ -342,7 +342,8 @@ string Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tenso
 }
 
 
-string Tree::generate_compute_operators(const string indent, const shared_ptr<Tensor> target, const list<shared_ptr<Tensor> > op) const {
+string Tree::generate_compute_operators(const string indent, const shared_ptr<Tensor> target, const list<shared_ptr<Tensor> > op,
+                                        const bool dagger) const {
   stringstream tt;
 
   vector<string> close;
@@ -368,6 +369,39 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
     list<shared_ptr<Index> > di = target->index();
     tt << (*s)->generate_sort_indices(cindent+"  ", uu.str(), di, true);
     tt << cindent << "}" << endl;
+
+    // if this is at the top-level and nees to be daggered:
+    if (depth() == 0 && dagger) {
+      shared_ptr<Tensor> top(new Tensor(**s));
+      // swap operators so that tensor is daggered 
+      if (top->index().size() != 4) {
+         throw logic_error("Daggered object is only supported for 4-index tensors");
+      } else {
+        auto k0 = di.begin(); auto k1 = k0; ++k1; auto k2 = k1; ++k2; auto k3 = k2; ++k3;
+        list<pair<list<shared_ptr<Index> >::iterator, list<shared_ptr<Index> >::iterator> > map;
+        map.push_back(make_pair(k0, k2));
+        map.push_back(make_pair(k2, k0));
+        map.push_back(make_pair(k1, k3));
+        map.push_back(make_pair(k3, k1));
+        list<shared_ptr<Index> > tmp;
+        for (auto k = top->index().begin(); k != top->index().end(); ++k) {
+          for (auto l = map.begin(); l != map.end(); ++l) {
+            if ((*k)->identical(*l->first)) {
+              tmp.push_back(*l->second); 
+              break;
+            }
+            auto ll = l;
+            if (++ll == map.end()) throw logic_error("should not happen: dagger stuffs"); 
+          }
+        }
+        top->index() = tmp;
+        tt << cindent << "{" << endl;
+        tt << top->generate_get_block(cindent+"  ", uu.str());
+        list<shared_ptr<Index> > di = target->index();
+        tt << top->generate_sort_indices(cindent+"  ", uu.str(), di, true);
+        tt << cindent << "}" << endl;
+      }
+    }
   }
 
   // put data
@@ -636,7 +670,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
       }
       shared_ptr<Tensor> residual(new Tensor(1.0, "r", res));
       list<shared_ptr<Tensor> > op2(1, (*i)->next_target());
-      tt << generate_compute_operators(indent, residual, op2);
+      tt << generate_compute_operators(indent, residual, op2, (*i)->dagger());
     }
 
     tt << generate_compute_footer(num_, strs, enlist);
@@ -686,11 +720,11 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "        std::shared_ptr<Queue<T> > energ = q.second;" << endl;
     ss << "        while (!queue->done())" << endl;
     ss << "          queue->next_compute();" << endl;
-    ss << "        r->scale(0.25); // 0.5 comes from 1/2 of the operator, 0.5 comes from add_dagger." << endl;
-    ss << "        *r = *(r->add_dagger());" << endl;
+    ss << "        r->scale(0.25); // FIXME" << endl;
+    ss << "//      *r = *(r->add_dagger());" << endl;
     ss << "        update_amplitude(t2, r);" << endl;
-    ss << "        const double en = energy(energ);" << endl;
     ss << "        const double err = r->rms();" << endl;
+    ss << "        const double en = energy(energ);" << endl;
     ss << "        this->print_iteration(iter, en, err);" << endl;
     ss << "        if (err < thresh_residual()) break;" << endl;
     ss << "      }" << endl;
@@ -701,7 +735,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "      double en = 0.0;" << endl;
     ss << "      while (!energ->done()) {" << endl;
     ss << "        std::shared_ptr<Task<T> > c = energ->next_compute();" << endl;
-    ss << "        en += c->energy();" << endl;
+    ss << "        en += c->energy() * 0.25; // FIXME" << endl;
     ss << "      }   " << endl;
     ss << "      return en; " << endl;
     ss << "    };  " << endl;
