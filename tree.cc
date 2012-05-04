@@ -704,7 +704,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "      this->eig_ = this->f1_->diag();" << endl;
     ss << "      t2 = this->v2_->clone();" << endl;
     ss << "#if 1" << endl;
-    ss << "      update_amplitude_start(t2, this->v2_);" << endl;
+    ss << "      this->update_amplitude_start(t2, this->v2_);" << endl;
     ss << "      t2->scale(2.0);" << endl;
     ss << "#endif" << endl;
     ss << "      r = t2->clone();" << endl;
@@ -722,7 +722,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "          queue->next_compute();" << endl;
     ss << "        r->scale(0.25); // FIXME" << endl;
     ss << "//      *r = *(r->add_dagger());" << endl;
-    ss << "        update_amplitude(t2, r);" << endl;
+    ss << "        this->update_amplitude(t2, r);" << endl;
     ss << "        const double err = r->rms();" << endl;
     ss << "        const double en = energy(energ);" << endl;
     ss << "        this->print_iteration(iter, en, err);" << endl;
