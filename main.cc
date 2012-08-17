@@ -46,12 +46,17 @@ int main() {
   shared_ptr<Op> R(new Op("r", "a", "a", "c", "c"));
   shared_ptr<Op> tdagger(new Op("t2dagger", "c", "c", "a", "a"));
 
+#if 0
+  list<shared_ptr<Op> > d = {{proj, f, t}};
+  list<shared_ptr<Op> > e = {{proj, H}};
+#else
   list<shared_ptr<Op> > d, e;
   d.push_back(proj);
   d.push_back(f);
   d.push_back(t);
   e.push_back(proj);
   e.push_back(H);
+#endif
 
   // amplitude equation
   shared_ptr<Diagram> di(new Diagram(d));
