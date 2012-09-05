@@ -475,6 +475,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "#include <src/smith/" << tree_name_ << "_tasks.h>" << endl;
     ss << "#include <src/smith/smith.h>" << endl;
     ss << "" << endl;
+    ss << "namespace bagel {" << endl;
     ss << "namespace SMITH {" << endl;
     ss << "namespace " << tree_name_ << "{" << endl;
     ss << "" << endl;
@@ -503,6 +504,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     tt << "#include <src/smith/task.h>" << endl;
     tt << "#include <vector>" << endl;
     tt << "" << endl;
+    tt << "namespace bagel {" << endl;
     tt << "namespace SMITH {" << endl;
     tt << "namespace " << tree_name_ << "{" << endl;
     tt << "" << endl;
@@ -743,10 +745,12 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << endl;
     ss << "}" << endl;
     ss << "}" << endl;
+    ss << "}" << endl;
 
     ss << "#endif" << endl << endl;
 
     tt << endl;
+    tt << "}" << endl;
     tt << "}" << endl;
     tt << "}" << endl;
     tt << "#endif" << endl << endl;
