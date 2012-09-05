@@ -238,9 +238,7 @@ void Diagram::active() {
   list<shared_ptr<Index> >  ac = active_indices();
   if (ac.size()) {
     // Performs Wick in constructor of an Active object
-    shared_ptr<Active> tmp(new Active(ac));
-    // Sets to member
-    rdm_ = tmp; 
+    rdm_ = shared_ptr<Active>(new Active(ac));
   }
 }
 
