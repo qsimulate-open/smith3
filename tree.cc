@@ -463,6 +463,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << header(tree_name_);
     tt << header(tree_name_ + "_tasks");
 
+    ss << "//mkm is in the house" << endl;  // mkm is generating something!
     ss << "#ifndef __SRC_SMITH_" << tree_name_ << "_H " << endl;
     ss << "#define __SRC_SMITH_" << tree_name_ << "_H " << endl;
     ss << "" << endl;

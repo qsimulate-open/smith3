@@ -65,8 +65,13 @@ int main() {
   shared_ptr<Equation> eq2(new Equation(dj, "MP2"));
   eq->merge(eq2);
   eq->duplicates();
+  cout << "Printing the eq object before active: " << endl;
+  eq->print();  // which print is being used? it is a print fnc of the eq object which is of eq nature (see up).
   eq->active();
+  cout << "Print the eq object after active: " << endl;
+  eq->print();
   shared_ptr<Tree> res(new Tree(eq));
+  cout << "Print the res object: " << endl;
   res->print();
 
   // energy
@@ -83,8 +88,13 @@ int main() {
   shared_ptr<Equation> eneq1(new Equation(e1, "MP2"));
   eneq->merge(eneq1);
   eneq->duplicates();
+//  std::cout << "Printing eneq object before active: " << endl;  //mkm this needs to be implimented
+//  eneq->print();                                                 
   eneq->active();
+//  std::cout << "Printing eneq object after active: " << endl;
+//  eneq->print();
   shared_ptr<Tree> energy(new Tree(eneq));
+  cout << "Printing the energy obj: " << endl;
   energy->print();
 
 #if 0
