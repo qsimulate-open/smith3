@@ -61,16 +61,7 @@ void Equation::print() {
 
 // processes active part
 void Equation::active() {
-// mkm try to do more elegant print, should call the print function of equation.h or diagram.h?
-//   print is a function of the *i object which is of diagram_ nature which equation.h says is a list of diagrams 
-//   so therefore print is from diagram.h 
- //std::cout << "Before active: " << endl;
- //for (auto i = diagram_.begin(); i != diagram_.end(); ++i) (*i)->print();
-  //for (auto i = diagram_.begin(); i != diagram_.end(); ++i) (*i)->print() const;
   for (auto i = diagram_.begin(); i != diagram_.end(); ++i) (*i)->active();
-  //std::cout << "After active: " << endl;
-  //for (auto i = diagram_.begin(); i != diagram_.end(); ++i) (*i)->print();
-  //for (auto i = diagram_.begin(); i != diagram_.end(); ++i) (*i)->print() const;
 }
 
 
