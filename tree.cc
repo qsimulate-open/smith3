@@ -495,6 +495,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << indent << "std::shared_ptr<Task0<T> > task0(new Task0<T>(tensor0, index));" << endl;
     ss << indent << "queue_->add_task(task0);" << endl << endl;
 
+    tt << "//mkm has tasks...test staging" << endl;  // mkm is generating something!
     tt << "#ifndef __SRC_SMITH_" << tree_name_ << "_TASKS_H " << endl;
     tt << "#define __SRC_SMITH_" << tree_name_ << "_TASKS_H " << endl;
     tt << "" << endl;
