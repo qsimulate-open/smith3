@@ -60,9 +60,9 @@ int main() {
 
   // amplitude equation
   shared_ptr<Diagram> di(new Diagram(d));
-  shared_ptr<Equation> eq(new Equation(di, "MP2"));
+  shared_ptr<Equation> eq(new Equation(di, "CAS"));
   shared_ptr<Diagram> dj(new Diagram(e));
-  shared_ptr<Equation> eq2(new Equation(dj, "MP2"));
+  shared_ptr<Equation> eq2(new Equation(dj, "CAS"));
   eq->merge(eq2);
   eq->duplicates();
   cout << "Printing the eq object before active: " << endl;
@@ -83,18 +83,19 @@ int main() {
   en1.push_back(tdagger);
   en1.push_back(R);
   shared_ptr<Diagram> e0(new Diagram(en0));
-  shared_ptr<Equation> eneq(new Equation(e0, "MP2"));
+  shared_ptr<Equation> eneq(new Equation(e0, "CAS"));
   shared_ptr<Diagram> e1(new Diagram(en1));
-  shared_ptr<Equation> eneq1(new Equation(e1, "MP2"));
+  shared_ptr<Equation> eneq1(new Equation(e1, "CAS"));
   eneq->merge(eneq1);
   eneq->duplicates();
-//  std::cout << "Printing eneq object before active: " << endl;  //mkm this needs to be implimented
+//  std::cout << "Printing eneq object before active: " << endl; //mkm this needs to be implemented
 //  eneq->print();                                                 
   eneq->active();
 //  std::cout << "Printing eneq object after active: " << endl;
 //  eneq->print();
   shared_ptr<Tree> energy(new Tree(eneq));
   cout << "Printing the energy obj: " << endl;
+// mkm prints some bogus stuff right now 
   energy->print();
 
 #if 0

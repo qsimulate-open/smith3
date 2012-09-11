@@ -135,6 +135,7 @@ class Tree : public std::enable_shared_from_this<Tree> {
     int depth() const;
 
     // code generators!
+    // mkm why is enlist initialized to false? do non energy stuff?
     std::pair<std::string,std::string> generate_task_list(const bool enlist = false,
         const std::shared_ptr<Tree> energy = std::shared_ptr<Tree>()) const;
 

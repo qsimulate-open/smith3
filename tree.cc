@@ -38,6 +38,7 @@ shared_ptr<Tensor> BinaryContraction::next_target() {
 
 BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor> l) {
   // o is a target tensor NOT included in l
+  // mkm because l is a ListTensor?
   target_ = o;
   tensor_ = l->front();
   shared_ptr<ListTensor> rest = l->rest();
@@ -341,7 +342,7 @@ string Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tenso
   return tt.str();
 }
 
-
+//mkm  it seems like this is already done for active case..and perhaps is the reason we have the res tree object already? 
 string Tree::generate_compute_operators(const string indent, const shared_ptr<Tensor> target, const list<shared_ptr<Tensor> > op,
                                         const bool dagger) const {
   stringstream tt;
@@ -447,9 +448,9 @@ string Tree::generate_task(const string indent, const int ic, const vector<share
 
 
 pair<string, string> Tree::generate_task_list(const bool enlist, const shared_ptr<Tree> energy) const {
-  // ss is the driver routine
+  // ss is the X.h driver routine
   stringstream ss;
-  // tt is the driver routine
+  // tt is the X_tasks.h driver routine
   stringstream tt;
 
   // just to make sure
@@ -463,7 +464,6 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << header(tree_name_);
     tt << header(tree_name_ + "_tasks");
 
-    ss << "//mkm is in the house" << endl;  // mkm is generating something!
     ss << "#ifndef __SRC_SMITH_" << tree_name_ << "_H " << endl;
     ss << "#define __SRC_SMITH_" << tree_name_ << "_H " << endl;
     ss << "" << endl;
@@ -495,7 +495,6 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << indent << "std::shared_ptr<Task0<T> > task0(new Task0<T>(tensor0, index));" << endl;
     ss << indent << "queue_->add_task(task0);" << endl << endl;
 
-    tt << "//mkm has tasks...test staging" << endl;  // mkm is generating something!
     tt << "#ifndef __SRC_SMITH_" << tree_name_ << "_TASKS_H " << endl;
     tt << "#define __SRC_SMITH_" << tree_name_ << "_TASKS_H " << endl;
     tt << "" << endl;
