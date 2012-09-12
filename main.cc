@@ -66,12 +66,12 @@ int main() {
   eq->merge(eq2);
   eq->duplicates();
   cout << "Printing the eq object before active: " << endl;
-  eq->print();  // which print is being used? it is a print fnc of the eq object which is of eq nature (see up).
+  eq->print();  
   eq->active();
   cout << "Print the eq object after active: " << endl;
   eq->print();
   shared_ptr<Tree> res(new Tree(eq));
-  cout << "Print the res object: " << endl;
+  cout << "Print the res Tree object: " << endl;
   res->print();
 
   // energy

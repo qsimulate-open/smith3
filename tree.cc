@@ -38,7 +38,6 @@ shared_ptr<Tensor> BinaryContraction::next_target() {
 
 BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor> l) {
   // o is a target tensor NOT included in l
-  // mkm because l is a ListTensor?
   target_ = o;
   tensor_ = l->front();
   shared_ptr<ListTensor> rest = l->rest();
