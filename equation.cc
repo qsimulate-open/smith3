@@ -60,6 +60,7 @@ void Equation::print() {
 }
 
 // processes active part
+// mkm need to add Gamma here perhaps or compute in constructor
 void Equation::active() {
   for (auto i = diagram_.begin(); i != diagram_.end(); ++i) (*i)->active();
 }

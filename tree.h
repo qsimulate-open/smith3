@@ -99,7 +99,6 @@ class Tree : public std::enable_shared_from_this<Tree> {
     mutable int num_;
 
   public:
-//mkm why doesn't tree have above and below information here in public constructor?
     Tree(const std::shared_ptr<Equation> eq);
     Tree(const std::shared_ptr<ListTensor> l);
     ~Tree() {};

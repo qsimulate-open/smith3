@@ -102,6 +102,7 @@ string RDM::str(string target, shared_ptr<Tensor> m) const {
     }
     ss << ") ";
   }
+// mkm Does this gamma need to be implemented? Also, why doesnt * gamma appear in the X.h file?
   ss << "data(" << target << ") += " << fixed << setw(5) << setprecision(2) << fac_ << " * gamma";
   ss << index_.size()/2 << "(";
   int j = index_.size()-1;

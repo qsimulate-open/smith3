@@ -35,6 +35,7 @@ class Active_base {
 
   public:
     Active_base(const int n) {};
+// mkm need to put Gamma tensor into the constructor here
 
     double& data() {};
 
