@@ -341,7 +341,44 @@ string Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tenso
   return tt.str();
 }
 
-//mkm  it seems like this is already done for active case..and perhaps is the reason we have the res tree object already? 
+
+string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const bool enlist) const {
+  stringstream tt;
+  tt << "template <typename T>" << endl;
+  if (!enlist) {
+    tt << "class Task" << ic << " : public Task<T> {" <<  "  // associated with gamma" << endl;
+  } else {
+    tt << "class Task" << ic << " : public EnergyTask<T> {" <<  "  // associated with gamma" << endl;
+  }
+  tt << "  protected:" << endl;
+  tt << "    IndexRange closed_;" << endl;
+  tt << "    IndexRange act_;" << endl;
+  tt << "    IndexRange virt_;" << endl;
+  tt << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
+  tt << "" << endl;
+// next up, real stuff here:
+  tt << "    void compute_() {" << endl;
+
+  tt << "    };  " << endl;
+  tt << "" << endl;
+// done
+  tt << "" << endl;
+  tt << "  public:" << endl;
+  if (!enlist) {
+    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
+  } else {
+    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : EnergyTask<T>() {" << endl;
+  }
+  tt << "      closed_ = i[0];" << endl;
+  tt << "      act_    = i[1];" << endl;
+  tt << "      virt_   = i[2];" << endl;
+  tt << "      Gamma   = t[0];" << "// still need to fix this!" <<  endl;
+  tt << "    };" << endl;
+  tt << "    ~Task" << icnt << "() {};" << endl;
+  tt << "};" << endl << endl;
+  return tt.str();
+}
+
 string Tree::generate_compute_operators(const string indent, const shared_ptr<Tensor> target, const list<shared_ptr<Tensor> > op,
                                         const bool dagger) const {
   stringstream tt;
@@ -535,7 +572,6 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ++icnt;
   }
 
-
   /////////////////////////////////////////////////////////////////
   // if op_ is not empty, we add a task that adds up op_.
   /////////////////////////////////////////////////////////////////
@@ -547,9 +583,16 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
       ss << target_->constructor_str(indent) << endl;
     }
 
-    vector<shared_ptr<Tensor> > op(1,target_);
+    vector<shared_ptr<Tensor> > op = {{target_}};
     op.insert(op.end(), op_.begin(), op_.end());
     ss << generate_task(indent, icnt, op, enlist);
+
+    for (auto i = op_.begin(); i != op_.end(); ++i) {
+      if ((*i)->label() == "Gamma") {
+        tt << generate_gamma(icnt, *i, enlist);
+        ++icnt;
+      }
+    }
 
     vector<shared_ptr<Tensor> > op2(op.begin(), op.end());
     tt << generate_compute_header(icnt, op2, enlist);
