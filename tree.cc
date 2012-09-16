@@ -376,6 +376,8 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
 // close the loops
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
       tt << *iter << endl;
+  } else {
+    throw logic_error("Tree::generate_gamma this should not happen");
   }
   tt << "    };  " << endl;
   tt << "" << endl;
