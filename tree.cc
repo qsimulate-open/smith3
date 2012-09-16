@@ -358,7 +358,25 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "" << endl;
 // next up, real stuff here:
   tt << "    void compute_() {" << endl;
-
+// loops
+  vector<string> close;
+  string indent ="      ";
+  string gindent = indent;
+  list<shared_ptr<Index> > ti = gamma->index();
+  if (!enlist || depth() != 1) {
+    for (auto iter = ti.begin(); iter != ti.end(); ++iter, gindent += "  ") {
+          string cindex = (*iter)->str_gen();
+          tt << gindent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
+                                        << cindex << " != " << (*iter)->generate() << ".end(); "
+                                        << "++" << cindex << ") {" << endl;
+          close.push_back(gindent + "}");
+    }
+    tt << target_->generate_get_block(gindent, "o", true);
+    tt << target_->generate_scratch_area(gindent, "o", true); // true means zero-out
+// close the loops
+    for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
+      tt << *iter << endl;
+  }
   tt << "    };  " << endl;
   tt << "" << endl;
 // done
