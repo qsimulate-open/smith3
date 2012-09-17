@@ -231,7 +231,8 @@ static string merge__(vector<shared_ptr<Tensor> > array) {
     }
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
-    if (label == "f1" || label == "v2") label = "this->" + label + "_";
+//mkm maybe needed:
+    if (label == "f1" || label == "v2" || label == "Gamma") label = "this->" + label + "_";
     ss << (i != array.begin() ? ", " : "") << ((label == "proj") ? "r" : label);
   }
   return ss.str();
@@ -370,34 +371,22 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
                                         << "++" << cindex << ") {" << endl;
           close.push_back(gindent + "}");
     }
-    tt << target_->generate_get_block(gindent, "o", true);
-    tt << target_->generate_scratch_area(gindent, "o", true); // true means zero-out
-// now list the rdm (rdm1,rdm2,rdm3) tensors
-    for (auto i = bc_.begin(); i != bc_.end(); ++i) {
-       vector<shared_ptr<Tensor> > strs = (*i)->tensors_str();
-       list<shared_ptr<Index> > di = (*i)->loop_indices();
+// now list rdm tensors ..I somehow need to get information from active
+// todo in future: make if statements (if one delta then rdm2, if two deltas then rdm1 if none then make rdm3)
+// need to make this:   std::unique_ptr<double[]> 0data= Gamma->get_block(0hash)?
 // retrieving tensor_
-       tt << (*i)->tensor()->generate_get_block(gindent, "i0x");
-       tt << (*i)->tensor()->generate_sort_indices(gindent, "i0x", di) << endl;
-// retrieving subtree_
-       tt << (*i)->next_target()->generate_get_block(gindent, "i1-rdmx");
-       tt << (*i)->next_target()->generate_sort_indices(gindent, "i1-rdmX", di) << endl;
-    }
-/* // below didn't work so trying above method.
-    list<shared_ptr<Diagram> > ir = gamma->print();
-    for (auto iter = ir.begin(); iter != ir.end(); ++iter) {
-        tt << "rdmX= " << (*iter)-> generate() << endl; 
-    }
-*/ 
+    for (auto i = bc_.begin(); i != bc_.end(); ++i) {
+      tt << (*i)->active()->generate_get_block(gindent, "i0");
+      }
 // close the loops
-    for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
+    for (auto iter = close.rbegin(); iter != close.rend(); ++iter) 
       tt << *iter << endl;
   } else {
-    throw logic_error("Tree::generate_gamma this should not happen");
+       throw logic_error("Tree::generate_gamma this should not happen");
   }
   tt << "    };  " << endl;
   tt << "" << endl;
-// done
+// done with protected part
   tt << "" << endl;
   tt << "  public:" << endl;
   if (!enlist) {
@@ -409,6 +398,10 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "      act_    = i[1];" << endl;
   tt << "      virt_   = i[2];" << endl;
   tt << "      Gamma   = t[0];" << "// still need to fix this!" <<  endl;
+//this should probably be related to what rdms we have
+  tt << "      rdm1    = t[1];" << "// still need to fix this!" <<  endl;
+  tt << "      rdm2    = t[2];" << "// still need to fix this!" <<  endl;
+  tt << "      rdm3    = t[3];" << "// still need to fix this!" <<  endl;
   tt << "    };" << endl;
   tt << "    ~Task" << icnt << "() {};" << endl;
   tt << "};" << endl << endl;
