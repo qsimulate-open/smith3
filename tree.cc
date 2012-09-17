@@ -356,9 +356,8 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "    IndexRange virt_;" << endl;
   tt << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
   tt << "" << endl;
-// next up, real stuff here:
-  tt << "    void compute_() {" << endl;
 // loops
+  tt << "    void compute_() {" << endl;
   vector<string> close;
   string indent ="      ";
   string gindent = indent;
@@ -373,6 +372,23 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
     }
     tt << target_->generate_get_block(gindent, "o", true);
     tt << target_->generate_scratch_area(gindent, "o", true); // true means zero-out
+// now list the rdm (rdm1,rdm2,rdm3) tensors
+    for (auto i = bc_.begin(); i != bc_.end(); ++i) {
+       vector<shared_ptr<Tensor> > strs = (*i)->tensors_str();
+       list<shared_ptr<Index> > di = (*i)->loop_indices();
+// retrieving tensor_
+       tt << (*i)->tensor()->generate_get_block(gindent, "i0x");
+       tt << (*i)->tensor()->generate_sort_indices(gindent, "i0x", di) << endl;
+// retrieving subtree_
+       tt << (*i)->next_target()->generate_get_block(gindent, "i1-rdmx");
+       tt << (*i)->next_target()->generate_sort_indices(gindent, "i1-rdmX", di) << endl;
+    }
+/* // below didn't work so trying above method.
+    list<shared_ptr<Diagram> > ir = gamma->print();
+    for (auto iter = ir.begin(); iter != ir.end(); ++iter) {
+        tt << "rdmX= " << (*iter)-> generate() << endl; 
+    }
+*/ 
 // close the loops
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
       tt << *iter << endl;
