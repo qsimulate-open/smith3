@@ -91,6 +91,8 @@ class Active_" << count_ << " : public Active_base {\n\
 
 
 
+
+
 string RDM::str(string target, shared_ptr<Tensor> m) const {
   stringstream ss;
   if (delta_.size()) {

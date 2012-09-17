@@ -371,13 +371,10 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
                                         << "++" << cindex << ") {" << endl;
           close.push_back(gindent + "}");
     }
-// now list rdm tensors ..I somehow need to get information from active
-// todo in future: make if statements (if one delta then rdm2, if two deltas then rdm1 if none then make rdm3)
-// need to make this:   std::unique_ptr<double[]> 0data= Gamma->get_block(0hash)?
-// retrieving tensor_
-    for (auto i = bc_.begin(); i != bc_.end(); ++i) {
-      tt << (*i)->active()->generate_get_block(gindent, "i0");
-      }
+// now list rdm tensors
+// todo: make if statements (if one delta then rdm2, if two deltas then rdm1 if none then make rdm3)
+// goal is to make this:   std::unique_ptr<double[]> 0data= Gamma->get_block(0hash)?
+    tt << gamma->active()->generate_get_block(gindent, "i0",true);
 // close the loops
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter) 
       tt << *iter << endl;
