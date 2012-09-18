@@ -309,8 +309,7 @@ const list<shared_ptr<Index> > Active::index() const {
   return (*j)->index();
 }
 
-//mkm not sure if this should be in active.cc or active_gen.cc
-string Active::generate_get_block(const string cindent, const string lab, const bool move) const {
+string Active::generate_get_block(const string cindent, const string lab, const bool move, const shared_ptr<Tensor> gammat) const {
 
   string lbl = label_;
   if (lbl == "proj") lbl = "r";
