@@ -310,7 +310,7 @@ const list<shared_ptr<Index> > Active::index() const {
 }
 
 string Active::generate_get_block(const string cindent, const string lab, const bool move, const shared_ptr<Tensor> gammat) const {
-
+//mkm I don't think this label_ is working fully either
   string lbl = label_;
   if (lbl == "proj") lbl = "r";
   size_t found = lbl.find("dagger");

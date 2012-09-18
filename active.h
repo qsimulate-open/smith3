@@ -96,6 +96,8 @@ class Active {
     std::string label_;
     // a list of indices
     std::list<std::shared_ptr<Index> > index_;
+    // the gamma tensor
+    std::shared_ptr<Tensor> gammat
 
     mutable int count__;
 
