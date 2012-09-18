@@ -145,6 +145,7 @@ class Tree : public std::enable_shared_from_this<Tree> {
     std::string generate_task(const std::string, const int, const std::vector<std::shared_ptr<Tensor> >, const bool enlist) const;
 
     std::string generate_gamma(const int ic, const std::shared_ptr<Tensor> gamma, const bool enlist) const;
+    std::shared_ptr<Index> generate_rdms() const;
 
 };
 

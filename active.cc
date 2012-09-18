@@ -309,9 +309,9 @@ const list<shared_ptr<Index> > Active::index() const {
   return (*j)->index();
 }
 
-string Active::generate_get_block(const string cindent, const string lab, const bool move, const string label,const shared_ptr<Tensor> gamma) const {
 
-//mkm I didn't know how to get the index_ without passing gamma, is there a better way?
+string Active::generate_get_block(const string cindent, const string hlab, const string label, const shared_ptr<Tensor> gamma) const {
+
   list<shared_ptr<Index> > index_ = gamma->index();
 
   string lbl = label;
@@ -325,7 +325,7 @@ string Active::generate_get_block(const string cindent, const string lab, const 
   }
 
   stringstream tt;
-  tt << cindent << "std::vector<size_t> " << lab << "hash = vec(";
+  tt << cindent << "std::vector<size_t> " << hlab << "hash = vec(";
   if (!trans) {
     for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
       if (iter != index_.rbegin()) tt << ", ";
@@ -342,8 +342,8 @@ string Active::generate_get_block(const string cindent, const string lab, const 
   }
   tt << ");" << endl;
   {
-    tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
-                  << lbl << "->" << (move ? "move" : "get") << "_block(" << lab << "hash);" << endl;
+    tt << cindent << "std::unique_ptr<double[]> " << hlab << "data = "
+                  << lbl << "->" <<  "get" << "_block(" << hlab << "hash);" << endl;
   }
   return tt.str();
 }

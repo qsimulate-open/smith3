@@ -356,6 +356,10 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "    IndexRange act_;" << endl;
   tt << "    IndexRange virt_;" << endl;
   tt << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
+// mkm need to control these with if statement
+  tt << "    std::shared_ptr<Tensor<T> > rdm1;" << " // todo control these with if statement"<< endl;
+  tt << "    std::shared_ptr<Tensor<T> > rdm2;" << endl;
+  tt << "    std::shared_ptr<Tensor<T> > rdm3;" << endl;
   tt << "" << endl;
 // loops
   tt << "    void compute_() {" << endl;
@@ -371,9 +375,15 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
                                         << "++" << cindex << ") {" << endl;
           close.push_back(gindent + "}");
     }
-// now list rdm tensors
-// todo: make if statements (if one delta then rdm2, if two deltas then rdm1 if none then make rdm3)
-    tt << gamma->active()->generate_get_block(gindent, "i0", true, gamma->label(), gamma);
+// now generate gamma get block
+    tt << gamma->active()->generate_get_block(gindent, "i0", gamma->label(), gamma);
+// now get rdms
+    //tt << gamma->active()->generate_rdms();
+// put data
+  {
+    string label = gamma->label();
+    tt << gindent << (label == "proj" ? "r" : label) << "->put_block(ohash, odata);" << endl;
+  }
 // close the loops
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter) 
       tt << *iter << endl;
