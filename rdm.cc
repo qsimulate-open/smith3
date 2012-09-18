@@ -1,6 +1,6 @@
 //
 // SMITH3 - generates spin-free multireference electron correlation programs.
-// Filename: active.h
+// Filename: active_gen.cc
 // Copyright (C) 2012 Toru Shiozaki
 //
 // Author: Toru Shiozaki <shiozaki@northwestern.edu>
@@ -24,39 +24,17 @@
 //
 
 
-//
-// implements the active part
-//
+#include "constants.h"
+#include "active.h"
+#include <sstream>
+#include <algorithm>
+#include <iomanip>
 
+using namespace std;
 
-#ifndef __ACTIVE_H
-#define __ACTIVE_H
+string RDM::generate(string indent) const {
+  stringstream tt;
+  tt << indent << "// adding RDM" << endl;
+  return tt.str();
+}
 
-#include <string>
-#include <list>
-#include <memory>
-#include "op.h"
-#include "tensor.h"
-#include "rdm.h"
-
-class Tensor;
-
-class Active {
-  friend class Tensor;
-  protected:
-    std::list<std::shared_ptr<RDM> > rdm_;
-    void reduce(std::shared_ptr<RDM> in);
-
-    mutable int count__;
-
-  public:
-    Active(const std::list<std::shared_ptr<Index> >& in);
-    ~Active() {};
-
-    void print(const std::string& indent = "") const;
-    const std::list<std::shared_ptr<Index> > index() const;
-
-    std::string generate(const std::string cindent) const;
-};
-
-#endif

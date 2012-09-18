@@ -310,41 +310,11 @@ const list<shared_ptr<Index> > Active::index() const {
 }
 
 
-string Active::generate_get_block(const string cindent, const string hlab, const string label, const shared_ptr<Tensor> gamma) const {
 
-  list<shared_ptr<Index> > index_ = gamma->index();
-
-  string lbl = label;
-  if (lbl == "proj") lbl = "r";
-  size_t found = lbl.find("dagger");
-  bool trans = false;
-  if (found != string::npos) {
-    string tmp(lbl.begin(), lbl.begin()+found);
-    lbl = tmp;
-    trans = true;
-  }
-
+string Active::generate(const string indent) const {
   stringstream tt;
-  tt << cindent << "std::vector<size_t> " << hlab << "hash = vec(";
-  if (!trans) {
-    for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
-      if (iter != index_.rbegin()) tt << ", ";
-      tt << (*iter)->str_gen() << "->key()";
-    }
-  } else {
-    assert(!(index_.size() & 1));
-    for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
-      if (iter != index_.rbegin()) tt << ", ";
-      string i0 = (*iter)->str_gen() + "->key()";
-      ++iter;
-      tt << (*iter)->str_gen() << "->key()" << ", " << i0;
-    }
-  }
-  tt << ");" << endl;
-  {
-    tt << cindent << "std::unique_ptr<double[]> " << hlab << "data = "
-                  << lbl << "->" <<  "get" << "_block(" << hlab << "hash);" << endl;
+  for (auto i = rdm_.begin(); i != rdm_.end(); ++i) {
+    tt << (*i)->generate(indent);
   }
   return tt.str();
 }
-

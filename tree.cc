@@ -292,7 +292,7 @@ string Tree::generate_compute_header(const int ic, const vector<shared_ptr<Tenso
   }
   tt << "  protected:" << endl;
   tt << "    IndexRange closed_;" << endl;
-  tt << "    IndexRange act_;" << endl;
+  tt << "    IndexRange active_;" << endl;
   tt << "    IndexRange virt_;" << endl;
 
   vector<string> done;
@@ -322,7 +322,7 @@ string Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tenso
     tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : EnergyTask<T>() {" << endl;
   }
   tt << "      closed_ = i[0];" << endl;
-  tt << "      act_    = i[1];" << endl;
+  tt << "      active_ = i[1];" << endl;
   tt << "      virt_   = i[2];" << endl;
 
   int i = 0;
@@ -353,7 +353,7 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   }
   tt << "  protected:" << endl;
   tt << "    IndexRange closed_;" << endl;
-  tt << "    IndexRange act_;" << endl;
+  tt << "    IndexRange active_;" << endl;
   tt << "    IndexRange virt_;" << endl;
   tt << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
 // mkm need to control these with if statement
@@ -375,16 +375,13 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
                                         << "++" << cindex << ") {" << endl;
           close.push_back(gindent + "}");
     }
-// now generate gamma get block
-    tt << gamma->active()->generate_get_block(gindent, "i0", gamma->label(), gamma);
-// now get rdms
-    //tt << gamma->active()->generate_rdms();
-// put data
-  {
-    string label = gamma->label();
-    tt << gindent << (label == "proj" ? "r" : label) << "->put_block(ohash, odata);" << endl;
-  }
-// close the loops
+    // now generate gamma get block
+    tt << gamma->generate_get_block(gindent, "i0", true);
+    // now generate codes for rdm
+    tt << gamma->active()->generate(gindent);
+    // now generage gamma put block
+    tt << gindent << gamma->label() << "->put_block(ohash, odata);" << endl;
+    // close the loops
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter) 
       tt << *iter << endl;
   } else {
@@ -392,7 +389,7 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   }
   tt << "    };  " << endl;
   tt << "" << endl;
-// done with protected part
+  // done with protected part
   tt << "" << endl;
   tt << "  public:" << endl;
   if (!enlist) {
@@ -401,10 +398,10 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
     tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : EnergyTask<T>() {" << endl;
   }
   tt << "      closed_ = i[0];" << endl;
-  tt << "      act_    = i[1];" << endl;
+  tt << "      active_ = i[1];" << endl;
   tt << "      virt_   = i[2];" << endl;
   tt << "      Gamma   = t[0];" << "// still need to fix this!" <<  endl;
-//this should probably be related to what rdms we have
+  //this should probably be related to what rdms we have
   tt << "      rdm1    = t[1];" << "// still need to fix this!" <<  endl;
   tt << "      rdm2    = t[2];" << "// still need to fix this!" <<  endl;
   tt << "      rdm3    = t[3];" << "// still need to fix this!" <<  endl;
@@ -561,7 +558,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "    std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T> > queue_(new Queue<T>());" << endl;
 
-    ss << indent << "std::vector<IndexRange> index = vec(this->closed_, this->act_, this->virt_);" << endl << endl;
+    ss << indent << "std::vector<IndexRange> index = vec(this->closed_, this->active_, this->virt_);" << endl << endl;
     ss << indent << vectensor << " tensor0 = vec(r);" << endl;
     ss << indent << "std::shared_ptr<Task0<T> > task0(new Task0<T>(tensor0, index));" << endl;
     ss << indent << "queue_->add_task(task0);" << endl << endl;
@@ -587,7 +584,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     tt << "  protected:" << endl;
     tt << "    std::shared_ptr<Tensor<T> > r_;" << endl;
     tt << "    IndexRange closed_;" << endl;
-    tt << "    IndexRange act_;" << endl;
+    tt << "    IndexRange active_;" << endl;
     tt << "    IndexRange virt_;" << endl;
     tt << "" << endl;
     tt << "    void compute_() {" << endl;
@@ -598,7 +595,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     tt << "    Task0(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
     tt << "      r_ =  t[0];" << endl;
     tt << "      closed_ = i[0];" << endl;
-    tt << "      act_    = i[1];" << endl;
+    tt << "      active_ = i[1];" << endl;
     tt << "      virt_   = i[2];" << endl;
     tt << "    };  " << endl;
     tt << "    ~Task0() {}; " << endl;
