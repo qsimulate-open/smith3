@@ -107,7 +107,7 @@ class Active {
     const std::list<std::shared_ptr<Index> > index() const;
 
     std::string generate(std::shared_ptr<Tensor> merged) const;
-    std::string generate_get_block(const std::string, const std::string, const bool move = false,const std::shared_ptr<Tensor> gammat) const;
+    std::string generate_get_block(const std::string, const std::string, const bool move, const std::shared_ptr<Tensor> gammat) const;
 
 };
 
