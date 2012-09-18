@@ -374,7 +374,7 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
 // now list rdm tensors
 // todo: make if statements (if one delta then rdm2, if two deltas then rdm1 if none then make rdm3)
 // goal is to make this:   std::unique_ptr<double[]> 0data= Gamma->get_block(0hash)?
-    tt << gamma->active()->generate_get_block(gindent, "i0", true, gamma);
+    tt << gamma->active()->generate_get_block(gindent, "i0", true, gamma->label());
 // close the loops
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter) 
       tt << *iter << endl;
