@@ -309,7 +309,10 @@ const list<shared_ptr<Index> > Active::index() const {
   return (*j)->index();
 }
 
-string Active::generate_get_block(const string cindent, const string lab, const bool move, const string label) const {
+string Active::generate_get_block(const string cindent, const string lab, const bool move, const string label,const shared_ptr<Tensor> gamma) const {
+
+//mkm I didn't know how to get the index_ without passing gamma, is there a better way?
+  list<shared_ptr<Index> > index_ = gamma->index();
 
   string lbl = label;
   if (lbl == "proj") lbl = "r";

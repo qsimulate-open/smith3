@@ -92,12 +92,8 @@ class Active {
   protected:
     std::list<std::shared_ptr<RDM> > rdm_;
     void reduce(std::shared_ptr<RDM> in);
-    // label of this tensor.
-    std::string label_;
     // a list of indices
-    std::list<std::shared_ptr<Index> > index_;
-    // the gamma tensor
-    std::shared_ptr<Tensor> gammat
+    //   std::list<std::shared_ptr<Index> > index_;
 
     mutable int count__;
 
@@ -109,7 +105,7 @@ class Active {
     const std::list<std::shared_ptr<Index> > index() const;
 
     std::string generate(std::shared_ptr<Tensor> merged) const;
-    std::string generate_get_block(const std::string, const std::string, const bool move, const std::string label) const;
+    std::string generate_get_block(const std::string, const std::string, const bool move, const std::string label, const std::shared_ptr<Tensor> gamma) const;
 
 };
 
