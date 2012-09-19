@@ -53,6 +53,7 @@ class Active {
     const std::list<std::shared_ptr<Index> > index() const;
 
     std::string generate(const std::string cindent) const;
+    std::vector<int> required_rdm() const;
 };
 
 #endif

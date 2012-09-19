@@ -345,6 +345,8 @@ string Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tenso
 
 string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const bool enlist) const {
   stringstream tt;
+  vector<int> rdmn = gamma->active()->required_rdm();
+
   tt << "template <typename T>" << endl;
   if (!enlist) {
     tt << "class Task" << ic << " : public Task<T> {" <<  "  // associated with gamma" << endl;
@@ -357,10 +359,9 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "    IndexRange virt_;" << endl;
   tt << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
   // mkm need to control these with if statement
-  tt << "    std::shared_ptr<Tensor<T> > rdm1;" << " // todo control these with if statement"<< endl;
-  tt << "    std::shared_ptr<Tensor<T> > rdm2;" << endl;
-  tt << "    std::shared_ptr<Tensor<T> > rdm3;" << endl;
-  tt << "" << endl;
+  for (auto i = rdmn.begin(); i != rdmn.end(); ++i)
+    tt << "    std::shared_ptr<Tensor<T> > rdm" << *i << ";" << endl;
+  tt << endl;
   // loops
   tt << "    void compute_() {" << endl;
   vector<string> close;
@@ -402,9 +403,12 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "      virt_   = i[2];" << endl;
   tt << "      Gamma   = t[0];" << "// still need to fix this!" <<  endl;
   //this should probably be related to what rdms we have
-  tt << "      rdm1    = t[1];" << "// still need to fix this!" <<  endl;
-  tt << "      rdm2    = t[2];" << "// still need to fix this!" <<  endl;
-  tt << "      rdm3    = t[3];" << "// still need to fix this!" <<  endl;
+  {
+    int itmp = 1;
+    for (auto i = rdmn.begin(); i != rdmn.end(); ++i, ++itmp) {
+      tt << "      rdm" << *i << "    = t[" << itmp << "];" << endl; 
+    }
+  }
   tt << "    };" << endl;
   tt << "    ~Task" << icnt << "() {};" << endl;
   tt << "};" << endl << endl;

@@ -29,6 +29,7 @@
 #include <iomanip>
 #include <stdexcept>
 #include "active.h"
+#include <algorithm>
 
 using namespace std;
 
@@ -318,4 +319,15 @@ string Active::generate(const string indent) const {
     tt << indent << "}" << endl;
   }
   return tt.str();
+}
+
+
+vector<int> Active::required_rdm() const {
+  vector<int> out;
+  for (auto i = rdm_.begin(); i != rdm_.end(); ++i) {
+    if (find(out.begin(), out.end(), (*i)->rank()) == out.end()) out.push_back((*i)->rank());
+  }
+
+  sort(out.begin(), out.end());
+  return out;
 }

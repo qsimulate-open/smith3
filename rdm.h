@@ -26,6 +26,12 @@
 #ifndef __SRC_RDM_H
 #define __SRC_RDM_H
 
+#include <list>
+#include <memory>
+#include <string>
+#include <cassert>
+#include "index.h"
+
 class RDM {
   protected:
     // prefactor
@@ -69,6 +75,8 @@ class RDM {
 
     // generate a code
     std::string generate(std::string indent) const;
+
+    int rank() const { assert(index_.size()%2 == 0); return index_.size()/2; }; 
 };
 
 

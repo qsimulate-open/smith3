@@ -37,13 +37,17 @@ using namespace std;
 // ok to do this here b/c these blocks need special attention because of deltas
 string RDM::generate(string indent) const {
   stringstream tt;
+  indent += "  ";
+
   //first let's do the generate_get_block...
   //problem: below lbl needs to be the rdm name, but isn't this bad b/c label is above in hierarchy
-  tt << indent << "std::unique_ptr<double[]> " << "i0" << "data = "
-                  << "lbl" << "->" << "get" << "_block(" << "i0" << "hash);" << endl;
- 
- 
-   
+  tt << indent << "std::vector<size_t> i0hash = vec("; 
+  for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
+    if (iter != index_.rbegin()) tt << ", ";
+    tt << (*iter)->str_gen() << "->key()";
+  }   
+  tt << ");" << endl; 
+  tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
 
   return tt.str();
 }
