@@ -34,7 +34,9 @@ using namespace std;
 
 string RDM::generate(string indent) const {
   stringstream tt;
-  tt << indent << "// adding RDM" << endl;
+  tt << indent << "// needed for adding RDM" << endl;
   return tt.str();
 }
+
+
 

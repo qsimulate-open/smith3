@@ -375,11 +375,14 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
                                         << "++" << cindex << ") {" << endl;
           close.push_back(gindent + "}");
     }
-    // now generate gamma get block, true does a move_block
+    // generate gamma get block, true does a move_block
     tt << gamma->generate_get_block(gindent, "o", true);
     // now generate codes for rdm
     tt << gamma->active()->generate(gindent);
-    // now generate gamma put block
+
+    // now add modified rdms to gamma source
+
+    // generate gamma put block
     tt << gindent << gamma->label() << "->put_block(ohash, odata);" << endl;
     // close the loops
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter) 
