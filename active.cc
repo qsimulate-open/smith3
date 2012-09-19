@@ -314,7 +314,7 @@ string Active::generate(const string indent) const {
   stringstream tt;
   for (auto i = rdm_.begin(); i != rdm_.end(); ++i) {
     tt << indent << "{" << endl;
-    tt << (*i)->generate(indent);
+    tt << (*i)->generate(indent); // this generate needs to do a get_block and sort_indices
     tt << indent << "}" << endl;
   }
   return tt.str();

@@ -32,11 +32,22 @@
 
 using namespace std;
 
+
+// need to do here both what generate_get_block and a generate_sort_indices usually does   
+// ok to do this here b/c these blocks need special attention because of deltas
 string RDM::generate(string indent) const {
   stringstream tt;
-  tt << indent << "// needed for adding RDM" << endl;
+  //first let's do the generate_get_block...
+  //problem: below lbl needs to be the rdm name, but isn't this bad b/c label is above in hierarchy
+  tt << indent << "std::unique_ptr<double[]> " << "i0" << "data = "
+                  << "lbl" << "->" << "get" << "_block(" << "i0" << "hash);" << endl;
+ 
+ 
+   
+
   return tt.str();
 }
+
 
 
 
