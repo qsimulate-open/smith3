@@ -231,7 +231,7 @@ static string merge__(vector<shared_ptr<Tensor> > array) {
     }
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
-//mkm maybe needed:
+    //mkm maybe needed:
     if (label == "f1" || label == "v2" || label == "Gamma") label = "this->" + label + "_";
     ss << (i != array.begin() ? ", " : "") << ((label == "proj") ? "r" : label);
   }
