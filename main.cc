@@ -113,4 +113,6 @@ int main() {
 #endif
 
   cout << res->generate() << endl;
+
+  return 0;
 }

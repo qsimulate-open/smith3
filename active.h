@@ -36,13 +36,9 @@
 #include <list>
 #include <memory>
 #include "op.h"
-#include "tensor.h"
 #include "rdm.h"
 
-class Tensor;
-
 class Active {
-  friend class Tensor;
   protected:
     std::list<std::shared_ptr<RDM> > rdm_;
     void reduce(std::shared_ptr<RDM> in);

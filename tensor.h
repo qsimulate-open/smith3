@@ -41,10 +41,7 @@
 #include "op.h"
 #include "active.h"
 
-class Active;
-
 class Tensor {
-  friend class Active;
   protected:
     // factor
     double factor_;
