@@ -310,7 +310,6 @@ const list<shared_ptr<Index> > Active::index() const {
 }
 
 
-
 string Active::generate(const string indent) const {
   stringstream tt;
   for (auto i = rdm_.begin(); i != rdm_.end(); ++i) {

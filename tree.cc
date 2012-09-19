@@ -356,12 +356,12 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "    IndexRange active_;" << endl;
   tt << "    IndexRange virt_;" << endl;
   tt << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
-// mkm need to control these with if statement
+  // mkm need to control these with if statement
   tt << "    std::shared_ptr<Tensor<T> > rdm1;" << " // todo control these with if statement"<< endl;
   tt << "    std::shared_ptr<Tensor<T> > rdm2;" << endl;
   tt << "    std::shared_ptr<Tensor<T> > rdm3;" << endl;
   tt << "" << endl;
-// loops
+  // loops
   tt << "    void compute_() {" << endl;
   vector<string> close;
   string indent ="      ";
@@ -375,11 +375,11 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
                                         << "++" << cindex << ") {" << endl;
           close.push_back(gindent + "}");
     }
-    // now generate gamma get block
-    tt << gamma->generate_get_block(gindent, "i0", true);
+    // now generate gamma get block, true does a move_block
+    tt << gamma->generate_get_block(gindent, "o", true);
     // now generate codes for rdm
     tt << gamma->active()->generate(gindent);
-    // now generage gamma put block
+    // now generate gamma put block
     tt << gindent << gamma->label() << "->put_block(ohash, odata);" << endl;
     // close the loops
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter) 
