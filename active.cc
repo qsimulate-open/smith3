@@ -313,8 +313,9 @@ const list<shared_ptr<Index> > Active::index() const {
 string Active::generate(const string indent) const {
   stringstream tt;
   for (auto i = rdm_.begin(); i != rdm_.end(); ++i) {
+    tt << indent << "{" << endl;
     tt << (*i)->generate(indent);
-    tt << (*i)->fac() << endl; // some rdm functions don't work like index()..why?
+    tt << indent << "}" << endl;
   }
   return tt.str();
 }
