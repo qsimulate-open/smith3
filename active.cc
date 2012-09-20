@@ -310,12 +310,12 @@ const list<shared_ptr<Index> > Active::index() const {
 }
 
 
-string Active::generate(const string indent, const string lab) const {
+string Active::generate(const string indent, const string lab, const list<shared_ptr<Index> >& loop) const {
   stringstream tt;
   for (auto i = rdm_.begin(); i != rdm_.end(); ++i) {
     tt << indent << "{" << endl;
     // this generate does both a get_block and a sort_indices
-    tt << (*i)->generate(indent,lab); 
+    tt << (*i)->generate(indent,lab,loop); 
     tt << indent << "}" << endl;
   }
   return tt.str();

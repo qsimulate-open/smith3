@@ -378,7 +378,7 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
     // generate gamma get block, true does a move_block
     tt << gamma->generate_get_block(gindent, "o", true);
     // now generate codes for rdm
-    tt << gamma->active()->generate(gindent,"o");
+    tt << gamma->active()->generate(gindent,"o",ti);
     // generate gamma put block
     tt << gindent << gamma->label() << "->put_block(ohash, odata);" << endl;
     // close the loops

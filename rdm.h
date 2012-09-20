@@ -74,7 +74,7 @@ class RDM {
     std::list<std::shared_ptr<RDM> > reduce_one(std::list<int>& done) const;
 
     // generate a code
-    std::string generate(std::string indent, const std::string tlab) const;
+    std::string generate(std::string indent, const std::string tlab,const std::list<std::shared_ptr<Index> >& loop) const;
 
     int rank() const { assert(index_.size()%2 == 0); return index_.size()/2; }; 
 };
