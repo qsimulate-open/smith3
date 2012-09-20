@@ -35,12 +35,11 @@ using namespace std;
 
 // need to do here both what generate_get_block and a generate_sort_indices usually does   
 // ok to do this here b/c these blocks need special attention because of deltas
-string RDM::generate(string indent) const {
+string RDM::generate(string indent, const string tlab) const {
   stringstream tt;
   indent += "  ";
 
-  //first let's do the generate_get_block...
-  //problem: below lbl needs to be the rdm name, but isn't this bad b/c label is above in hierarchy
+  // first let's do the generate_get_block for an rdm..
   tt << indent << "std::vector<size_t> i0hash = vec("; 
   for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
     if (iter != index_.rbegin()) tt << ", ";
@@ -48,7 +47,16 @@ string RDM::generate(string indent) const {
   }   
   tt << ");" << endl; 
   tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
-
+  // now do the sort
+  tt << indent << "sort_indices<";
+  tt << "NEED-TO-FILL-IN>"; 
+  tt << "(i0data, " << tlab << "data, "  ; 
+  for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
+    if (iter != index_.rbegin()) tt << ", ";
+    tt << (*iter)->str_gen() << "->size()";
+  }
+  tt << ");" << endl;
+  
   return tt.str();
 }
 

@@ -52,7 +52,7 @@ class Active {
     void print(const std::string& indent = "") const;
     const std::list<std::shared_ptr<Index> > index() const;
 
-    std::string generate(const std::string cindent) const;
+    std::string generate(const std::string cindent, const std::string lab) const;
     std::vector<int> required_rdm() const;
 };
 

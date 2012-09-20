@@ -358,7 +358,6 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "    IndexRange active_;" << endl;
   tt << "    IndexRange virt_;" << endl;
   tt << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
-  // mkm need to control these with if statement
   for (auto i = rdmn.begin(); i != rdmn.end(); ++i)
     tt << "    std::shared_ptr<Tensor<T> > rdm" << *i << ";" << endl;
   tt << endl;
@@ -379,7 +378,7 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
     // generate gamma get block, true does a move_block
     tt << gamma->generate_get_block(gindent, "o", true);
     // now generate codes for rdm
-    tt << gamma->active()->generate(gindent);
+    tt << gamma->active()->generate(gindent,"o");
     // generate gamma put block
     tt << gindent << gamma->label() << "->put_block(ohash, odata);" << endl;
     // close the loops
@@ -401,8 +400,8 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "      closed_ = i[0];" << endl;
   tt << "      active_ = i[1];" << endl;
   tt << "      virt_   = i[2];" << endl;
-  tt << "      Gamma   = t[0];" << "// still need to fix this!" <<  endl;
-  //this should probably be related to what rdms we have
+  tt << "      Gamma   = t[0];" << endl;
+  //this is related to what rdms we have
   {
     int itmp = 1;
     for (auto i = rdmn.begin(); i != rdmn.end(); ++i, ++itmp) {

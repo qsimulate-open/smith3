@@ -29,7 +29,6 @@
 #include <iomanip>
 #include <stdexcept>
 #include "active.h"
-#include <algorithm>
 
 using namespace std;
 
@@ -311,11 +310,12 @@ const list<shared_ptr<Index> > Active::index() const {
 }
 
 
-string Active::generate(const string indent) const {
+string Active::generate(const string indent, const string lab) const {
   stringstream tt;
   for (auto i = rdm_.begin(); i != rdm_.end(); ++i) {
     tt << indent << "{" << endl;
-    tt << (*i)->generate(indent); // this generate needs to do a get_block and sort_indices
+    // this generate does both a get_block and a sort_indices
+    tt << (*i)->generate(indent,lab); 
     tt << indent << "}" << endl;
   }
   return tt.str();
