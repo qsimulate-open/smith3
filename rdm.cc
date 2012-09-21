@@ -51,10 +51,12 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   }   
   tt << ");" << endl; 
   tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
+
   // now do the sort 
   vector<string> close;
   string itag = "i";
   string iindent = "  ";
+  // start sort loops
   int cntl=0;
   for (auto i = loop.begin(); i != loop.end(); ++i,++cntl) {
     // string itag += string((*iter)->num());  // new label this would simplify things for next line
@@ -62,12 +64,14 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
     close.push_back(indent + "}");
     indent += iindent;
   }
-  // somehow check if we have a delta, if so we need to process  and get the indices
-  // if ( delta_->delta()->size()  != 0 )  
-  // for (auto j = delta_.begin(); j != delta_.end(); ++j){
-  //  tt << indent << (*j)->delta() << endl;
-  //}
-  
+  // somehow check if we have a delta, if so we need to process and get the indices
+  // and when don't have need to make an exception for data
+/*
+  for (auto d = delta_.begin() ; d != delta_.end(); ++d) {  
+    std::cout << (*d)->print() << endl;
+  }    
+*/
+
   // make odata part of summation for target
   int cnt=0;
   int cntp=0;
