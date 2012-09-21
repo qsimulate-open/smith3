@@ -363,30 +363,20 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << endl;
   // loops
   tt << "    void compute_() {" << endl;
-  vector<string> close;
   string indent ="      ";
   string gindent = indent;
-  list<shared_ptr<Index> > ti = gamma->index();
-  if (!enlist || depth() != 1) {
-    for (auto iter = ti.begin(); iter != ti.end(); ++iter, gindent += "  ") {
-          string cindex = (*iter)->str_gen();
-          tt << gindent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
-                                        << cindex << " != " << (*iter)->generate() << ".end(); "
-                                        << "++" << cindex << ") {" << endl;
-          close.push_back(gindent + "}");
-    }
-    // generate gamma get block, true does a move_block
-    tt << gamma->generate_get_block(gindent, "o", true);
-    // now generate codes for rdm
-    tt << gamma->active()->generate(gindent,"o",ti);
-    // generate gamma put block
-    tt << gindent << gamma->label() << "->put_block(ohash, odata);" << endl;
-    // close the loops
-    for (auto iter = close.rbegin(); iter != close.rend(); ++iter) 
-      tt << *iter << endl;
-  } else {
-       throw logic_error("Tree::generate_gamma this should not happen");
-  }
+  vector<string> close;
+  tt << gamma->generate_loop(gindent, close);
+  // generate gamma get block, true does a move_block
+  tt << gamma->generate_get_block(gindent, "o", true);
+  // now generate codes for rdm
+  tt << gamma->generate_active(gindent, "o");
+
+  // generate gamma put block
+  tt << gindent << gamma->label() << "->put_block(ohash, odata);" << endl;
+  // close the loops
+  for (auto iter = close.rbegin(); iter != close.rend(); ++iter) 
+    tt << *iter << endl;
   tt << "    };  " << endl;
   tt << "" << endl;
   // done with protected part
@@ -420,15 +410,8 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
 
   vector<string> close;
   string cindent = indent;
-  list<shared_ptr<Index> > ti = target->index();
   // note that I am using reverse_iterator
-  for (auto iter = ti.begin(); iter != ti.end(); ++iter, cindent += "  ") {
-    string cindex = (*iter)->str_gen();
-    tt << cindent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
-                                  << cindex << " != " << (*iter)->generate() << ".end(); "
-                                  << "++" << cindex << ") {" << endl;
-    close.push_back(cindent + "}");
-  }
+  tt << target->generate_loop(cindent, close);
   // get data
   tt << target->generate_get_block(cindent, "o", true);
 

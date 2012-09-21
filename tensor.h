@@ -96,6 +96,9 @@ class Tensor {
                                              const std::shared_ptr<Tensor>, const std::shared_ptr<Tensor>) const;
 
     std::pair<std::string, std::string> generate_dim(const std::list<std::shared_ptr<Index> >&) const;
+
+    std::string generate_active(const std::string indent, const std::string tag) const;
+    std::string generate_loop(std::string&, std::vector<std::string>&) const;
 };
 
 #endif

@@ -47,33 +47,6 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   }   
   tt << ");" << endl; 
   tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
-  // now do the sort
-  vector<int> done;
-  tt << indent << "sort_indices<";
-  for (auto i = loop.rbegin(); i != loop.rend(); ++i) {
-    int cnt = 0;
-    for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
-      if ((*i)->identical(*j)) break;  
-    }
-    //if (cnt == index_.size()) throw logic_error("should not happen.. RDM::generate");
-    if (cnt == index_.size()) std::cout << "the count: " << cnt << endl;
-    done.push_back(cnt);
-  }
-  // then fill out others
-  for (int i = 0; i != index_.size(); ++i) {
-    if (find(done.begin(), done.end(), i) == done.end())
-      done.push_back(i);
-  }
-  // write out
-  for (auto i = done.begin(); i != done.end(); ++i) {
-    tt << *i << ",";
-  }
-  tt << ">(i0data, " << tlab << "data, " ; 
-  for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
-    if (iter != index_.rbegin()) tt << ", ";
-    tt << (*iter)->str_gen() << "->size()";
-  }
-  tt << ");" << endl;
   
   return tt.str();
 }

@@ -348,3 +348,22 @@ pair<string, string> Tensor::generate_dim(const list<shared_ptr<Index> >& di) co
   }
   return make_pair(ss.str(), tt.str());
 }
+
+
+string Tensor::generate_active(const string indent, const string tag) const {
+  assert(label() == "Gamma");
+  return active()->generate(indent, tag, index());
+}
+
+
+string Tensor::generate_loop(string& indent, vector<string>& close) const {
+  stringstream tt;
+  for (auto iter = index_.begin(); iter != index_.end(); ++iter, indent += "  ") {
+    string cindex = (*iter)->str_gen();
+    tt << indent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
+                                 << cindex << " != " << (*iter)->generate() << ".end(); "
+                                 << "++" << cindex << ") {" << endl;
+    close.push_back(indent + "}");
+  }
+  return tt.str();
+}
