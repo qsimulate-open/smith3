@@ -38,16 +38,68 @@ using namespace std;
 string RDM::generate(string indent, const string tlab, const list<shared_ptr<Index> >& loop) const {
   stringstream tt;
   indent += "  ";
-
+  stringstream ls;
+  stringstream rs;
+  
+  ls  << "odata[";
+  rs << "data[" ;
+  
   // first let's do the generate_get_block for an rdm..
   tt << indent << "std::vector<size_t> i0hash = vec("; 
-  for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
+  int cntr=0;
+  for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter,++cntr) {
     if (iter != index_.rbegin()) tt << ", ";
     tt << (*iter)->str_gen() << "->key()";
   }   
   tt << ");" << endl; 
   tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
+  // now do the sort 
+  vector<string> close;
+  string itag = "i";
+  string iindent = "  ";
+  int cntl=0;
+  for (auto i = loop.begin(); i != loop.end(); ++i,++cntl) {
+    // string itag += string((*iter)->num());  // new label this would simplify things for next line
+    tt << indent << "for (int " << itag << (*i)->num() << " =0; " << itag << (*i)->num() << " != " << (*i)->str_gen() <<             "->size(); ++"<< itag << (*i)->num() << ") {" << endl;
+    close.push_back(indent + "}");
+    indent += iindent;
+  }
+  // somehow check if we have a delta, if so we need to process  and get the indices
+  // if ( delta_->delta()->size()  != 0 )  
+  // for (auto j = delta_.begin(); j != delta_.end(); ++j){
+  //  tt << indent << (*j)->delta() << endl;
+  //}
   
+  // make odata part of summation for target
+  int cnt=0;
+  int cntp=0;
+  for (auto ri = loop.rbegin(); ri != loop.rend(); ++ri,++cnt,++cntp) {
+     if (cnt != cntl-1) {
+      ls << itag << (*ri)->num() << "+" << (*ri)->str_gen() << "->size();*(";
+     } else {
+      ls << itag << (*ri)->num();
+      for (int p=0; p!= cntp; ++cntp) ls << ")" ;
+      ls << "]";
+     }
+   }
+  // make data part of summation
+  cnt=0;
+  cntp=0;
+  for (auto riter = loop.rbegin(); riter != loop.rend(); ++riter,++cnt,++cntp) {
+     if (cnt != cntr-1) {
+      rs << itag << (*riter)->num() << "+" << (*riter)->str_gen() << "->size();*(";
+     } else {
+      rs << itag << (*riter)->num();
+      for (int p=0; p!= cntp; ++cntp) rs << ")" ;
+      rs << "]";
+     }
+   }
+  // add the odata and data summations with prefactor
+
+
+  // close loops
+  for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
+        tt << *iter << endl;
   return tt.str();
 }
 
