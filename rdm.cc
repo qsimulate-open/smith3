@@ -68,12 +68,14 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   // and when don't have need to make an exception for data addition
   for (auto d = delta_.begin() ; d != delta_.end(); ++d) {  
     std::cout << d->first->str_gen() << " " << d->second->str_gen() << endl;
+    tt << indent << "if (" << d->first->str_gen() << " == " << d->second->str_gen() << " && " << itag << d->second->str_gen() << " == " << itag << d->second->str_gen() << ") {" << endl;
   }    
+    
 
   // make odata part of summation for target
   int cnt = 0;
   int cntp = 0;
-  ls  << "odata[";
+  ls  << " odata[";
   for (auto ri = loop.rbegin(); ri != loop.rend(); ++ri, ++cnt) {
     if (cnt != cntl-1 && cnt != cntl-2) {
       ls << itag << (*ri)->num() << "+" << (*ri)->str_gen() << "->size()*(";
@@ -106,12 +108,12 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   }
   }
   // add the odata and data summations with prefactor
-
-  tt << indent << ls.str()  << indent <<" += " << rs.str() << ";" << endl;
-
+  tt << indent << ls.str()  << indent <<" += " << rs.str() << ";" ;
+  // end the if statement
+  tt << indent << endl;
   // close loops
   for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-        tt << *iter << endl;
+    tt << *iter << endl;
   return tt.str();
 }
 
