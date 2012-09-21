@@ -66,11 +66,9 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   }
   // somehow check if we have a delta, if so we need to process and get the indices
   // and when don't have need to make an exception for data addition
-/*
   for (auto d = delta_.begin() ; d != delta_.end(); ++d) {  
-    std::cout << (*d)->print() << endl;
+    std::cout << d->first->str_gen() << " " << d->second->str_gen() << endl;
   }    
-*/
 
   // make odata part of summation for target
   int cnt = 0;
@@ -93,7 +91,7 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   int cnt = 0;
   int cntp = 0;
   // mkm not sure why this factor isn't looking like a double, ie I get 1 and not 1.0
-  rs << "(" << factor() << ") * data[";
+  rs << "(" << setprecision(1) << fixed << factor() << ") * data[";
   for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter, ++cnt) {
     if (cnt != cntr-1 && cnt!= cntr-2) {
       rs << itag << (*riter)->num() << "+" << (*riter)->str_gen() << "->size()*(";
