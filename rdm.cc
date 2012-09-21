@@ -78,23 +78,27 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
       ls << itag << (*ri)->num() << "+" << (*ri)->str_gen() << "->size();*(";
      } else {
       ls << itag << (*ri)->num();
-      for (int p=0; p!= cntp; ++cntp) ls << ")" ;
+      for (int p=0; p!= cntp; ++p) ls << ")" ;
       ls << "]";
      }
    }
   // make data part of summation
-  cnt=0;
-  cntp=0;
+  {
+  int cnt=0;
+  int cntp=0;
   for (auto riter = loop.rbegin(); riter != loop.rend(); ++riter,++cnt,++cntp) {
-     if (cnt != cntr-1) {
+    if (cnt != cntr-1) {
       rs << itag << (*riter)->num() << "+" << (*riter)->str_gen() << "->size();*(";
-     } else {
+    } else {
       rs << itag << (*riter)->num();
-      for (int p=0; p!= cntp; ++cntp) rs << ")" ;
+      for (int p=0; p!= cntp; ++p) rs << ")" ;
       rs << "]";
-     }
-   }
+    }
+  }
+  }
   // add the odata and data summations with prefactor
+
+  tt << indent << ls.str() << " = " << rs.str() << ";" << endl;
 
 
   // close loops
