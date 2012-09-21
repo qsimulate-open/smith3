@@ -41,8 +41,6 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   stringstream ls;
   stringstream rs;
   
-  ls  << "odata[";
-  rs << "data[" ;
   
   // first let's do the generate_get_block for an rdm..
   tt << indent << "std::vector<size_t> i0hash = vec("; 
@@ -73,33 +71,40 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   // make odata part of summation for target
   int cnt=0;
   int cntp=0;
-  for (auto ri = loop.rbegin(); ri != loop.rend(); ++ri,++cnt,++cntp) {
-     if (cnt != cntl-1) {
-      ls << itag << (*ri)->num() << "+" << (*ri)->str_gen() << "->size();*(";
-     } else {
+  ls  << "odata[";
+  for (auto ri = loop.rbegin(); ri != loop.rend(); ++ri,++cnt) {
+    if (cnt != cntl-1 && cnt != cntl-2) {
+      ls << itag << (*ri)->num() << "+" << (*ri)->str_gen() << "->size()*(";
+      ++cntp;
+    } else if (cnt == cntl-2 ){
+      ls << itag << (*ri)->num() << "+" << (*ri)->str_gen() << "->size()*";
+    } else {
       ls << itag << (*ri)->num();
-      for (int p=0; p!= cntp; ++p) ls << ")" ;
-      ls << "]";
-     }
-   }
+      for (int p=0; p!= cntp; ++p) ls << ")";
+      ls << "]" << endl;
+    }
+  }
   // make data part of summation
   {
   int cnt=0;
   int cntp=0;
-  for (auto riter = loop.rbegin(); riter != loop.rend(); ++riter,++cnt,++cntp) {
-    if (cnt != cntr-1) {
-      rs << itag << (*riter)->num() << "+" << (*riter)->str_gen() << "->size();*(";
+  rs << "data[";
+  for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter,++cnt) {
+    if (cnt != cntr-1 && cnt!= cntr-2) {
+      rs << itag << (*riter)->num() << "+" << (*riter)->str_gen() << "->size()*(";
+      ++cntp;
+    } else if ( cnt == cntr -2){
+      rs << itag << (*riter)->num() << "+" << (*riter)->str_gen() << "->size()*";
     } else {
       rs << itag << (*riter)->num();
-      for (int p=0; p!= cntp; ++p) rs << ")" ;
+      for (int p=0; p!= cntp; ++p) rs << ")";
       rs << "]";
     }
   }
   }
   // add the odata and data summations with prefactor
 
-  tt << indent << ls.str() << " = " << rs.str() << ";" << endl;
-
+  tt << indent << ls.str()  << indent <<" += " << rs.str() << ";" << endl;
 
   // close loops
   for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
