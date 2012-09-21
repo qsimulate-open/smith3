@@ -88,7 +88,8 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   {
   int cnt=0;
   int cntp=0;
-  rs << "data[";
+  // mkm not sure why this factor isn't looking like a double, ie I get 1 and not 1.0
+  rs << "(" << factor() << ") * data[";
   for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter,++cnt) {
     if (cnt != cntr-1 && cnt!= cntr-2) {
       rs << itag << (*riter)->num() << "+" << (*riter)->str_gen() << "->size()*(";
