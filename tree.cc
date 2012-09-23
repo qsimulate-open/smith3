@@ -49,11 +49,8 @@ BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor
 void BinaryContraction::print() const {
   string indent = "";
   for (int i = 0; i != depth(); ++i) indent += "  ";
-  cout << indent
-       << (target_ ? (target_->str()+" = ") : "") << tensor_->str() << " * " << subtree_.front()->target()->str() << endl;
-  for (auto i = subtree_.begin(); i != subtree_.end(); ++i) {
-    (*i)->print();
-  }
+  cout << indent << (target_ ? (target_->str()+" = ") : "") << tensor_->str() << " * " << subtree_.front()->target()->str() << endl;
+  for (auto& i : subtree_) i->print();
 }
 
 
@@ -183,10 +180,8 @@ void Tree::factorize() {
       }
     }
   }
-  for (auto i = done.begin(); i != done.end(); ++i)
-    bc_.erase(*i);
-  for (auto i = bc_.begin(); i != bc_.end(); ++i)
-    (*i)->factorize();
+  for (auto& i : done) bc_.erase(i);
+  for (auto& i : bc_) i->factorize();
 }
 
 
@@ -196,8 +191,7 @@ int Tree::depth() const { return parent_ ? parent_->parent()->depth()+1 : 0; }
 
 void Tree::set_target_rec() {
   if (!bc_.empty()) {
-    for (auto i = bc_.begin() ; i != bc_.end(); ++i)
-      (*i)->set_target_rec();
+    for (auto& i : bc_) i->set_target_rec();
   }
 }
 
@@ -296,8 +290,8 @@ string Tree::generate_compute_header(const int ic, const vector<shared_ptr<Tenso
   tt << "    IndexRange virt_;" << endl;
 
   vector<string> done;
-  for (auto s = tensors.begin(); s != tensors.end(); ++s) {
-    string label = label__((*s)->label());
+  for (auto& s : tensors) {
+    string label = label__(s->label());
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
     tt << "    std::shared_ptr<Tensor<T> > " << label << ";" << endl;
@@ -358,8 +352,8 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "    IndexRange active_;" << endl;
   tt << "    IndexRange virt_;" << endl;
   tt << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
-  for (auto i = rdmn.begin(); i != rdmn.end(); ++i)
-    tt << "    std::shared_ptr<Tensor<T> > rdm" << *i << ";" << endl;
+  for (auto i : rdmn)
+    tt << "    std::shared_ptr<Tensor<T> > rdm" << i << ";" << endl;
   tt << endl;
   // loops
   tt << "    void compute_() {" << endl;
@@ -439,9 +433,9 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
         map.push_back(make_pair(k1, k3));
         map.push_back(make_pair(k3, k1));
         list<shared_ptr<Index> > tmp;
-        for (auto k = top->index().begin(); k != top->index().end(); ++k) {
+        for (auto& k : top->index()) {
           for (auto l = map.begin(); l != map.end(); ++l) {
-            if ((*k)->identical(*l->first)) {
+            if (k->identical(*l->first)) {
               tmp.push_back(*l->second); 
               break;
             }
@@ -605,9 +599,9 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     op.insert(op.end(), op_.begin(), op_.end());
     ss << generate_task(indent, icnt, op, enlist);
 
-    for (auto i = op_.begin(); i != op_.end(); ++i) {
-      if ((*i)->label() == "Gamma") {
-        tt << generate_gamma(icnt, *i, enlist);
+    for (auto& i : op_) {
+      if (i->label() == "Gamma") {
+        tt << generate_gamma(icnt, i, enlist);
         ++icnt;
       }
     }
@@ -626,12 +620,12 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
   for (auto i = bc_.begin(); i != bc_.end(); ++i) {
     vector<shared_ptr<Tensor> > strs = (*i)->tensors_str();
 
-    for (auto s = strs.begin(); s != strs.end(); ++s) {
+    for (auto& s : strs) {
       // if it contains a new intermediate tensor, dump a constructor
       // (while registering in ii - note that ii is a static variable here).
-      if (find(ii.begin(), ii.end(), *s) == ii.end() && (*s)->label().find("I") != string::npos) {
-        ii.push_back(*s);
-        ss << (*s)->constructor_str(indent) << endl;
+      if (find(ii.begin(), ii.end(), s) == ii.end() && s->label().find("I") != string::npos) {
+        ii.push_back(s);
+        ss << s->constructor_str(indent) << endl;
       }
     }
     // saving a counter to a protected member for dependency checks
@@ -650,9 +644,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
       if (!enlist || depth() != 1) {
         for (auto iter = ti.begin(); iter != ti.end(); ++iter, cindent += "  ") {
           string cindex = (*iter)->str_gen();
-          tt << cindent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
-                                        << cindex << " != " << (*iter)->generate() << ".end(); "
-                                        << "++" << cindex << ") {" << endl;
+          tt << cindent << "for (auto& " << cindex << " : " << (*iter)->generate() << ") {" << endl;
           close.push_back(cindent + "}");
         }
 
@@ -667,9 +659,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
       list<shared_ptr<Index> > di = (*i)->loop_indices();
       for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent += "  ") {
         string cindex = (*iter)->str_gen();
-        tt << dindent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
-                                      << cindex << " != " << (*iter)->generate() << ".end(); "
-                                      << "++" << cindex << ") {" << endl;
+        tt << dindent << "for (auto& " << cindex << " : " << (*iter)->generate() << ") {" << endl;
         close2.push_back(dindent + "}");
       }
 
@@ -752,8 +742,8 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "      std::shared_ptr<Queue<T> > energy_(new Queue<T>());" << endl;
     if (energy) {
       energy->num_ = icnt;
-      for (auto i = energy->bc_.begin(); i != energy->bc_.end(); ++i) {
-        pair<string, string> tmp = (*i)->generate_task_list(true); // true triggers energy list
+      for (auto& i : energy->bc_) {
+        pair<string, string> tmp = i->generate_task_list(true); // true triggers energy list
         ss << tmp.first;
         tt << tmp.second;
       }
@@ -821,8 +811,8 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
 
 pair<string, string> BinaryContraction::generate_task_list(const bool enlist) const {
   stringstream ss, tt;
-  for (auto i = subtree_.begin(); i != subtree_.end(); ++i) {
-    pair<string, string> tmp = (*i)->generate_task_list(enlist);
+  for (auto& i : subtree_) {
+    pair<string, string> tmp = i->generate_task_list(enlist);
     ss << tmp.first;
     tt << tmp.second;
   }

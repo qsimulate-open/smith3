@@ -33,92 +33,79 @@
 using namespace std;
 
 
-// need to do here both what generate_get_block and a generate_sort_indices usually does   
+// need to do here both what generate_get_block and a generate_sort_indices usually does
 // ok to do this here b/c these blocks need special attention because of deltas
 string RDM::generate(string indent, const string tlab, const list<shared_ptr<Index> >& loop) const {
+  assert(!index_.empty() && !loop.empty());
   stringstream tt;
   indent += "  ";
-  stringstream ls;
-  stringstream rs;
-  
-  
+  const string itag = "i";
+
   // first let's do the generate_get_block for an rdm..
-  tt << indent << "std::vector<size_t> i0hash = vec("; 
-  int cntr=0;
-  for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter, ++cntr) {
+  tt << indent << "std::vector<size_t> i0hash = {";
+  for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
     if (iter != index_.rbegin()) tt << ", ";
-    tt << (*iter)->str_gen() << "->key()";
-  }   
-  tt << ");" << endl; 
+    tt << (*iter)->str_gen() << ".key()";
+  }
+  tt << "};" << endl;
   tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
 
-  // now do the sort 
+  // now do the sort
   vector<string> close;
-  string itag = "i";
-  string iindent = "  ";
-  // start sort loops
-  int cntl=0;
-  for (auto i = loop.begin(); i != loop.end(); ++i, ++cntl) {
-    tt << indent << "for (int " << itag << (*i)->num() << " = 0; " << itag << (*i)->num() << " != " << (*i)->str_gen() <<             "->size(); ++"<< itag << (*i)->num() << ") {" << endl;
-    close.push_back(indent + "}");
-    indent += iindent;
-  }
-  // process delta information
-  int cntd=0;
-  for (auto d = delta_.begin() ; d != delta_.end(); ++d) {  
-    tt << indent << "if (" << d->first->str_gen() << " == " << d->second->str_gen() << " && " << itag << d->first->num() << " == " << itag << d->second->num() << ") {" << endl;
-    close.push_back(indent + "}");
-    indent += iindent;
-    cntd=1;
-  }    
-    
 
-  // make odata part of summation for target
-  int cnt = 0;
-  int cntp = 0;
-  ls  << "odata[";
-  for (auto ri = loop.rbegin(); ri != loop.rend(); ++ri, ++cnt) {
-    if (cnt != cntl-1 && cnt != cntl-2) {
-      ls << itag << (*ri)->num() << "+" << (*ri)->str_gen() << "->size()*(";
-      ++cntp;
-    } else if (cnt == cntl-2 ){
-      ls << itag << (*ri)->num() << "+" << (*ri)->str_gen() << "->size()*";
-    } else {
-      ls << itag << (*ri)->num();
-      for (int p = 0; p != cntp; ++p) ls << ")";
-      ls << "]" << endl;
+  // in case delta_ is not empty
+  if (!delta_.empty()) {
+    // first delta loops for blocks
+    tt << indent << "if (";
+    for (auto d = delta_.begin(); d != delta_.end(); ++d) {
+      tt << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? "&&" : "");
     }
-  }
-  // make data part of summation
-  {
-  int cnt = 0;
-  int cntp = 0;
-  rs << "(" << setprecision(1) << fixed << factor() << ") * data[";
-  for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter, ++cnt) {
-    if (cnt != cntr-1 && cnt!= cntr-2) {
-      rs << itag << (*riter)->num() << "+" << (*riter)->str_gen() << "->size()*(";
-      ++cntp;
-    } else if ( cnt == cntr -2){
-      rs << itag << (*riter)->num() << "+" << (*riter)->str_gen() << "->size()*";
-    } else {
-      rs << itag << (*riter)->num();
-      for (int p = 0; p != cntp; ++p) rs << ")";
-      rs << "]";
+    tt << ") {" << endl;
+    close.push_back(indent + "}");
+    indent += "  ";
+
+    // start sort loops
+    for (auto& i : loop) {
+      const int inum = i->num();
+      bool found = false;
+      for (auto& d : delta_)
+        if (d.first->num() == inum) found = true;
+      if (!found) { 
+        tt << indent << "for (int " << itag << inum << " = 0; " << itag << inum << " != " << i->str_gen() << ".size(); ++" << itag << inum << ") {" << endl;
+        close.push_back(indent + "}");
+        indent += "  ";
+      }
     }
-  }
-  }
-  // add the odata and data summations with prefactor
-  if (cntd > 0) {
-    // here we have a delta_ case (cntd > 0)
-    tt << indent << ls.str()  << indent <<"  += " << rs.str() << ";" ;
+
+    // make odata part of summation for target
+    tt  << indent << "odata[";
+    for (auto ri = loop.rbegin(); ri != loop.rend(); ++ri) {
+      int inum = (*ri)->num();
+      for (auto& d : delta_)
+        if (d.first->num() == inum) inum = d.second->num();
+      tt << itag << inum << "+" << (*ri)->str_gen() << ".size()" << (ri != --loop.rend() ? "*(" : "");
+    }
+    for (auto ri = ++loop.begin(); ri != loop.end(); ++ri)
+      tt << ")";
+    tt << "]" << endl;
+
+    // make data part of summation
+    tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
+    for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter)
+      tt << itag << (*riter)->num() << "+" << (*riter)->str_gen() << ".size()" << (riter != --index_.rend() ? "*(" : "");
+    for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
+      tt << ")";
+    tt << "];" << endl;
+
+    // close loops
+    for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
+      tt << *iter << endl;
+
+  // if delta_ is empty call sort_indices
   } else {
-    tt << indent << ls.str()  << indent <<"  = " << rs.str() << ";" ;
+    // TODO please code appropriate code here (loop up the operator generators)
+    tt << "****** please write a code in rdm.cc" << endl;
   }
-  // end the if statement
-  tt << indent << endl;
-  // close loops
-  for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-    tt << *iter << endl;
   return tt.str();
 }
 

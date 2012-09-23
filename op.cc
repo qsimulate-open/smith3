@@ -84,32 +84,32 @@ shared_ptr<Op> Op::copy() const {
 
 int Op::num_nodagger() const {
   int out = 0;
-  for (auto i = op_.begin(); i != op_.end(); ++i)
-    if (get<1>(*i)==0 && !(*get<0>(*i))->dagger()) ++out;
+  for (auto& i : op_)
+    if (get<1>(i)==0 && !(*get<0>(i))->dagger()) ++out;
   return out;
 }
 
 
 int Op::num_dagger() const {
   int out = 0;
-  for (auto i = op_.begin(); i != op_.end(); ++i)
-    if (get<1>(*i)==0 && (*get<0>(*i))->dagger()) ++out;
+  for (auto& i : op_)
+    if (get<1>(i)==0 && (*get<0>(i))->dagger()) ++out;
   return out;
 }
 
 
 int Op::num_active_dagger() const {
   int out = 0;
-  for (auto i = op_.begin(); i != op_.end(); ++i)
-    if (get<1>(*i)==2 && (*get<0>(*i))->dagger()) ++out;
+  for (auto& i : op_)
+    if (get<1>(i)==2 && (*get<0>(i))->dagger()) ++out;
   return out;
 }
 
 
 int Op::num_active_nodagger() const {
   int out = 0;
-  for (auto i = op_.begin(); i != op_.end(); ++i)
-    if (get<1>(*i)==2 && !(*get<0>(*i))->dagger()) ++out;
+  for (auto& i : op_)
+    if (get<1>(i)==2 && !(*get<0>(i))->dagger()) ++out;
   return out;
 }
 
@@ -121,18 +121,18 @@ bool Op::general() const {
 
 int Op::num_general() const {
   int out = 0;
-  for (auto i = op_.begin(); i != op_.end(); ++i)
-    if((*get<0>(*i))->label() ==  "g") ++out; 
+  for (auto& i : op_)
+    if((*get<0>(i))->label() ==  "g") ++out; 
   return out;
 }
 
 
 void Op::mutate_general(int& in) {
-  for (auto i = op_.begin(); i != op_.end(); ++i) {
-    if ((*get<0>(*i))->label() ==  "g") {
+  for (auto& i : op_) {
+    if ((*get<0>(i))->label() ==  "g") {
       if (in & 1) {
-        (*get<0>(*i))->set_label("x");
-        get<1>(*i) += 2;
+        (*get<0>(i))->set_label("x");
+        get<1>(i) += 2;
       }
       in >>= 1;
     }
@@ -142,8 +142,8 @@ void Op::mutate_general(int& in) {
 
 bool Op::contracted() const {
   int out = 0;
-  for (auto i = op_.begin(); i != op_.end(); ++i)
-    if (get<1>(*i) == 0) ++out;
+  for (auto& i : op_)
+    if (get<1>(i) == 0) ++out;
   return out == 0;
 }
 
@@ -151,16 +151,16 @@ bool Op::contracted() const {
 void Op::print() const {
   // tensor
   cout << label_ << "(";
-  for (auto i = op_.begin(); i != op_.end(); ++i) {
-    cout << (*get<0>(*i))->str(false) << " ";
+  for (auto& i : op_) {
+    cout << (*get<0>(i))->str(false) << " ";
   }
   cout << ") ";
   // (non active) operator
   if (num_nodagger() + num_dagger() != 0) {
     cout << "{";
-    for (auto i = op_.begin(); i != op_.end(); ++i) {
-      if (get<1>(*i) == -1 || get<1>(*i) == 2) continue;
-      cout << (*get<0>(*i))->str() << rho(get<2>(*i))->str();
+    for (auto& i : op_) {
+      if (get<1>(i) == -1 || get<1>(i) == 2) continue;
+      cout << (*get<0>(i))->str() << rho(get<2>(i))->str();
     }
     cout << "} ";
   }
@@ -175,36 +175,36 @@ void Op::refresh_indices(map<shared_ptr<Index>, int>& dict,
   //       already contracted. This is to make it easy to get the minus sign in the
   //       Wick theorem evaluator.
   //
-  for (auto i = op_.begin(); i != op_.end(); ++i) {
+  for (auto& i : op_) {
     // if this is not still contracted
-    if (get<1>(*i) != -1) {
-      auto iter = dict.find(*get<0>(*i));
+    if (get<1>(i) != -1) {
+      auto iter = dict.find(*get<0>(i));
       if (iter == dict.end()) {
         const int c = dict.size();
-        dict.insert(make_pair(*get<0>(*i), c));
-        (*get<0>(*i))->set_num(c);
+        dict.insert(make_pair(*get<0>(i), c));
+        (*get<0>(i))->set_num(c);
       }
     // if this is already contracted, we use negative values (does not have to be, though - just for print out)
     } else {
-      auto iter = done.find(*get<0>(*i));
+      auto iter = done.find(*get<0>(i));
       if (iter == done.end()) {
         const int c = done.size();
-        done.insert(make_pair(*get<0>(*i), -c-1));
-        (*get<0>(*i))->set_num(-c-1);
+        done.insert(make_pair(*get<0>(i), -c-1));
+        (*get<0>(i))->set_num(-c-1);
       }
     }
 
-    auto ster = spin.find(rho(get<2>(*i)));
-    if (get<1>(*i) != -1) {
+    auto ster = spin.find(rho(get<2>(i)));
+    if (get<1>(i) != -1) {
       if (ster == spin.end()) {
         const int c = spin.size();
-        spin.insert(make_pair(rho(get<2>(*i)), c));
-        rho(get<2>(*i))->set_num(c);
+        spin.insert(make_pair(rho(get<2>(i)), c));
+        rho(get<2>(i))->set_num(c);
       }
     }
 
     // set all the spins into operators
-    (*get<0>(*i))->set_spin(rho(get<2>(*i)));
+    (*get<0>(i))->set_spin(rho(get<2>(i)));
   }
 }
 

@@ -30,6 +30,7 @@
 #include <memory>
 #include <string>
 #include <cassert>
+#include <map>
 #include "index.h"
 
 class RDM {
@@ -39,11 +40,11 @@ class RDM {
     // operators that constitute RDM
     std::list<std::shared_ptr<Index> > index_;
     // kronecker's delta
-    std::list<std::pair<std::shared_ptr<Index>, std::shared_ptr<Index> > > delta_;
+    std::map<std::shared_ptr<Index>, std::shared_ptr<Index> > delta_;
 
   public:
     RDM(const std::list<std::shared_ptr<Index> >& in,
-        const std::list<std::pair<std::shared_ptr<Index>, std::shared_ptr<Index> > >& in2,
+        const std::map<std::shared_ptr<Index>, std::shared_ptr<Index> >& in2,
         const double& f = 1.0)
       : index_(in), delta_(in2), fac_(f) { };
     ~RDM() {};
@@ -62,9 +63,9 @@ class RDM {
     // returns a const reference of index_
     const std::list<std::shared_ptr<Index> >& index() const { return index_; };
     // returns a const reference of delta_
-    const std::list<std::pair<std::shared_ptr<Index>, std::shared_ptr<Index> > >& delta() const { return delta_; };
+    const std::map<std::shared_ptr<Index>, std::shared_ptr<Index> >& delta() const { return delta_; };
     // returns a reference of delta_
-    std::list<std::pair<std::shared_ptr<Index>, std::shared_ptr<Index> > >& delta() { return delta_; };
+    std::map<std::shared_ptr<Index>, std::shared_ptr<Index> >& delta() { return delta_; };
 
     // returns if this is in the final form
     bool done() const;

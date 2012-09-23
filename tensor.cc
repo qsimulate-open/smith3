@@ -144,22 +144,22 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
   }
 
   stringstream tt;
-  tt << cindent << "std::vector<size_t> " << lab << "hash = vec(";
+  tt << cindent << "std::vector<size_t> " << lab << "hash = {";
   if (!trans) {
     for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
       if (iter != index_.rbegin()) tt << ", ";
-      tt << (*iter)->str_gen() << "->key()";
+      tt << (*iter)->str_gen() << ".key()";
     }   
   } else {
     assert(!(index_.size() & 1));
     for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
       if (iter != index_.rbegin()) tt << ", ";
-      string i0 = (*iter)->str_gen() + "->key()";
+      string i0 = (*iter)->str_gen() + ".key()";
       ++iter;
-      tt << (*iter)->str_gen() << "->key()" << ", " << i0;
+      tt << (*iter)->str_gen() << ".key()" << ", " << i0;
     }
   }
-  tt << ");" << endl; 
+  tt << "};" << endl; 
   {
     tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
                   << lbl << "->" << (move ? "move" : "get") << "_block(" << lab << "hash);" << endl;
@@ -261,12 +261,12 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
   ss << ">(" << lab << "data, " << target_label; 
   if (!trans) {
     for (auto i = index_.rbegin(); i != index_.rend(); ++i)
-      ss << ", " << (*i)->str_gen() << "->size()";
+      ss << ", " << (*i)->str_gen() << ".size()";
   } else {
     for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
-      string tmp = ", " + (*i)->str_gen() + "->size()";
+      string tmp = ", " + (*i)->str_gen() + ".size()";
       ++i;
-      ss << ", " << (*i)->str_gen() << "->size()" << tmp;
+      ss << ", " << (*i)->str_gen() << ".size()" << tmp;
     }
   }
   ss << ");" << endl;
@@ -313,7 +313,7 @@ string Tensor::generate_sort_indices_target(const string cindent, const string l
 
   ss << "1,1," << prefac__(factor_);
   ss << ">(" << lab << "data_sorted, " << lab << "data"; 
-  for (auto i = source.begin(); i != source.end(); ++i) ss << ", " << (*i)->str_gen() << "->size()";
+  for (auto i = source.begin(); i != source.end(); ++i) ss << ", " << (*i)->str_gen() << ".size()";
   ss << ");" << endl;
   return ss.str();
 }
@@ -331,9 +331,9 @@ pair<string, string> Tensor::generate_dim(const list<shared_ptr<Index> >& di) co
       }
     }
     if (shared) {
-      t.push_back((*i)->str_gen() + "->size()");
+      t.push_back((*i)->str_gen() + ".size()");
     } else {
-      s.push_back((*i)->str_gen() + "->size()");
+      s.push_back((*i)->str_gen() + ".size()");
     }
   }
 
@@ -360,9 +360,7 @@ string Tensor::generate_loop(string& indent, vector<string>& close) const {
   stringstream tt;
   for (auto iter = index_.begin(); iter != index_.end(); ++iter, indent += "  ") {
     string cindex = (*iter)->str_gen();
-    tt << indent << "for (auto " << cindex << " = " << (*iter)->generate() << ".begin(); "
-                                 << cindex << " != " << (*iter)->generate() << ".end(); "
-                                 << "++" << cindex << ") {" << endl;
+    tt << indent << "for (auto& " << cindex << " : " << (*iter)->generate() << ") {" << endl; 
     close.push_back(indent + "}");
   }
   return tt.str();

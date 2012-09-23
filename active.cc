@@ -68,8 +68,8 @@ shared_ptr<RDM> RDM::copy() const {
   }
 
   // lastly clone all the delta functions
-  list<pair<shared_ptr<Index>, shared_ptr<Index> > > d;
-  for (auto i = delta_.begin(); i != delta_.end(); ++i) d.push_back(make_pair(i->first->clone(), i->second->clone())); 
+  map<shared_ptr<Index>, shared_ptr<Index> > d;
+  for (auto i = delta_.begin(); i != delta_.end(); ++i) d.insert(make_pair(i->first->clone(), i->second->clone())); 
 
   shared_ptr<RDM> out(new RDM(in, d)); 
   out->fac() = fac_;
@@ -111,7 +111,7 @@ list<shared_ptr<RDM> > RDM::reduce_one(list<int>& done) const {
       }
       assert(rml.size() == 2);
 
-      tmp->delta().push_back(make_pair(*rml[0],*rml[1]));
+      tmp->delta().insert(make_pair(*rml[0],*rml[1]));
       // Please note that this procedure does not change the sign (you can prove it in 30sec)
       tmp->fac() *= ((cnt0-1)&1 ? -1.0 : 1.0);
       if ((*i)->same_spin(*j)) {
@@ -249,8 +249,7 @@ bool RDM::done() const {
 
 Active::Active(const list<shared_ptr<Index> >& in) {
 
-  list<pair<shared_ptr<Index>, shared_ptr<Index> > > t;
-  shared_ptr<RDM> tmp(new RDM(in, t, 1.0));
+  shared_ptr<RDM> tmp(new RDM(in, map<shared_ptr<Index>, shared_ptr<Index> >(), 1.0));
 
   // this sets list<RDM>
   reduce(tmp);
