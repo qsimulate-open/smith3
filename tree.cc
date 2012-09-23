@@ -369,7 +369,7 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   // generate gamma put block
   tt << gindent << gamma->label() << "->put_block(ohash, odata);" << endl;
   // close the loops
-  for (auto iter = close.rbegin(); iter != close.rend(); ++iter) 
+  for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
     tt << *iter << endl;
   tt << "    };  " << endl;
   tt << "" << endl;
@@ -389,7 +389,7 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   {
     int itmp = 1;
     for (auto i = rdmn.begin(); i != rdmn.end(); ++i, ++itmp) {
-      tt << "      rdm" << *i << "    = t[" << itmp << "];" << endl; 
+      tt << "      rdm" << *i << "    = t[" << itmp << "];" << endl;
     }
   }
   tt << "    };" << endl;
@@ -422,7 +422,7 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
     // if this is at the top-level and nees to be daggered:
     if (depth() == 0 && dagger) {
       shared_ptr<Tensor> top(new Tensor(**s));
-      // swap operators so that tensor is daggered 
+      // swap operators so that tensor is daggered
       if (top->index().size() != 4) {
          throw logic_error("Daggered object is only supported for 4-index tensors");
       } else {
@@ -436,11 +436,11 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
         for (auto& k : top->index()) {
           for (auto l = map.begin(); l != map.end(); ++l) {
             if (k->identical(*l->first)) {
-              tmp.push_back(*l->second); 
+              tmp.push_back(*l->second);
               break;
             }
             auto ll = l;
-            if (++ll == map.end()) throw logic_error("should not happen: dagger stuffs"); 
+            if (++ll == map.end()) throw logic_error("should not happen: dagger stuffs");
           }
         }
         top->index() = tmp;

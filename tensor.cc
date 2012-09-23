@@ -40,7 +40,7 @@ Tensor::Tensor(const shared_ptr<Op> op) : factor_(1.0) {
     index_.push_back(in);
   }
 
-} 
+}
 
 
 Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0) {
@@ -49,12 +49,12 @@ Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0) {
   // op
   index_ = activ->index();
   active_ = activ;
-} 
+}
 
 
 std::string Tensor::str() const {
   stringstream ss;
-  if (factor_ != 1.0) ss << " " << fixed << setw(4) << setprecision(2) << factor_ << " "; 
+  if (factor_ != 1.0) ss << " " << fixed << setw(4) << setprecision(2) << factor_ << " ";
   ss << label_ << "(";
   for (auto i = index_.begin(); i != index_.end(); ++i) {
     // we don't need the spin part here
@@ -72,7 +72,7 @@ std::string Tensor::str() const {
 bool Tensor::all_active() const {
   bool out = true;
   for (auto i = index_.begin(); i != index_.end(); ++i) {
-    out &= (*i)->active(); 
+    out &= (*i)->active();
   }
   return out;
 }
@@ -80,8 +80,8 @@ bool Tensor::all_active() const {
 
 // adds all-active tensor to Active_;
 void Tensor::merge(shared_ptr<Tensor> a) {
-  assert(active_);  
-  merged_ = a; 
+  assert(active_);
+  merged_ = a;
   list<list<shared_ptr<Index> >::iterator> remove;
   // remove Index that belongs to a
   for (auto i = a->index().begin(); i != a->index().end(); ++i) {
@@ -111,7 +111,7 @@ bool Tensor::operator==(const Tensor& o) const {
   if (out) {
     for (auto i = index_.begin(), j = o.index().begin(); i != index_.end(); ++i, ++j) {
       out &= (*i)->identical(*j);
-    } 
+    }
   }
   return out;
 }
@@ -156,11 +156,11 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
       tt << (*iter)->str_gen() << ".key()" << ", " << i0;
     }
   }
-  tt << "};" << endl; 
+  tt << "};" << endl;
   {
     tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
                   << lbl << "->" << (move ? "move" : "get") << "_block(" << lab << "hash);" << endl;
-  }   
+  }
   return tt.str();
 }
 
@@ -254,7 +254,7 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
   string target_label = op ? "odata" : lab + "data_sorted";
 
   ss << (op ? 1 : 0) << ",1," << prefac__(factor_);
-  ss << ">(" << lab << "data, " << target_label; 
+  ss << ">(" << lab << "data, " << target_label;
   if (!trans) {
     for (auto i = index_.rbegin(); i != index_.rend(); ++i)
       ss << ", " << (*i)->str_gen() << ".size()";
@@ -308,7 +308,7 @@ string Tensor::generate_sort_indices_target(const string cindent, const string l
   }
 
   ss << "1,1," << prefac__(factor_);
-  ss << ">(" << lab << "data_sorted, " << lab << "data"; 
+  ss << ">(" << lab << "data_sorted, " << lab << "data";
   for (auto i = source.begin(); i != source.end(); ++i) ss << ", " << (*i)->str_gen() << ".size()";
   ss << ");" << endl;
   return ss.str();
@@ -356,7 +356,7 @@ string Tensor::generate_loop(string& indent, vector<string>& close) const {
   stringstream tt;
   for (auto iter = index_.begin(); iter != index_.end(); ++iter, indent += "  ") {
     string cindex = (*iter)->str_gen();
-    tt << indent << "for (auto& " << cindex << " : " << (*iter)->generate() << ") {" << endl; 
+    tt << indent << "for (auto& " << cindex << " : " << (*iter)->generate() << ") {" << endl;
     close.push_back(indent + "}");
   }
   return tt.str();

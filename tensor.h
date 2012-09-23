@@ -28,10 +28,10 @@
 #define __TENSOR_H
 
 // In order to treat Active and Op on the same footing.
-// To make it easy, this is again driven by Index::num_. 
+// To make it easy, this is again driven by Index::num_.
 // Perhaps it's better if it is done by pointer itself, but for the time being it's fine...
 //
-// Index::spin_ is not set. 
+// Index::spin_ is not set.
 
 // this object should generate some codes.
 

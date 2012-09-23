@@ -50,12 +50,12 @@ void RDM::print(const string& indent) const {
 shared_ptr<RDM> RDM::copy() const {
   // first clone all the indices
   list<shared_ptr<Index> > in;
-  for (auto i = index_.begin(); i != index_.end(); ++i) in.push_back((*i)->clone());
+  for (auto& i : index_) in.push_back(i->clone());
 
   map<shared_ptr<Spin>, shared_ptr<Spin> > dict;
   auto j = in.begin();
   for (auto i = index_.begin(); i != index_.end(); ++i, ++j) {
-    // get the original spin 
+    // get the original spin
     shared_ptr<Spin> o = (*i)->spin();
     if (dict.find(o) == dict.end()) {
       (*j)->set_spin(o);
@@ -69,9 +69,9 @@ shared_ptr<RDM> RDM::copy() const {
 
   // lastly clone all the delta functions
   map<shared_ptr<Index>, shared_ptr<Index> > d;
-  for (auto i = delta_.begin(); i != delta_.end(); ++i) d.insert(make_pair(i->first->clone(), i->second->clone())); 
+  for (auto& i : delta_) d.insert(make_pair(i.first->clone(), i.second->clone()));
 
-  shared_ptr<RDM> out(new RDM(in, d)); 
+  shared_ptr<RDM> out(new RDM(in, d));
   out->fac() = fac_;
   return out;
 }
@@ -90,14 +90,14 @@ list<shared_ptr<RDM> > RDM::reduce_one(list<int>& done) const {
     if ((*i)->dagger() || find(done.begin(), done.end(), (*i)->num()) != done.end())
       continue;
 
-    // again this function is controlled by numbers... sorry... 
+    // again this function is controlled by numbers... sorry...
     const int inum = (*i)->num();
 
     for (auto j = i; j != index_.end(); ++j) {
       if (!(*j)->dagger() || j==i) continue;
 
       // if you find daggered object in the right hand side...
-      shared_ptr<RDM> tmp = this->copy(); 
+      shared_ptr<RDM> tmp = this->copy();
 
       // find the indices to be deleted.
       vector<list<shared_ptr<Index> >::iterator> rml;
@@ -117,13 +117,12 @@ list<shared_ptr<RDM> > RDM::reduce_one(list<int>& done) const {
       if ((*i)->same_spin(*j)) {
         tmp->fac() *= 2.0;
       } else {
-        // this case we need to replace a spin 
+        // this case we need to replace a spin
         const shared_ptr<Spin> s0 = (*rml[0])->spin();
         const shared_ptr<Spin> s1 = (*rml[1])->spin();
-        for (auto k = tmp->index().begin(); k != tmp->index().end(); ++k) {
-          if ((*k)->spin() == s0) {
-            (*k)->set_spin(s1);
-          }
+        for (auto& k : tmp->index()) {
+          if (k->spin() == s0)
+            k->set_spin(s1);
         }
       }
 
@@ -147,7 +146,7 @@ bool RDM::reduce_done(const list<int>& done) const {
     if (!(*i)->dagger() && find(done.begin(), done.end(), (*i)->num()) == done.end()) {
       for (auto j = i; j != index_.end(); ++j) {
         if ((*j)->dagger()) out = false;
-      } 
+      }
       break;
     }
   }
@@ -157,11 +156,11 @@ bool RDM::reduce_done(const list<int>& done) const {
 
 void RDM::sort() {
 
-  // of course this is not the fastest code, but I am fine. 
+  // of course this is not the fastest code, but I am fine.
 
   // first we align indices so that
   // 0+ 0 1+ 1 2+ 2...
-  // actually this might be better for actually implementation. 
+  // actually this might be better for actually implementation.
   vector<shared_ptr<Spin> > done_spin;
   while (!done()) {
 
@@ -170,7 +169,7 @@ void RDM::sort() {
     // continue to spin which is not processed
     for (; i != index_.end(); ++i) {
       if (find(done_spin.begin(), done_spin.end(), (*i)->spin()) != done_spin.end()) {
-        buf.push_back(*i); 
+        buf.push_back(*i);
       } else {
         break;
       }
@@ -186,12 +185,12 @@ void RDM::sort() {
         // if dagger, move it to right before the nondagger of the same spin
         for (++j; j != index_.end(); ++j) {
           if ((*j)->spin() == cs) {
-            buf.push_back(*i); 
-            buf.push_back(*j); 
-            assert(!(*j)->dagger()); 
+            buf.push_back(*i);
+            buf.push_back(*j);
+            assert(!(*j)->dagger());
             found = true;
           } else {
-            buf.push_back(*j); 
+            buf.push_back(*j);
             if (!found) ++cnt;
           }
         }
@@ -200,11 +199,11 @@ void RDM::sort() {
         for (++j; j != index_.end(); ++j) {
           if ((*j)->spin() == cs) {
             buf.push_back(*j);
-            assert((*j)->dagger()); 
-            buf.push_back(*i); 
+            assert((*j)->dagger());
+            buf.push_back(*i);
             found = true;
           } else {
-            buf.push_back(*j); 
+            buf.push_back(*j);
             if (!found) ++cnt;
           }
         }
@@ -264,32 +263,32 @@ void Active::reduce(shared_ptr<RDM> in) {
   while (buf.size() != 0) {
     list<pair<shared_ptr<RDM>, list<int> > > buf2;
 
-    for (auto iter = buf.begin(); iter != buf.end(); ++iter) { 
-      shared_ptr<RDM> tmp = iter->first;
-      list<int> done = iter->second; 
-      
+    for (auto& it : buf) {
+      shared_ptr<RDM> tmp = it.first;
+      list<int> done = it.second;
+
       // taking delta
       list<shared_ptr<RDM> > out = tmp->reduce_one(done);
       // this is also needed!
       out.push_back(tmp);
-      for (auto i = out.begin(); i != out.end(); ++i) {
-        if ((*i)->reduce_done(done)) {
-          rdm_.push_back(*i);
+      for (auto& i : out) {
+        if (i->reduce_done(done)) {
+          rdm_.push_back(i);
         } else {
-          buf2.push_back(make_pair(*i,done));
+          buf2.push_back(make_pair(i,done));
         }
       }
     }
     buf = buf2;
   }
 
-  for (auto i = rdm_.begin(); i != rdm_.end(); ++i)
-    (*i)->sort();
+  for (auto& i : rdm_)
+    i->sort();
 }
 
 
 void Active::print(const string& indent) const {
-  for (auto i = rdm_.begin(); i != rdm_.end(); ++i) (*i)->print(indent);
+  for (auto& i : rdm_) i->print(indent);
 }
 
 
@@ -300,7 +299,7 @@ const list<shared_ptr<Index> > Active::index() const {
   for (auto i = rdm_.begin(); i != rdm_.end(); ++i) {
     if (!done && (*i)->delta().size() == 0) {
       done = true;
-      j = i; 
+      j = i;
     } else if ((*i)->delta().size() == 0) {
       throw logic_error("I think this won't happen. Active::index()");
     }
@@ -311,10 +310,10 @@ const list<shared_ptr<Index> > Active::index() const {
 
 string Active::generate(const string indent, const string lab, const list<shared_ptr<Index> >& loop) const {
   stringstream tt;
-  for (auto i = rdm_.begin(); i != rdm_.end(); ++i) {
+  for (auto& i : rdm_) {
     tt << indent << "{" << endl;
     // this generate does both a get_block and a sort_indices
-    tt << (*i)->generate(indent,lab,loop); 
+    tt << i->generate(indent,lab,loop);
     tt << indent << "}" << endl;
   }
   return tt.str();
@@ -323,8 +322,8 @@ string Active::generate(const string indent, const string lab, const list<shared
 
 vector<int> Active::required_rdm() const {
   vector<int> out;
-  for (auto i = rdm_.begin(); i != rdm_.end(); ++i) {
-    if (find(out.begin(), out.end(), (*i)->rank()) == out.end()) out.push_back((*i)->rank());
+  for (auto& i : rdm_) {
+    if (find(out.begin(), out.end(), i->rank()) == out.end()) out.push_back(i->rank());
   }
 
   sort(out.begin(), out.end());
