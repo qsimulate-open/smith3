@@ -59,23 +59,24 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   // start sort loops
   int cntl=0;
   for (auto i = loop.begin(); i != loop.end(); ++i, ++cntl) {
-    // string itag += string((*iter)->num());  // new label this would simplify things for next line
     tt << indent << "for (int " << itag << (*i)->num() << " = 0; " << itag << (*i)->num() << " != " << (*i)->str_gen() <<             "->size(); ++"<< itag << (*i)->num() << ") {" << endl;
     close.push_back(indent + "}");
     indent += iindent;
   }
-  // somehow check if we have a delta, if so we need to process and get the indices
-  // and when don't have need to make an exception for data addition
+  // process delta information
+  int cntd=0;
   for (auto d = delta_.begin() ; d != delta_.end(); ++d) {  
-    std::cout << d->first->str_gen() << " " << d->second->str_gen() << endl;
-    tt << indent << "if (" << d->first->str_gen() << " == " << d->second->str_gen() << " && " << itag << d->second->str_gen() << " == " << itag << d->second->str_gen() << ") {" << endl;
+    tt << indent << "if (" << d->first->str_gen() << " == " << d->second->str_gen() << " && " << itag << d->first->num() << " == " << itag << d->second->num() << ") {" << endl;
+    close.push_back(indent + "}");
+    indent += iindent;
+    cntd=1;
   }    
     
 
   // make odata part of summation for target
   int cnt = 0;
   int cntp = 0;
-  ls  << " odata[";
+  ls  << "odata[";
   for (auto ri = loop.rbegin(); ri != loop.rend(); ++ri, ++cnt) {
     if (cnt != cntl-1 && cnt != cntl-2) {
       ls << itag << (*ri)->num() << "+" << (*ri)->str_gen() << "->size()*(";
@@ -92,7 +93,6 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   {
   int cnt = 0;
   int cntp = 0;
-  // mkm not sure why this factor isn't looking like a double, ie I get 1 and not 1.0
   rs << "(" << setprecision(1) << fixed << factor() << ") * data[";
   for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter, ++cnt) {
     if (cnt != cntr-1 && cnt!= cntr-2) {
@@ -108,7 +108,12 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   }
   }
   // add the odata and data summations with prefactor
-  tt << indent << ls.str()  << indent <<" += " << rs.str() << ";" ;
+  if (cntd > 0) {
+    // here we have a delta_ case (cntd > 0)
+    tt << indent << ls.str()  << indent <<"  += " << rs.str() << ";" ;
+  } else {
+    tt << indent << ls.str()  << indent <<"  = " << rs.str() << ";" ;
+  }
   // end the if statement
   tt << indent << endl;
   // close loops
