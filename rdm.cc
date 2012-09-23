@@ -41,15 +41,6 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   indent += "  ";
   const string itag = "i";
 
-  // first let's do the generate_get_block for an rdm..
-  tt << indent << "std::vector<size_t> i0hash = {";
-  for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
-    if (iter != index_.rbegin()) tt << ", ";
-    tt << (*iter)->str_gen() << ".key()";
-  }
-  tt << "};" << endl;
-  tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
-
   // now do the sort
   vector<string> close;
 
@@ -63,6 +54,9 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
     tt << ") {" << endl;
     close.push_back(indent + "}");
     indent += "  ";
+
+    tt << indent << "std::vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
+    tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
 
     // start sort loops
     for (auto& i : loop) {
@@ -104,6 +98,8 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   // if delta_ is empty call sort_indices
   } else {
     // TODO please code appropriate code here (loop up the operator generators)
+    tt << indent << "std::vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
+    tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
     tt << "****** please write a code in rdm.cc" << endl;
   }
   return tt.str();

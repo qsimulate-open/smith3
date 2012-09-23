@@ -146,10 +146,7 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
   stringstream tt;
   tt << cindent << "std::vector<size_t> " << lab << "hash = {";
   if (!trans) {
-    for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
-      if (iter != index_.rbegin()) tt << ", ";
-      tt << (*iter)->str_gen() << ".key()";
-    }   
+    tt << list_keys(index_);
   } else {
     assert(!(index_.size() & 1));
     for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
