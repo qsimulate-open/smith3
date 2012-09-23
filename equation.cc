@@ -36,9 +36,9 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
 
   while (out.front()->num_dagger()) {
     list<shared_ptr<Diagram> > out2;
-    for (auto j = out.begin(); j != out.end(); ++j) {
-      for (int i = 0; i != (*j)->num_dagger(); ++i) {
-        shared_ptr<Diagram> n = (*j)->copy();
+    for (auto& j : out) {
+      for (int i = 0; i != j->num_dagger(); ++i) {
+        shared_ptr<Diagram> n = j->copy();
         bool done = n->reduce_one_noactive(i);
         if (!done) break;
         if (n->valid() || n->done()) {
@@ -49,24 +49,24 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
     }
     out = out2;
   }
-  for (auto i = diagram_.begin(); i != diagram_.end(); ++i) (*i)->refresh_indices();
+  for (auto& i : diagram_) i->refresh_indices();
 
 }
 
 
 // print. This triggers Diagram::refresh_indices().
 void Equation::print() {
-  for (auto i = diagram_.begin(); i != diagram_.end(); ++i) (*i)->print();
+  for (auto& i : diagram_) i->print();
 }
 
 // processes active part
 void Equation::active() {
-  for (auto i = diagram_.begin(); i != diagram_.end(); ++i) (*i)->active();
+  for (auto& i : diagram_) i->active();
 }
 
 
 void Equation::refresh_indices() {
-  for (auto i = diagram_.begin(); i != diagram_.end(); ++i) (*i)->refresh_indices();
+  for (auto& i : diagram_) i->refresh_indices();
 }
 
 // find identical terms
@@ -103,7 +103,7 @@ void Equation::duplicates_(const bool proj) {
       if (found) break;
     } while ((*i)->permute(proj));
   }
-  for (auto iter = rm.begin(); iter != rm.end(); ++iter) diagram_.erase(*iter);
+  for (auto& it : rm) diagram_.erase(it);
 }
 
 
