@@ -31,8 +31,8 @@ using namespace std;
 
 string ListTensor::generate() const {
   stringstream ss;
-  for (auto i = list_.begin(); i != list_.end(); ++i) {
-    ss << (*i)->generate();
+  for (auto& i : list_) {
+    ss << i->generate();
   }
   return ss.str();
 }
