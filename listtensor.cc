@@ -27,13 +27,14 @@
 #include "listtensor.h"
 
 using namespace std;
+using namespace smith;
 
 ListTensor::ListTensor(shared_ptr<Diagram> d) {
   // factor
   fac_ = d->fac();
   // vector of tensors
-  for (auto i = d->op().begin(); i != d->op().end(); ++i) {
-    shared_ptr<Tensor> t(new Tensor(*i));
+  for (auto& i : d->op()) {
+    shared_ptr<Tensor> t(new Tensor(i));
     list_.push_back(t);
   }
   if (d->rdm()) {
@@ -47,11 +48,11 @@ ListTensor::ListTensor(shared_ptr<Diagram> d) {
 
 void ListTensor::print() const {
   cout << setw(4) << setprecision(1) << fixed <<  fac_ << " ";
-  for (auto i = list_.begin(); i != list_.end(); ++i) cout << (*i)->str();
+  for (auto& i : list_) cout << i->str();
   if (dagger_) cout << " ** Daggered object added **";
   cout << endl;
-  for (auto i = list_.begin(); i != list_.end(); ++i) {
-    if ((*i)->active()) (*i)->active()->print("   ");
+  for (auto& i : list_) {
+    if (i->active()) i->active()->print("   ");
   }
 
   cout << endl;

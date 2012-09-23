@@ -29,7 +29,7 @@
 #include "cost.h"
 
 using namespace std;
-
+using namespace smith;
 
 const string PCost::show() const {
   stringstream out;
@@ -47,7 +47,7 @@ void Cost::sort_pcost() {
 
 const string Cost::show() const {
   string out;
-  for (auto i = cost_.begin(); i != cost_.end(); ++i) out += i->show() + " ";
+  for (auto& i : cost_) out += i.show() + " ";
   return out;
 }
 

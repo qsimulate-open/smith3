@@ -27,7 +27,7 @@
 #include "diagram.h"
 
 using namespace std;
-
+using namespace smith;
 
 list<shared_ptr<Diagram> > Diagram::get_all() const {
   list<shared_ptr<Diagram> > out;

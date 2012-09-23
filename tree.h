@@ -31,6 +31,8 @@
 #include "equation.h"
 #include "listtensor.h"
 
+namespace smith {
+
 class Tree;
 
 class BinaryContraction {
@@ -148,6 +150,8 @@ class Tree : public std::enable_shared_from_this<Tree> {
     std::shared_ptr<Index> generate_rdms() const;
 
 };
+
+}
 
 
 #endif

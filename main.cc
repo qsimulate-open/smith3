@@ -34,6 +34,7 @@
 #include "tree.h"
 
 using namespace std;
+using namespace smith;
 
 int main() {
 
@@ -112,7 +113,7 @@ int main() {
   es.close();
 #endif
 
-  cout << res->generate() << endl;
+  cout << endl;
 
   return 0;
 }

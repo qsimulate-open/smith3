@@ -31,6 +31,7 @@
 #include <iomanip>
 
 using namespace std;
+using namespace smith;
 
 
 // need to do here both what generate_get_block and a generate_sort_indices usually does

@@ -30,6 +30,7 @@
 #include <stdexcept>
 
 using namespace std;
+using namespace smith;
 
 
 shared_ptr<Tensor> BinaryContraction::next_target() {

@@ -41,6 +41,8 @@
 #include "op.h"
 #include "active.h"
 
+namespace smith {
+
 class Tensor {
   protected:
     // factor
@@ -86,7 +88,6 @@ class Tensor {
 
     void merge(std::shared_ptr<Tensor> o);
 
-    std::string generate() const;
     std::string constructor_str(std::string indent) const;
 
     std::string generate_get_block(const std::string, const std::string, const bool move = false) const;
@@ -100,6 +101,8 @@ class Tensor {
     std::string generate_active(const std::string indent, const std::string tag) const;
     std::string generate_loop(std::string&, std::vector<std::string>&) const;
 };
+
+}
 
 #endif
 

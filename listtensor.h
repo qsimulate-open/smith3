@@ -32,6 +32,8 @@
 #include <memory>
 #include <list>
 
+namespace smith {
+
 // class for a vector of tensors
 class ListTensor {
   protected:
@@ -56,9 +58,8 @@ class ListTensor {
 
     double fac() const { return fac_; };
     bool dagger() const { return dagger_; };
-
-    std::string generate() const;
 };
 
+}
 
 #endif

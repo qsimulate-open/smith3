@@ -30,6 +30,8 @@
 #include <string>
 #include <sstream>
 
+namespace smith {
+
 static std::string header(const std::string& filename) {
   std::stringstream ss;
   ss << "//" << std::endl;
@@ -60,6 +62,8 @@ static std::string header(const std::string& filename) {
   ss << "" << std::endl;
   return ss.str();
 };
+
+}
 
 #endif
 

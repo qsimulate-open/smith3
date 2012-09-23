@@ -35,6 +35,8 @@
 #include <list>
 #include <map>
 
+namespace smith {
+
 class Diagram {
   protected:
     // a list of operators
@@ -110,5 +112,7 @@ class Diagram {
     // gathers active indices
     std::list<std::shared_ptr<Index> > active_indices() const; 
 };
+
+}
 
 #endif

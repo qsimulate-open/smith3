@@ -37,6 +37,8 @@
 #include <iostream>
 #include "indexmap.h"
 
+namespace smith {
+
 class PCost {
 
   protected:
@@ -111,6 +113,7 @@ class Cost {
 
 };
 
+}
 
 #endif
 

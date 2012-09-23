@@ -40,6 +40,8 @@
 
 // base class for spin-summed operators
 
+namespace smith {
+
 class Op {
   protected:
     // tensor info
@@ -124,6 +126,6 @@ class Op {
     void print() const;
 };
 
-
+}
 
 #endif

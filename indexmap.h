@@ -34,6 +34,8 @@
 #include <list>
 #include <stdexcept>
 
+namespace smith {
+
 // This defines the index classes. If you want to generalize this generator
 // to more general cases (RASPT2, for instance), then just add some entry.
 // Indices will be sorted using these numbers when tensors are canonicalized.
@@ -59,6 +61,8 @@ class IndexMap {
     std::list<std::pair<std::string, std::pair<int,int> > >::const_iterator begin() const { return map_.begin(); };
     std::list<std::pair<std::string, std::pair<int,int> > >::const_iterator end() const { return map_.end(); };
 };
+
+}
 
 #endif
 

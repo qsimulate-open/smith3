@@ -38,6 +38,8 @@
 #include "op.h"
 #include "rdm.h"
 
+namespace smith {
+
 class Active {
   protected:
     std::list<std::shared_ptr<RDM> > rdm_;
@@ -55,5 +57,7 @@ class Active {
     std::string generate(const std::string cindent, const std::string lab, const std::list<std::shared_ptr<Index> >& loop) const;
     std::vector<int> required_rdm() const;
 };
+
+}
 
 #endif

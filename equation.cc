@@ -28,6 +28,7 @@
 #include <cassert>
 
 using namespace std;
+using namespace smith;
 
 Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
 

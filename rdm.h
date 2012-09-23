@@ -33,6 +33,8 @@
 #include <map>
 #include "index.h"
 
+namespace smith {
+
 class RDM {
   protected:
     // prefactor
@@ -80,5 +82,6 @@ class RDM {
     int rank() const { assert(index_.size()%2 == 0); return index_.size()/2; }; 
 };
 
+}
 
 #endif

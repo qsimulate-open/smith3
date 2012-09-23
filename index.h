@@ -31,6 +31,8 @@
 #include <sstream>
 #include <cassert>
 
+namespace smith {
+
 class Spin {
   protected:
     int num_;
@@ -119,7 +121,6 @@ class Index {
     };
 };
 
-
 // global function
 static std::string list_keys(const std::list<std::shared_ptr<Index> >& index) {
   std::stringstream tt; 
@@ -128,6 +129,8 @@ static std::string list_keys(const std::list<std::shared_ptr<Index> >& index) {
     tt << (*iter)->str_gen() << ".key()";
   }
   return tt.str();
+}
+
 }
 
 #endif

@@ -31,6 +31,7 @@
 #include "active.h"
 
 using namespace std;
+using namespace smith;
 
 void RDM::print(const string& indent) const {
 

@@ -30,6 +30,8 @@
 #include <list>
 #include "diagram.h"
 
+namespace smith {
+
 class Equation {
   protected:
     // list of diagrams
@@ -63,6 +65,8 @@ class Equation {
     std::list<std::shared_ptr<Diagram> > diagram() { return diagram_; };
 
 };
+
+}
 
 #endif
 

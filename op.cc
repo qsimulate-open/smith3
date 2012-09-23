@@ -28,6 +28,7 @@
 #include <algorithm>
 
 using namespace std;
+using namespace smith;
 
 Op::Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td)
   : label_(lab), a_(new Index(ta,true)), b_(new Index(tb,true)), c_(new Index(tc,false)), d_(new Index(td,false)) {
