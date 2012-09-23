@@ -121,7 +121,7 @@ class Index {
 
 
 // global function
-static std::string list_keys(std::list<std::shared_ptr<Index> >& index) {
+static std::string list_keys(const std::list<std::shared_ptr<Index> >& index) {
   std::stringstream tt; 
   for (auto iter = index.rbegin(); iter != index.rend(); ++iter) {
     if (iter != index.rbegin()) tt << ", ";

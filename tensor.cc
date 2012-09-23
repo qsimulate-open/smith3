@@ -166,25 +166,24 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
 
 
 // TODO replace by a standard function (since I am aboard, I cannot google..)
-static double abs__(const double& a) { return a > 0 ? a : -a; };
 static string prefac__(const double& factor_) {
   stringstream ss;
-  if (abs__(factor_-1.0) < 1.0e-10) { ss << "1,1";
-  } else if (abs__(factor_+1.0) < 1.0e-10) { ss << "-1,1";
-  } else if (abs__(factor_-2.0) < 1.0e-10) { ss << "2,1";
-  } else if (abs__(factor_+2.0) < 1.0e-10) { ss << "-2,1";
-  } else if (abs__(factor_-4.0) < 1.0e-10) { ss << "4,1";
-  } else if (abs__(factor_+4.0) < 1.0e-10) { ss << "-4,1";
-  } else if (abs__(factor_-8.0) < 1.0e-10) { ss << "8,1";
-  } else if (abs__(factor_+8.0) < 1.0e-10) { ss << "-8,1";
-  } else if (abs__(factor_-16.0) < 1.0e-10) { ss << "16,1";
-  } else if (abs__(factor_+16.0) < 1.0e-10) { ss << "-16,1";
-  } else if (abs__(factor_-32.0) < 1.0e-10) { ss << "32,1";
-  } else if (abs__(factor_+32.0) < 1.0e-10) { ss << "-32,1";
-  } else if (abs__(factor_-0.5) < 1.0e-10) { ss << "1,2";
-  } else if (abs__(factor_+0.5) < 1.0e-10) { ss << "-1,2";
-  } else if (abs__(factor_-0.25) < 1.0e-10) { ss << "1,4";
-  } else if (abs__(factor_+0.25) < 1.0e-10) { ss << "-1,4";
+  if (fabs(factor_-1.0) < 1.0e-10) { ss << "1,1";
+  } else if (fabs(factor_+1.0) < 1.0e-10) { ss << "-1,1";
+  } else if (fabs(factor_-2.0) < 1.0e-10) { ss << "2,1";
+  } else if (fabs(factor_+2.0) < 1.0e-10) { ss << "-2,1";
+  } else if (fabs(factor_-4.0) < 1.0e-10) { ss << "4,1";
+  } else if (fabs(factor_+4.0) < 1.0e-10) { ss << "-4,1";
+  } else if (fabs(factor_-8.0) < 1.0e-10) { ss << "8,1";
+  } else if (fabs(factor_+8.0) < 1.0e-10) { ss << "-8,1";
+  } else if (fabs(factor_-16.0) < 1.0e-10) { ss << "16,1";
+  } else if (fabs(factor_+16.0) < 1.0e-10) { ss << "-16,1";
+  } else if (fabs(factor_-32.0) < 1.0e-10) { ss << "32,1";
+  } else if (fabs(factor_+32.0) < 1.0e-10) { ss << "-32,1";
+  } else if (fabs(factor_-0.5) < 1.0e-10) { ss << "1,2";
+  } else if (fabs(factor_+0.5) < 1.0e-10) { ss << "-1,2";
+  } else if (fabs(factor_-0.25) < 1.0e-10) { ss << "1,4";
+  } else if (fabs(factor_+0.25) < 1.0e-10) { ss << "-1,4";
   } else {
     ss << "this case is not yet considered " << factor_ << " in Tensor::generate_sort_indices()";
     throw runtime_error(ss.str());
@@ -284,15 +283,15 @@ string Tensor::generate_sort_indices_target(const string cindent, const string l
     list<shared_ptr<Index> > aind = a->index();
     for (auto i = aind.rbegin(); i != aind.rend(); ++i) {
       bool found = false;
-      for (auto j = loop.begin(); j != loop.end(); ++j)
-        if ((*i)->identical(*j)) found = true;
+      for (auto& j : loop)
+        if ((*i)->identical(j)) found = true;
       if (!found) source.push_back(*i);
     }
     aind = b->index();
     for (auto i = aind.rbegin(); i != aind.rend(); ++i) {
       bool found = false;
-      for (auto j = loop.begin(); j != loop.end(); ++j)
-        if ((*i)->identical(*j)) found = true;
+      for (auto& j : loop)
+        if ((*i)->identical(j)) found = true;
       if (!found) source.push_back(*i);
     }
   }
@@ -321,8 +320,8 @@ pair<string, string> Tensor::generate_dim(const list<shared_ptr<Index> >& di) co
   // first indices which are not shared
   for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
     bool shared = false;
-    for (auto j = di.begin(); j != di.end(); ++j) {
-      if ((*i)->identical(*j)) {
+    for (auto& j : di) {
+      if ((*i)->identical(j)) {
         shared = true;
         break;
       }
