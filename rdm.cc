@@ -33,9 +33,7 @@
 using namespace std;
 using namespace smith;
 
-
-// need to do here both what generate_get_block and a generate_sort_indices usually does
-// ok to do this here b/c these blocks need special attention because of deltas
+// do a special sort_indices for rdm summation with possible delta cases
 string RDM::generate(string indent, const string tlab, const list<shared_ptr<Index> >& loop) const {
   assert(!index_.empty() && !loop.empty());
   stringstream tt;
@@ -98,11 +96,41 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
 
   // if delta_ is empty call sort_indices
   } else {
-    // TODO please code appropriate code here (loop up the operator generators)
+    // loop up the operator generators
     tt << indent << "std::vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
     tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
-    tt << "****** please write a code in rdm.cc" << endl;
+   
+    for (auto& i : loop) {
+      const int inum = i->num();
+      tt << indent << "for (int " << itag << inum << " = 0; " << itag << inum << " != " << i->str_gen() << ".size(); ++" << itag << inum << ") {" << endl;
+      close.push_back(indent + "}");
+      indent += "  ";
+    }
+
+    // make odata part of summation for target
+    tt  << indent << "odata[";
+    for (auto ri = loop.rbegin(); ri != loop.rend(); ++ri) {
+      int inum = (*ri)->num();
+      tt << itag << inum << "+" << (*ri)->str_gen() << ".size()" << (ri != --loop.rend() ? "*(" : "");
+    }
+    for (auto ri = ++loop.begin(); ri != loop.end(); ++ri)
+      tt << ")";
+    tt << "]" << endl;
+
+    // make data part of summation
+    tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
+    for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter)
+      tt << itag << (*riter)->num() << "+" << (*riter)->str_gen() << ".size()" << (riter != --index_.rend() ? "*(" : "");
+    for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
+      tt << ")";
+    tt << "];" << endl;
+  
+    // close loops
+    for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
+      tt << *iter << endl;
+  
   }
+
   return tt.str();
 }
 
