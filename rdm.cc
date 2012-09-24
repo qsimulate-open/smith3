@@ -76,7 +76,8 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
       int inum = (*ri)->num();
       for (auto& d : delta_)
         if (d.first->num() == inum) inum = d.second->num();
-      tt << itag << inum << "+" << (*ri)->str_gen() << ".size()" << (ri != --loop.rend() ? "*(" : "");
+      const string tmp = "+" + (*ri)->str_gen() + ".size()*(";
+      tt << itag << inum << (ri != --loop.rend() ? tmp : "");
     }
     for (auto ri = ++loop.begin(); ri != loop.end(); ++ri)
       tt << ")";
@@ -84,8 +85,10 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
 
     // make data part of summation
     tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
-    for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter)
-      tt << itag << (*riter)->num() << "+" << (*riter)->str_gen() << ".size()" << (riter != --index_.rend() ? "*(" : "");
+    for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {
+      const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
+      tt << itag << (*riter)->num() << (riter != --index_.rend() ? tmp : "");
+    }
     for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
       tt << ")";
     tt << "];" << endl;
@@ -100,34 +103,7 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
     tt << indent << "std::vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
     tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
    
-    for (auto& i : loop) {
-      const int inum = i->num();
-      tt << indent << "for (int " << itag << inum << " = 0; " << itag << inum << " != " << i->str_gen() << ".size(); ++" << itag << inum << ") {" << endl;
-      close.push_back(indent + "}");
-      indent += "  ";
-    }
-
-    // make odata part of summation for target
-    tt  << indent << "odata[";
-    for (auto ri = loop.rbegin(); ri != loop.rend(); ++ri) {
-      int inum = (*ri)->num();
-      tt << itag << inum << "+" << (*ri)->str_gen() << ".size()" << (ri != --loop.rend() ? "*(" : "");
-    }
-    for (auto ri = ++loop.begin(); ri != loop.end(); ++ri)
-      tt << ")";
-    tt << "]" << endl;
-
-    // make data part of summation
-    tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
-    for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter)
-      tt << itag << (*riter)->num() << "+" << (*riter)->str_gen() << ".size()" << (riter != --index_.rend() ? "*(" : "");
-    for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
-      tt << ")";
-    tt << "];" << endl;
-  
-    // close loops
-    for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-      tt << *iter << endl;
+    // call sort_indices here
   
   }
 
