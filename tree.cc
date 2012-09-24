@@ -523,7 +523,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "#include <iomanip>" << endl;
     ss << "#include <src/smith/queue.h>" << endl;
     ss << "#include <src/smith/" << tree_name_ << "_tasks.h>" << endl;
-    ss << "#include <src/smith/smith.h>" << endl;
+    ss << "#include <src/smith/smith_info.h>" << endl;
     ss << "" << endl;
     ss << "namespace bagel {" << endl;
     ss << "namespace SMITH {" << endl;
