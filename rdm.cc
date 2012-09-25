@@ -33,6 +33,35 @@
 using namespace std;
 using namespace smith;
 
+// TODO replace by a standard function as soon as I get this working
+namespace smith {
+  static string prefac__(const double& factor_) {
+    stringstream tt;
+    if (fabs(factor_-1.0) < 1.0e-10) { tt << "1,1";
+    } else if (fabs(factor_+1.0) < 1.0e-10) { tt << "-1,1";
+    } else if (fabs(factor_-2.0) < 1.0e-10) { tt << "2,1";
+    } else if (fabs(factor_+2.0) < 1.0e-10) { tt << "-2,1";
+    } else if (fabs(factor_-4.0) < 1.0e-10) { tt << "4,1";
+    } else if (fabs(factor_+4.0) < 1.0e-10) { tt << "-4,1";
+    } else if (fabs(factor_-8.0) < 1.0e-10) { tt << "8,1";
+    } else if (fabs(factor_+8.0) < 1.0e-10) { tt << "-8,1";
+    } else if (fabs(factor_-16.0) < 1.0e-10) { tt << "16,1";
+    } else if (fabs(factor_+16.0) < 1.0e-10) { tt << "-16,1";
+    } else if (fabs(factor_-32.0) < 1.0e-10) { tt << "32,1";
+    } else if (fabs(factor_+32.0) < 1.0e-10) { tt << "-32,1";
+    } else if (fabs(factor_-0.5) < 1.0e-10) { tt << "1,2";
+    } else if (fabs(factor_+0.5) < 1.0e-10) { tt << "-1,2";
+    } else if (fabs(factor_-0.25) < 1.0e-10) { tt << "1,4";
+    } else if (fabs(factor_+0.25) < 1.0e-10) { tt << "-1,4";
+    } else {
+      tt << "this case is not yet considered " << factor_ << " in RDM::generate()";
+      throw runtime_error(tt.str());
+    }
+    return tt.str();
+  }
+}
+
+
 // do a special sort_indices for rdm summation with possible delta cases
 string RDM::generate(string indent, const string tlab, const list<shared_ptr<Index> >& loop) const {
   assert(!index_.empty() && !loop.empty());
@@ -124,7 +153,7 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
       tt << i << ",";
 
     // add factor information
-    tt << "TODO add factors" ;  
+    tt << 0 << ",1," << prefac__(fac_);
    
     // add source data dimensions
     tt << ">(data, " << tlab << "data, " ;
