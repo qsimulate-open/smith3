@@ -123,6 +123,10 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
     for (auto& i : done) 
       tt << i << ",";
 
+    // add factor information
+    tt << "TODO add factors" ;  
+   
+    // add source data dimensions
     tt << ">(data, " << tlab << "data, " ;
     for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
       if (iter != index_.rbegin()) tt << ", ";
