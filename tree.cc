@@ -227,8 +227,19 @@ static string merge__(vector<shared_ptr<Tensor> > array) {
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
     //mkm maybe needed:
-    if (label == "f1" || label == "v2" || label == "Gamma") label = "this->" + label + "_";
-    ss << (i != array.begin() ? ", " : "") << ((label == "proj") ? "r" : label);
+    if (label == "Gamma"){
+      //will also need to add rdms to merge list
+      ss << ", Special Case:add rdms!!";
+      // but should i pass stuff from below so I can do this?
+      // vector<int> rdmn = gamma->active()->required_rdm();
+      // for (auto i : rdmn)
+      //   ss << ", this->" << i << "_";
+      //
+      //
+    } else {
+      if (label == "f1" || label == "v2") label = "this->" + label + "_";
+      ss << (i != array.begin() ? ", " : "") << ((label == "proj") ? "r" : label);
+   }
   }
   return ss.str();
 }
@@ -467,9 +478,12 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
 
 string Tree::generate_task(const string indent, const int ic, const vector<shared_ptr<Tensor> > op, const bool enlist) const {
   stringstream ss;
+
+ 
   ss << indent << "std::vector<std::shared_ptr<Tensor<T> > > tensor" << ic << " = vec(" << merge__(op) << ");" << endl;
   ss << indent << "std::shared_ptr<Task" << ic << "<T> > task"
                << ic << "(new Task" << ic << "<T>(tensor" << ic << ", index));" << endl;
+
 
   if (!enlist) {
     if (parent_) {
