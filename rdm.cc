@@ -33,7 +33,6 @@
 using namespace std;
 using namespace smith;
 
-// TODO replace by a standard function as soon as I get this working
 namespace smith {
   static string prefac__(const double& factor_) {
     stringstream tt;
@@ -153,7 +152,7 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
       tt << i << ",";
 
     // add factor information
-    tt << 0 << ",1," << prefac__(fac_);
+    tt << "1,1," << prefac__(fac_);
    
     // add source data dimensions
     tt << ">(data, " << tlab << "data, " ;

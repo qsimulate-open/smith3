@@ -164,7 +164,6 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
 }
 
 
-// TODO replace by a standard function (since I am aboard, I cannot google..)
 namespace smith {
   static string prefac__(const double& factor_) {
     stringstream ss;
