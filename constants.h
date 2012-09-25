@@ -29,6 +29,9 @@
 
 #include <string>
 #include <sstream>
+#include <stdexcept>
+#include <cmath>
+#include <cassert>
 
 namespace smith {
 
@@ -62,6 +65,22 @@ static std::string header(const std::string& filename) {
   ss << "" << std::endl;
   return ss.str();
 };
+
+static std::string prefac__(const double& factor_) {
+  const double thresh = 1.0e-10;
+  // bruteforce way...
+  const int large = 1024;
+  int i, j;
+  for (i = 1; i != 1024; ++i) {
+    j = static_cast<int>(factor_*i + (factor_<0 ? -thresh : thresh));
+    if (fabs(factor_*i-j) < thresh)
+      break;
+  }
+  std::stringstream ss;
+  ss << j << "," << i;
+  return ss.str();
+};
+
 
 }
 

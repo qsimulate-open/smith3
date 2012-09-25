@@ -25,6 +25,7 @@
 
 
 #include "tensor.h"
+#include "constants.h"
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
@@ -161,34 +162,6 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
                   << lbl << "->" << (move ? "move" : "get") << "_block(" << lab << "hash);" << endl;
   }
   return tt.str();
-}
-
-
-namespace smith {
-  static string prefac__(const double& factor_) {
-    stringstream ss;
-    if (fabs(factor_-1.0) < 1.0e-10) { ss << "1,1";
-    } else if (fabs(factor_+1.0) < 1.0e-10) { ss << "-1,1";
-    } else if (fabs(factor_-2.0) < 1.0e-10) { ss << "2,1";
-    } else if (fabs(factor_+2.0) < 1.0e-10) { ss << "-2,1";
-    } else if (fabs(factor_-4.0) < 1.0e-10) { ss << "4,1";
-    } else if (fabs(factor_+4.0) < 1.0e-10) { ss << "-4,1";
-    } else if (fabs(factor_-8.0) < 1.0e-10) { ss << "8,1";
-    } else if (fabs(factor_+8.0) < 1.0e-10) { ss << "-8,1";
-    } else if (fabs(factor_-16.0) < 1.0e-10) { ss << "16,1";
-    } else if (fabs(factor_+16.0) < 1.0e-10) { ss << "-16,1";
-    } else if (fabs(factor_-32.0) < 1.0e-10) { ss << "32,1";
-    } else if (fabs(factor_+32.0) < 1.0e-10) { ss << "-32,1";
-    } else if (fabs(factor_-0.5) < 1.0e-10) { ss << "1,2";
-    } else if (fabs(factor_+0.5) < 1.0e-10) { ss << "-1,2";
-    } else if (fabs(factor_-0.25) < 1.0e-10) { ss << "1,4";
-    } else if (fabs(factor_+0.25) < 1.0e-10) { ss << "-1,4";
-    } else {
-      ss << "this case is not yet considered " << factor_ << " in Tensor::generate_sort_indices()";
-      throw runtime_error(ss.str());
-    }
-    return ss.str();
-  }
 }
 
 
