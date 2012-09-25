@@ -71,6 +71,8 @@ class BinaryContraction {
     Tree* parent() { return parent_; };
     const Tree* parent() const { return parent_; };
 
+    std::vector<int> required_rdm(std::vector<int> input) const;
+
     int depth() const;
 
     std::vector<std::shared_ptr<Tensor> > tensors_str();
@@ -135,6 +137,9 @@ class Tree : public std::enable_shared_from_this<Tree> {
     bool merge(std::shared_ptr<Tree> o);
 
     int depth() const;
+
+    // this function returns the rank of required RDMs here + inp
+    std::vector<int> required_rdm(std::vector<int> inp) const;
 
     // code generators!
     std::pair<std::string,std::string> generate_task_list(const bool enlist = false,

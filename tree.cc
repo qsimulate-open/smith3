@@ -549,6 +549,10 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "    std::shared_ptr<Tensor<T> > t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > r;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
+
+    vector<int> rdm = required_rdm(vector<int>());
+    for (auto& i : rdm) ss << "    std::shared_ptr<Tensor<T> > rdm" << i << endl;
+
     ss << "" << endl;
     ss << "    std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T> > queue_(new Queue<T>());" << endl;
@@ -841,5 +845,31 @@ vector<shared_ptr<Tensor> > BinaryContraction::tensors_str() {
   out.push_back(tensor_);
   if (!subtree_.empty())
     out.push_back(subtree_.front()->target());
+  return out;
+}
+
+
+vector<int> Tree::required_rdm(vector<int> orig) const {
+  vector<int> out = orig;
+  for (auto& i : bc_)
+    out = i->required_rdm(out);
+
+  for (auto& i : op_) {
+    if (i->label() != "Gamma") continue;
+    vector<int> rdmn = i->active()->required_rdm();
+    for (auto& j: rdmn)
+      if (find(out.begin(), out.end(), j) == out.end()) out.push_back(j);
+  }
+  sort(out.begin(), out.end());
+  return out;
+}
+
+
+vector<int> BinaryContraction::required_rdm(vector<int> orig) const {
+  vector<int> out = orig;
+  for (auto& i : subtree_)
+    out = i->required_rdm(out);
+
+  sort(out.begin(), out.end());
   return out;
 }

@@ -71,7 +71,7 @@ static std::string prefac__(const double& factor_) {
   // bruteforce way...
   const int large = 1024;
   int i, j;
-  for (i = 1; i != 1024; ++i) {
+  for (i = 1; i != large; ++i) {
     j = static_cast<int>(factor_*i + (factor_<0 ? -thresh : thresh));
     if (fabs(factor_*i-j) < thresh)
       break;
