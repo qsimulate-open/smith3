@@ -214,11 +214,10 @@ static int icnt;
 vector<shared_ptr<Tensor> > ii;
 
 // local functions... (not a good practice...) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-static string merge__(vector<shared_ptr<Tensor> > array) {
+static string merge__(vector<string> array) {
   stringstream ss;
   vector<string> done;
-  for (auto i = array.begin(); i != array.end(); ++i) {
-    string label = (*i)->label();
+  for (auto& label : array) {
     size_t found = label.find("dagger");
     if (found != string::npos) {
       string tmp(label.begin(), label.begin() + found);
@@ -226,27 +225,12 @@ static string merge__(vector<shared_ptr<Tensor> > array) {
     }
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
-    //mkm maybe needed:
-    if (label == "Gamma"){
-      //will also need to add rdms to merge list
-      ss << ", Special Case:add rdms!!";
-      // but should i pass stuff from below so I can do this?
-      // vector<int> rdmn = gamma->active()->required_rdm();
-      // for (auto i : rdmn)
-      //   ss << ", this->" << i << "_";
-      //
-      //
-    } else {
-      if (label == "f1" || label == "v2") label = "this->" + label + "_";
-      ss << (i != array.begin() ? ", " : "") << ((label == "proj") ? "r" : label);
-   }
+    if (label == "f1" || label == "v2") label = "this->" + label + "_";
+    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? "r" : label);
   }
   return ss.str();
 }
-static string merge__(list<shared_ptr<Tensor> > array) {
-  vector<shared_ptr<Tensor> > arr(array.begin(), array.end());
-  return merge__(arr);
-}
+static string merge__(list<string> array) { return merge__(vector<string>(array.begin(), array.end())); }
 static string label__(const string& lbl) {
   string label = lbl;
   if (label == "proj") label = "r";
@@ -477,18 +461,23 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
 
 
 string Tree::generate_task(const string indent, const int ic, const vector<shared_ptr<Tensor> > op, const bool enlist) const {
-  stringstream ss;
+  vector<string> ops;
+  for (auto& i : op) ops.push_back(i->label());
+  int ip = -1;
+  if (parent_) ip = parent_->parent()->num();
+  return generate_task(indent, ip, ic, ops, enlist);
+}
 
- 
-  ss << indent << "std::vector<std::shared_ptr<Tensor<T> > > tensor" << ic << " = vec(" << merge__(op) << ");" << endl;
+string Tree::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const bool enlist) const {
+  stringstream ss;
+  ss << indent << "std::vector<std::shared_ptr<Tensor<T> > > tensor" << ic << " = {" << merge__(op) << "};" << endl;
   ss << indent << "std::shared_ptr<Task" << ic << "<T> > task"
                << ic << "(new Task" << ic << "<T>(tensor" << ic << ", index));" << endl;
-
 
   if (!enlist) {
     if (parent_) {
       assert(parent_->parent());
-      ss << indent << "task" << parent_->parent()->num() << "->add_dep(task" << ic << ");" << endl;
+      ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
       ss << indent << "task" << ic << "->add_dep(task0);" << endl;
     } else {
       assert(depth() == 0);
@@ -497,9 +486,8 @@ string Tree::generate_task(const string indent, const int ic, const vector<share
     ss << indent << "queue_->add_task(task" << ic << ");" << endl;
   } else {
     if (parent_) {
-      assert(parent_->parent());
-      if (parent_->parent()->num() != ic)
-        ss << indent << "task" << parent_->parent()->num() << "->add_dep(task" << ic << ");" << endl;
+      if (ip != ic)
+        ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
     } else {
       assert(depth() == 0);
     }
@@ -549,10 +537,6 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "    std::shared_ptr<Tensor<T> > t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > r;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
-
-    vector<int> rdm = required_rdm(vector<int>());
-    for (auto& i : rdm) ss << "    std::shared_ptr<Tensor<T> > rdm" << i << endl;
-
     ss << "" << endl;
     ss << "    std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T> > queue_(new Queue<T>());" << endl;
@@ -618,19 +602,28 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     op.insert(op.end(), op_.begin(), op_.end());
     ss << generate_task(indent, icnt, op, enlist);
 
-    for (auto& i : op_) {
-      if (i->label() == "Gamma") {
-        tt << generate_gamma(icnt, i, enlist);
-        ++icnt;
-      }
-    }
-
     vector<shared_ptr<Tensor> > op2(op.begin(), op.end());
     tt << generate_compute_header(icnt, op2, enlist);
     tt << generate_compute_operators(indent, target_, op_);
     tt << generate_compute_footer(icnt, op2, enlist);
 
     ++icnt;
+
+    for (auto& i : op_) {
+      if (i->label() == "Gamma") {
+        tt << generate_gamma(icnt, i, enlist);
+        vector<string> tmp = {i->label()};
+        vector<int> rdms = i->active()->required_rdm(); 
+        for (auto& j : rdms) {
+          stringstream zz; 
+          zz << "rdm" << j << "_";
+          tmp.push_back(zz.str());
+        }
+        ss << generate_task(indent, icnt-1, icnt, tmp, enlist);
+        ++icnt;
+      }
+    }
+
   }
 
   /////////////////////////////////////////////////////////////////
