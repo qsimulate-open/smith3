@@ -36,108 +36,112 @@ using namespace smith;
 
 // do a special sort_indices for rdm summation with possible delta cases
 string RDM::generate(string indent, const string tlab, const list<shared_ptr<Index> >& loop) const {
-  assert(!index_.empty() && !loop.empty());
-  stringstream tt;
-  indent += "  ";
-  const string itag = "i";
+  if (!index_.empty() && !loop.empty()) {
+   stringstream tt;
+   indent += "  ";
+   const string itag = "i";
 
-  // now do the sort
-  vector<string> close;
+   // now do the sort
+   vector<string> close;
 
-  // in case delta_ is not empty
-  if (!delta_.empty()) {
-    // first delta loops for blocks
-    tt << indent << "if (";
-    for (auto d = delta_.begin(); d != delta_.end(); ++d) {
-      tt << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? " && " : "");
-    }
-    tt << ") {" << endl;
-    close.push_back(indent + "}");
-    indent += "  ";
+   // in case delta_ is not empty
+   if (!delta_.empty()) {
+     // first delta loops for blocks
+     tt << indent << "if (";
+     for (auto d = delta_.begin(); d != delta_.end(); ++d) {
+       tt << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? " && " : "");
+     }
+     tt << ") {" << endl;
+     close.push_back(indent + "}");
+     indent += "  ";
 
-    tt << indent << "std::vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
-    tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
+     tt << indent << "std::vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
+     tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
 
-    // start sort loops
-    for (auto& i : loop) {
-      const int inum = i->num();
-      bool found = false;
-      for (auto& d : delta_)
-        if (d.first->num() == inum) found = true;
-      if (!found) { 
-        tt << indent << "for (int " << itag << inum << " = 0; " << itag << inum << " != " << i->str_gen() << ".size(); ++" << itag << inum << ") {" << endl;
-        close.push_back(indent + "}");
-        indent += "  ";
-      }
-    }
+     // start sort loops
+     for (auto& i : loop) {
+       const int inum = i->num();
+       bool found = false;
+       for (auto& d : delta_)
+         if (d.first->num() == inum) found = true;
+       if (!found) { 
+         tt << indent << "for (int " << itag << inum << " = 0; " << itag << inum << " != " << i->str_gen() << ".size(); ++" << itag << inum << ") {" << endl;
+         close.push_back(indent + "}");
+         indent += "  ";
+       }
+     }
 
-    // make odata part of summation for target
-    tt  << indent << "odata[";
-    for (auto ri = loop.rbegin(); ri != loop.rend(); ++ri) {
-      int inum = (*ri)->num();
-      for (auto& d : delta_)
-        if (d.first->num() == inum) inum = d.second->num();
-      const string tmp = "+" + (*ri)->str_gen() + ".size()*(";
-      tt << itag << inum << (ri != --loop.rend() ? tmp : "");
-    }
-    for (auto ri = ++loop.begin(); ri != loop.end(); ++ri)
-      tt << ")";
-    tt << "]" << endl;
+     // make odata part of summation for target
+     tt  << indent << "odata[";
+     for (auto ri = loop.rbegin(); ri != loop.rend(); ++ri) {
+       int inum = (*ri)->num();
+       for (auto& d : delta_)
+         if (d.first->num() == inum) inum = d.second->num();
+       const string tmp = "+" + (*ri)->str_gen() + ".size()*(";
+       tt << itag << inum << (ri != --loop.rend() ? tmp : "");
+     }
+     for (auto ri = ++loop.begin(); ri != loop.end(); ++ri)
+       tt << ")";
+     tt << "]" << endl;
 
-    // make data part of summation
-    tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
-    for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {
-      const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
-      tt << itag << (*riter)->num() << (riter != --index_.rend() ? tmp : "");
-    }
-    for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
-      tt << ")";
-    tt << "];" << endl;
+     // make data part of summation
+     tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
+     for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {
+       const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
+       tt << itag << (*riter)->num() << (riter != --index_.rend() ? tmp : "");
+     }
+     for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
+       tt << ")";
+     tt << "];" << endl;
+ 
+     // close loops
+     for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
+       tt << *iter << endl;
 
-    // close loops
-    for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-      tt << *iter << endl;
-
-  // if delta_ is empty call sort_indices
-  } else {
-    // loop up the operator generators
-    tt << indent << "std::vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
-    tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
+   // if delta_ is empty call sort_indices
+   } else {
+     // loop up the operator generators
+     tt << indent << "std::vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
+     tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
    
-    // call sort_indices here
-    vector<int> done;
-    tt << indent << "sort_indices<";
-    for (auto i = loop.rbegin(); i != loop.rend(); ++i) {
-      int cnt = 0;
-      for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
-        if ((*i)->identical(*j)) break;
-      }
-      if (cnt == index_.size()) throw logic_error("should not happen.. RDM::generate");
-      done.push_back(cnt);
-    }
-    // then fill out others
-    for (int i = 0; i != index_.size(); ++i) {
-      if (find(done.begin(), done.end(), i) == done.end())
-        done.push_back(i);
-    }
-    // write out
-    for (auto& i : done) 
-      tt << i << ",";
+     // call sort_indices here
+     vector<int> done;
+     tt << indent << "sort_indices<";
+     for (auto i = loop.rbegin(); i != loop.rend(); ++i) {
+       int cnt = 0;
+       for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
+         if ((*i)->identical(*j)) break;
+       }
+       if (cnt == index_.size()) throw logic_error("should not happen.. RDM::generate");
+       done.push_back(cnt);
+     }
+     // then fill out others
+     for (int i = 0; i != index_.size(); ++i) {
+       if (find(done.begin(), done.end(), i) == done.end())
+         done.push_back(i);
+     }
+     // write out
+     for (auto& i : done) 
+       tt << i << ",";
 
-    // add factor information
-    tt << "1,1," << prefac__(fac_);
+     // add factor information
+     tt << "1,1," << prefac__(fac_);
    
-    // add source data dimensions
-    tt << ">(data, " << tlab << "data, " ;
-    for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
-      if (iter != index_.rbegin()) tt << ", ";
-        tt << (*iter)->str_gen() << "->size()";
-    }
-    tt << ");" << endl;
+     // add source data dimensions
+     tt << ">(data, " << tlab << "data, " ;
+     for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
+       if (iter != index_.rbegin()) tt << ", ";
+         tt << (*iter)->str_gen() << "->size()";
+     }
+     tt << ");" << endl;
 
-  }
-
-  return tt.str();
+   } 
+   return tt.str();
+  } else if (index_.empty()) {
+    throw logic_error ("TODO fix if index empty");
+  } else if (loop.empty()) {
+    throw logic_error ("TODO fix if loop empty");
+  }  
 }
 
 
