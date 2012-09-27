@@ -39,14 +39,23 @@ using namespace smith;
 int main() {
 
 // MP2
+#if 0
   shared_ptr<Op> proj(new Op("proj", "c", "c", "a", "a"));
-//  shared_ptr<Op> proj(new Op("proj", "x", "x", "a", "a")); // test active 1
-  shared_ptr<Op> dum(new Op("proj"));
-//shared_ptr<Op> f(new Op("v2", "g", "g", "g", "g"));
-  shared_ptr<Op> f(new Op("f1", "g", "g"));
-// MP2
   shared_ptr<Op> t(new Op("t2", "a", "a", "c", "c"));
-//  shared_ptr<Op> t(new Op("t2", "a", "x", "x", "x"));  // test active 1
+#endif
+// simple one
+#if 0
+  shared_ptr<Op> proj(new Op("proj", "x", "x", "a", "a")); // test active 1
+  shared_ptr<Op> t(new Op("t2", "a", "x", "x", "x"));  // test active 1
+#endif
+// complicated one 
+#if 1
+  shared_ptr<Op> proj(new Op("proj", "c", "x", "x", "x"));
+  shared_ptr<Op> t(new Op("t2", "x", "x", "x", "c"));
+#endif
+
+  shared_ptr<Op> dum(new Op("proj"));
+  shared_ptr<Op> f(new Op("f1", "g", "g"));
   shared_ptr<Op> H(new Op("v2", "g", "g", "g", "g"));
   shared_ptr<Op> R(new Op("r", "a", "a", "c", "c"));
   shared_ptr<Op> tdagger(new Op("t2dagger", "c", "c", "a", "a"));
