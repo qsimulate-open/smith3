@@ -82,6 +82,8 @@ bool Tensor::all_active() const {
 
 // adds all-active tensor to Active_;
 void Tensor::merge(shared_ptr<Tensor> a) {
+  std::cout << "Before merge" << endl;
+  a->print();
   assert(active_);
   merged_ = a;
   list<list<shared_ptr<Index> >::iterator> remove;
@@ -97,6 +99,7 @@ void Tensor::merge(shared_ptr<Tensor> a) {
     }
   }
   for (auto& i : remove) index_.erase(i);
+
 }
 
 
@@ -116,15 +119,6 @@ bool Tensor::operator==(const Tensor& o) const {
   return out;
 }
 
-shared_ptr<Tensor> Tensor::fill_gamma (shared_ptr<Tensor> g) {
- if (merged_) {
-  std::cout << "found object to merge" << endl;
-  //this is temporary..really want to return f1(x0,x1) tensor type 
-  return g;
- } else {
-   throw logic_error("Gamma empty and nothing to input");
- }
-}
 
 string Tensor::constructor_str(std::string indent) const {
   stringstream ss;

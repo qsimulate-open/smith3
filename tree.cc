@@ -614,13 +614,6 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
 
     for (auto& i : op_) {
       if (i->label() == "Gamma") {
-#if 0
-        if (i->index().empty()) {
-          <shared_ptr<Tensor> j;
-          j = i->fill_gamma(i);
-          i = j;
-        } 
-#endif
         tt << generate_gamma(icnt, i, enlist);
         vector<string> tmp = {i->label()};
         vector<int> rdms = i->active()->required_rdm(); 
