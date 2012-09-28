@@ -45,8 +45,8 @@ int main() {
 #endif
 // simple one
 #if 0
-  shared_ptr<Op> proj(new Op("proj", "x", "x", "a", "a")); // test active 1
-  shared_ptr<Op> t(new Op("t2", "a", "x", "x", "x"));  // test active 1
+  shared_ptr<Op> proj(new Op("proj", "x", "x", "a", "a")); 
+  shared_ptr<Op> t(new Op("t2", "a", "x", "x", "x"));  
 #endif
 // complicated one 
 #if 1

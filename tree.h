@@ -142,6 +142,7 @@ class Tree : public std::enable_shared_from_this<Tree> {
     // this function returns the rank of required RDMs here + inp
     std::vector<int> required_rdm(std::vector<int> inp) const;
 
+
     // code generators!
     std::pair<std::string,std::string> generate_task_list(const bool enlist = false,
         const std::shared_ptr<Tree> energy = std::shared_ptr<Tree>()) const;

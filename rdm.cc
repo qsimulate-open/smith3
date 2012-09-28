@@ -138,9 +138,9 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
    } 
    return tt.str();
   } else if (index_.empty()) {
-    throw logic_error ("TODO fix if index empty");
+    throw logic_error ("TODO fix if-index-empty.. RDM::generate");
   } else if (loop.empty()) {
-    throw logic_error ("TODO fix if loop empty");
+    throw logic_error ("TODO fix if-loop-empty.. RDM::generate");
   }  
 }
 
