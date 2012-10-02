@@ -82,6 +82,8 @@ bool Tensor::all_active() const {
 
 // adds all-active tensor to Active_;
 void Tensor::merge(shared_ptr<Tensor> a) {
+  std::cout << "Before merge" << endl;
+  a->print();
   assert(active_);
   merged_ = a;
   list<list<shared_ptr<Index> >::iterator> remove;
