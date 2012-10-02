@@ -39,8 +39,8 @@ using namespace smith;
 int main() {
 
 // MP2
-#if 1
-  shared_ptr<Op> proj(new Op("proj", "c", "c", "a", "a"));
+#if 0
+  shared_ptr<Op> proj(new Op("proj", "c", "c", "a", "a")); 
   shared_ptr<Op> t(new Op("t2", "a", "a", "c", "c"));
 #endif
 // simple one
@@ -49,7 +49,7 @@ int main() {
   shared_ptr<Op> t(new Op("t2", "a", "x", "x", "x"));  // test active 1
 #endif
 // complicated one 
-#if 0
+#if 1
   shared_ptr<Op> proj(new Op("proj", "c", "x", "x", "x"));
   shared_ptr<Op> t(new Op("t2", "x", "x", "x", "c"));
 #endif

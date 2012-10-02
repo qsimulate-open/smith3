@@ -76,8 +76,10 @@ class RDM {
     // One index is going to be annihilated. done is updated inside the function
     std::list<std::shared_ptr<RDM> > reduce_one(std::list<int>& done) const;
 
-    // generate a code
-    std::string generate(std::string indent, const std::string tlab,const std::list<std::shared_ptr<Index> >& loop) const;
+    // generate a code for Gamma rdm summation
+    std::string generate(std::string indent, const std::string tlab, const std::list<std::shared_ptr<Index> >& loop) const;
+    // generates code for Gamma rdm summation with merged object multiplication
+    std::string generate_mult(std::string indent, const std::string tag, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged, const std::string mlab) const;
 
     int rank() const { assert(index_.size()%2 == 0); return index_.size()/2; }; 
 };

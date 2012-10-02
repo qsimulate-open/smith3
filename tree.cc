@@ -95,11 +95,7 @@ Tree::Tree(shared_ptr<Equation> eq) : parent_(NULL), num_(-1), tree_name_(eq->na
   for (auto i = d.begin(); i != d.end(); ++i) {
     shared_ptr<ListTensor> tmp(new ListTensor(*i));
     // All internal tensor should be included in the active part
-//mkm take out later    std::cout << "Testing tmp ListTensor Before absorb_all.." << endl;
-//    tmp->print();
     tmp->absorb_all_internal();   
-//mkm   std::cout << "Testing tmp After absorb_all.." << endl;
-//    tmp->print();  //mkm so why does tmp change if absorb_all_internal doesnt have a return value? b/c it calls merge() which calls tensor()?
 
     shared_ptr<Tensor> first = tmp->front();
     shared_ptr<ListTensor> rest = tmp->rest();
@@ -358,16 +354,20 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   // loops
   tt << "    void compute_() {" << endl;
   string indent ="      ";
-  string gindent = indent;
   vector<string> close;
+#if 0 
+  string gindent = indent;
   tt << gamma->generate_loop(gindent, close);
   // generate gamma get block, true does a move_block
   tt << gamma->generate_get_block(gindent, "o", true);
   // now generate codes for rdm
   tt << gamma->generate_active(gindent, "o");
+#else
+  tt << gamma->generate_gamma(indent, close, "o", true); 
+#endif
 
   // generate gamma put block
-  tt << gindent << gamma->label() << "->put_block(ohash, odata);" << endl;
+  tt << indent << gamma->label() << "->put_block(ohash, odata);" << endl;
   // close the loops
   for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
     tt << *iter << endl;
