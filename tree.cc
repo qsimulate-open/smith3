@@ -95,7 +95,11 @@ Tree::Tree(shared_ptr<Equation> eq) : parent_(NULL), num_(-1), tree_name_(eq->na
   for (auto i = d.begin(); i != d.end(); ++i) {
     shared_ptr<ListTensor> tmp(new ListTensor(*i));
     // All internal tensor should be included in the active part
-    tmp->absorb_all_internal();
+//mkm take out later    std::cout << "Testing tmp ListTensor Before absorb_all.." << endl;
+//    tmp->print();
+    tmp->absorb_all_internal();   
+//mkm   std::cout << "Testing tmp After absorb_all.." << endl;
+//    tmp->print();  //mkm so why does tmp change if absorb_all_internal doesnt have a return value? b/c it calls merge() which calls tensor()?
 
     shared_ptr<Tensor> first = tmp->front();
     shared_ptr<ListTensor> rest = tmp->rest();
