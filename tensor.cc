@@ -86,8 +86,8 @@ void Tensor::merge(shared_ptr<Tensor> a) {
   merged_ = a;
   list<list<shared_ptr<Index> >::iterator> remove;
   // remove Index that belongs to a
-  for (auto& i : a->index()) {     
-    const int n = i->num();        
+  for (auto& i : a->index()) {
+    const int n = i->num();
     for (auto j = index_.begin(); j != index_.end(); ++j) {
       // careful, this code is driven by numbers
       if ((*j)->num() == n) {
@@ -97,7 +97,6 @@ void Tensor::merge(shared_ptr<Tensor> a) {
     }
   }
   for (auto& i : remove) index_.erase(i);
-
 }
 
 

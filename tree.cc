@@ -121,7 +121,7 @@ void Tree::print() const {
   string indent = "";
   for (int i = 0; i != depth(); ++i) indent += "  ";
   if (target_) {
-    for (auto i = op_.begin(); i != op_.end(); ++i) 
+    for (auto i = op_.begin(); i != op_.end(); ++i)
       cout << indent << target_->str() << " += " << (*i)->str() << (dagger_ ? " *" : "") << endl;
   }
   for (auto i = bc_.begin(); i != bc_.end(); ++i)
@@ -335,9 +335,6 @@ string Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tenso
   tt << "};" << endl << endl;
   return tt.str();
 }
-
-
-
 
 
 string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const bool enlist) const {
