@@ -86,8 +86,8 @@ void Tensor::merge(shared_ptr<Tensor> a) {
   merged_ = a;
   list<list<shared_ptr<Index> >::iterator> remove;
   // remove Index that belongs to a
-  for (auto& i : a->index()) {     
-    const int n = i->num();        
+  for (auto& i : a->index()) {
+    const int n = i->num();
     for (auto j = index_.begin(); j != index_.end(); ++j) {
       // careful, this code is driven by numbers
       if ((*j)->num() == n) {
@@ -116,15 +116,6 @@ bool Tensor::operator==(const Tensor& o) const {
   return out;
 }
 
-shared_ptr<Tensor> Tensor::fill_gamma (shared_ptr<Tensor> g) {
- if (merged_) {
-  std::cout << "found object to merge" << endl;
-  //this is temporary..really want to return f1(x0,x1) tensor type 
-  return g;
- } else {
-   throw logic_error("Gamma empty and nothing to input");
- }
-}
 
 string Tensor::constructor_str(std::string indent) const {
   stringstream ss;

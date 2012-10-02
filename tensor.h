@@ -88,8 +88,6 @@ class Tensor {
 
     void merge(std::shared_ptr<Tensor> o);
 
-    std::shared_ptr<Tensor> fill_gamma (std::shared_ptr<Tensor> g);
-
     std::string constructor_str(std::string indent) const;
 
     std::string generate_get_block(const std::string, const std::string, const bool move = false) const;
