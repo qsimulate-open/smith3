@@ -28,7 +28,6 @@
 #include "constants.h"
 #include <algorithm>
 #include <stdexcept>
-#include <string>
 
 using namespace std;
 using namespace smith;
@@ -96,7 +95,7 @@ Tree::Tree(shared_ptr<Equation> eq) : parent_(NULL), num_(-1), tree_name_(eq->na
   for (auto i = d.begin(); i != d.end(); ++i) {
     shared_ptr<ListTensor> tmp(new ListTensor(*i));
     // All internal tensor should be included in the active part
-    tmp->absorb_all_internal();   
+    tmp->absorb_all_internal();
 
     shared_ptr<Tensor> first = tmp->front();
     shared_ptr<ListTensor> rest = tmp->rest();
@@ -334,63 +333,7 @@ string Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tenso
 }
 
 
-string Tree::generate_gamma_combination(const int ic, const shared_ptr<Tensor> gamma, const bool enlist) const {
-  stringstream tt;
 
-  tt << "template <typename T>" << endl;
-  if (!enlist) {
-    tt << "class Task" << ic << " : public Task<T> {" <<  "  // associated with gamma combination" << endl;
-  } else {
-    tt << "class Task" << ic << " : public EnergyTask<T> {" <<  "  // associated with gamma combination" << endl;
-  }
-  tt << "  protected:" << endl;
-  tt << "    IndexRange closed_;" << endl;
-  tt << "    IndexRange active_;" << endl;
-  tt << "    IndexRange virt_;" << endl;
-  tt << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
-  tt << "    std::shared_ptr<Tensor<T> > GammaC;" << endl;
-  tt << endl;
-  // loops
-  tt << "    void compute_() {" << endl;
-  string indent ="      ";
-  string gindent = indent;
-  vector<string> close;
-  // todo loops over common indices
-  tt << gamma->generate_loop(gindent, close);
-  // generate gamma get block, true does a move_block
-  tt << gamma->generate_get_block(gindent, "o", true);
-
-
-  // todo Gamma*f1 dgemm
-
-
-
-  // generate gamma put block
-  tt << gindent << gamma->label() << "->put_block(ohash, odata);" << endl;
-  // close the loops
-  for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-    tt << *iter << endl;
-  tt << "    };  " << endl;
-  tt << "" << endl;
-  // done with protected part
-  tt << "" << endl;
-  tt << "  public:" << endl;
-  if (!enlist) {
-    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
-  } else {
-    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : EnergyTask<T>() {" << endl;
-  }
-  tt << "      closed_ = i[0];" << endl;
-  tt << "      active_ = i[1];" << endl;
-  tt << "      virt_   = i[2];" << endl;
-  tt << "      Gamma   = t[0];" << endl;
-  tt << "      GammaC  = t[1];" << endl;
-  tt << "    };" << endl;
-  tt << "    ~Task" << icnt << "() {};" << endl;
-  tt << "};" << endl << endl;
-
-  return tt.str();
-}
 
 
 string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const bool enlist) const {
@@ -670,12 +613,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ++icnt;
 
     for (auto& i : op_) {
-      // it might be better to access tensor's merged_ than the following   
-      bool chktensor = false;      
-      size_t found = i->str().find("<<");
-      if (found!=string::npos) chktensor = true;
-    
-      if (i->label() == "Gamma" && !chktensor) {
+      if (i->label() == "Gamma") {
         tt << generate_gamma(icnt, i, enlist);
         vector<string> tmp = {i->label()};
         vector<int> rdms = i->active()->required_rdm(); 
@@ -685,10 +623,6 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
           tmp.push_back(zz.str());
         }
         ss << generate_task(indent, icnt-1, icnt, tmp, enlist);
-        ++icnt;
-      }
-      if (i->label() == "Gamma" && chktensor) {
-        tt << generate_gamma_combination (icnt, i, enlist);
         ++icnt;
       }
     }
