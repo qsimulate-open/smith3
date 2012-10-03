@@ -323,11 +323,8 @@ string Active::generate(const string indent, const string lab, const list<shared
 string Active::generate_merged(const string indent, const string tag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, const string mlab) const {
   stringstream tt;
   for (auto& i : rdm_) {
-    tt << indent << "{" << endl;
     tt << i->generate_mult(indent, tag, index, merged, mlab);
-    tt << indent << "}" << endl;
   }
-  
   return tt.str();
 }
 

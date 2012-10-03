@@ -151,18 +151,23 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
 
 string RDM::generate_mult(string indent, const string tag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, const string mlab) const {
   stringstream tt;
-  indent += "  ";
+  //indent += "  ";
   const string itag = "i";
 
 
   // add for merge for loops
   // perhaps loops should be outside all inner blocks ie done above and mclose passed?
+  
+
   vector<string> mclose;
   for (auto& m : merged) {
-    tt << indent << "for (auto& : " << m->str_gen() << ") {" << endl;
+    tt << indent << "for (auto& " << m->str_gen() << " : "  <<  m->generate()  << ") {" << endl;
     mclose.push_back(indent + "}");
     indent += "  ";
-  }  
+  }
+  // make get block for merge obj
+          tt << indent << "vector<size_t> fhash = {" << list_keys(merged) << "};" << endl;
+          tt << indent << "unique_ptr<double[]> fdata = " << mlab << "->get_block(fhash);" << endl;
 
   // now do the sort
   vector<string> close;
@@ -217,11 +222,14 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
       tt << ")";
     tt << "]";
     // mulitiply merge on the fly
-    tt << " * " << mlab << "(";
-    for (auto mi = merged.begin(); mi != merged.end()  ; ++mi) { 
-      tt <<  (*mi)->str_gen()  << (mi != --merged.end() ? "," :"") ;
+    tt << " * " << "fdata" << "[";
+    for (auto mi = merged.rbegin(); mi != merged.rend()  ; ++mi) { 
+      const string tmp = "+" + (*mi)->str_gen() + ".size()*(";
+      tt << itag << (*mi)->num() << (mi != --merged.rend() ? tmp : "");
     }
-    tt << ");" << endl;
+    for (auto mi = ++merged.begin(); mi != merged.end()  ; ++mi)  
+      tt << ")";
+    tt << "];" << endl;
 
     // close loops
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
