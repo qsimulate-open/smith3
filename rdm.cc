@@ -242,8 +242,8 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
   // if delta_ is empty do sort_indices with merged multiplication //
   } else {
     // loop up the operator generators
-    tt << indent << "vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
-    tt << indent << "unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
+    tt << indent << "vector<size_t> i0hash = {" << list_keys(merged) << "};" << endl;
+    tt << indent << "unique_ptr<double[]> data = " << mlab << "->get_block(i0hash);" << endl;
 
     // do manual sort_indices with merged mulitplication 
     // make odata part of summation for target
@@ -268,12 +268,16 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
     for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
       tt << ")";
     tt << "]";
+
     // mulitiply merge on the fly
-    tt << " * " << mlab << "(";
-    for (auto mi = merged.begin(); mi != merged.end()  ; ++mi) { 
-      tt <<  (*mi)->str_gen()  << (mi != --merged.end() ? "," :"") ;
+    tt << " * " << "fdata" << "[";
+    for (auto mi = merged.rbegin(); mi != merged.rend()  ; ++mi) { 
+      const string tmp = "+" + (*mi)->str_gen() + ".size()*(";
+      tt << itag << (*mi)->num() << (mi != --merged.rend() ? tmp : "");
     }
-    tt << ");" << endl;
+    for (auto mi = ++merged.begin(); mi != merged.end()  ; ++mi)  
+      tt << ")";
+    tt << "];" << endl;
 
     // close loops
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
