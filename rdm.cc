@@ -156,7 +156,7 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
 
 
   // add for merge for loops
-  // perhaps loops should be outside all inner blocks?
+  // perhaps loops should be outside all inner blocks ie done above and mclose passed?
   vector<string> mclose;
   for (auto& m : merged) {
     tt << indent << "for (auto& : " << m->str_gen() << ") {" << endl;
@@ -231,42 +231,51 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
     for (auto iter = mclose.rbegin(); iter != mclose.rend(); ++iter)
       tt << *iter << endl;
 
-  // if delta_ is empty call sort_indices
+  // if delta_ is empty do sort_indices with merged multiplication //
   } else {
     // loop up the operator generators
     tt << indent << "vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
     tt << indent << "unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
 
-    // call sort_indices here
-    vector<int> done;
-    tt << indent << "sort_indices<";
-    for (auto i = index.rbegin(); i != index.rend(); ++i) {
-      int cnt = 0;
-      for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
-        if ((*i)->identical(*j)) break;
-      }
-      if (cnt == index_.size()) throw logic_error("should not happen.. RDM::generate");
-      done.push_back(cnt);
+    // do manual sort_indices with merged mulitplication 
+    // make odata part of summation for target
+    tt  << indent << "odata[";
+    for (auto ri = index.rbegin(); ri != index.rend(); ++ri) {
+      int inum = (*ri)->num();
+      for (auto& d : delta_)
+        if (d.first->num() == inum) inum = d.second->num();
+      const string tmp = "+" + (*ri)->str_gen() + ".size()*(";
+      tt << itag << inum << (ri != --index.rend() ? tmp : "");
     }
-    // then fill out others
-    for (int i = 0; i != index_.size(); ++i) {
-      if (find(done.begin(), done.end(), i) == done.end())
-        done.push_back(i);
+    for (auto ri = ++index.begin(); ri != index.end(); ++ri)
+      tt << ")";
+    tt << "]" << endl;
+
+    // make data part of summation
+    tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
+    for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {
+      const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
+      tt << itag << (*riter)->num() << (riter != --index_.rend() ? tmp : "");
     }
-    // write out
-    for (auto& i : done) 
-      tt << i << ",";
-
-    // add factor information
-    tt << "1,1," << prefac__(fac_);
-
-    // add source data dimensions
-    tt << ">(data, " << tag << "data, " ;
-    for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
-      if (iter != index_.rbegin()) tt << ", ";
-        tt << (*iter)->str_gen() << "->size()";
+    for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
+      tt << ")";
+    tt << "]";
+    // mulitiply merge on the fly
+    tt << " * " << mlab << "(";
+    for (auto mi = merged.begin(); mi != merged.end()  ; ++mi) { 
+      tt <<  (*mi)->str_gen()  << (mi != --merged.end() ? "," :"") ;
     }
     tt << ");" << endl;
+
+    // close loops
+    for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
+      tt << *iter << endl;
+
+    // close merge for loops
+    for (auto iter = mclose.rbegin(); iter != mclose.rend(); ++iter)
+      tt << *iter << endl;
+
+
 
   } 
   return tt.str();
