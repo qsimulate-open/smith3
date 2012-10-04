@@ -43,6 +43,13 @@ class RDM {
     std::list<std::shared_ptr<Index> > index_;
     // kronecker's delta
     std::map<std::shared_ptr<Index>, std::shared_ptr<Index> > delta_;
+   
+    std::string make_get_block(std::string ident);
+    std::string make_merged_loops(std::string& indent, const std::string tag, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged, std::vector<std::string>& close);
+    std::string multiply_merge(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<Index> >& merged);
+    std::string make_odata(const std::string itag, std::string& indent, const std::list<std::shared_ptr<Index> >& index);
+    
+
 
   public:
     RDM(const std::list<std::shared_ptr<Index> >& in,
@@ -79,7 +86,7 @@ class RDM {
     // generate a code for Gamma rdm summation
     std::string generate(std::string indent, const std::string tlab, const std::list<std::shared_ptr<Index> >& loop) const;
     // generates code for Gamma rdm summation with merged object multiplication
-    std::string generate_mult(std::string indent, const std::string tag, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged, const std::string mlab) const;
+    std::string generate_mult(std::string indent, const std::string itag, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged, const std::string mlab);
 
     int rank() const { assert(index_.size()%2 == 0); return index_.size()/2; }; 
 };

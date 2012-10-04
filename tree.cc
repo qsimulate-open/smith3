@@ -348,13 +348,10 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "    IndexRange active_;" << endl;
   tt << "    IndexRange virt_;" << endl;
   tt << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
-  // mlab here is the name of the merged tensor eg f1
-  if (gamma->merged()) {
-    for (auto& i: rdmn)
+  for (auto& i: rdmn)
       tt << "    std::shared_ptr<Tensor<T> > rdm" << i << ";" << endl;
-    //this is related to merged tensor
+  if (gamma->merged()) 
     tt << "    std::shared_ptr<Tensor<T> > " << gamma->merged()->label() << ";" << endl;
-  }
   tt << endl;
   // loops
   tt << "    void compute_() {" << endl;
@@ -396,7 +393,7 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
     for (auto i = rdmn.begin(); i != rdmn.end(); ++i, ++itmp) {
       tt << "      rdm" << (*i) << "    = t[" << itmp << "];" << endl;
     }
-    //this is related to merged tensor
+    // related to merged tensor
     if (gamma->merged()) tt << "      "<< gamma->merged()->label() << "      = t[" <<  itmp << "];" << endl;
   }
   tt << "    };" << endl;
