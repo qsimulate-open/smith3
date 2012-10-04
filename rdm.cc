@@ -198,8 +198,10 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
         tt << indent << "for (int " << itag << jnum << " = 0; " << itag << jnum << " != " << j->str_gen() << ".size(); ++" << itag << jnum << ") {" << endl;
         close.push_back(indent + "}");
         indent += "  ";
-     }
-    } 
+      } else {
+        assert(false);
+      }
+    }
 
     // make odata part of summation for target
     tt  << indent << "odata[";

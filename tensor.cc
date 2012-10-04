@@ -349,11 +349,6 @@ string Tensor::generate_active(string indent, const string tag) const {
   return tt.str();
 }
 
-string Tensor::required_merge() const {
-  assert(label() == "Gamma");
-  if(merged_) return merged_->label();
-  else return "";
-}
 
 string Tensor::generate_loop(string& indent, vector<string>& close) const {
   stringstream tt;

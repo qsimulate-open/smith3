@@ -349,13 +349,11 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "    IndexRange virt_;" << endl;
   tt << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
   // mlab here is the name of the merged tensor eg f1
-  string mlab = gamma->required_merge();  
-  if (!mlab.empty()) 
-  {
+  if (gamma->merged()) {
     for (auto& i: rdmn)
       tt << "    std::shared_ptr<Tensor<T> > rdm" << i << ";" << endl;
     //this is related to merged tensor
-    if (!mlab.empty()) tt << "    std::shared_ptr<Tensor<T> > " << mlab << ";" << endl;
+    tt << "    std::shared_ptr<Tensor<T> > " << gamma->merged()->label() << ";" << endl;
   }
   tt << endl;
   // loops
@@ -398,8 +396,8 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
     for (auto i = rdmn.begin(); i != rdmn.end(); ++i, ++itmp) {
       tt << "      rdm" << (*i) << "    = t[" << itmp << "];" << endl;
     }
-  //this is related to merged tensor
-  if (!mlab.empty()) tt << "      "<< mlab << "      = t[" <<  itmp << "];" << endl;
+    //this is related to merged tensor
+    if (gamma->merged()) tt << "      "<< gamma->merged()->label() << "      = t[" <<  itmp << "];" << endl;
   }
   tt << "    };" << endl;
   tt << "    ~Task" << icnt << "() {};" << endl;

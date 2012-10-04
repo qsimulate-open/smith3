@@ -67,6 +67,8 @@ class Tensor {
     std::list<std::shared_ptr<Index> >& index() { return index_; };
     const std::list<std::shared_ptr<Index> >& index() const { return index_; };
 
+    const std::shared_ptr<const Tensor> merged() const { return merged_; };
+
     int rank() const {
       if (index_.size() & 1) throw std::logic_error("Tensor::rank() cannot be called by DF tensors so far.");
       return index_.size() >> 1;
@@ -101,7 +103,6 @@ class Tensor {
     std::string generate_active(const std::string indent, const std::string tag) const;
     std::string generate_loop(std::string&, std::vector<std::string>&) const;
     std::string generate_gamma(std::string& indent, std::vector<std::string>& close, std::string tag, const bool) const;
-    std::string required_merge() const;
 };
 
 }
