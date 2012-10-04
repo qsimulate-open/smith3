@@ -155,20 +155,6 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
   const string itag = "i";
 
 
-  // add for merge for loops
-  // perhaps loops should be outside all inner blocks ie done above and mclose passed?
-  
-
-  vector<string> mclose;
-  for (auto& m : merged) {
-    tt << indent << "for (auto& " << m->str_gen() << " : "  <<  m->generate()  << ") {" << endl;
-    mclose.push_back(indent + "}");
-    indent += "  ";
-  }
-  // make get block for merge obj
-          tt << indent << "vector<size_t> fhash = {" << list_keys(merged) << "};" << endl;
-          tt << indent << "unique_ptr<double[]> fdata = " << mlab << "->get_block(fhash);" << endl;
-
   // now do the sort
   vector<string> close;
 
@@ -198,6 +184,22 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
         indent += "  ";
       }
     }
+
+    // extra for loop(s) for merged
+    // check to see if merged indices are not in the index loop
+    bool mfound = false;
+    for (auto& j : merged) {
+      for (auto& i : index) {
+        if (j->num() == i->num()) mfound = true; 
+      }
+      if (!mfound) {
+        // add extra for loop(s) for merged
+        const int jnum = j->num();
+        tt << indent << "for (int " << itag << jnum << " = 0; " << itag << jnum << " != " << j->str_gen() << ".size(); ++" << itag << jnum << ") {" << endl;
+        close.push_back(indent + "}");
+        indent += "  ";
+     }
+    } 
 
     // make odata part of summation for target
     tt  << indent << "odata[";
@@ -235,15 +237,35 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
       tt << *iter << endl;
 
-    // close merge for loops
-    for (auto iter = mclose.rbegin(); iter != mclose.rend(); ++iter)
-      tt << *iter << endl;
-
   // if delta_ is empty do sort_indices with merged multiplication //
   } else {
+
     // loop up the operator generators
-    tt << indent << "vector<size_t> i0hash = {" << list_keys(merged) << "};" << endl;
-    tt << indent << "unique_ptr<double[]> data = " << mlab << "->get_block(i0hash);" << endl;
+    tt << indent << "vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
+    tt << indent << "unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
+
+    // add loops over odata
+    for (auto& i : index) {
+      const int inum = i->num();
+      tt << indent << "for (int " << itag << inum << " = 0; " << itag << inum << " != " << i->str_gen() << ".size(); ++" << itag << inum << ") {" << endl;
+      close.push_back(indent + "}");
+      indent += "  ";
+    }
+     
+    // check to see if merged indices are not in the index loop
+    bool mfound = false;
+    for (auto& j : merged) {
+      for (auto& i : index) {
+        if (j->num() == i->num()) mfound = true; 
+      }
+      if (!mfound) {
+        // add extra for loop(s) for merged
+        const int jnum = j->num();
+        tt << indent << "for (int " << itag << jnum << " = 0; " << itag << jnum << " != " << j->str_gen() << ".size(); ++" << itag << jnum << ") {" << endl;
+        close.push_back(indent + "}");
+        indent += "  ";
+     }
+    } 
 
     // do manual sort_indices with merged mulitplication 
     // make odata part of summation for target
@@ -282,12 +304,6 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
     // close loops
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
       tt << *iter << endl;
-
-    // close merge for loops
-    for (auto iter = mclose.rbegin(); iter != mclose.rend(); ++iter)
-      tt << *iter << endl;
-
-
 
   } 
   return tt.str();

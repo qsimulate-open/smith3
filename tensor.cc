@@ -319,18 +319,41 @@ pair<string, string> Tensor::generate_dim(const list<shared_ptr<Index> >& di) co
 }
 
 
-string Tensor::generate_active(const string indent, const string tag) const {
+string Tensor::generate_active(string indent, const string tag) const {
   assert(label() == "Gamma");
   stringstream tt;
   if (!merged_) {
     tt << active()->generate(indent, tag, index());
   } else {
+    // add merge loops
     tt << indent <<"// associated with merged" << endl;
+
+    vector<string> mclose;
+    list<shared_ptr<Index> >& merged = merged_->index();
+    for (auto& m : merged) {
+      tt << indent << "for (auto& " << m->str_gen() << " : "  <<  m->generate()  << ") {" << endl;
+      mclose.push_back(indent + "}");
+      indent += "  ";
+    }
+    // make get block for merge obj
+    tt << indent << "vector<size_t> fhash = {" << list_keys(merged) << "};" << endl;
+    tt << indent << "unique_ptr<double[]> fdata = " << merged_->label() << "->get_block(fhash);" << endl;
+
     tt << active()->generate_merged(indent, tag, index(), merged_->index(), merged_->label());
+
+    // close merge for loops
+    for (auto iter = mclose.rbegin(); iter != mclose.rend(); ++iter)
+      tt << *iter << endl;
+
   }
   return tt.str();
 }
 
+string Tensor::required_merge() const {
+  assert(label() == "Gamma");
+  if(merged_) return merged_->label();
+  else return "";
+}
 
 string Tensor::generate_loop(string& indent, vector<string>& close) const {
   stringstream tt;
