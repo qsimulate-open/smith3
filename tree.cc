@@ -627,6 +627,11 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
           zz << "rdm" << j << "_";
           tmp.push_back(zz.str());
         }
+        if (i->merged()) {
+          stringstream mm;
+          mm << i->merged()->label() << "_";
+          tmp.push_back(mm.str());
+        }
         ss << generate_task(indent, icnt-1, icnt, tmp, enlist);
         ++icnt;
       }

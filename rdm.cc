@@ -170,39 +170,21 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
    
     tt <<  make_get_block(indent);
 
-    // start sort loops
-    for (auto& i : index) {
-      const int inum = i->num();
-      bool found = false;
-      for (auto& d : delta_)
-        if (d.first->num() == inum) found = true;
-      if (!found) { 
-        tt << indent << "for (int " << itag << inum << " = 0; " << itag << inum << " != " << i->str_gen() << ".size(); ++" << itag << inum << ") {" << endl;
-        close.push_back(indent + "}");
-        indent += "  ";
-      }
-    }
-  
-    //save delta indices
-    int i1;
-    int i2;
-    for (auto& d : delta_) {
-      i1 = d.first->num();
-      i2 = d.second->num();
-    }
-    // extra for loops for merged 
-    tt << make_merged_loops(indent, itag, index, merged, close, i1, i2);
+    // loops for index and merged 
+    tt << make_merged_loops(indent, itag, index, merged, close);
     // make odata part of summation for target
-    tt << make_odata(itag, indent, index);
+    tt << make_odata(itag, indent, index, merged);
     // mulitiply data and merge on the fly
-    tt << multiply_merge(itag, indent, merged, i1, i2);
+    tt << multiply_merge(itag, indent, merged);
     // close loops
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
       tt << *iter << endl;
 
   // if delta_ is empty do sort_indices with merged multiplication // // 
   } else {
-    
+    string lindent = indent;
+    tt << lindent << "{" << endl;
+    indent += "  " ;
     tt << make_get_block(indent);
 
     // add loops over odata
@@ -216,12 +198,13 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
     // extra for loops for merged 
     tt << make_merged_loops(indent, itag, index, merged, close);
     // make odata part of summation for target
-    tt << make_odata(itag, indent, index);
+    tt << make_odata(itag, indent, index, merged);
     // mulitiply data and merge on the fly
     tt << multiply_merge(itag, indent, merged);
     // close loops
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
       tt << *iter << endl;
+    tt << lindent << "}" << endl;
 
   } 
   return tt.str();
@@ -236,123 +219,127 @@ std::string RDM::make_get_block(std::string ident) {
 }
 
 
-std::string RDM::make_merged_loops(string& indent, const string itag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, vector<string>& close, int& i1, int& i2) {
-  stringstream tt;
-  bool mfound = false;
-  bool dfound1 = false;
-  bool dfound2 = false;
-  int cnt=1;
-  for (auto& j : merged) {
-    // check if merged is in index
-    for (auto& i : index) {
-      if (j->num() == i->num()) mfound = true; 
-    }
-    // check if merged is in delta
-    for (auto& d : delta_) { 
-      if (j->num() == d.first->num()) {
-        dfound1 = true;                 
-        // see if first delta is in index loop
-        for (auto& i : index) {
-          if (cnt == 1) {
-            if (j->num() == i->num()) {
-             i1 = d.first->num(); 
-            } else {
-             i1 = d.second->num();     // if first delta isn't in index the second one will be
-            }   
-          } else if (cnt == 2) {
-            if (j->num() == i->num()) {
-             i2 = d.first->num(); 
-            } else {
-             i2 = d.second->num();     // if first delta isn't in index the second one will be
-            }   
-          }
-        }
-      } else if (j->num() == d.second->num()) { 
-        dfound2 = true;
-        // see if first delta is in index loop
-        for (auto& i : index) {
-          if (cnt == 1) {
-            if (j->num() == i->num()) {
-             i1 = d.first->num(); 
-            } else {
-             i1 = d.second->num();     // if first delta isn't in index the second one will be
-            }   
-          } else if (cnt == 2) {
-            if (j->num() == i->num()) {
-             i2 = d.first->num(); 
-            } else {
-             i2 = d.second->num();     // if first delta isn't in index the second one will be
-            }   
-          }
-        }
-      } else {   // merged indices in delta
-         if (cnt == 1) {
-             i1 = j->num();
-         } else if (cnt == 2) {
-             i2 = j->num();
-         }
-      }
-    }
-    // if index (or delta equiv) not found already in a list then need a loop for this index
-    if (!mfound && !dfound1 && !dfound2) {  
-      // add extra for loop(s) for merged
-      const int jnum = j->num();
-      tt << indent << "for (int " << itag << jnum << " = 0; " << itag << jnum << " != " << j->str_gen() << ".size(); ++" << itag << jnum << ") {" << endl;
-      close.push_back(indent + "}");
-      indent += "  ";
-    } else {
-      continue;
-      //assert(false);
-    }
-   ++cnt;
-  }
-  return tt.str();
-}
-
 std::string RDM::make_merged_loops(string& indent, const string itag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, vector<string>& close) {
   stringstream tt;
-  bool mfound = false;
-  for (auto& j : merged) {
+  bool mfound;
+  bool mfound1;   
+  bool mfound2;   
+  int jnum,jnum1,jnum2;
+
+  // search deltas for matching merged indices to eliminate redunant indices
+  if (!delta_.empty()){
+
+    // part 1: start sort loops 
+    // make a new index list which will have the loop indices
+    vector<int> nindex ;
     for (auto& i : index) {
-      if (j->num() == i->num()) mfound = true; 
+      const int inum = i->num();
+      bool found = false;
+      for (auto& d : delta_)
+        if (d.first->num() == inum) found = true;
+      if (!found) { 
+        nindex.push_back(inum);
+        tt << indent << "for (int " << itag << inum << " = 0; " << itag << inum << " != " << i->str_gen() << ".size(); ++" << itag << inum << ") {" << endl;
+        close.push_back(indent + "}");
+        indent += "  ";
+      }
     }
-    if (!mfound) {
-      // add extra for loop(s) for merged
-      const int jnum = j->num();
-      tt << indent << "for (int " << itag << jnum << " = 0; " << itag << jnum << " != " << j->str_gen() << ".size(); ++" << itag << jnum << ") {" << endl;
-      close.push_back(indent + "}");
-      indent += "  ";
-    } else {
-      assert(false);
+
+    for (auto& j : merged) {
+      mfound1 = false;
+      mfound2 = false;
+      for (auto& d : delta_){
+        if (j->num() == d.first->num()) {
+          jnum1 = d.first->num();
+          jnum2 = d.second->num();
+          break;    
+        } else if (j->num() == d.second->num()) {
+          jnum1 = d.first->num();
+          jnum2 = d.second->num();
+          break;
+        }    
+      }
+
+      // check if any delta-merged matches are already listed
+      for (auto& i : nindex) {
+        if ( jnum1 == i) { 
+          mfound1 = true; 
+          break;
+        }
+      }
+      for (auto& i : nindex) {
+        if ( jnum2 == i) { 
+          mfound2 = true; 
+          break;
+        }
+      }
+
+      // if matching delta indices not in loops, print out another loop
+      if (!mfound1 && !mfound2) {
+        jnum = j->num();
+        // add loop for merged index j
+        tt << indent << "for (int " << itag << jnum << " = 0; " << itag << jnum << " != " << j->str_gen() << ".size(); ++" << itag << jnum << ") {" << endl;
+        close.push_back(indent + "}");
+        indent += "  ";
+      } else if (mfound) {
+        continue;
+      }
+    }
+
+    // part 2: if we have delta we need to check if delta indices match those of merged 
+    // and if so we need to declare matching indices (const int x = y;) 
+    bool enlist = false;
+    int x, y;
+    for (auto& m : merged) {
+      for (auto& d : delta_) {
+        if (m->num() == d.first->num()) {
+          x = m->num();
+          y = d.second->num();
+          // check if y is in list, not necessary 
+          for (auto& i : nindex) {
+            if (y == i) {
+              enlist = true;
+              break;
+            }
+          }
+        } else if (m->num() == d.second->num()) {
+          x = m->num();
+          y = d.first->num();
+          // check if y is in this list 
+          for (auto& i : nindex) {
+            if (y == i) {
+              enlist = true;
+              break;
+            } 
+          }
+        } else { 
+          continue;
+        }
+        if (enlist) {
+            tt << indent << "const int i" << x << " = " << "i" << y << ";" << endl; 
+            break;
+        }
+      }
+    }
+  } else {
+    for (auto& j : merged) {
+      mfound = false;  
+      for (auto& i : index) {
+        if (j->num() == i->num()) mfound = true; 
+      }
+      if (!mfound) {
+        // merged index not found so add extra loop for merged index j
+        const int jnum = j->num();
+        tt << indent << "for (int " << itag << jnum << " = 0; " << itag << jnum << " != " << j->str_gen() << ".size(); ++" << itag << jnum << ") {" << endl;
+        close.push_back(indent + "}");
+        indent += "  ";
+      } else {
+        assert(false);
+      }
     }
   }
-  return tt.str();
-}
 
 
-std::string RDM::multiply_merge(const string itag, string& indent,  const list<shared_ptr<Index> >& merged, int& i1, int& i2) {
-  stringstream tt;
-    // make data part of summation
-    tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
-    for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {
-      const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
-      tt << itag << (*riter)->num() << (riter != --index_.rend() ? tmp : "");
-    }
-    for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
-      tt << ")";
-    tt << "]";
-    // multiply merge fdata[i4+x4.size()*(i3)];
-    tt << " * " << "fdata" << "[i" << i2 << "+x" << i2 << ".size()*(i"<< i1; 
-    // todo go thru and check if the number needs to be updated with i1 or i2?
- /*  for (auto mi = merged.rbegin(); mi != merged.rend()  ; ++mi) { 
-      const string tmp = "+" + (*mi)->str_gen() + ".size()*(";
-      tt << itag << (*mi)->num() << (mi != --merged.rend() ? tmp : "");
-    } 
- */
-    for (auto mi = ++merged.begin(); mi != merged.end()  ; ++mi)  
-      tt << ")";
-    tt << "];" << endl;
-//    tt << indent << indent << indent << "// CHECKING i2 i1:  " << i2 << "  " << i1 << endl;
   return tt.str();
 }
 
@@ -381,8 +368,9 @@ std::string RDM::multiply_merge(const string itag, string& indent,  const list<s
 }
 
 
-std::string RDM::make_odata(const string itag, string& indent, const list<shared_ptr<Index> >& index) {
+std::string RDM::make_odata(const string itag, string& indent, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged) {
   stringstream tt;
+
   tt  << indent << "odata[";
   for (auto ri = index.rbegin(); ri != index.rend(); ++ri) {
     int inum = (*ri)->num();
