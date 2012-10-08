@@ -36,8 +36,19 @@ using namespace smith;
 
 // do a special sort_indices for rdm summation with possible delta cases
 string RDM::generate(string indent, const string tlab, const list<shared_ptr<Index> >& loop) {
-// temp turn off check for testing task file
-// if (!index_.empty() && !loop.empty()) {
+// special rdm0 case
+ if (index_.empty()) {
+   stringstream tt;
+   indent += "  ";
+   tt << indent << "if (";
+   for (auto d = delta_.begin(); d != delta_.end(); ++d) {
+      tt << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? " && " : "");
+   }
+   tt << ") " << endl;
+   tt << indent << "  unique_ptr<double[]> data = " << setprecision(1) << fixed << factor()  << endl;
+   return tt.str();
+ }
+
  if (!loop.empty()) {
    stringstream tt;
    indent += "  ";
