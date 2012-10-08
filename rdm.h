@@ -56,7 +56,7 @@ class RDM {
     RDM(const std::list<std::shared_ptr<Index> >& in,
         const std::map<std::shared_ptr<Index>, std::shared_ptr<Index> >& in2,
         const double& f = 1.0)
-      : index_(in), delta_(in2), fac_(f) { };
+      : fac_(f), index_(in), delta_(in2) { };
     ~RDM() {};
 
     void print(const std::string& indent = "") const;

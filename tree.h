@@ -50,7 +50,7 @@ class BinaryContraction {
 
   public:
     BinaryContraction(std::shared_ptr<Tensor> o, std::shared_ptr<ListTensor> l);
-    BinaryContraction(std::list<std::shared_ptr<Tree> > o, std::shared_ptr<Tensor> t) : subtree_(o), tensor_(t) {};
+    BinaryContraction(std::list<std::shared_ptr<Tree> > o, std::shared_ptr<Tensor> t) : tensor_(t), subtree_(o) {};
     ~BinaryContraction() {};
 
     std::list<std::shared_ptr<Tree> >& subtree() { return subtree_; };
