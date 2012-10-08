@@ -35,9 +35,9 @@ using namespace smith;
 
 
 // do a special sort_indices for rdm summation with possible delta cases
-string RDM::generate(string indent, const string tlab, const list<shared_ptr<Index> >& loop) const {
+string RDM::generate(string indent, const string tlab, const list<shared_ptr<Index> >& loop) {
 // temp turn off check for testing task file
-  //if (!index_.empty() && !loop.empty()) {
+  if (!index_.empty() && !loop.empty()) {
    stringstream tt;
    indent += "  ";
    const string itag = "i";
@@ -55,9 +55,8 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
      tt << ") {" << endl;
      close.push_back(indent + "}");
      indent += "  ";
-
-     tt << indent << "vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
-     tt << indent << "unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
+  
+     tt <<  make_get_block(indent);
 
      // start sort loops
      for (auto& i : loop) {
@@ -102,8 +101,8 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
    // if delta_ is empty call sort_indices
    } else {
      // loop up the operator generators
-     tt << indent << "vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
-     tt << indent << "unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
+
+     tt <<  make_get_block(indent);
    
      // call sort_indices here
      vector<int> done;
@@ -139,13 +138,18 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
    } 
    return tt.str();
 // temp turn off check for testing task file
-#if 0 
+#if 1
   } else if (index_.empty()) {
+    std::cout << "Error rdm0 fail here: "  << endl;
+    for (auto& d : delta_ )
+    std::cout << d.first->str_gen() << " " << d.second->str_gen() << " "  ;
+    std::cout << endl <<  "End error. "  << endl;
+
     throw logic_error ("TODO fix if index empty");
+#endif
   } else if (loop.empty()) {
     throw logic_error ("TODO fix if loop empty");
   }  
-#endif
 }
 
 

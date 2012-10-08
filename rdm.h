@@ -85,7 +85,7 @@ class RDM {
     std::list<std::shared_ptr<RDM> > reduce_one(std::list<int>& done) const;
 
     // generate a code for Gamma rdm summation
-    std::string generate(std::string indent, const std::string tlab, const std::list<std::shared_ptr<Index> >& loop) const;
+    std::string generate(std::string indent, const std::string tlab, const std::list<std::shared_ptr<Index> >& loop);
     // generates code for Gamma rdm summation with merged object multiplication
     std::string generate_mult(std::string indent, const std::string itag, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged, const std::string mlab);
 
