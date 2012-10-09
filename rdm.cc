@@ -53,6 +53,8 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   
    vector<string> close;
 
+   indent += "  ";
+
    // start sort loops
    for (auto& i : loop) {
      const int inum = i->num();
@@ -78,7 +80,7 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
    for (auto ri = ++loop.begin(); ri != loop.end(); ++ri)
      tt << ")";
 //if rdm0 special
-   tt << "]   += " << setprecision(1) << fixed << factor()  << endl;
+   tt << "] += " << setprecision(1) << fixed << factor() << ";" << endl;
 
   // close loops
   for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
