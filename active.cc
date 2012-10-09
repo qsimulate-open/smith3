@@ -333,7 +333,7 @@ vector<int> Active::required_rdm() const {
   vector<int> out;
   for (auto& i : rdm_) {
     // rdm0 does not need to be included in header
-    if ( i->rank() > 0 ) 
+    if (i->rank() > 0) 
       if (find(out.begin(), out.end(), i->rank()) == out.end()) out.push_back(i->rank());
   }
 

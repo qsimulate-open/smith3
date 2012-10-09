@@ -48,11 +48,9 @@ class RDM {
     // if delta case also makes index loops then checks to see if merged-or-delta indices are in loops..
     std::string make_merged_loops(std::string& indent, const std::string tag, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged, std::vector<std::string>& close);
     std::string multiply_merge(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<Index> >& merged);
-    std::string make_odata(const std::string itag, std::string& indent, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged);
-    // make non-merged odata
-    //std::string make_nm_odata(const std::string itag, std::string& indent, const std::list<std::shared_ptr<Index> >& index);
-    
-
+    std::string make_odata(const std::string itag, std::string& indent, const std::list<std::shared_ptr<Index> >& index);
+    std::string make_sort_loops(const std::string itag, std::string& indent, const std::list<std::shared_ptr<Index> >& index, std::vector<std::string>& close);
+    std::string make_delta_if(std::string& indent, std::vector<std::string>& close);
 
   public:
     RDM(const std::list<std::shared_ptr<Index> >& in,

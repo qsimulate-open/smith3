@@ -133,7 +133,7 @@ bool Tree::done() const {
   return out;
 #endif
 // todo check this
- std::cout << "Check Tree::done" << endl;
+ cout << "Check Tree::done" << endl;
  return true;
 }
 

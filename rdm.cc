@@ -33,8 +33,6 @@
 using namespace std;
 using namespace smith;
 
-
-// do a special sort_indices for rdm summation with possible delta cases
 string RDM::generate(string indent, const string tlab, const list<shared_ptr<Index> >& loop) {
  stringstream tt;
 
@@ -42,31 +40,12 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
    stringstream tt;
    indent += "  ";
    const string itag = "i";
-   tt << indent << "// rdm0 case" << endl;
- 
-   // delta if statement
-   tt << indent << "if (";
-   for (auto d = delta_.begin(); d != delta_.end(); ++d) {
-      tt << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? " && " : "");
-   }
-   tt << ") " << endl;
-  
    vector<string> close;
+ 
+   // rdm0 delta if statement
+   tt << make_delta_if(indent, close);
 
-   indent += "  ";
-
-   // start sort loops
-   for (auto& i : loop) {
-     const int inum = i->num();
-     bool found = false;
-     for (auto& d : delta_)
-       if (d.first->num() == inum) found = true;
-     if (!found) { 
-       tt << indent << "for (int " << itag << inum << " = 0; " << itag << inum << " != " << i->str_gen() << ".size(); ++" << itag << inum << ") {" << endl;
-       close.push_back(indent + "}");
-       indent += "  ";
-     }
-   }
+   tt << make_sort_loops(itag, indent, loop, close); 
 
    // make odata part of summation for target
    tt  << indent << "odata[";
@@ -79,13 +58,12 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
    }
    for (auto ri = ++loop.begin(); ri != loop.end(); ++ri)
      tt << ")";
-//if rdm0 special
+   // unique to rdm0 case:
    tt << "] += " << setprecision(1) << fixed << factor() << ";" << endl;
 
   // close loops
   for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
     tt << *iter << endl;
-
 
    return tt.str();
  }
@@ -99,42 +77,17 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
 
    // in case delta_ is not empty
    if (!delta_.empty()) {
-     // first delta loops for blocks
-     tt << indent << "if (";
-     for (auto d = delta_.begin(); d != delta_.end(); ++d) {
-       tt << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? " && " : "");
-     }
-     tt << ") {" << endl;
-     close.push_back(indent + "}");
-     indent += "  ";
-  
-     tt <<  make_get_block(indent);
 
-     // start sort loops
-     for (auto& i : loop) {
-       const int inum = i->num();
-       bool found = false;
-       for (auto& d : delta_)
-         if (d.first->num() == inum) found = true;
-       if (!found) { 
-         tt << indent << "for (int " << itag << inum << " = 0; " << itag << inum << " != " << i->str_gen() << ".size(); ++" << itag << inum << ") {" << endl;
-         close.push_back(indent + "}");
-         indent += "  ";
-       }
-     }
+     // first delta if statement 
+     tt << make_delta_if(indent, close);
+  
+     tt << make_get_block(indent);
+     
+     // loops over delta indices
+     tt << make_sort_loops(itag, indent, loop, close); 
 
      // make odata part of summation for target
-     tt  << indent << "odata[";
-     for (auto ri = loop.rbegin(); ri != loop.rend(); ++ri) {
-       int inum = (*ri)->num();
-       for (auto& d : delta_)
-         if (d.first->num() == inum) inum = d.second->num();
-       const string tmp = "+" + (*ri)->str_gen() + ".size()*(";
-       tt << itag << inum << (ri != --loop.rend() ? tmp : "");
-     }
-     for (auto ri = ++loop.begin(); ri != loop.end(); ++ri)
-       tt << ")";
-     tt << "]" << endl;
+     tt << make_odata(itag, indent, loop);
 
      // make data part of summation
      tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
@@ -221,7 +174,7 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
     // loops for index and merged 
     tt << make_merged_loops(indent, itag, index, merged, close);
     // make odata part of summation for target
-    tt << make_odata(itag, indent, index, merged);
+    tt << make_odata(itag, indent, index);
     // mulitiply data and merge on the fly
     tt << multiply_merge(itag, indent, merged);
     // close loops
@@ -246,7 +199,7 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
     // extra for loops for merged 
     tt << make_merged_loops(indent, itag, index, merged, close);
     // make odata part of summation for target
-    tt << make_odata(itag, indent, index, merged);
+    tt << make_odata(itag, indent, index);
     // mulitiply data and merge on the fly
     tt << multiply_merge(itag, indent, merged);
     // close loops
@@ -259,7 +212,7 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
 }
 
 // protected functions  //////
-std::string RDM::make_get_block(std::string indent) {
+string RDM::make_get_block(string indent) {
   stringstream tt;
   tt << indent << "vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
   tt << indent << "unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
@@ -267,7 +220,7 @@ std::string RDM::make_get_block(std::string indent) {
 }
 
 
-std::string RDM::make_merged_loops(string& indent, const string itag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, vector<string>& close) {
+string RDM::make_merged_loops(string& indent, const string itag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, vector<string>& close) {
   stringstream tt;
 
   if (delta_.empty()) {
@@ -362,7 +315,7 @@ std::string RDM::make_merged_loops(string& indent, const string itag, const list
 }
 
 
-std::string RDM::multiply_merge(const string itag, string& indent,  const list<shared_ptr<Index> >& merged) {
+string RDM::multiply_merge(const string itag, string& indent,  const list<shared_ptr<Index> >& merged) {
   stringstream tt;
   // make data part of summation
   tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
@@ -386,7 +339,7 @@ std::string RDM::multiply_merge(const string itag, string& indent,  const list<s
 }
 
 
-std::string RDM::make_odata(const string itag, string& indent, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged) {
+string RDM::make_odata(const string itag, string& indent, const list<shared_ptr<Index> >& index) {
   stringstream tt;
 
   tt  << indent << "odata[";
@@ -399,8 +352,37 @@ std::string RDM::make_odata(const string itag, string& indent, const list<shared
   }
   for (auto ri = ++index.begin(); ri != index.end(); ++ri)
     tt << ")";
-  tt << "]" << endl;
+    tt << "]" << endl;
   return tt.str();
 }
 
+string RDM::make_sort_loops(const string itag, string& indent, const list<shared_ptr<Index> >& loop, vector<string>&  close) {
+  stringstream tt;
+  // start sort loops
+  for (auto& i : loop) {
+    const int inum = i->num();
+    bool found = false;
+    for (auto& d : delta_)
+      if (d.first->num() == inum) found = true;
+    if (!found) { 
+      tt << indent << "for (int " << itag << inum << " = 0; " << itag << inum << " != " << i->str_gen() << ".size(); ++" << itag << inum << ") {" << endl;
+      close.push_back(indent + "}");
+      indent += "  ";
+    }
+  }
+  return tt.str();
+}
 
+string RDM::make_delta_if(string& indent, vector<string>& close) {
+  stringstream tt;
+
+  tt << indent << "if (";
+  for (auto d = delta_.begin(); d != delta_.end(); ++d) {
+    tt << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? " && " : "");
+  }
+  tt << ") {" << endl;
+  close.push_back(indent + "}");
+  indent += "  ";
+
+  return tt.str();
+}
