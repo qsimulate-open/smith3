@@ -39,7 +39,53 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
  stringstream tt;
 
  if (index_.empty()) {
-   throw logic_error("rdm0 case broken");
+   stringstream tt;
+   indent += "  ";
+   const string itag = "i";
+   tt << indent << "// rdm0 case" << endl;
+ 
+   // delta if statement
+   tt << indent << "if (";
+   for (auto d = delta_.begin(); d != delta_.end(); ++d) {
+      tt << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? " && " : "");
+   }
+   tt << ") " << endl;
+  
+   vector<string> close;
+
+   // start sort loops
+   for (auto& i : loop) {
+     const int inum = i->num();
+     bool found = false;
+     for (auto& d : delta_)
+       if (d.first->num() == inum) found = true;
+     if (!found) { 
+       tt << indent << "for (int " << itag << inum << " = 0; " << itag << inum << " != " << i->str_gen() << ".size(); ++" << itag << inum << ") {" << endl;
+       close.push_back(indent + "}");
+       indent += "  ";
+     }
+   }
+
+   // make odata part of summation for target
+   tt  << indent << "odata[";
+   for (auto ri = loop.rbegin(); ri != loop.rend(); ++ri) {
+     int inum = (*ri)->num();
+     for (auto& d : delta_)
+       if (d.first->num() == inum) inum = d.second->num();
+     const string tmp = "+" + (*ri)->str_gen() + ".size()*(";
+     tt << itag << inum << (ri != --loop.rend() ? tmp : "");
+   }
+   for (auto ri = ++loop.begin(); ri != loop.end(); ++ri)
+     tt << ")";
+//if rdm0 special
+   tt << "]   += " << setprecision(1) << fixed << factor()  << endl;
+
+  // close loops
+  for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
+    tt << *iter << endl;
+
+
+   return tt.str();
  }
 
  if (!loop.empty()) {
