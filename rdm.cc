@@ -36,21 +36,13 @@ using namespace smith;
 
 // do a special sort_indices for rdm summation with possible delta cases
 string RDM::generate(string indent, const string tlab, const list<shared_ptr<Index> >& loop) {
-// special rdm0 case
+ stringstream tt;
+
  if (index_.empty()) {
-   stringstream tt;
-   indent += "  ";
-   tt << indent << "if (";
-   for (auto d = delta_.begin(); d != delta_.end(); ++d) {
-      tt << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? " && " : "");
-   }
-   tt << ") " << endl;
-   tt << indent << "  unique_ptr<double[]> data = " << setprecision(1) << fixed << factor()  << endl;
-   return tt.str();
+   throw logic_error("rdm0 case broken");
  }
 
  if (!loop.empty()) {
-   stringstream tt;
    indent += "  ";
    const string itag = "i";
 
@@ -148,11 +140,12 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
      tt << ");" << endl;
 
    } 
-   return tt.str();
 // temp turn off check for testing task file
   } else {
     throw logic_error("RDM::generate error: loop gamma tensor indices empty");
   }
+
+  return tt.str();
 }
 
 
@@ -218,10 +211,10 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
 }
 
 // protected functions  //////
-std::string RDM::make_get_block(std::string ident) {
+std::string RDM::make_get_block(std::string indent) {
   stringstream tt;
-  tt << ident << "vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
-  tt << ident << "unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
+  tt << indent << "vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
+  tt << indent << "unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
   return tt.str();
 }
 
@@ -323,24 +316,24 @@ std::string RDM::make_merged_loops(string& indent, const string itag, const list
 
 std::string RDM::multiply_merge(const string itag, string& indent,  const list<shared_ptr<Index> >& merged) {
   stringstream tt;
-    // make data part of summation
-    tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
-    for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {
-      const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
-      tt << itag << (*riter)->num() << (riter != --index_.rend() ? tmp : "");
-    }
-    for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
-      tt << ")";
-    tt << "]";
-    // multiply merge
-    tt << " * " << "fdata" << "[";
-    for (auto mi = merged.rbegin(); mi != merged.rend()  ; ++mi) { 
-      const string tmp = "+" + (*mi)->str_gen() + ".size()*(";
-      tt << itag << (*mi)->num() << (mi != --merged.rend() ? tmp : "");
-    }
-    for (auto mi = ++merged.begin(); mi != merged.end()  ; ++mi)  
-      tt << ")";
-    tt << "];" << endl;
+  // make data part of summation
+  tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
+  for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {
+    const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
+    tt << itag << (*riter)->num() << (riter != --index_.rend() ? tmp : "");
+  }
+  for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
+    tt << ")";
+  tt << "]";
+  // multiply merge
+  tt << " * " << "fdata" << "[";
+  for (auto mi = merged.rbegin(); mi != merged.rend()  ; ++mi) { 
+    const string tmp = "+" + (*mi)->str_gen() + ".size()*(";
+    tt << itag << (*mi)->num() << (mi != --merged.rend() ? tmp : "");
+  }
+  for (auto mi = ++merged.begin(); mi != merged.end()  ; ++mi)  
+    tt << ")";
+  tt << "];" << endl;
   return tt.str();
 }
 
