@@ -88,7 +88,7 @@ Tree::Tree(const shared_ptr<ListTensor> l) : num_(-1) {
 }
 
 
-Tree::Tree(shared_ptr<Equation> eq) : parent_(NULL), num_(-1), tree_name_(eq->name()) {
+Tree::Tree(shared_ptr<Equation> eq) : parent_(NULL), tree_name_(eq->name()), num_(-1) {
 
   // First make ListTensor for all the diagrams
   list<shared_ptr<Diagram> > d = eq->diagram();
@@ -132,6 +132,8 @@ bool Tree::done() const {
   for (auto i = tensor_.begin(); i != tensor_.end(); ++i) out &= ((*i)->length() == 1);
   return out;
 #endif
+// todo check this
+ return true;
 }
 
 
