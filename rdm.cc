@@ -151,7 +151,7 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
    return tt.str();
 // temp turn off check for testing task file
   } else {
-    throw logic_error ("RDM::generate error: loop gamma tensor indices empty");
+    throw logic_error("RDM::generate error: loop gamma tensor indices empty");
   }
 }
 
@@ -229,11 +229,9 @@ std::string RDM::make_get_block(std::string ident) {
 std::string RDM::make_merged_loops(string& indent, const string itag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, vector<string>& close) {
   stringstream tt;
 
-
   if (delta_.empty()) {
-    bool mfound;
     for (auto& j : merged) {
-      mfound = false;  
+      bool mfound = false;  
       for (auto& i : index) {
         if (j->num() == i->num()) mfound = true; 
       }
@@ -252,7 +250,7 @@ std::string RDM::make_merged_loops(string& indent, const string itag, const list
     // part 1: start sort loops 
 
     // make a new index list which will have the loop indices
-    vector<int> nindex ;
+    vector<int> nindex;
     for (auto& i : index) {
       const int inum = i->num();
       bool found = false;
@@ -269,11 +267,11 @@ std::string RDM::make_merged_loops(string& indent, const string itag, const list
     for (auto& j : merged) {
       for (auto& d : delta_){
         if (j->num() == d.first->num() || j->num() == d.second->num()) {
-          int jnum1 = d.first->num();
-          int jnum2 = d.second->num();
+          const int jnum1 = d.first->num();
+          const int jnum2 = d.second->num();
           // check if any delta-merged matches are already looped, if not add a loop
           if ((find(nindex.begin(), nindex.end(), jnum1) == nindex.end()) && (find(nindex.begin(), nindex.end(), jnum2) == nindex.end())) {
-            const int  jnum = j->num();
+            const int jnum = j->num();
             nindex.push_back(jnum);
             // add loop for merged index j
             tt << indent << "for (int " << itag << jnum << " = 0; " << itag << jnum << " != " << j->str_gen() << ".size(); ++" << itag << jnum << ") {" << endl;
@@ -282,7 +280,7 @@ std::string RDM::make_merged_loops(string& indent, const string itag, const list
           }
           break;    
         } else { // in case merged index is not in delta, check if in loop list, add if not    
-          int jnum = j->num();
+          const int jnum = j->num();
           if (find(nindex.begin(), nindex.end(), jnum) == nindex.end()) {       
             nindex.push_back(jnum);
             // add loop for merged index j
@@ -299,27 +297,21 @@ std::string RDM::make_merged_loops(string& indent, const string itag, const list
     for (auto& m : merged) {
       for (auto& d : delta_) {
         if (m->num() == d.first->num()) { 
-          int x = m->num();
-          int y = d.second->num();
+          const int y = d.second->num();
           // check if y is in list..and if it is add it 
           if (find(nindex.begin(), nindex.end(), y) != nindex.end()) {
-            tt << indent << "const int i" << x << " = " << "i" << y << ";" << endl; 
+            tt << indent << "const int i" << m->num() << " = " << "i" << y << ";" << endl; 
             break;
           } // ok if not found as delta index may be listed
         } else if (m->num() == d.second->num()) {
-          int x = m->num();
-          int y = d.first->num();
+          const int y = d.first->num();
           if (find(nindex.begin(), nindex.end(), y) != nindex.end()) {
-            tt << indent << "const int i" << x << " = " << "i" << y << ";" << endl; 
-            break;
+            tt << indent << "const int i" << m->num() << " = " << "i" << y << ";" << endl; 
           } else {   // check nindex now should be listed
-            int mnum = m->num();
-            if (find(nindex.begin(), nindex.end(), mnum) != nindex.end()) {
-              break;   
-            } else { 
-              throw ("Should not happen, see RDM::make_merged_loops..");
-            }
+            if (find(nindex.begin(), nindex.end(), m->num()) == nindex.end())
+              throw logic_error("Should not happen, see RDM::make_merged_loops..");
           }
+          break;
         }
       } 
     }
