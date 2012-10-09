@@ -49,6 +49,8 @@ class RDM {
     std::string make_merged_loops(std::string& indent, const std::string tag, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged, std::vector<std::string>& close);
     std::string multiply_merge(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<Index> >& merged);
     std::string make_odata(const std::string itag, std::string& indent, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged);
+    // make non-merged odata
+    //std::string make_nm_odata(const std::string itag, std::string& indent, const std::list<std::shared_ptr<Index> >& index);
     
 
 
