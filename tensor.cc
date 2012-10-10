@@ -123,12 +123,9 @@ string Tensor::constructor_str(string indent) const {
   if (index_.empty()) {
     ss << ";" << endl;
   } else {
-    // mkm vec() not working in bagel
-    //ss << " = vec(";
     ss << " = {";
     for (auto i = index_.rbegin(); i != index_.rend(); ++i)
       ss << (i != index_.rbegin() ? ", this->" : "this->") << (*i)->generate();
-    //ss << ");" << endl;
     ss << "};" << endl;
   }
   ss << indent << "std::shared_ptr<Tensor<T> > " << label_ << "(new Tensor<T>(" << label_ << "_index, false));";

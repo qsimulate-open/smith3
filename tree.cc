@@ -543,9 +543,6 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "    std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T> > queue_(new Queue<T>());" << endl;
 
-    // mkm vec() is not working in bagel
-    //ss << indent << "std::vector<IndexRange> index = vec(this->closed_, this->active_, this->virt_);" << endl << endl;
-    //ss << indent << vectensor << " tensor0 = vec(r);" << endl;
     ss << indent << "std::vector<IndexRange> index = {this->closed_, this->active_, this->virt_};" << endl << endl;
     ss << indent << vectensor << " tensor0 = {r};" << endl;
     ss << indent << "std::shared_ptr<Task0<T> > task0(new Task0<T>(tensor0, index));" << endl;
@@ -799,6 +796,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "//      *r = *(r->add_dagger());" << endl;
     ss << "        this->update_amplitude(t2, r);" << endl;
     ss << "        const double err = r->rms();" << endl;
+    ss << "        r->zero();" << endl;
     ss << "        const double en = energy(energ);" << endl;
     ss << "        this->print_iteration(iter, en, err);" << endl;
     ss << "        if (err < thresh_residual()) break;" << endl;

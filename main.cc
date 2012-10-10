@@ -81,7 +81,11 @@ int main() {
   shared_ptr<Equation> eq(new Equation(di, theory));
   shared_ptr<Diagram> dj(new Diagram(e));
   shared_ptr<Equation> eq2(new Equation(dj, theory));
+  cout << "Printing the eq object before eq merge " << endl;
+  eq->print();  
   eq->merge(eq2);
+  cout << "Printing the eq object after eq merge " << endl;
+  eq->print();  
   eq->duplicates();
   cout << "Printing the eq object before active: " << endl;
   eq->print();  
