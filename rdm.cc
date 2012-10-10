@@ -141,7 +141,6 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
      tt << ");" << endl;
 
    } 
-// temp turn off check for testing task file
   } else {
     throw logic_error("RDM::generate error: loop gamma tensor indices empty");
   }
@@ -214,8 +213,8 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
 // protected functions  //////
 string RDM::make_get_block(string indent) {
   stringstream tt;
-  tt << indent << "vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
-  tt << indent << "unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
+  tt << indent << "std::vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
+  tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
   return tt.str();
 }
 

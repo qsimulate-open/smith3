@@ -360,16 +360,7 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "    void compute_() {" << endl;
   string indent ="      ";
   vector<string> close;
-#if 0 
-  string gindent = indent;
-  tt << gamma->generate_loop(gindent, close);
-  // generate gamma get block, true does a move_block
-  tt << gamma->generate_get_block(gindent, "o", true);
-  // now generate codes for rdm
-  tt << gamma->generate_active(gindent, "o");
-#else
   tt << gamma->generate_gamma(indent, close, "o", true); 
-#endif
 
   // generate gamma put block
   tt << indent << gamma->label() << "->put_block(ohash, odata);" << endl;
@@ -552,8 +543,11 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "    std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T> > queue_(new Queue<T>());" << endl;
 
-    ss << indent << "std::vector<IndexRange> index = vec(this->closed_, this->active_, this->virt_);" << endl << endl;
-    ss << indent << vectensor << " tensor0 = vec(r);" << endl;
+    // mkm vec() is not working in bagel
+    //ss << indent << "std::vector<IndexRange> index = vec(this->closed_, this->active_, this->virt_);" << endl << endl;
+    //ss << indent << vectensor << " tensor0 = vec(r);" << endl;
+    ss << indent << "std::vector<IndexRange> index = {this->closed_, this->active_, this->virt_};" << endl << endl;
+    ss << indent << vectensor << " tensor0 = {r};" << endl;
     ss << indent << "std::shared_ptr<Task0<T> > task0(new Task0<T>(tensor0, index));" << endl;
     ss << indent << "queue_->add_task(task0);" << endl << endl;
 
@@ -781,7 +775,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "    };" << endl;
     ss << endl;
     ss << "  public:" << endl;
-    ss << "    " << tree_name_ << "(std::shared_ptr<Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info() {" << endl;
+    ss << "    " << tree_name_ << "(std::shared_ptr<const Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info() {" << endl;
     ss << "      this->eig_ = this->f1_->diag();" << endl;
     ss << "      t2 = this->v2_->clone();" << endl;
     ss << "#if 1" << endl;

@@ -30,6 +30,7 @@
 #include <iostream>
 #include <fstream>
 #include <list>
+#include <string>
 #include "equation.h"
 #include "tree.h"
 
@@ -39,19 +40,22 @@ using namespace smith;
 int main() {
 
 // MP2
-#if 0
+#if 1
   shared_ptr<Op> proj(new Op("proj", "c", "c", "a", "a")); 
   shared_ptr<Op> t(new Op("t2", "a", "a", "c", "c"));
+  string theory="MP2";
 #endif
 // simple one
 #if 0
   shared_ptr<Op> proj(new Op("proj", "x", "x", "a", "a")); // test active 1
   shared_ptr<Op> t(new Op("t2", "a", "x", "x", "x"));  // test active 1
+  string theory="CAS";
 #endif
 // complicated one 
-#if 1
+#if 0
   shared_ptr<Op> proj(new Op("proj", "c", "x", "x", "x"));
   shared_ptr<Op> t(new Op("t2", "x", "x", "x", "c"));
+  string theory="CAS";
 #endif
 
   shared_ptr<Op> dum(new Op("proj"));
@@ -74,9 +78,9 @@ int main() {
 
   // amplitude equation
   shared_ptr<Diagram> di(new Diagram(d));
-  shared_ptr<Equation> eq(new Equation(di, "CAS"));
+  shared_ptr<Equation> eq(new Equation(di, theory));
   shared_ptr<Diagram> dj(new Diagram(e));
-  shared_ptr<Equation> eq2(new Equation(dj, "CAS"));
+  shared_ptr<Equation> eq2(new Equation(dj, theory));
   eq->merge(eq2);
   eq->duplicates();
   cout << "Printing the eq object before active: " << endl;
@@ -97,9 +101,9 @@ int main() {
   en1.push_back(tdagger);
   en1.push_back(R);
   shared_ptr<Diagram> e0(new Diagram(en0));
-  shared_ptr<Equation> eneq(new Equation(e0, "CAS"));
+  shared_ptr<Equation> eneq(new Equation(e0, theory));
   shared_ptr<Diagram> e1(new Diagram(en1));
-  shared_ptr<Equation> eneq1(new Equation(e1, "CAS"));
+  shared_ptr<Equation> eneq1(new Equation(e1, theory));
   eneq->merge(eneq1);
   eneq->duplicates();
 //  std::cout << "Printing eneq object before active: " << endl; //mkm this needs to be implemented

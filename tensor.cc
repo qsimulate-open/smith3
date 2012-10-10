@@ -119,16 +119,19 @@ bool Tensor::operator==(const Tensor& o) const {
 
 string Tensor::constructor_str(string indent) const {
   stringstream ss;
-  ss << indent << "vector<IndexRange> " << label_ << "_index";
+  ss << indent << "std::vector<IndexRange> " << label_ << "_index";
   if (index_.empty()) {
     ss << ";" << endl;
   } else {
-    ss << " = vec(";
+    // mkm vec() not working in bagel
+    //ss << " = vec(";
+    ss << " = {";
     for (auto i = index_.rbegin(); i != index_.rend(); ++i)
       ss << (i != index_.rbegin() ? ", this->" : "this->") << (*i)->generate();
-    ss << ");" << endl;
+    //ss << ");" << endl;
+    ss << "};" << endl;
   }
-  ss << indent << "shared_ptr<Tensor<T> > " << label_ << "(new Tensor<T>(" << label_ << "_index, false));";
+  ss << indent << "std::shared_ptr<Tensor<T> > " << label_ << "(new Tensor<T>(" << label_ << "_index, false));";
   return ss.str();
 }
 
@@ -144,7 +147,7 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
   }
 
   stringstream tt;
-  tt << cindent << "vector<size_t> " << lab << "hash = {";
+  tt << cindent << "std::vector<size_t> " << lab << "hash = {";
   if (!trans) {
     tt << list_keys(index_);
   } else {
@@ -158,7 +161,7 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
   }
   tt << "};" << endl;
   {
-    tt << cindent << "unique_ptr<double[]> " << lab << "data = "
+    tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
                   << lbl << "->" << (move ? "move" : "get") << "_block(" << lab << "hash);" << endl;
   }
   return tt.str();
@@ -175,10 +178,10 @@ string Tensor::generate_scratch_area(const string cindent, const string lab, con
   }
 
   stringstream ss;
-  ss << cindent << "unique_ptr<double[]> " << lab << "data_sorted(new double["
+  ss << cindent << "std::unique_ptr<double[]> " << lab << "data_sorted(new double["
                 << lbl << "->get_size(" << lab << "hash)]);" << endl;
   if (zero) {
-    ss << cindent << "fill(" << lab << "data_sorted.get(), " << lab << "data_sorted.get()+"
+    ss << cindent << "std::fill(" << lab << "data_sorted.get(), " << lab << "data_sorted.get()+"
                   << lbl << "->get_size(" << lab << "hash), 0.0);" << endl;
   }
   return ss.str();
@@ -330,14 +333,15 @@ string Tensor::generate_active(string indent, const string tag) const {
 
     vector<string> mclose;
     list<shared_ptr<Index> >& merged = merged_->index();
+    // the m->generate() makes active_ this label must be identical on bagel side (src/smith/spinfreebase.h)
     for (auto& m : merged) {
       tt << indent << "for (auto& " << m->str_gen() << " : "  <<  m->generate()  << ") {" << endl;
       mclose.push_back(indent + "}");
       indent += "  ";
     }
     // make get block for merge obj
-    tt << indent << "vector<size_t> fhash = {" << list_keys(merged) << "};" << endl;
-    tt << indent << "unique_ptr<double[]> fdata = " << merged_->label() << "->get_block(fhash);" << endl;
+    tt << indent << "std::vector<size_t> fhash = {" << list_keys(merged) << "};" << endl;
+    tt << indent << "std::unique_ptr<double[]> fdata = " << merged_->label() << "->get_block(fhash);" << endl;
 
     tt << active()->generate_merged(indent, tag, index(), merged_->index(), merged_->label());
 
