@@ -38,7 +38,7 @@ namespace smith {
 static std::string header(const std::string& filename) {
   std::stringstream ss;
   ss << "//" << std::endl;
-  ss << "// Newint - Parallel electron correlation program." << std::endl;
+  ss << "// BAGEL - Parallel electron correlation program." << std::endl;
   ss << "// Filename: " << filename << ".h" << std::endl;
   ss << "// Copyright (C) 2012 Shiozaki group" << std::endl;
   ss << "//" << std::endl;
@@ -47,18 +47,18 @@ static std::string header(const std::string& filename) {
   ss << "//" << std::endl;
   ss << "// This file is part of the BAGEL package." << std::endl;
   ss << "//" << std::endl;
-  ss << "// The Newint package is free software; you can redistribute it and/or modify" << std::endl;
+  ss << "// The BAGEL package is free software; you can redistribute it and/or modify" << std::endl;
   ss << "// it under the terms of the GNU Library General Public License as published by" << std::endl;
   ss << "// the Free Software Foundation; either version 3, or (at your option)" << std::endl;
   ss << "// any later version." << std::endl;
   ss << "//" << std::endl;
-  ss << "// The Newint package is distributed in the hope that it will be useful," << std::endl;
+  ss << "// The BAGEL package is distributed in the hope that it will be useful," << std::endl;
   ss << "// but WITHOUT ANY WARRANTY; without even the implied warranty of" << std::endl;
   ss << "// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the" << std::endl;
   ss << "// GNU Library General Public License for more details." << std::endl;
   ss << "//" << std::endl;
   ss << "// You should have received a copy of the GNU Library General Public License" << std::endl;
-  ss << "// along with the Newint package; see COPYING.  If not, write to" << std::endl;
+  ss << "// along with the BAGEL package; see COPYING.  If not, write to" << std::endl;
   ss << "// the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA." << std::endl;
   ss << "//" << std::endl;
   ss << "" << std::endl;
