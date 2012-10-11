@@ -33,7 +33,7 @@
 using namespace std;
 using namespace smith;
 
-Tensor::Tensor(const shared_ptr<Op> op) : factor_(1.0), scalar_("EE")  {
+Tensor::Tensor(const shared_ptr<Op> op) : factor_(1.0), scalar_("")  {
   // scalar quantity..defined on bagel side
   //scalar_=op->sclr();
   // label
@@ -47,7 +47,7 @@ Tensor::Tensor(const shared_ptr<Op> op) : factor_(1.0), scalar_("EE")  {
 }
 
 
-Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0), scalar_("EB") {
+Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0), scalar_("") {
   // scalar quantity..defined on bagel side
   // mkm define here too?
   // label
@@ -60,7 +60,7 @@ Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0), scalar_("EB") {
 
 string Tensor::str() const {
   stringstream ss;
-  if (factor_ != 1.0) ss << " " << fixed << setw(4) << setprecision(2) << factor_ << " " << scalar_ << " ";
+  if (factor_ != 1.0) ss << " " << fixed << setw(4) << setprecision(2) << factor_ << (scalar_.empty() ? "" : " "+scalar_) << " ";
   ss << label_ << "(";
   for (auto i = index_.begin(); i != index_.end(); ++i) {
     // we don't need the spin part here
@@ -164,6 +164,12 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
   {
     tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
                   << lbl << "->" << (move ? "move" : "get") << "_block(" << lab << "hash);" << endl;
+  }
+  if (!scalar_.empty()) {
+    tt << cindent << "dscal_("; 
+    for (auto i = index_.rbegin(); i != index_.rend(); ++i)
+      tt << (i != index_.rbegin() ? "*" : "") << (*i)->str_gen() << ".size()";
+    tt << ", -e0_, " << lab << "data.get(), 1);" << endl; 
   }
   return tt.str();
 }

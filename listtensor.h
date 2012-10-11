@@ -38,14 +38,15 @@ namespace smith {
 class ListTensor {
   protected:
     double fac_;
+    std::string scalar_;
     std::list<std::shared_ptr<Tensor> > list_;
 
     bool dagger_;
 
   public:
     ListTensor(std::shared_ptr<Diagram> d);
-    ListTensor(double f, std::list<std::shared_ptr<Tensor> > ve, bool d)
-      : fac_(f), list_(ve), dagger_(d) {};
+    ListTensor(double f, std::string sc, std::list<std::shared_ptr<Tensor> > ve, bool d)
+      : fac_(f), scalar_(sc), list_(ve), dagger_(d) {};
     ~ListTensor() {};
 
     void print() const;
@@ -57,6 +58,7 @@ class ListTensor {
     std::shared_ptr<Tensor> target() const;
 
     double fac() const { return fac_; };
+    std::string scalar() const { return scalar_; };
     bool dagger() const { return dagger_; };
 };
 

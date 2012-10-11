@@ -32,6 +32,7 @@ using namespace smith;
 ListTensor::ListTensor(shared_ptr<Diagram> d) {
   // factor
   fac_ = d->fac();
+  scalar_ = d->scalar();
   // vector of tensors
   for (auto& i : d->op()) {
     shared_ptr<Tensor> t(new Tensor(i));
@@ -47,7 +48,7 @@ ListTensor::ListTensor(shared_ptr<Diagram> d) {
 
 
 void ListTensor::print() const {
-  cout << setw(4) << setprecision(1) << fixed <<  fac_ << " ";
+  cout << setw(4) << setprecision(1) << fixed <<  fac_ << (scalar_.empty() ? "" : " * "+ scalar_) << " ";
   for (auto& i : list_) cout << i->str();
   if (dagger_) cout << " ** Daggered object added **";
   cout << endl;
@@ -110,7 +111,7 @@ shared_ptr<Tensor> ListTensor::target() const {
 shared_ptr<ListTensor> ListTensor::rest() const {
   list<shared_ptr<Tensor> > r = list_; 
   r.pop_front();     
-  shared_ptr<ListTensor> out(new ListTensor(fac_, r, dagger_));
+  shared_ptr<ListTensor> out(new ListTensor(fac_, scalar_, r, dagger_));
   return out;
 }
 

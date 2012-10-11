@@ -85,10 +85,8 @@ int main() {
   shared_ptr<Equation> eq(new Equation(di, theory));
   cout << "Printing first equation" << endl;
   eq->print();
-  shared_ptr<Diagram> dib(new Diagram(db));
+  shared_ptr<Diagram> dib(new Diagram(db, "mE0"));
   cout << "Printing second diagram" << endl;
-  dib->set_fac(-1.0);
-  dib->set_sclr("E0");
   dib->print();
  
   shared_ptr<Equation> eqb(new Equation(dib, theory));

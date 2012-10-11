@@ -79,7 +79,7 @@ shared_ptr<Diagram> Diagram::copy() const {
   }
   out->set_op(outop);
   out->set_fac(fac_);
-  out->set_sclr(sclr_);
+  out->scalar_ = scalar_;
   if (dagger_) out->add_dagger();
   return out;
 }
@@ -97,7 +97,7 @@ void Diagram::refresh_indices() {
 // this is not a const function because it refreshes the indices
 void Diagram::print() {
   refresh_indices();
-  cout << setw(4) << setprecision(1) << fixed <<  fac_ << " " << sclr_ << " ";
+  cout << setw(4) << setprecision(1) << fixed <<  fac_ << " " << scalar_ << " ";
   for (auto& i : op_) i->print();
 
   // active operators
@@ -132,7 +132,7 @@ list<shared_ptr<Index> > Diagram::active_indices() const {
 
 
 void Diagram::print() const {
-  cout << setw(4) << setprecision(1) << fixed <<  fac_ << " " << sclr_ << " ";
+  cout << setw(4) << setprecision(1) << fixed <<  fac_ << " " << scalar_ << " ";
   for (auto& i : op_) i->print();
   cout << endl;
 }

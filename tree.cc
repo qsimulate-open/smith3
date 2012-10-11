@@ -83,6 +83,7 @@ Tree::Tree(const shared_ptr<ListTensor> l) : num_(-1) {
   } else {
     shared_ptr<Tensor> t = l->front();
     t->set_factor(l->fac());
+    t->set_scalar(l->scalar());
     op_.push_back(t);
   }
 }

@@ -44,7 +44,7 @@ class Diagram {
     // a constant factor
     double fac_;
     // a scalar to be defined later on bagel side
-    std::string sclr_;
+    std::string scalar_;
     // active part
     std::shared_ptr<Active> rdm_;
 
@@ -52,10 +52,9 @@ class Diagram {
     bool dagger_;
 
   public:
-    //Diagram(std::list<std::shared_ptr<Op> > op) : op_(op), fac_(1.0), dagger_(false) { };
-    //Diagram() : fac_(1.0), dagger_(false) { };
-    Diagram(std::list<std::shared_ptr<Op> > op) : op_(op), fac_(1.0), sclr_(""), dagger_(false) { };
-    Diagram() : fac_(1.0), sclr_(""), dagger_(false) { };
+    Diagram(std::list<std::shared_ptr<Op> > op) : op_(op), fac_(1.0), dagger_(false) { };
+    Diagram(std::list<std::shared_ptr<Op> > op, std::string s) : op_(op), fac_(1.0), scalar_(s), dagger_(false) { };
+    Diagram() : fac_(1.0), dagger_(false) { };
     // copy constructor is complicated but preserves the same topology as this.
     ~Diagram() {};
 
@@ -68,7 +67,7 @@ class Diagram {
     // get functions
     double& fac() { return fac_; };
     const double fac() const { return fac_; };
-    std::string& sclr() { return sclr_; }; 
+    std::string& scalar() { return scalar_; }; 
     std::shared_ptr<Active> rdm() { return rdm_; };
     bool dagger() const { return dagger_; };
 
@@ -77,7 +76,6 @@ class Diagram {
     // set functions for private members
     void set_op(const std::list<std::shared_ptr<Op> >& o) { op_ = o; };
     void set_fac(const double a) { fac_ = a; };
-    void set_sclr(std::string s) { sclr_ = s; };
 
     // refresh the indices
     void refresh_indices();
