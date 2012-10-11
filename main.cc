@@ -68,21 +68,38 @@ int main() {
   list<shared_ptr<Op> > d = {{proj, f, t}};
   list<shared_ptr<Op> > e = {{proj, H}};
 #else
-  list<shared_ptr<Op> > d, e;
+  list<shared_ptr<Op> > d, db, e;
   d.push_back(proj);
   d.push_back(f);
   d.push_back(t);
+  db.push_back(proj);
+  db.push_back(t);
   e.push_back(proj);
   e.push_back(H);
 #endif
 
   // amplitude equation
   shared_ptr<Diagram> di(new Diagram(d));
+  cout << "Printing first diagram" << endl;
+  di->print();
   shared_ptr<Equation> eq(new Equation(di, theory));
+  cout << "Printing first equation" << endl;
+  eq->print();
+  shared_ptr<Diagram> dib(new Diagram(db));
+  cout << "Printing second diagram" << endl;
+  dib->set_fac(-1.0);
+  dib->set_sclr("E0");
+  dib->print();
+ 
+  shared_ptr<Equation> eqb(new Equation(dib, theory));
+  cout << "Printing second equation" << endl;
+  eqb->print();
+#if 1   // testing diagram
   shared_ptr<Diagram> dj(new Diagram(e));
   shared_ptr<Equation> eq2(new Equation(dj, theory));
   cout << "Printing the eq object before eq merge " << endl;
   eq->print();  
+  eq->merge(eqb);
   eq->merge(eq2);
   cout << "Printing the eq object after eq merge " << endl;
   eq->print();  
@@ -117,7 +134,6 @@ int main() {
 //  eneq->print();
   shared_ptr<Tree> energy(new Tree(eneq));
   cout << "Printing the energy obj: " << endl;
-// mkm prints some bogus stuff right now 
   energy->print();
 
 #if 0
@@ -133,7 +149,7 @@ int main() {
   fs.close();
   es.close();
 #endif
-
+#endif  // testing diagram
   cout << endl;
 
   return 0;

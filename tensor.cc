@@ -33,7 +33,9 @@
 using namespace std;
 using namespace smith;
 
-Tensor::Tensor(const shared_ptr<Op> op) : factor_(1.0) {
+Tensor::Tensor(const shared_ptr<Op> op) : factor_(1.0), scalar_("EE")  {
+  // scalar quantity..defined on bagel side
+  //scalar_=op->sclr();
   // label
   label_ = op->label();
   // op
@@ -45,7 +47,9 @@ Tensor::Tensor(const shared_ptr<Op> op) : factor_(1.0) {
 }
 
 
-Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0) {
+Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0), scalar_("EB") {
+  // scalar quantity..defined on bagel side
+  // mkm define here too?
   // label
   label_ = "Gamma";
   // op
@@ -56,7 +60,7 @@ Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0) {
 
 string Tensor::str() const {
   stringstream ss;
-  if (factor_ != 1.0) ss << " " << fixed << setw(4) << setprecision(2) << factor_ << " ";
+  if (factor_ != 1.0) ss << " " << fixed << setw(4) << setprecision(2) << factor_ << " " << scalar_ << " ";
   ss << label_ << "(";
   for (auto i = index_.begin(); i != index_.end(); ++i) {
     // we don't need the spin part here

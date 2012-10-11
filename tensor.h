@@ -47,6 +47,8 @@ class Tensor {
   protected:
     // factor
     double factor_;
+    // scalar to be supplied later by bagel
+    std::string scalar_;
     // label of this tensor.
     std::string label_;
     // a list of indices
@@ -57,6 +59,8 @@ class Tensor {
     std::shared_ptr<Tensor> merged_;
 
   public:
+    Tensor(const double& d, const std::string s, const std::string& l, const std::list<std::shared_ptr<Index> >& i)
+      : factor_(d), scalar_(s), label_(l), index_(i) { };
     Tensor(const double& d, const std::string& l, const std::list<std::shared_ptr<Index> >& i)
       : factor_(d), label_(l), index_(i) { };
     Tensor(const std::shared_ptr<Op> op);
@@ -77,8 +81,10 @@ class Tensor {
     std::string str() const;
     void print(std::string indent = "") const { std::cout << indent << str() << std::endl; };
     void set_factor(const double a) { factor_ = a; };
+    void set_scalar(const std::string s) { scalar_ = s; };
 
     double factor() const { return factor_; };
+    std::string scalar() const {return scalar_; };
     std::string label() const { return label_; };
     std::shared_ptr<Active> active() { return active_; };
     const std::shared_ptr<Active> active() const { return active_; };
