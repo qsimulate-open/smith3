@@ -157,7 +157,10 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
       ++iter;
       tt << (*iter)->str_gen() << ".key()" << ", " << i0;
     }
-  }
+  } 
+  // for scalar
+  if (index_.empty())
+    tt << "1lu" ; 
   tt << "};" << endl;
   {
     tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "

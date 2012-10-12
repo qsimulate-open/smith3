@@ -55,11 +55,12 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
        if (d.first->num() == inum) inum = d.second->num();
      const string tmp = "+" + (*ri)->str_gen() + ".size()*(";
      tt << itag << inum << (ri != --loop.rend() ? tmp : "");
-   }
+   
    for (auto ri = ++loop.begin(); ri != loop.end(); ++ri)
      tt << ")";
    // unique to rdm0 case:
    tt << "] += " << setprecision(1) << fixed << factor() << ";" << endl;
+   }  
 
   // close loops
   for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
@@ -342,12 +343,16 @@ string RDM::make_odata(const string itag, string& indent, const list<shared_ptr<
   stringstream tt;
 
   tt  << indent << "odata[";
-  for (auto ri = index.rbegin(); ri != index.rend(); ++ri) {
-    int inum = (*ri)->num();
-    for (auto& d : delta_)
-      if (d.first->num() == inum) inum = d.second->num();
-    const string tmp = "+" + (*ri)->str_gen() + ".size()*(";
-    tt << itag << inum << (ri != --index.rend() ? tmp : "");
+  if (index.empty()) {
+    tt << "0" ;
+  } else { 
+    for (auto ri = index.rbegin(); ri != index.rend(); ++ri) {
+      int inum = (*ri)->num();
+      for (auto& d : delta_)
+        if (d.first->num() == inum) inum = d.second->num();
+      const string tmp = "+" + (*ri)->str_gen() + ".size()*(";
+      tt << itag << inum << (ri != --index.rend() ? tmp : "");
+    }
   }
   for (auto ri = ++index.begin(); ri != index.end(); ++ri)
     tt << ")";
