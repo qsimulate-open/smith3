@@ -296,17 +296,14 @@ string Tree::generate_compute_header(const int ic, const vector<shared_ptr<Tenso
     done.push_back(label);
     tt << "    std::shared_ptr<Tensor<T> > " << label << ";" << endl;
     // check if scalar needs to be added  
-    string nscalar = s->required_scalar();
-    if (!nscalar.empty()) {
-      if (nscalar == "e0") {
-        tt << "    double " << nscalar << "_ = this->compute_e0();" << endl;
+    if (!s->scalar().empty()) {
+      if (s->scalar() == "e0" ) {
+        tt << "    double " << s->scalar() << "_ = this->compute_e0();" << endl;
       } else { 
-        throw logic_error("Implimentation needed for scalar");
+        throw logic_error ("Implimentation needed");
       }
     }
   }
-
-
 
   tt << "" << endl;
   tt << "    void compute_() {" << endl;

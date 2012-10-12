@@ -110,7 +110,6 @@ class Tensor {
     std::string generate_loop(std::string&, std::vector<std::string>&) const;
     std::string generate_gamma(std::string& indent, std::vector<std::string>& close, std::string tag, const bool) const;
 
-    std::string required_scalar() const;
 };
 
 }

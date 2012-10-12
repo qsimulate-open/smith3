@@ -382,11 +382,3 @@ string Tensor::generate_gamma(string& indent, vector<string>& close, string tag,
   return tt.str();
 }
 
-string Tensor::required_scalar() const {
-  stringstream tt;
-  if (!scalar_.empty()) 
-    tt << scalar_;
-  return tt.str();
-}
-
-
