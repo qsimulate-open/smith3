@@ -297,8 +297,13 @@ string Tree::generate_compute_header(const int ic, const vector<shared_ptr<Tenso
     tt << "    std::shared_ptr<Tensor<T> > " << label << ";" << endl;
     // check if scalar needs to be added  
     string nscalar = s->required_scalar();
-    if (!nscalar.empty())
-       tt << "    double " << nscalar << "_;" << endl;
+    if (!nscalar.empty()) {
+      if (nscalar == "e0") {
+        tt << "    double " << nscalar << "_ = this->compute_e0();" << endl;
+      } else { 
+        throw logic_error("Implimentation needed for scalar");
+      }
+    }
   }
 
 
@@ -625,12 +630,12 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
         vector<int> rdms = i->active()->required_rdm(); 
         for (auto& j : rdms) {
           stringstream zz; 
-          zz << "rdm" << j << "_";
+          zz << "this->rdm" << j << "_";
           tmp.push_back(zz.str());
         }
         if (i->merged()) {
           stringstream mm;
-          mm << i->merged()->label() << "_";
+          mm << "this->" << i->merged()->label() << "_";
           tmp.push_back(mm.str());
         }
         ss << generate_task(indent, icnt-1, icnt, tmp, enlist);
