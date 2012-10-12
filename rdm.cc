@@ -55,12 +55,12 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
        if (d.first->num() == inum) inum = d.second->num();
      const string tmp = "+" + (*ri)->str_gen() + ".size()*(";
      tt << itag << inum << (ri != --loop.rend() ? tmp : "");
-   
+   }  
+
    for (auto ri = ++loop.begin(); ri != loop.end(); ++ri)
      tt << ")";
    // unique to rdm0 case:
    tt << "] += " << setprecision(1) << fixed << factor() << ";" << endl;
-   }  
 
   // close loops
   for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
