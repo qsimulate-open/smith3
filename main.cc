@@ -85,7 +85,7 @@ int main() {
   shared_ptr<Equation> eq(new Equation(di, theory));
   cout << "Printing first equation" << endl;
   eq->print();
-  shared_ptr<Diagram> dib(new Diagram(db, "mE0"));
+  shared_ptr<Diagram> dib(new Diagram(db, "e0"));
   cout << "Printing second diagram" << endl;
   dib->print();
  

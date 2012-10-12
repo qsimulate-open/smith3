@@ -35,7 +35,6 @@ using namespace smith;
 
 Tensor::Tensor(const shared_ptr<Op> op) : factor_(1.0), scalar_("")  {
   // scalar quantity..defined on bagel side
-  //scalar_=op->sclr();
   // label
   label_ = op->label();
   // op
@@ -49,7 +48,6 @@ Tensor::Tensor(const shared_ptr<Op> op) : factor_(1.0), scalar_("")  {
 
 Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0), scalar_("") {
   // scalar quantity..defined on bagel side
-  // mkm define here too?
   // label
   label_ = "Gamma";
   // op
@@ -169,7 +167,8 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
     tt << cindent << "dscal_("; 
     for (auto i = index_.rbegin(); i != index_.rend(); ++i)
       tt << (i != index_.rbegin() ? "*" : "") << (*i)->str_gen() << ".size()";
-    tt << ", -e0_, " << lab << "data.get(), 1);" << endl; 
+    // update scalar_ name directly
+    tt << ", -1*" << scalar_ << "_, " << lab << "data.get(), 1);" << endl; 
   }
   return tt.str();
 }
@@ -382,3 +381,12 @@ string Tensor::generate_gamma(string& indent, vector<string>& close, string tag,
   tt << generate_active(indent, tag);
   return tt.str();
 }
+
+string Tensor::required_scalar() const {
+  stringstream tt;
+  if (!scalar_.empty()) 
+    tt << scalar_;
+  return tt.str();
+}
+
+

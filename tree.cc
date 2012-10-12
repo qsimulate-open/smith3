@@ -295,7 +295,13 @@ string Tree::generate_compute_header(const int ic, const vector<shared_ptr<Tenso
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
     tt << "    std::shared_ptr<Tensor<T> > " << label << ";" << endl;
+    // check if scalar needs to be added  
+    string nscalar = s->required_scalar();
+    if (!nscalar.empty())
+       tt << "    double " << nscalar << "_;" << endl;
   }
+
+
 
   tt << "" << endl;
   tt << "    void compute_() {" << endl;
