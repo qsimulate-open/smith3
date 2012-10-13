@@ -158,8 +158,8 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
       tt << (*iter)->str_gen() << ".key()" << ", " << i0;
     }
   } 
-  // for scalar
-  if (index_.empty())
+  // for scalar. todo not quite working..maybe need to go all the way to rdm index to check if empty?
+  if (index_.empty() && merged_)
     tt << "1lu" ; 
   tt << "};" << endl;
   {

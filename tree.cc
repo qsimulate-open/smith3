@@ -298,7 +298,7 @@ string Tree::generate_compute_header(const int ic, const vector<shared_ptr<Tenso
     // check if scalar needs to be added  
     if (!s->scalar().empty()) {
       if (s->scalar() == "e0" ) {
-        tt << "    double " << s->scalar() << "_ = this->compute_e0();" << endl;
+        tt << "    double " << s->scalar() << "_;" << endl;
       } else { 
         throw logic_error ("Implimentation needed");
       }
@@ -319,7 +319,14 @@ string Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tenso
   tt << "" << endl;
   tt << "  public:" << endl;
   if (!enlist) {
-    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
+    bool found = false;
+    for (auto& s : tensors)
+      if (!s->scalar().empty()) found = true;
+    if (found) {
+      tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i, const double e) : Task<T>() {" << endl;
+    } else {
+      tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
+    }
   } else {
     tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : EnergyTask<T>() {" << endl;
   }
@@ -336,7 +343,17 @@ string Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tenso
     done.push_back(label);
     tt << "      " << (label == "proj" ? "r" : label) << " = t[" << i << "];" << endl;
     ++i;
+
+    // check if scalar needs to be added  
+    if (!(*s)->scalar().empty()) {
+      if ((*s)->scalar() == "e0" ) {
+        tt << "      e0 = e; " << endl;
+      } else { 
+        throw logic_error ("Implimentation needed");
+      }
   }
+  }
+
 
   tt << "    };" << endl;
   tt << "    ~Task" << icnt << "() {};" << endl;
@@ -548,6 +565,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "    std::shared_ptr<Tensor<T> > t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > r;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
+    ss << "    double e0;" << endl;
     ss << "" << endl;
     ss << "    std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T> > queue_(new Queue<T>());" << endl;
@@ -784,6 +802,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "    " << tree_name_ << "(std::shared_ptr<const Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info() {" << endl;
     ss << "      this->eig_ = this->f1_->diag();" << endl;
     ss << "      t2 = this->v2_->clone();" << endl;
+    ss << "      e0 = this->compute_e0();" << endl;
     ss << "#if 1" << endl;
     ss << "      this->update_amplitude_start(t2, this->v2_);" << endl;
     ss << "      t2->scale(2.0);" << endl;
