@@ -137,7 +137,7 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
      tt << ">(data, " << tlab << "data, " ;
      for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
        if (iter != index_.rbegin()) tt << ", ";
-         tt << (*iter)->str_gen() << "->size()";
+         tt << (*iter)->str_gen() << ".size()";
      }
      tt << ");" << endl;
 
