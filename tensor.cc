@@ -136,7 +136,7 @@ string Tensor::constructor_str(string indent) const {
   return ss.str();
 }
 
-string Tensor::generate_get_block(const string cindent, const string lab, const bool move) const {
+string Tensor::generate_get_block(const string cindent, const string lab, const bool move, const bool noscale) const {
   string lbl = label_;
   if (lbl == "proj") lbl = "r";
   size_t found = lbl.find("dagger");
@@ -168,7 +168,7 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
     tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
                   << lbl << "->" << (move ? "move" : "get") << "_block(" << lab << "hash);" << endl;
   }
-  if (!scalar_.empty()) {
+  if (!scalar_.empty() && !noscale) {
     tt << cindent << "dscal_("; 
     for (auto i = index_.rbegin(); i != index_.rend(); ++i)
       tt << (i != index_.rbegin() ? "*" : "") << (*i)->str_gen() << ".size()";
@@ -381,7 +381,7 @@ string Tensor::generate_gamma(string& indent, vector<string>& close, string tag,
   stringstream tt;
   tt << generate_loop(indent, close);
   // generate gamma get block, true does a move_block
-  tt << generate_get_block(indent, tag, move);
+  tt << generate_get_block(indent, tag, move, true); // true means we don;t scale
   // now generate codes for rdm
   tt << generate_active(indent, tag);
   return tt.str();
