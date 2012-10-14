@@ -45,11 +45,13 @@ Tensor::Tensor(const shared_ptr<Op> op) : factor_(1.0), scalar_("")  {
 
 }
 
+static int ig = 0;
 
 Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0), scalar_("") {
   // scalar quantity..defined on bagel side
   // label
-  label_ = "Gamma";
+  stringstream ss; ss << "Gamma" << ig; ++ig;
+  label_ = ss.str();
   // op
   index_ = activ->index();
   active_ = activ;
@@ -158,9 +160,9 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
       tt << (*iter)->str_gen() << ".key()" << ", " << i0;
     }
   } 
-  // for scalar. todo not quite working..maybe need to go all the way to rdm index to check if empty?
+  // for scalar.
   if (index_.empty() && merged_)
-    tt << "1lu" ; 
+    tt << "0lu" ; 
   tt << "};" << endl;
   {
     tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
@@ -332,7 +334,7 @@ pair<string, string> Tensor::generate_dim(const list<shared_ptr<Index> >& di) co
 
 
 string Tensor::generate_active(string indent, const string tag) const {
-  assert(label() == "Gamma");
+  assert(label_.find("Gamma") != string::npos);
   stringstream tt;
   if (!merged_) {
     tt << active()->generate(indent, tag, index());
@@ -375,7 +377,7 @@ string Tensor::generate_loop(string& indent, vector<string>& close) const {
 
 
 string Tensor::generate_gamma(string& indent, vector<string>& close, string tag, const bool move) const {
-  assert(label() == "Gamma");
+  assert(label_.find("Gamma") != string::npos);
   stringstream tt;
   tt << generate_loop(indent, close);
   // generate gamma get block, true does a move_block

@@ -322,11 +322,7 @@ string Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tenso
     bool found = false;
     for (auto& s : tensors)
       if (!s->scalar().empty()) found = true;
-    if (found) {
-      tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i, const double e) : Task<T>() {" << endl;
-    } else {
-      tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
-    }
+    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i" << (found ? ", const double e" : "") << ") : Task<T>() {" << endl;
   } else {
     tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : EnergyTask<T>() {" << endl;
   }
@@ -346,12 +342,12 @@ string Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tenso
 
     // check if scalar needs to be added  
     if (!(*s)->scalar().empty()) {
-      if ((*s)->scalar() == "e0" ) {
-        tt << "      e0 = e; " << endl;
+      if ((*s)->scalar() == "e0") {
+        tt << "      e0_ = e; " << endl;
       } else { 
-        throw logic_error ("Implimentation needed");
+        throw logic_error("Tree::generate_compute_footer, only \"e0\" is accepted so far");
       }
-  }
+    }
   }
 
 
@@ -376,7 +372,7 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "    IndexRange closed_;" << endl;
   tt << "    IndexRange active_;" << endl;
   tt << "    IndexRange virt_;" << endl;
-  tt << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
+  tt << "    std::shared_ptr<Tensor<T> > " << gamma->label() << ";" << endl;
   for (auto& i: rdmn)
       tt << "    std::shared_ptr<Tensor<T> > rdm" << i << ";" << endl;
   if (gamma->merged()) 
@@ -406,7 +402,7 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "      closed_ = i[0];" << endl;
   tt << "      active_ = i[1];" << endl;
   tt << "      virt_   = i[2];" << endl;
-  tt << "      Gamma   = t[0];" << endl;
+  tt << "      " << gamma->label() << "  = t[0];" << endl;
   //this is related to what rdms we have
   {
     int itmp = 1;
@@ -421,6 +417,7 @@ string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const 
   tt << "};" << endl << endl;
   return tt.str();
 }
+
 
 string Tree::generate_compute_operators(const string indent, const shared_ptr<Tensor> target, const list<shared_ptr<Tensor> > op,
                                         const bool dagger) const {
@@ -493,14 +490,25 @@ string Tree::generate_task(const string indent, const int ic, const vector<share
   for (auto& i : op) ops.push_back(i->label());
   int ip = -1;
   if (parent_) ip = parent_->parent()->num();
-  return generate_task(indent, ip, ic, ops, enlist);
+
+  string scalar;
+  for (auto& i : op) {
+    if (!i->scalar().empty()) {
+      if (i->scalar() != "e0") throw logic_error("unknown scalar. Tree::generate_task");
+      if (!scalar.empty() && i->scalar() != scalar) throw logic_error("multiple scalars. Tree::generate_task");
+      scalar = i->scalar(); 
+    }
+  }
+
+  return generate_task(indent, ip, ic, ops, enlist, scalar);
 }
 
-string Tree::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const bool enlist) const {
+
+string Tree::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const bool enlist, const string scalar) const {
   stringstream ss;
   ss << indent << "std::vector<std::shared_ptr<Tensor<T> > > tensor" << ic << " = {" << merge__(op) << "};" << endl;
   ss << indent << "std::shared_ptr<Task" << ic << "<T> > task"
-               << ic << "(new Task" << ic << "<T>(tensor" << ic << ", index));" << endl;
+               << ic << "(new Task" << ic << "<T>(tensor" << ic << ", index" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
 
   if (!enlist) {
     if (parent_) {
@@ -564,8 +572,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "  protected:" << endl;
     ss << "    std::shared_ptr<Tensor<T> > t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T> > r;" << endl;
-    ss << "    std::shared_ptr<Tensor<T> > Gamma;" << endl;
-    ss << "    double e0;" << endl;
+    ss << "    double e0_;" << endl;
     ss << "" << endl;
     ss << "    std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T> > queue_(new Queue<T>());" << endl;
@@ -621,6 +628,11 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
   /////////////////////////////////////////////////////////////////
   if (!op_.empty()) {
 
+    // Gamma should be constructed here
+    for (auto& i : op_)
+      if (i->label().find("Gamma") != string::npos)
+        ss << i->constructor_str(indent) << endl; 
+
     // step through operators and if they are new, construct them.
     if (find(ii.begin(), ii.end(), target_) == ii.end()) {
       ii.push_back(target_);
@@ -639,7 +651,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ++icnt;
 
     for (auto& i : op_) {
-      if (i->label() == "Gamma") {
+      if (i->label().find("Gamma") != string::npos) {
         tt << generate_gamma(icnt, i, enlist);
         vector<string> tmp = {i->label()};
         vector<int> rdms = i->active()->required_rdm(); 
@@ -802,7 +814,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "    " << tree_name_ << "(std::shared_ptr<const Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info() {" << endl;
     ss << "      this->eig_ = this->f1_->diag();" << endl;
     ss << "      t2 = this->v2_->clone();" << endl;
-    ss << "      e0 = this->compute_e0();" << endl;
+    ss << "      e0_ = this->compute_e0();" << endl;
     ss << "#if 1" << endl;
     ss << "      this->update_amplitude_start(t2, this->v2_);" << endl;
     ss << "      t2->scale(2.0);" << endl;
@@ -857,6 +869,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
   return make_pair(ss.str(), tt.str());
 }
 
+
 pair<string, string> BinaryContraction::generate_task_list(const bool enlist) const {
   stringstream ss, tt;
   for (auto& i : subtree_) {
@@ -884,7 +897,7 @@ vector<int> Tree::required_rdm(vector<int> orig) const {
     out = i->required_rdm(out);
 
   for (auto& i : op_) {
-    if (i->label() != "Gamma") continue;
+    if (i->label().find("Gamma") == string::npos) continue;
     vector<int> rdmn = i->active()->required_rdm();
     for (auto& j: rdmn)
       if (find(out.begin(), out.end(), j) == out.end()) out.push_back(j);
