@@ -40,16 +40,20 @@ using namespace smith;
 int main() {
 
 // MP2
-#if 1
+#if 0
   shared_ptr<Op> proj(new Op("proj", "c", "c", "a", "a")); 
   shared_ptr<Op> t(new Op("t2", "a", "a", "c", "c"));
+  shared_ptr<Op> R(new Op("r", "a", "a", "c", "c"));
+  shared_ptr<Op> tdagger(new Op("t2dagger", "c", "c", "a", "a"));
   string theory="MP2";
 #endif
-// simple one
-#if 0
+// simple CASPT2
+#if 1
   shared_ptr<Op> proj(new Op("proj", "x", "x", "a", "a")); // test active 1
-  shared_ptr<Op> t(new Op("t2", "a", "x", "x", "x"));  // test active 1
-  string theory="CAS";
+  shared_ptr<Op> t(new Op("t2", "a", "a", "x", "x"));  // test active 1
+  shared_ptr<Op> R(new Op("r", "a", "a", "x", "x"));
+  shared_ptr<Op> tdagger(new Op("t2dagger", "x", "x", "a", "a"));
+  string theory="CAS_all_active";
 #endif
 // complicated one 
 #if 0
@@ -61,8 +65,6 @@ int main() {
   shared_ptr<Op> dum(new Op("proj"));
   shared_ptr<Op> f(new Op("f1", "g", "g"));
   shared_ptr<Op> H(new Op("v2", "g", "g", "g", "g"));
-  shared_ptr<Op> R(new Op("r", "a", "a", "c", "c"));
-  shared_ptr<Op> tdagger(new Op("t2dagger", "c", "c", "a", "a"));
 
 #if 0
   list<shared_ptr<Op> > d = {{proj, f, t}};
@@ -85,6 +87,7 @@ int main() {
   shared_ptr<Equation> eq(new Equation(di, theory));
   cout << "Printing first equation" << endl;
   eq->print();
+  // TODO e0 is actually -e0, and therefore,  the screen output is currently wrong
   shared_ptr<Diagram> dib(new Diagram(db, "e0"));
   cout << "Printing second diagram" << endl;
   dib->print();
