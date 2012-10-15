@@ -72,12 +72,11 @@ static std::string prefac__(const double& factor_) {
   const int large = 1024;
   int i, j;
   for (i = 1; i != large; ++i) {
-    j = static_cast<int>(factor_*i + (factor_<0 ? -thresh : thresh));
-    if (fabs(factor_*i-j) < thresh)
+    if (fabs(factor_*i-std::round(factor_*i)) < thresh)
       break;
   }
   std::stringstream ss;
-  ss << j << "," << i;
+  ss << std::round(factor_*i) << "," << i;
   return ss.str();
 };
 
