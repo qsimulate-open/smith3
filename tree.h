@@ -137,6 +137,10 @@ class Tree : public std::enable_shared_from_this<Tree> {
 
     bool merge(std::shared_ptr<Tree> o);
 
+    void sort_gamma();
+
+    std::list<std::shared_ptr<Tensor> > gammas() const;
+
     int depth() const;
 
     // this function returns the rank of required RDMs here + inp

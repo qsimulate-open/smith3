@@ -155,6 +155,31 @@ void BinaryContraction::factorize() {
 }
 
 
+void Tree::sort_gamma() {
+  cout << "debugging sort_gamma " << endl; 
+
+  list<shared_ptr<Tensor> > g = gammas();
+  for (auto& i : g) i->print();
+
+}
+
+
+// return gamma below this
+list<shared_ptr<Tensor> > Tree::gammas() const {
+  list<shared_ptr<Tensor> > out;
+  for (auto& i : bc_) {
+    for (auto& j : i->subtree()) {
+      // recursive call 
+      list<shared_ptr<Tensor> > tmp = j->gammas();
+      out.insert(out.end(), tmp.begin(), tmp.end());
+    }
+  }
+  for (auto& i : op_)
+    if (i->label().find("Gamma") != string::npos) out.push_back(i); 
+  return out;
+}
+
+
 bool Tree::merge(shared_ptr<Tree> o) {
   bool out = false;
   if (o->bc_.size() > 0) {

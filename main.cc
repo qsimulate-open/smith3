@@ -57,6 +57,8 @@ int main() {
 #endif
 // complicated one 
 #if 0
+  shared_ptr<Op> tdagger(new Op("t2dagger", "x", "x", "a", "a"));
+  shared_ptr<Op> R(new Op("r", "a", "a", "x", "x"));
   shared_ptr<Op> proj(new Op("proj", "c", "x", "x", "x"));
   shared_ptr<Op> t(new Op("t2", "x", "x", "x", "c"));
   string theory="CAS";
@@ -111,6 +113,7 @@ int main() {
   cout << "Print the eq object after active: " << endl;
   eq->print();
   shared_ptr<Tree> res(new Tree(eq));
+  res->sort_gamma();
   cout << "Print the res Tree object: " << endl;
   res->print();
 
