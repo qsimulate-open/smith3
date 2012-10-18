@@ -42,6 +42,7 @@ bool RDM::operator==(const RDM& o) const {
   out &= delta_.size() == o.delta().size();
   for (auto i = index_.begin(), j = o.index().begin(); i != index_.end(); ++i, ++j) {
     out &= (*i)->identical(*j);
+    if (!out) break;
   }
   return out;
 }

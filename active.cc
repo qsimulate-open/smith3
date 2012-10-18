@@ -310,7 +310,7 @@ const list<shared_ptr<Index> > Active::index() const {
 
 bool Active::operator==(const Active& o) const {
   bool out = true;
-  // TODO need to add differing order allowance 
+  // TODO need to add differing order allowance to make code more general
   // compare all rdms of active objects
   out &= rdm_.size() == o.rdm_.size();
   if (out) {

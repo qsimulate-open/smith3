@@ -164,8 +164,9 @@ void Tree::sort_gamma() {
     // find like tensors in list using overloaded ==
     find_gamma(i);
   }
-  for (auto& j: gamma_)
-    cout << "gamma_ list: " << j->label() << endl;
+  cout << "\nUnique Gamma Tensors: " << endl;
+  for (auto j = gamma_.begin(); j != gamma_.end(); ++j)
+    cout << "gamma_ list: " << (*j)->label() << (j == --gamma_.end() ? "\n" : "") << endl;
 }
 
 
@@ -173,7 +174,7 @@ void Tree::find_gamma(shared_ptr<Tensor> o) {
   bool found = false;
   for (auto& i : gamma_) {
     if ((*i) == (*o)) {
-      cout << "Possible Rename: " << o->label() <<  " to " << i->label() <<  endl;
+      cout << "Rename: " << o->label() <<  " to " << i->label() <<  endl;
       found = true;
       break;
     }
