@@ -106,10 +106,18 @@ void Tensor::merge(shared_ptr<Tensor> a) {
 
 bool Tensor::operator==(const Tensor& o) const {
   bool out = true;
-  out &= label_ == o.label();
-  out &= factor_ == o.factor();
+  // if comparing Gammas we don't need to have similar labels or factors
+  //if (label_.find("Gamma") != string::npos && label_.find("Gamma") != string::npos) {
+  if (label_.find("Gamma") != string::npos && o.label().find("Gamma") != string::npos) {
+  } else {
+    out &= label_ == o.label();
+    out &= factor_ == o.factor();
+  }
   // TODO for the time being, active is not assumed to be factorized
-  if (active() || o.active()) out = false;
+  if (active() || o.active()) {
+    out &= index_.size() == o.index().size();
+  //  out = false;
+  }
   // index
   out &= index_.size() == o.index().size();
   if (out) {

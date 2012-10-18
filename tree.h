@@ -100,6 +100,9 @@ class Tree : public std::enable_shared_from_this<Tree> {
     // std::string
     std::string tree_name_;
 
+    // this is only used in the top level
+    std::list<std::shared_ptr<Tensor> > gamma_;
+
     // when we do generate, a counter is used to generate a list of tasks.
     mutable int num_;
 
@@ -138,6 +141,7 @@ class Tree : public std::enable_shared_from_this<Tree> {
     bool merge(std::shared_ptr<Tree> o);
 
     void sort_gamma();
+    void find_gamma(std::shared_ptr<Tensor> o);
 
     std::list<std::shared_ptr<Tensor> > gammas() const;
 

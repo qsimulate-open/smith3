@@ -159,8 +159,24 @@ void Tree::sort_gamma() {
   cout << "debugging sort_gamma " << endl; 
 
   list<shared_ptr<Tensor> > g = gammas();
-  for (auto& i : g) i->print();
+  for (auto& i : g) {
+    i->print();
+    // find like tensors in list using overloaded ==
+    find_gamma(i);
+  }
+}
 
+
+void Tree::find_gamma(shared_ptr<Tensor> o) {
+  bool found = false;
+  for (auto& i : gamma_) {
+    if ((*i) == (*o)) {
+      cout << "Possible Rename: " << o->label() <<  " to " << i->label() <<  endl;
+      found = true;
+      break;
+    }
+  }
+  if (!found) gamma_.push_back(o);
 }
 
 
@@ -655,9 +671,11 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
 
     // Gamma should be constructed here
     for (auto& i : op_)
-      if (i->label().find("Gamma") != string::npos)
+      if (i->label().find("Gamma") != string::npos) {
+        // reconstruct gamma label if necessary
         ss << i->constructor_str(indent) << endl; 
-
+      }
+    
     // step through operators and if they are new, construct them.
     if (find(ii.begin(), ii.end(), target_) == ii.end()) {
       ii.push_back(target_);
