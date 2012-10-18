@@ -54,6 +54,8 @@ class Active {
     void print(const std::string& indent = "") const;
     const std::list<std::shared_ptr<Index> > index() const;
 
+    bool operator==(const Active& o) const;
+
     // this generate does get_block and a sort_indices
     std::string generate(const std::string cindent, const std::string lab, const std::list<std::shared_ptr<Index> >& loop) const;
     // this generate does get_block, sort_indices, and the merged mulitiplication

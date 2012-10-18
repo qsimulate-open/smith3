@@ -308,6 +308,19 @@ const list<shared_ptr<Index> > Active::index() const {
   return (*j)->index();
 }
 
+bool Active::operator==(const Active& o) const {
+  bool out = true;
+  // TODO need to add differing order allowance 
+  // compare all rdms of active objects
+  out &= rdm_.size() == o.rdm_.size();
+  if (out) {
+    for (auto i = rdm_.begin(), j = o.rdm_.begin(); i != rdm_.end(); ++i, ++j) {
+      out &= (*(*i)) == (*(*j));
+    }
+  }
+  return out;
+}
+
 
 string Active::generate(const string indent, const string lab, const list<shared_ptr<Index> >& loop) const {
   stringstream tt;

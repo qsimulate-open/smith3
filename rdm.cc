@@ -33,6 +33,20 @@
 using namespace std;
 using namespace smith;
 
+
+bool RDM::operator==(const RDM& o) const {
+  bool out = true;
+  // compare all rdms of active objects
+  out &= fac_ == o.factor();
+  out &= index_.size() == o.index().size();
+  out &= delta_.size() == o.delta().size();
+  for (auto i = index_.begin(), j = o.index().begin(); i != index_.end(); ++i, ++j) {
+    out &= (*i)->identical(*j);
+  }
+  return out;
+}
+
+
 string RDM::generate(string indent, const string tlab, const list<shared_ptr<Index> >& loop) {
  stringstream tt;
 
@@ -211,7 +225,7 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
   return tt.str();
 }
 
-// protected functions  //////
+// protected functions start //////
 string RDM::make_get_block(string indent) {
   stringstream tt;
   tt << indent << "std::vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;

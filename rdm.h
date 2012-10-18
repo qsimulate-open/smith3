@@ -59,6 +59,7 @@ class RDM {
       : fac_(f), index_(in), delta_(in2) { };
     ~RDM() {};
 
+
     void print(const std::string& indent = "") const;
     // sort indices so that it will be 0+0 1+1 ... (spin ordering is arbitrary)
     void sort();
@@ -83,6 +84,8 @@ class RDM {
 
     // One index is going to be annihilated. done is updated inside the function
     std::list<std::shared_ptr<RDM> > reduce_one(std::list<int>& done) const;
+
+    bool operator==(const RDM& o) const;
 
     // generate a code for Gamma rdm summation
     std::string generate(std::string indent, const std::string tlab, const std::list<std::shared_ptr<Index> >& loop);

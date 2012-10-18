@@ -48,7 +48,7 @@ int main() {
   string theory="MP2";
 #endif
 // simple CASPT2
-#if 1
+#if 0
   shared_ptr<Op> proj(new Op("proj", "x", "x", "a", "a")); // test active 1
   shared_ptr<Op> t(new Op("t2", "a", "a", "x", "x"));  // test active 1
   shared_ptr<Op> R(new Op("r", "a", "a", "x", "x"));
@@ -56,7 +56,7 @@ int main() {
   string theory="CAS_all_active";
 #endif
 // complicated one 
-#if 0
+#if 1
   shared_ptr<Op> tdagger(new Op("t2dagger", "x", "x", "a", "a"));
   shared_ptr<Op> R(new Op("r", "a", "a", "x", "x"));
   shared_ptr<Op> proj(new Op("proj", "c", "x", "x", "x"));

@@ -164,6 +164,8 @@ void Tree::sort_gamma() {
     // find like tensors in list using overloaded ==
     find_gamma(i);
   }
+  for (auto& j: gamma_)
+    cout << "gamma_ list: " << j->label() << endl;
 }
 
 
