@@ -87,8 +87,8 @@ class Tensor {
     void set_scalar(const std::string s) { scalar_ = s; };
 
     double factor() const { return factor_; };
-    std::string scalar() const {return scalar_; };
-    std::string label() const { return label_; };
+    std::string scalar() const { return scalar_; };
+    std::string label() const { return alias_ ? alias_->label() : label_; };
     std::shared_ptr<Active> active() { return active_; };
     const std::shared_ptr<Active> active() const { return active_; };
 
