@@ -70,6 +70,7 @@ string Tensor::str() const {
   ss << ")";
 
   if (merged_) ss << " << " << merged_->str();
+  if (alias_) ss << " __ " << alias_->label(); 
   return ss.str();
 }
 
@@ -384,14 +385,71 @@ string Tensor::generate_loop(string& indent, vector<string>& close) const {
 }
 
 
-string Tensor::generate_gamma(string& indent, vector<string>& close, string tag, const bool move) const {
+string Tensor::generate_gamma(const int ic, const bool enlist) const {
   assert(label_.find("Gamma") != string::npos);
+
   stringstream tt;
+  vector<int> rdmn = active()->required_rdm();
+
+  tt << "template <typename T>" << endl;
+  if (!enlist) {
+    tt << "class Task" << ic << " : public Task<T> {" <<  "  // associated with gamma" << endl;
+  } else {
+    tt << "class Task" << ic << " : public EnergyTask<T> {" <<  "  // associated with gamma" << endl;
+  }
+  tt << "  protected:" << endl;
+  tt << "    IndexRange closed_;" << endl;
+  tt << "    IndexRange active_;" << endl;
+  tt << "    IndexRange virt_;" << endl;
+  tt << "    std::shared_ptr<Tensor<T> > " << label_ << ";" << endl;
+  for (auto& i: rdmn)
+      tt << "    std::shared_ptr<Tensor<T> > rdm" << i << ";" << endl;
+  if (merged_) 
+    tt << "    std::shared_ptr<Tensor<T> > " << merged_->label() << ";" << endl;
+  tt << endl;
+  // loops
+  tt << "    void compute_() {" << endl;
+
+  string indent ="      ";
+  vector<string> close;
   tt << generate_loop(indent, close);
   // generate gamma get block, true does a move_block
-  tt << generate_get_block(indent, tag, move, true); // true means we don;t scale
+  tt << generate_get_block(indent, "o", true, true); // first true means move, second true means we don;t scale
   // now generate codes for rdm
-  tt << generate_active(indent, tag);
+  tt << generate_active(indent, "o");
+
+  // generate gamma put block
+  tt << indent << label() << "->put_block(ohash, odata);" << endl;
+  // close the loops
+  for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
+    tt << *iter << endl;
+  tt << "    };  " << endl;
+  tt << "" << endl;
+  // done with protected part
+  tt << "" << endl;
+  tt << "  public:" << endl;
+  if (!enlist) {
+    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
+  } else {
+    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : EnergyTask<T>() {" << endl;
+  }
+  tt << "      closed_ = i[0];" << endl;
+  tt << "      active_ = i[1];" << endl;
+  tt << "      virt_   = i[2];" << endl;
+  tt << "      " << label() << "  = t[0];" << endl;
+  //this is related to what rdms we have
+  {
+    int itmp = 1;
+    for (auto i = rdmn.begin(); i != rdmn.end(); ++i, ++itmp) {
+      tt << "      rdm" << (*i) << "    = t[" << itmp << "];" << endl;
+    }
+    // related to merged tensor
+    if (merged_) tt << "      "<< merged_->label() << "      = t[" <<  itmp << "];" << endl;
+  }
+  tt << "    };" << endl;
+  tt << "    ~Task" << ic << "() {};" << endl;
+  tt << "};" << endl << endl;
   return tt.str();
 }
+
 

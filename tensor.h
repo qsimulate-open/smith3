@@ -58,6 +58,9 @@ class Tensor {
     std::shared_ptr<Active> active_;
     std::shared_ptr<Tensor> merged_;
 
+    // alias tensor if any
+    std::shared_ptr<Tensor> alias_;
+
   public:
     Tensor(const double& d, const std::string s, const std::string& l, const std::list<std::shared_ptr<Index> >& i)
       : factor_(d), scalar_(s), label_(l), index_(i) { };
@@ -96,6 +99,8 @@ class Tensor {
 
     void merge(std::shared_ptr<Tensor> o);
 
+    void set_alias(std::shared_ptr<Tensor> o) { alias_ = o; };
+
     std::string constructor_str(std::string indent) const;
 
     std::string generate_get_block(const std::string, const std::string, const bool move = false, const bool noscale = false) const;
@@ -108,7 +113,7 @@ class Tensor {
 
     std::string generate_active(const std::string indent, const std::string tag) const;
     std::string generate_loop(std::string&, std::vector<std::string>&) const;
-    std::string generate_gamma(std::string& indent, std::vector<std::string>& close, std::string tag, const bool) const;
+    std::string generate_gamma(const int, const bool) const;
 
 };
 

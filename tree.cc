@@ -164,7 +164,7 @@ void Tree::sort_gamma() {
     // find like tensors in list using overloaded ==
     find_gamma(i);
   }
-  cout << "\nUnique Gamma Tensors: " << endl;
+  cout << endl << "Unique Gamma Tensors: " << endl;
   for (auto j = gamma_.begin(); j != gamma_.end(); ++j)
     cout << "gamma_ list: " << (*j)->label() << (j == --gamma_.end() ? "\n" : "") << endl;
 }
@@ -175,6 +175,7 @@ void Tree::find_gamma(shared_ptr<Tensor> o) {
   for (auto& i : gamma_) {
     if ((*i) == (*o)) {
       cout << "Rename: " << o->label() <<  " to " << i->label() <<  endl;
+      o->set_alias(i);
       found = true;
       break;
     }
@@ -402,67 +403,6 @@ string Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tenso
 }
 
 
-string Tree::generate_gamma(const int ic, const shared_ptr<Tensor> gamma, const bool enlist) const {
-  stringstream tt;
-  vector<int> rdmn = gamma->active()->required_rdm();
-
-  tt << "template <typename T>" << endl;
-  if (!enlist) {
-    tt << "class Task" << ic << " : public Task<T> {" <<  "  // associated with gamma" << endl;
-  } else {
-    tt << "class Task" << ic << " : public EnergyTask<T> {" <<  "  // associated with gamma" << endl;
-  }
-  tt << "  protected:" << endl;
-  tt << "    IndexRange closed_;" << endl;
-  tt << "    IndexRange active_;" << endl;
-  tt << "    IndexRange virt_;" << endl;
-  tt << "    std::shared_ptr<Tensor<T> > " << gamma->label() << ";" << endl;
-  for (auto& i: rdmn)
-      tt << "    std::shared_ptr<Tensor<T> > rdm" << i << ";" << endl;
-  if (gamma->merged()) 
-    tt << "    std::shared_ptr<Tensor<T> > " << gamma->merged()->label() << ";" << endl;
-  tt << endl;
-  // loops
-  tt << "    void compute_() {" << endl;
-  string indent ="      ";
-  vector<string> close;
-  tt << gamma->generate_gamma(indent, close, "o", true); 
-
-  // generate gamma put block
-  tt << indent << gamma->label() << "->put_block(ohash, odata);" << endl;
-  // close the loops
-  for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-    tt << *iter << endl;
-  tt << "    };  " << endl;
-  tt << "" << endl;
-  // done with protected part
-  tt << "" << endl;
-  tt << "  public:" << endl;
-  if (!enlist) {
-    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
-  } else {
-    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : EnergyTask<T>() {" << endl;
-  }
-  tt << "      closed_ = i[0];" << endl;
-  tt << "      active_ = i[1];" << endl;
-  tt << "      virt_   = i[2];" << endl;
-  tt << "      " << gamma->label() << "  = t[0];" << endl;
-  //this is related to what rdms we have
-  {
-    int itmp = 1;
-    for (auto i = rdmn.begin(); i != rdmn.end(); ++i, ++itmp) {
-      tt << "      rdm" << (*i) << "    = t[" << itmp << "];" << endl;
-    }
-    // related to merged tensor
-    if (gamma->merged()) tt << "      "<< gamma->merged()->label() << "      = t[" <<  itmp << "];" << endl;
-  }
-  tt << "    };" << endl;
-  tt << "    ~Task" << icnt << "() {};" << endl;
-  tt << "};" << endl << endl;
-  return tt.str();
-}
-
-
 string Tree::generate_compute_operators(const string indent, const shared_ptr<Tensor> target, const list<shared_ptr<Tensor> > op,
                                         const bool dagger) const {
   stringstream tt;
@@ -665,6 +605,30 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     tt << "};" << endl << endl;
 
     ++icnt;
+
+    // all the gamma tensors should be defined here. Only distinct Gammas are computed
+    for (auto& i : gamma_) {
+      assert(i->label().find("Gamma") != string::npos);
+      // reconstruct gamma label if necessary
+      ss << i->constructor_str(indent) << endl; 
+
+      tt << i->generate_gamma(icnt, enlist);
+      vector<string> tmp = {i->label()};
+      vector<int> rdms = i->active()->required_rdm(); 
+      for (auto& j : rdms) {
+        stringstream zz; 
+        zz << "this->rdm" << j << "_";
+        tmp.push_back(zz.str());
+      }
+      if (i->merged()) {
+        stringstream mm;
+        mm << "this->" << i->merged()->label() << "_";
+        tmp.push_back(mm.str());
+      }
+      ss << generate_task(indent, icnt-1, icnt, tmp, enlist);
+      ++icnt;
+    }
+
   }
 
   /////////////////////////////////////////////////////////////////
@@ -672,13 +636,6 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
   /////////////////////////////////////////////////////////////////
   if (!op_.empty()) {
 
-    // Gamma should be constructed here
-    for (auto& i : op_)
-      if (i->label().find("Gamma") != string::npos) {
-        // reconstruct gamma label if necessary
-        ss << i->constructor_str(indent) << endl; 
-      }
-    
     // step through operators and if they are new, construct them.
     if (find(ii.begin(), ii.end(), target_) == ii.end()) {
       ii.push_back(target_);
@@ -695,26 +652,6 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     tt << generate_compute_footer(icnt, op2, enlist);
 
     ++icnt;
-
-    for (auto& i : op_) {
-      if (i->label().find("Gamma") != string::npos) {
-        tt << generate_gamma(icnt, i, enlist);
-        vector<string> tmp = {i->label()};
-        vector<int> rdms = i->active()->required_rdm(); 
-        for (auto& j : rdms) {
-          stringstream zz; 
-          zz << "this->rdm" << j << "_";
-          tmp.push_back(zz.str());
-        }
-        if (i->merged()) {
-          stringstream mm;
-          mm << "this->" << i->merged()->label() << "_";
-          tmp.push_back(mm.str());
-        }
-        ss << generate_task(indent, icnt-1, icnt, tmp, enlist);
-        ++icnt;
-      }
-    }
 
   }
 
