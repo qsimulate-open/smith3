@@ -70,7 +70,7 @@ string Tensor::str() const {
   ss << ")";
 
   if (merged_) ss << " << " << merged_->str();
-  if (alias_) ss << " __ " << alias_->label(); 
+  if (alias_) ss << " (" << label_ << ")";
   return ss.str();
 }
 

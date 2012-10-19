@@ -141,10 +141,11 @@ class Tree : public std::enable_shared_from_this<Tree> {
 
     bool merge(std::shared_ptr<Tree> o);
 
-    void sort_gamma();
+    void sort_gamma(std::list<std::shared_ptr<Tensor> > o = std::list<std::shared_ptr<Tensor> >());
     void find_gamma(std::shared_ptr<Tensor> o);
 
-    std::list<std::shared_ptr<Tensor> > gammas() const;
+    std::list<std::shared_ptr<Tensor> > gather_gamma() const;
+    std::list<std::shared_ptr<Tensor> > gamma() const { return gamma_; };
 
     int depth() const;
 

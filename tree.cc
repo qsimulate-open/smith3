@@ -155,18 +155,11 @@ void BinaryContraction::factorize() {
 }
 
 
-void Tree::sort_gamma() {
-  cout << "debugging sort_gamma " << endl; 
+void Tree::sort_gamma(std::list<std::shared_ptr<Tensor> > o) {
+  gamma_ = o;
 
-  list<shared_ptr<Tensor> > g = gammas();
-  for (auto& i : g) {
-    i->print();
-    // find like tensors in list using overloaded ==
-    find_gamma(i);
-  }
-  cout << endl << "Unique Gamma Tensors: " << endl;
-  for (auto j = gamma_.begin(); j != gamma_.end(); ++j)
-    cout << "gamma_ list: " << (*j)->label() << (j == --gamma_.end() ? "\n" : "") << endl;
+  list<shared_ptr<Tensor> > g = gather_gamma();
+  for (auto& i : g) find_gamma(i);
 }
 
 
@@ -175,8 +168,14 @@ void Tree::find_gamma(shared_ptr<Tensor> o) {
   for (auto& i : gamma_) {
     if ((*i) == (*o)) {
       cout << "Rename: " << o->label() <<  " to " << i->label() <<  endl;
-      o->set_alias(i);
+
       found = true;
+      o->set_alias(i);
+
+      o->print();
+      o->active()->print();
+      i->print();
+      i->active()->print();
       break;
     }
   }
@@ -185,12 +184,12 @@ void Tree::find_gamma(shared_ptr<Tensor> o) {
 
 
 // return gamma below this
-list<shared_ptr<Tensor> > Tree::gammas() const {
+list<shared_ptr<Tensor> > Tree::gather_gamma() const {
   list<shared_ptr<Tensor> > out;
   for (auto& i : bc_) {
     for (auto& j : i->subtree()) {
       // recursive call 
-      list<shared_ptr<Tensor> > tmp = j->gammas();
+      list<shared_ptr<Tensor> > tmp = j->gather_gamma();
       out.insert(out.end(), tmp.begin(), tmp.end());
     }
   }

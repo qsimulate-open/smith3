@@ -68,10 +68,6 @@ int main() {
   shared_ptr<Op> f(new Op("f1", "g", "g"));
   shared_ptr<Op> H(new Op("v2", "g", "g", "g", "g"));
 
-#if 0
-  list<shared_ptr<Op> > d = {{proj, f, t}};
-  list<shared_ptr<Op> > e = {{proj, H}};
-#else
   list<shared_ptr<Op> > d, db, e;
   d.push_back(proj);
   d.push_back(f);
@@ -80,42 +76,22 @@ int main() {
   db.push_back(t);
   e.push_back(proj);
   e.push_back(H);
-#endif
 
   // amplitude equation
   shared_ptr<Diagram> di(new Diagram(d));
-  cout << "Printing first diagram" << endl;
-  di->print();
   shared_ptr<Equation> eq(new Equation(di, theory));
-  cout << "Printing first equation" << endl;
-  eq->print();
   // TODO e0 is actually -e0, and therefore,  the screen output is currently wrong
   shared_ptr<Diagram> dib(new Diagram(db, "e0"));
-  cout << "Printing second diagram" << endl;
-  dib->print();
  
   shared_ptr<Equation> eqb(new Equation(dib, theory));
-  cout << "Printing second equation" << endl;
-  eqb->print();
-#if 1   // testing diagram
   shared_ptr<Diagram> dj(new Diagram(e));
   shared_ptr<Equation> eq2(new Equation(dj, theory));
-  cout << "Printing the eq object before eq merge " << endl;
-  eq->print();  
   eq->merge(eqb);
   eq->merge(eq2);
-  cout << "Printing the eq object after eq merge " << endl;
-  eq->print();  
   eq->duplicates();
-  cout << "Printing the eq object before active: " << endl;
-  eq->print();  
   eq->active();
-  cout << "Print the eq object after active: " << endl;
-  eq->print();
   shared_ptr<Tree> res(new Tree(eq));
   res->sort_gamma();
-  cout << "Print the res Tree object: " << endl;
-  res->print();
 
   // energy
   list<shared_ptr<Op> > en0, en1;
@@ -131,20 +107,10 @@ int main() {
   shared_ptr<Equation> eneq1(new Equation(e1, theory));
   eneq->merge(eneq1);
   eneq->duplicates();
-//  std::cout << "Printing eneq object before active: " << endl; //mkm this needs to be implemented
-//  eneq->print();                                                 
   eneq->active();
-//  std::cout << "Printing eneq object after active: " << endl;
-//  eneq->print();
   shared_ptr<Tree> energy(new Tree(eneq));
-  cout << "Printing the energy obj: " << endl;
-  energy->print();
+  energy->sort_gamma(res->gamma());
 
-#if 0
-  cout << "-----" << endl;
-  cout << res->generate_task_list() << endl;
-  cout << "-----" << endl;
-#else
   ofstream fs(res->tree_name() + ".h");
   ofstream es(res->tree_name() + "_tasks.h");
   pair<string, string> tmp = res->generate_task_list(false,energy);
@@ -152,9 +118,14 @@ int main() {
   es << tmp.second;
   fs.close();
   es.close();
-#endif
-#endif  // testing diagram
   cout << endl;
+
+  // output
+  cout << endl << "   *** Residual ***" << endl << endl;
+  res->print();
+  cout << endl << "   ***  Energy  ***" << endl << endl;
+  energy->print();
+  cout << endl << endl;
 
   return 0;
 }
