@@ -61,7 +61,7 @@ Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0), scalar_("") {
 string Tensor::str() const {
   stringstream ss;
   if (factor_ != 1.0) ss << " " << fixed << setw(4) << setprecision(2) << factor_ << (scalar_.empty() ? "" : " "+scalar_) << " ";
-  ss << label_ << "(";
+  ss << label() << "(";
   for (auto i = index_.begin(); i != index_.end(); ++i) {
     // we don't need the spin part here
     if (i != index_.begin()) ss << ", ";
@@ -110,7 +110,7 @@ bool Tensor::operator==(const Tensor& o) const {
   // if comparing Gammas we don't need to have similar labels or factors
   if (label_.find("Gamma") != string::npos && o.label().find("Gamma") != string::npos) {
   } else {
-    out &= label_ == o.label();
+    out &= label() == o.label();
     out &= factor_ == o.factor();
   }
   // TODO for the time being, active is not assumed to be factorized
@@ -132,7 +132,7 @@ bool Tensor::operator==(const Tensor& o) const {
 
 string Tensor::constructor_str(string indent) const {
   stringstream ss;
-  ss << indent << "std::vector<IndexRange> " << label_ << "_index";
+  ss << indent << "std::vector<IndexRange> " << label() << "_index";
   if (index_.empty()) {
     ss << ";" << endl;
   } else {
@@ -141,12 +141,12 @@ string Tensor::constructor_str(string indent) const {
       ss << (i != index_.rbegin() ? ", this->" : "this->") << (*i)->generate();
     ss << "};" << endl;
   }
-  ss << indent << "std::shared_ptr<Tensor<T> > " << label_ << "(new Tensor<T>(" << label_ << "_index, false));";
+  ss << indent << "std::shared_ptr<Tensor<T> > " << label() << "(new Tensor<T>(" << label() << "_index, false));";
   return ss.str();
 }
 
 string Tensor::generate_get_block(const string cindent, const string lab, const bool move, const bool noscale) const {
-  string lbl = label_;
+  string lbl = label();
   if (lbl == "proj") lbl = "r";
   size_t found = lbl.find("dagger");
   bool trans = false;
@@ -189,7 +189,7 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
 
 
 string Tensor::generate_scratch_area(const string cindent, const string lab, const bool zero) const {
-  string lbl = label_;
+  string lbl = label();
   if (lbl == "proj") lbl = "r";
   size_t found = lbl.find("dagger");
   if (found != string::npos) {
@@ -401,7 +401,7 @@ string Tensor::generate_gamma(const int ic, const bool enlist) const {
   tt << "    IndexRange closed_;" << endl;
   tt << "    IndexRange active_;" << endl;
   tt << "    IndexRange virt_;" << endl;
-  tt << "    std::shared_ptr<Tensor<T> > " << label_ << ";" << endl;
+  tt << "    std::shared_ptr<Tensor<T> > " << label() << ";" << endl;
   for (auto& i: rdmn)
       tt << "    std::shared_ptr<Tensor<T> > rdm" << i << ";" << endl;
   if (merged_) 

@@ -470,6 +470,8 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
 
 
 string Tree::generate_task(const string indent, const int ic, const vector<shared_ptr<Tensor> > op, const bool enlist) const {
+  stringstream ss;
+
   vector<string> ops;
   for (auto& i : op) ops.push_back(i->label());
   int ip = -1;
@@ -484,7 +486,29 @@ string Tree::generate_task(const string indent, const int ic, const vector<share
     }
   }
 
-  return generate_task(indent, ip, ic, ops, enlist, scalar);
+  // if gamma, we need to add dependency. We need to go up to the root tree.
+  ss << generate_task(indent, ip, ic, ops, enlist, scalar);
+  for (auto& i : op) {
+    if (i->label().find("Gamma") != string::npos)
+      ss << indent << "task" << ic << "->" << add_depend(i) << endl;
+  }
+  ss << endl;
+
+  return ss.str();
+}
+
+
+string Tree::add_depend(const std::shared_ptr<const Tensor> o) const {
+  stringstream out;
+  if (!parent_) {
+    assert(!gamma_.empty());
+    for (auto& i : gamma_) {
+      if (o->label() == i->label()) out << "add_dep(task" << i->num() << ");"; 
+    }
+  } else {
+    out << parent_->parent()->add_depend(o);
+  }
+  return out.str();
 }
 
 
@@ -608,8 +632,8 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
 
     // all the gamma tensors should be defined here. Only distinct Gammas are computed
     for (auto& i : gamma_) {
+      i->set_num(icnt);
       assert(i->label().find("Gamma") != string::npos);
-      // reconstruct gamma label if necessary
       ss << i->constructor_str(indent) << endl; 
 
       tt << i->generate_gamma(icnt, enlist);
@@ -625,7 +649,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
         mm << "this->" << i->merged()->label() << "_";
         tmp.push_back(mm.str());
       }
-      ss << generate_task(indent, icnt-1, icnt, tmp, enlist);
+      ss << generate_task(indent, 0, icnt, tmp, enlist);
       ++icnt;
     }
 
@@ -642,7 +666,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
       ss << target_->constructor_str(indent) << endl;
     }
 
-    vector<shared_ptr<Tensor> > op = {{target_}};
+    vector<shared_ptr<Tensor> > op = {target_};
     op.insert(op.end(), op_.begin(), op_.end());
     ss << generate_task(indent, icnt, op, enlist);
 
@@ -671,7 +695,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     }
     // saving a counter to a protected member for dependency checks
     num_ = icnt;
-    ss << generate_task(indent, icnt, strs, enlist);
+    ss << generate_task(indent, num_, strs, enlist);
 
     // here we generate a task for this binary contraction
     tt << generate_compute_header(num_, strs, enlist);

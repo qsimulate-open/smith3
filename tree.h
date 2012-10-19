@@ -103,7 +103,8 @@ class Tree : public std::enable_shared_from_this<Tree> {
     // this is only used in the top level for unique gamma tensors
     std::list<std::shared_ptr<Tensor> > gamma_;
 
-    // when we do generate, a counter is used to generate a list of tasks.
+    // when we generate, a counter is used to generate a list of tasks.
+    std::string add_depend(const std::shared_ptr<const Tensor> o) const;
     mutable int num_;
 
   public:

@@ -60,6 +60,8 @@ class Tensor {
 
     // alias tensor if any
     std::shared_ptr<Tensor> alias_;
+    // for gamma tensors
+    mutable int num_;
 
   public:
     Tensor(const double& d, const std::string s, const std::string& l, const std::list<std::shared_ptr<Index> >& i)
@@ -114,6 +116,9 @@ class Tensor {
     std::string generate_active(const std::string indent, const std::string tag) const;
     std::string generate_loop(std::string&, std::vector<std::string>&) const;
     std::string generate_gamma(const int, const bool) const;
+
+    int num() const { assert(label_.find("Gamma") != std::string::npos); return num_; }; 
+    void set_num(const int n) const { assert(label_.find("Gamma") != std::string::npos); num_ = n; };
 
 };
 
