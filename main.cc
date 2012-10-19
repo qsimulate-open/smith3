@@ -68,14 +68,9 @@ int main() {
   shared_ptr<Op> f(new Op("f1", "g", "g"));
   shared_ptr<Op> H(new Op("v2", "g", "g", "g", "g"));
 
-  list<shared_ptr<Op> > d, db, e;
-  d.push_back(proj);
-  d.push_back(f);
-  d.push_back(t);
-  db.push_back(proj);
-  db.push_back(t);
-  e.push_back(proj);
-  e.push_back(H);
+  list<shared_ptr<Op> > d = {proj, f, t};
+  list<shared_ptr<Op> > e = {proj, H};
+  list<shared_ptr<Op> > db = {proj, t};
 
   // amplitude equation
   shared_ptr<Diagram> di(new Diagram(d));
@@ -94,13 +89,8 @@ int main() {
   res->sort_gamma();
 
   // energy
-  list<shared_ptr<Op> > en0, en1;
-  en0.push_back(dum);
-  en0.push_back(tdagger);
-  en0.push_back(H);
-  en1.push_back(dum);
-  en1.push_back(tdagger);
-  en1.push_back(R);
+  list<shared_ptr<Op> > en0 = {dum, tdagger, H};
+  list<shared_ptr<Op> > en1 = {dum, tdagger, R};
   shared_ptr<Diagram> e0(new Diagram(en0));
   shared_ptr<Equation> eneq(new Equation(e0, theory));
   shared_ptr<Diagram> e1(new Diagram(en1));
