@@ -36,8 +36,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __SRC_INDICES_H
-#define __SRC_INDICES_H
+#ifndef __SRC_TENSOR_H
+#define __SRC_TENSOR_H
 
 #include <iostream>
 #include <tuple>
@@ -50,16 +50,19 @@
 #include <sstream>
 #include <initializer_list>
 
-class Indices {
+class Tensor {
   protected:
+    std::string tag_;
+    std::string base_;
     std::list<std::string> indices_;
 
   public:
-    Indices(const std::initializer_list<std::string> o) {
+    Tensor(const std::string b, const std::string postfix, const std::initializer_list<std::string> o)
+     : tag_(b+postfix), base_(b) {
       for (auto& i : o) indices_.push_back(i);
     };
 
-    std::string str() const {
+    std::string str_index() const {
       std::stringstream ss;
       for (auto i = indices_.begin(); i != indices_.end(); ++i) {
         if (i != indices_.begin()) ss << ", ";
@@ -68,12 +71,14 @@ class Indices {
       return ss.str();
     };
 
-    std::string generate_tensor(std::string tag) const {
+    std::string generate() const {
       std::stringstream ss;
-      ss << "  shared_ptr<Op> " << tag << "(new Op(" << str() << "));" << std::endl; 
+      ss << "  shared_ptr<Op> " << tag_ << "(new Op(\"" << base_ << "\"" << (indices_.empty() ? "" : ", ") << str_index() << "));" << std::endl; 
       return ss.str();
     };
 
+    std::string base() const { return base_; };
+    std::string tag() const { return tag_; };
 };
 
 #endif

@@ -500,7 +500,7 @@ string Tree::generate_task(const string indent, const int ic, const vector<share
 string Tree::add_depend(const std::shared_ptr<const Tensor> o) const {
   stringstream out;
   if (!parent_) {
-    assert(!gamma_.empty());
+//  assert(!gamma_.empty());
     for (auto& i : gamma_) {
       if (o->label() == i->label()) out << "add_dep(task" << i->num() << ");"; 
     }
