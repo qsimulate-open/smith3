@@ -168,7 +168,7 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
   tt <<  make_get_block(indent);
 
   // loops for index and merged 
-  tt << make_merged_loops(indent, itag, index, merged, close);
+  tt << make_merged_loops(indent, itag, close);
   // make odata part of summation for target
   tt << make_odata(itag, indent, index);
   // mulitiply data and merge on the fly
@@ -192,7 +192,7 @@ string RDM::make_get_block(string indent) {
 }
 
 
-string RDM::make_merged_loops(string& indent, const string itag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, vector<string>& close) {
+string RDM::make_merged_loops(string& indent, const string itag, vector<string>& close) {
   stringstream tt;
 
   // gather all the loop indices
