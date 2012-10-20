@@ -53,6 +53,10 @@ int main() {
   shared_ptr<Op> t(new Op("t2", "a", "a", "x", "x"));  // test active 1
   shared_ptr<Op> R(new Op("r", "a", "a", "x", "x"));
   shared_ptr<Op> tdagger(new Op("t2dagger", "x", "x", "a", "a"));
+  shared_ptr<Op> proj2(new Op("proj", "x", "x", "a", "x")); // test active 1
+  shared_ptr<Op> t2(new Op("t2", "a", "x", "x", "x"));  // test active 1
+  shared_ptr<Op> R2(new Op("r", "a", "x", "x", "x"));
+  shared_ptr<Op> tdagger2(new Op("t2dagger", "x", "x", "a", "x"));
   string theory="CAS_all_active";
 #endif
 // complicated one 
@@ -69,23 +73,35 @@ int main() {
   shared_ptr<Op> H(new Op("v2", "g", "g", "g", "g"));
 
   list<shared_ptr<Op> > d = {proj, f, t};
+  list<shared_ptr<Op> > d2 = {proj2, f, t2};
+  list<shared_ptr<Op> > d3 = {proj2, f, t};
+  list<shared_ptr<Op> > d4 = {proj, f, t2};
   list<shared_ptr<Op> > e = {proj, H};
   list<shared_ptr<Op> > db = {proj, t};
 
   // amplitude equation
   shared_ptr<Diagram> di(new Diagram(d));
-  shared_ptr<Equation> eq(new Equation(di, theory));
+  shared_ptr<Diagram> di2(new Diagram(d2));
+  shared_ptr<Diagram> di3(new Diagram(d3));
+  shared_ptr<Diagram> di4(new Diagram(d4));
+  shared_ptr<Equation> eqn(new Equation(di, theory));
+  shared_ptr<Equation> eqn2(new Equation(di2, theory));
+  shared_ptr<Equation> eqn3(new Equation(di3, theory));
+  shared_ptr<Equation> eqn4(new Equation(di4, theory));
   // TODO e0 is actually -e0, and therefore,  the screen output is currently wrong
   shared_ptr<Diagram> dib(new Diagram(db, "e0"));
  
   shared_ptr<Equation> eqb(new Equation(dib, theory));
   shared_ptr<Diagram> dj(new Diagram(e));
   shared_ptr<Equation> eq2(new Equation(dj, theory));
-  eq->merge(eqb);
-  eq->merge(eq2);
-  eq->duplicates();
-  eq->active();
-  shared_ptr<Tree> res(new Tree(eq));
+  eqn->merge(eqn2);
+  eqn->merge(eqn3);
+  eqn->merge(eqn4);
+  eqn->merge(eqb);
+  eqn->merge(eq2);
+  eqn->duplicates();
+  eqn->active();
+  shared_ptr<Tree> res(new Tree(eqn));
   res->sort_gamma();
 
   // energy
