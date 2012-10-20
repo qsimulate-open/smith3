@@ -82,19 +82,17 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
   // close loops
   for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
     tt << *iter << endl;
+  }
 
-   return tt.str();
- }
+  if (!loop.empty()) {
+    indent += "  ";
+    const string itag = "i";
 
- if (!loop.empty()) {
-   indent += "  ";
-   const string itag = "i";
+    // now do the sort
+    vector<string> close;
 
-   // now do the sort
-   vector<string> close;
-
-   // in case delta_ is not empty
-   if (!delta_.empty()) {
+    // in case delta_ is not empty
+    if (!delta_.empty()) {
 
      // first delta if statement 
      tt << make_delta_if(indent, close);
@@ -205,6 +203,7 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
 
   return tt.str();
 }
+
 
 // protected functions start //////
 string RDM::make_get_block(string indent) {

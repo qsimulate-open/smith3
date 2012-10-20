@@ -119,7 +119,7 @@ int main() {
 
   ofstream fs(res->tree_name() + ".h");
   ofstream es(res->tree_name() + "_tasks.h");
-  pair<string, string> tmp = res->generate_task_list(false,energy);
+  pair<string, string> tmp = res->generate_task_list(false, energy);
   fs << tmp.first;
   es << tmp.second;
   fs.close();
