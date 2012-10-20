@@ -322,22 +322,10 @@ bool Active::operator==(const Active& o) const {
 }
 
 
-string Active::generate(const string indent, const string lab, const list<shared_ptr<Index> >& loop) const {
+string Active::generate(const string indent, const string tag, const list<shared_ptr<Index> > index, const list<shared_ptr<Index> > merged, const string mlab) const {
   stringstream tt;
-  for (auto& i : rdm_) {
-    tt << indent << "{" << endl;
-    tt << i->generate(indent, lab, loop);
-    tt << indent << "}" << endl;
-  }
-  return tt.str();
-}
-
-
-string Active::generate_merged(const string indent, const string tag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, const string mlab) const {
-  stringstream tt;
-  for (auto& i : rdm_) {
-    tt << i->generate_mult(indent, tag, index, merged, mlab);
-  }
+  for (auto& i : rdm_)
+    tt << i->generate(indent, tag, index, merged, mlab);
   return tt.str();
 }
 

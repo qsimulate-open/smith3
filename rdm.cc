@@ -50,8 +50,15 @@ bool RDM::operator==(const RDM& o) const {
 }
 
 
-string RDM::generate(string indent, const string tlab, const list<shared_ptr<Index> >& loop) {
+string RDM::generate(string indent, const string tag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, const string mlab) {
+  return merged.empty() ? generate_not_merged(indent, tag, index) : generate_merged(indent, tag, index, merged, mlab);
+}
+
+
+string RDM::generate_not_merged(string indent, const string tag, const list<shared_ptr<Index> >& index) {
   stringstream tt;
+  tt << indent << "{" << endl;
+  const string lindent = indent;
 
   indent += "  ";
   const string itag = "i";
@@ -69,10 +76,10 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
       tt << make_get_block(indent);
    
     // loops over delta indices
-    tt << make_sort_loops(itag, indent, loop, close); 
+    tt << make_sort_loops(itag, indent, index, close); 
 
     // make odata part of summation for target
-    tt << make_odata(itag, indent, loop);
+    tt << make_odata(itag, indent, index);
 
     // make data part of summation
     if (index_.empty()) {
@@ -101,7 +108,7 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
     // call sort_indices here
     vector<int> done;
     tt << indent << "sort_indices<";
-    for (auto i = loop.rbegin(); i != loop.rend(); ++i) {
+    for (auto i = index.rbegin(); i != index.rend(); ++i) {
       int cnt = 0;
       for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
         if ((*i)->identical(*j)) break;
@@ -122,20 +129,21 @@ string RDM::generate(string indent, const string tlab, const list<shared_ptr<Ind
     tt << "1,1," << prefac__(fac_);
  
     // add source data dimensions
-    tt << ">(data, " << tlab << "data, " ;
+    tt << ">(data, " << tag << "data, " ;
     for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
       if (iter != index_.rbegin()) tt << ", ";
         tt << (*iter)->str_gen() << ".size()";
     }
     tt << ");" << endl;
-
   } 
+
+  tt << lindent << "}" << endl;
 
   return tt.str();
 }
 
 
-string RDM::generate_mult(string indent, const string tag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, const string mlab) {
+string RDM::generate_merged(string indent, const string tag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, const string mlab) {
   stringstream tt;
   //indent += "  ";
   const string itag = "i";

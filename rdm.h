@@ -52,6 +52,11 @@ class RDM {
     std::string make_sort_loops(const std::string itag, std::string& indent, const std::list<std::shared_ptr<Index> >& index, std::vector<std::string>& close);
     std::string make_delta_if(std::string& indent, std::vector<std::string>& close);
 
+    // generate a code for Gamma rdm summation
+    std::string generate_not_merged(std::string indent, const std::string tlab, const std::list<std::shared_ptr<Index> >& loop);
+    // generates code for Gamma rdm summation with merged object multiplication
+    std::string generate_merged(std::string indent, const std::string itag, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged, const std::string mlab);
+
   public:
     RDM(const std::list<std::shared_ptr<Index> >& in,
         const std::map<std::shared_ptr<Index>, std::shared_ptr<Index> >& in2,
@@ -87,10 +92,7 @@ class RDM {
 
     bool operator==(const RDM& o) const;
 
-    // generate a code for Gamma rdm summation
-    std::string generate(std::string indent, const std::string tlab, const std::list<std::shared_ptr<Index> >& loop);
-    // generates code for Gamma rdm summation with merged object multiplication
-    std::string generate_mult(std::string indent, const std::string itag, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged, const std::string mlab);
+    std::string generate(std::string indent, const std::string itag, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged, const std::string mlab);
 
     int rank() const { assert(index_.size()%2 == 0); return index_.size()/2; }; 
 };

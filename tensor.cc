@@ -363,7 +363,7 @@ string Tensor::generate_active(string indent, const string tag) const {
     tt << indent << "std::vector<size_t> fhash = {" << list_keys(merged) << "};" << endl;
     tt << indent << "std::unique_ptr<double[]> fdata = " << merged_->label() << "->get_block(fhash);" << endl;
 
-    tt << active()->generate_merged(indent, tag, index(), merged_->index(), merged_->label());
+    tt << active()->generate(indent, tag, index(), merged_->index(), merged_->label());
 
     // close merge for loops
     for (auto iter = mclose.rbegin(); iter != mclose.rend(); ++iter)
