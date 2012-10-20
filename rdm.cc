@@ -171,60 +171,38 @@ string RDM::generate_mult(string indent, const string tag, const list<shared_ptr
   stringstream tt;
   //indent += "  ";
   const string itag = "i";
+  const string lindent = indent;
 
   // now do the sort
   vector<string> close;
 
-  // in case delta_ is not empty // //
+  // first delta loops for blocks
   if (!delta_.empty()) {
-    // first delta loops for blocks
     tt << indent << "if (";
     for (auto d = delta_.begin(); d != delta_.end(); ++d) {
       tt << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? " && " : "");
     }
     tt << ") {" << endl;
     close.push_back(indent + "}");
-    indent += "  ";
-   
-    tt <<  make_get_block(indent);
-
-    // loops for index and merged 
-    tt << make_merged_loops(indent, itag, index, merged, close);
-    // make odata part of summation for target
-    tt << make_odata(itag, indent, index);
-    // mulitiply data and merge on the fly
-    tt << multiply_merge(itag, indent, merged);
-    // close loops
-    for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-      tt << *iter << endl;
-
-  // if delta_ is empty do sort_indices with merged multiplication // // 
   } else {
-    string lindent = indent;
-    tt << lindent << "{" << endl;
-    indent += "  " ;
-    tt << make_get_block(indent);
+    tt << indent << "{" << endl;
+  }
+ 
+  indent += "  ";
+  tt <<  make_get_block(indent);
 
-    // add loops over odata
-    for (auto& i : index) {
-      const int inum = i->num();
-      tt << indent << "for (int " << itag << inum << " = 0; " << itag << inum << " != " << i->str_gen() << ".size(); ++" << itag << inum << ") {" << endl;
-      close.push_back(indent + "}");
-      indent += "  ";
-    }
-     
-    // extra for loops for merged 
-    tt << make_merged_loops(indent, itag, index, merged, close);
-    // make odata part of summation for target
-    tt << make_odata(itag, indent, index);
-    // mulitiply data and merge on the fly
-    tt << multiply_merge(itag, indent, merged);
-    // close loops
-    for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-      tt << *iter << endl;
-    tt << lindent << "}" << endl;
+  // loops for index and merged 
+  tt << make_merged_loops(indent, itag, index, merged, close);
+  // make odata part of summation for target
+  tt << make_odata(itag, indent, index);
+  // mulitiply data and merge on the fly
+  tt << multiply_merge(itag, indent, merged);
+  // close loops
+  for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
+    tt << *iter << endl;
 
-  } 
+  if (delta_.empty()) tt << lindent << "}" << endl;
+
   return tt.str();
 }
 
