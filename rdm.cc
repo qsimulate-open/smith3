@@ -51,115 +51,85 @@ bool RDM::operator==(const RDM& o) const {
 
 
 string RDM::generate(string indent, const string tlab, const list<shared_ptr<Index> >& loop) {
- stringstream tt;
+  stringstream tt;
 
- if (index_.empty()) {
-   stringstream tt;
-   indent += "  ";
-   const string itag = "i";
-   vector<string> close;
- 
-   // rdm0 delta if statement
-   tt << make_delta_if(indent, close);
+  indent += "  ";
+  const string itag = "i";
 
-   tt << make_sort_loops(itag, indent, loop, close); 
+  // now do the sort
+  vector<string> close;
 
-   // make odata part of summation for target
-   tt  << indent << "odata[";
-   for (auto ri = loop.rbegin(); ri != loop.rend(); ++ri) {
-     int inum = (*ri)->num();
-     for (auto& d : delta_)
-       if (d.first->num() == inum) inum = d.second->num();
-     const string tmp = "+" + (*ri)->str_gen() + ".size()*(";
-     tt << itag << inum << (ri != --loop.rend() ? tmp : "");
-   }  
+  // in case delta_ is not empty
+  if (!delta_.empty()) {
 
-   for (auto ri = ++loop.begin(); ri != loop.end(); ++ri)
-     tt << ")";
-   // unique to rdm0 case:
-   tt << "] += " << setprecision(1) << fixed << factor() << ";" << endl;
+    // first delta if statement 
+    tt << make_delta_if(indent, close);
 
-  // close loops
-  for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-    tt << *iter << endl;
-  }
-
-  if (!loop.empty()) {
-    indent += "  ";
-    const string itag = "i";
-
-    // now do the sort
-    vector<string> close;
-
-    // in case delta_ is not empty
-    if (!delta_.empty()) {
-
-     // first delta if statement 
-     tt << make_delta_if(indent, close);
-  
-     tt << make_get_block(indent);
-     
-     // loops over delta indices
-     tt << make_sort_loops(itag, indent, loop, close); 
-
-     // make odata part of summation for target
-     tt << make_odata(itag, indent, loop);
-
-     // make data part of summation
-     tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
-     for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {
-       const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
-       tt << itag << (*riter)->num() << (riter != --index_.rend() ? tmp : "");
-     }
-     for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
-       tt << ")";
-     tt << "];" << endl;
- 
-     // close loops
-     for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-       tt << *iter << endl;
-
-   // if delta_ is empty call sort_indices
-   } else {
-     // loop up the operator generators
-
-     tt <<  make_get_block(indent);
+    if (!index_.empty())
+      tt << make_get_block(indent);
    
-     // call sort_indices here
-     vector<int> done;
-     tt << indent << "sort_indices<";
-     for (auto i = loop.rbegin(); i != loop.rend(); ++i) {
-       int cnt = 0;
-       for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
-         if ((*i)->identical(*j)) break;
-       }
-       if (cnt == index_.size()) throw logic_error("should not happen.. RDM::generate");
-       done.push_back(cnt);
-     }
-     // then fill out others
-     for (int i = 0; i != index_.size(); ++i) {
-       if (find(done.begin(), done.end(), i) == done.end())
-         done.push_back(i);
-     }
-     // write out
-     for (auto& i : done) 
-       tt << i << ",";
+    // loops over delta indices
+    tt << make_sort_loops(itag, indent, loop, close); 
 
-     // add factor information
-     tt << "1,1," << prefac__(fac_);
-   
-     // add source data dimensions
-     tt << ">(data, " << tlab << "data, " ;
-     for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
-       if (iter != index_.rbegin()) tt << ", ";
-         tt << (*iter)->str_gen() << ".size()";
-     }
-     tt << ");" << endl;
+    // make odata part of summation for target
+    tt << make_odata(itag, indent, loop);
 
-   } 
+    // make data part of summation
+    if (index_.empty()) {
+      tt << indent << "  += " << setprecision(1) << fixed << factor() << ";" << endl;
+    } else {
+      tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
+      for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {
+        const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
+        tt << itag << (*riter)->num() << (riter != --index_.rend() ? tmp : "");
+      }
+      for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
+        tt << ")";
+      tt << "];" << endl;
+    }
+ 
+    // close loops
+    for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
+      tt << *iter << endl;
+
+  // if delta_ is empty call sort_indices
   } else {
-    throw logic_error("RDM::generate error: loop gamma tensor indices empty");
-  }
+    // loop up the operator generators
+
+    tt <<  make_get_block(indent);
+ 
+    // call sort_indices here
+    vector<int> done;
+    tt << indent << "sort_indices<";
+    for (auto i = loop.rbegin(); i != loop.rend(); ++i) {
+      int cnt = 0;
+      for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
+        if ((*i)->identical(*j)) break;
+      }
+      if (cnt == index_.size()) throw logic_error("should not happen.. RDM::generate");
+      done.push_back(cnt);
+    }
+    // then fill out others
+    for (int i = 0; i != index_.size(); ++i) {
+      if (find(done.begin(), done.end(), i) == done.end())
+        done.push_back(i);
+    }
+    // write out
+    for (auto& i : done) 
+      tt << i << ",";
+
+    // add factor information
+    tt << "1,1," << prefac__(fac_);
+ 
+    // add source data dimensions
+    tt << ">(data, " << tlab << "data, " ;
+    for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
+      if (iter != index_.rbegin()) tt << ", ";
+        tt << (*iter)->str_gen() << ".size()";
+    }
+    tt << ");" << endl;
+
+  } 
 
   return tt.str();
 }
