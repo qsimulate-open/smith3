@@ -314,9 +314,8 @@ bool Active::operator==(const Active& o) const {
   // compare all rdms of active objects
   out &= rdm_.size() == o.rdm_.size();
   if (out) {
-    for (auto i = rdm_.begin(), j = o.rdm_.begin(); i != rdm_.end(); ++i, ++j) {
-      out &= (*(*i)) == (*(*j));
-    }
+    for (auto i = rdm_.begin(), j = o.rdm_.begin(); i != rdm_.end(); ++i, ++j)
+      out &= (**i) == (**j);
   }
   return out;
 }
@@ -334,10 +333,9 @@ vector<int> Active::required_rdm() const {
   vector<int> out;
   for (auto& i : rdm_) {
     // rdm0 does not need to be included in header
-    if (i->rank() > 0) 
-      if (find(out.begin(), out.end(), i->rank()) == out.end()) out.push_back(i->rank());
+    if (i->rank() > 0 && find(out.begin(), out.end(), i->rank()) == out.end())
+      out.push_back(i->rank());
   }
-
   sort(out.begin(), out.end());
   return out;
 }
