@@ -777,7 +777,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
 
     } else {
       // making residual vector...
-      list<shared_ptr<Index> > proj = bc_.front()->tensor()->index();
+      list<shared_ptr<Index> > proj = (*i)->tensor()->index();
       list<shared_ptr<Index> > res;
       assert(!(proj.size() & 1));
       for (auto ii = proj.begin(); ii != proj.end(); ++ii, ++ii) {
