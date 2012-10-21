@@ -11,10 +11,9 @@ class Equation {
   protected:
     std::list<std::shared_ptr<Diagram> > diagram_;
     std::string label_;
-    std::string scalar_;
 
   public:
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor> > > in, const std::string scalar = "") : label_(l), scalar_(scalar) {
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor> > > in, const std::string scalar = "") : label_(l) {
       std::list<int> max;
       for (auto& i : in) max.push_back(i.size());
 
@@ -43,7 +42,7 @@ class Equation {
       int cnt = 0;
       for (auto& i : out) {
         std::stringstream ss; ss << label_ << cnt; 
-        diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str())));
+        diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), scalar)));
         ++cnt;
       }
 
@@ -59,12 +58,10 @@ class Equation {
 
     std::string generate(std::initializer_list<std::shared_ptr<Equation> > o) const {
       std::stringstream ss;
-      for (auto& i : diagram_)
-        ss << i->construct_str();
-      for (auto& i : diagram_)
-        ss << "  shared_ptr<Diagram> " << i->diag_label() << "(new Diagram(" << i->label() << (scalar_.empty() ? "" : ", "+scalar_) << "));" << std::endl;
-      for (auto& i : diagram_)
-        ss << "  shared_ptr<Equation> " << i->eqn_label() << "(new Equation(" << i->diag_label() << ", theory));" << std::endl;
+      for (auto& i : diagram_) ss << i->construct_str();
+      for (auto& i : diagram_) ss << i->diagram_str();
+      for (auto& i : diagram_) ss << i->equation_str();
+
       for (auto i = diagram_.begin(); i != diagram_.end(); ++i)
         if (i != diagram_.begin())
           ss << "  " << diagram_.front()->eqn_label() << "->merge(" << (*i)->eqn_label() << ");" << std::endl;

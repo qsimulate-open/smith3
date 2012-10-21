@@ -115,7 +115,7 @@ int main() {
   
   // residual equations
   shared_ptr<Equation> eq0(new Equation("da", {proj_list, f, t_list}));
-  shared_ptr<Equation> eq1(new Equation("db", {proj_list, t_list}));
+  shared_ptr<Equation> eq1(new Equation("db", {proj_list, t_list}, "e0"));
   shared_ptr<Equation> eq2(new Equation("dc", {proj_list, H}));
   eq0->merge(eq1);
   eq0->merge(eq2);
