@@ -23,19 +23,6 @@
 // the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
-//////////////////////////////////////////////////////////////////////////////////
-//
-//  This program generates a simple CASPT2 theory generator
-//  
-//  Here the CASPT2 test includes two excitation operators, xxaa and xxxa 
-//
-//  compile: 
-//  g++ -std=c++11 generate-main.cc -o generate-main
-//  run:
-//  ./generate-maine > main.cc 
-//
-//////////////////////////////////////////////////////////////////////////////////
-
 #include <iostream>
 #include <tuple>
 #include <string>
@@ -55,7 +42,10 @@
 
 using namespace std;
 
-const string theory = "MP2";
+//const string theory = "MP2";
+const string theory = "CAS_all_active";
+
+using namespace SMITH3::Prep;
 
 tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> > > create_proj() {
   vector<shared_ptr<Tensor> > lp, lt, ls, td;
@@ -66,7 +56,7 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
     for (auto& j : label) {
       for (auto& k : label) {
         for (auto& l : label) {
-#if 0
+#if 1
           if ((l == "x" && k == "x" && j == "a" && i == "a")
           ||  (l == "x" && k == "x" && j == "x" && i == "a")) {
 #else
@@ -86,9 +76,6 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
 
   return tie(lp, lt, ls, td);
 };
-
-
-
 
 int main() {
 

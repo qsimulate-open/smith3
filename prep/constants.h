@@ -4,6 +4,9 @@
 #include <sstream>
 #include <string>
 
+namespace SMITH3 {
+namespace Prep {
+
 static std::string header() {
   std::stringstream mm;
   mm << "//" << std::endl;
@@ -74,5 +77,6 @@ static std::string footer(const std::string res, const std::string energy) {
   return mm.str();
 };
 
+}}
 
 #endif

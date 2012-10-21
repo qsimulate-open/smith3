@@ -4,6 +4,9 @@
 #include "tensor.h"
 #include <initializer_list>
 
+namespace SMITH3 {
+namespace Prep {
+
 class Diagram {
   protected:
     std::list<std::shared_ptr<Tensor> > op_;
@@ -48,5 +51,7 @@ class Diagram {
     }
 
 };
+
+}}
 
 #endif

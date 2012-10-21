@@ -23,19 +23,6 @@
 // the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
-//////////////////////////////////////////////////////////////////////////////////
-//
-//  This program generates a simple CASPT2 theory generator
-//  
-//  Here the CASPT2 test includes two excitation operators, xxaa and xxxa 
-//
-//  compile: 
-//  g++ -std=c++11 generate-main-caspt2-double.cc -o generate-main-caspt2-double
-//  run:
-//  ./generate-main-caspt2-double > main.cc 
-//
-//////////////////////////////////////////////////////////////////////////////////
-
 #ifndef __SRC_TENSOR_H
 #define __SRC_TENSOR_H
 
@@ -49,6 +36,9 @@
 #include <cassert>
 #include <sstream>
 #include <initializer_list>
+
+namespace SMITH3 {
+namespace Prep {
 
 class Tensor {
   protected:
@@ -80,5 +70,7 @@ class Tensor {
     std::string base() const { return base_; };
     std::string tag() const { return tag_; };
 };
+
+}}
 
 #endif

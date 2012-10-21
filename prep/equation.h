@@ -7,6 +7,9 @@
 #include <list>
 #include <vector>
 
+namespace SMITH3 {
+namespace Prep {
+
 class Equation {
   protected:
     std::list<std::shared_ptr<Diagram> > diagram_;
@@ -79,6 +82,8 @@ class Equation {
 
 
 };
+
+}}
 
 
 #endif
