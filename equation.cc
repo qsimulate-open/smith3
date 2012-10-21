@@ -51,6 +51,8 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
       out = out2;
     }
     for (auto& i : diagram_) i->refresh_indices();
+  } else {
+    assert(false);
   }
 
 }
