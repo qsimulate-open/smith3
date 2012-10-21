@@ -71,8 +71,11 @@ class Equation {
       ss << "  " << diagram_.front()->eqn_label() << "->duplicates();" << std::endl;
       ss << "  " << diagram_.front()->eqn_label() << "->active();" << std::endl;
       ss << "  shared_ptr<Tree> " << tree_label() << "(new Tree(e" << diagram_.front()->label() << "));" << std::endl;
-      for (auto i = o.begin(); i != o.end(); ++i) {
-        ss << "  " << tree_label() << "->sort_gamma(" << (*i)->tree_label() << "->gamma());" << std::endl;
+      if (o.size() == 0) {
+        ss << "  " << tree_label() << "->sort_gamma();" << std::endl;
+      } else {
+        for (auto i = o.begin(); i != o.end(); ++i)
+          ss << "  " << tree_label() << "->sort_gamma(" << (*i)->tree_label() << "->gamma());" << std::endl;
       }
       return ss.str();
     };

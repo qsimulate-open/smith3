@@ -74,8 +74,8 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
 #endif
             stringstream ss; ss << cnt;
             lp.push_back(shared_ptr<Tensor>(new Tensor("proj", ss.str(), {l, k, j, i}))); 
-            td.push_back(shared_ptr<Tensor>(new Tensor("tdagger", ss.str(), {l, k, j, i}))); 
-            lt.push_back(shared_ptr<Tensor>(new Tensor("t", ss.str(), {j, i, l, k}))); 
+            td.push_back(shared_ptr<Tensor>(new Tensor("t2dagger", ss.str(), {l, k, j, i}))); 
+            lt.push_back(shared_ptr<Tensor>(new Tensor("t2", ss.str(), {j, i, l, k}))); 
             ls.push_back(shared_ptr<Tensor>(new Tensor("r", ss.str(), {j, i, l, k}))); 
             ++cnt;
           }
@@ -99,8 +99,8 @@ int main() {
   tie(proj_list, t_list, r_list, t_dagger) = create_proj();
 
   // make f and H tensors here
-  vector<shared_ptr<Tensor> > f = {shared_ptr<Tensor>(new Tensor("f", "", {"g", "g"}))};
-  vector<shared_ptr<Tensor> > H = {shared_ptr<Tensor>(new Tensor("H", "", {"g", "g", "g", "g"}))};
+  vector<shared_ptr<Tensor> > f = {shared_ptr<Tensor>(new Tensor("f1", "", {"g", "g"}))};
+  vector<shared_ptr<Tensor> > H = {shared_ptr<Tensor>(new Tensor("v2", "", {"g", "g", "g", "g"}))};
   vector<shared_ptr<Tensor> > dum = {shared_ptr<Tensor>(new Tensor("proj", "e", {}))};
   
   cout << "  string theory=\"" << theory << "\"; " << endl;

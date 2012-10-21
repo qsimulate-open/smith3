@@ -41,15 +41,15 @@ int main() {
 
   string theory="MP2"; 
   shared_ptr<Op> proj0(new Op("proj", "c", "c", "a", "a"));
-  shared_ptr<Op> t0(new Op("t", "a", "a", "c", "c"));
+  shared_ptr<Op> t20(new Op("t2", "a", "a", "c", "c"));
   shared_ptr<Op> r0(new Op("r", "a", "a", "c", "c"));
-  shared_ptr<Op> f(new Op("f", "g", "g"));
-  shared_ptr<Op> H(new Op("H", "g", "g", "g", "g"));
+  shared_ptr<Op> f1(new Op("f1", "g", "g"));
+  shared_ptr<Op> v2(new Op("v2", "g", "g", "g", "g"));
   shared_ptr<Op> proje(new Op("proj"));
-  shared_ptr<Op> tdagger0(new Op("tdagger", "c", "c", "a", "a"));
-  list<shared_ptr<Op> > da0 = {proj0, f, t0};
-  list<shared_ptr<Op> > db0 = {proj0, t0};
-  list<shared_ptr<Op> > dc0 = {proj0, H};
+  shared_ptr<Op> t2dagger0(new Op("t2dagger", "c", "c", "a", "a"));
+  list<shared_ptr<Op> > da0 = {proj0, f1, t20};
+  list<shared_ptr<Op> > db0 = {proj0, t20};
+  list<shared_ptr<Op> > dc0 = {proj0, v2};
   shared_ptr<Diagram> dda0(new Diagram(da0));
   shared_ptr<Diagram> ddb0(new Diagram(db0));
   shared_ptr<Diagram> ddc0(new Diagram(dc0));
@@ -61,8 +61,9 @@ int main() {
   eda0->duplicates();
   eda0->active();
   shared_ptr<Tree> tda(new Tree(eda0));
-  list<shared_ptr<Op> > ea0 = {proje, tdagger0, H};
-  list<shared_ptr<Op> > eb0 = {proje, tdagger0, r0};
+  tda->sort_gamma();
+  list<shared_ptr<Op> > ea0 = {proje, t2dagger0, v2};
+  list<shared_ptr<Op> > eb0 = {proje, t2dagger0, r0};
   shared_ptr<Diagram> dea0(new Diagram(ea0));
   shared_ptr<Diagram> deb0(new Diagram(eb0));
   shared_ptr<Equation> eea0(new Equation(dea0, theory));
