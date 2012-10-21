@@ -35,7 +35,6 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
   list<shared_ptr<Diagram> > out = in->get_all();
 
   if (out.size() != 0) {
-
     while (out.front()->num_dagger()) {
       list<shared_ptr<Diagram> > out2;
       for (auto& j : out) {
