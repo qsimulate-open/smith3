@@ -186,8 +186,12 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
 // protected functions start //////
 string RDM::make_get_block(string indent) {
   stringstream tt;
-  tt << indent << "std::vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
-  tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
+  if (rank() > 0) {
+    tt << indent << "std::vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
+    tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
+  } else {
+    tt << indent << "// rdm0 case" << endl;
+  } 
   return tt.str();
 }
 
@@ -225,27 +229,31 @@ string RDM::make_merged_loops(string& indent, const string itag, vector<string>&
 
 string RDM::multiply_merge(const string itag, string& indent, const list<shared_ptr<Index> >& merged) {
   stringstream tt;
-  // make data part of summation
-  tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
-  for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {
-    const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
-    tt << itag << (*riter)->num() << (riter != --index_.rend() ? tmp : "");
+  if (rank() == 0) {
+      tt << "  += " << setprecision(1) << fixed << factor() << ";" << endl;
+  } else { 
+    // make data part of summation
+    tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
+    for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {
+      const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
+      tt << itag << (*riter)->num() << (riter != --index_.rend() ? tmp : "");
+    }
+    for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
+      tt << ")";
+    tt << "]";
+    // multiply merge
+    tt << " * " << "fdata" << "[";
+    for (auto mi = merged.rbegin(); mi != merged.rend()  ; ++mi) { 
+      int inum = (*mi)->num();
+      for (auto& i : delta_)
+        if (i.first->num() == inum) inum = i.second->num(); 
+      const string tmp = "+" + (*mi)->str_gen() + ".size()*(";
+      tt << itag << inum << (mi != --merged.rend() ? tmp : "");
+    }
+    for (auto mi = ++merged.begin(); mi != merged.end()  ; ++mi)  
+      tt << ")";
+    tt << "];" << endl;
   }
-  for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
-    tt << ")";
-  tt << "]";
-  // multiply merge
-  tt << " * " << "fdata" << "[";
-  for (auto mi = merged.rbegin(); mi != merged.rend()  ; ++mi) { 
-    int inum = (*mi)->num();
-    for (auto& i : delta_)
-      if (i.first->num() == inum) inum = i.second->num(); 
-    const string tmp = "+" + (*mi)->str_gen() + ".size()*(";
-    tt << itag << inum << (mi != --merged.rend() ? tmp : "");
-  }
-  for (auto mi = ++merged.begin(); mi != merged.end()  ; ++mi)  
-    tt << ")";
-  tt << "];" << endl;
   return tt.str();
 }
 
@@ -267,7 +275,12 @@ string RDM::make_odata(const string itag, string& indent, const list<shared_ptr<
   }
   for (auto ri = ++index.begin(); ri != index.end(); ++ri)
     tt << ")";
-    tt << "]" << endl;
+  // factor will now be added on same line in rdm0 case
+  if (rank() > 0) {
+    tt << "]" << endl; 
+  } else { 
+    tt << "]";
+  }
   return tt.str();
 }
 

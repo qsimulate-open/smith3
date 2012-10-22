@@ -59,8 +59,8 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
 #if 0     // MP2 
           if (l == "c" && k == "c" && j == "a" && i == "a") {
 #endif
-#if 0     // all eight single configurations work
-          if (l == "x" && k == "x" && j == "a" && i == "a") {
+#if 0     // test case for rdm0
+          if (l == "c" && k == "x" && j == "x" && i == "x") {
 #endif
 #if  0    // CASPT2 test case  
           if ((l == "x" && k == "x" && j == "a" && i == "a") 
