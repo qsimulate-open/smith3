@@ -83,7 +83,7 @@ string RDM::generate_not_merged(string indent, const string tag, const list<shar
 
     // make data part of summation
     if (index_.empty()) {
-      tt << indent << "  += " << setprecision(1) << fixed << factor() << ";" << endl;
+      tt << add_rdm0_factor();
     } else {
       tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
       for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {
@@ -226,11 +226,16 @@ string RDM::make_merged_loops(string& indent, const string itag, vector<string>&
   return tt.str();
 }
 
+string RDM::add_rdm0_factor() {
+  stringstream tt;
+  tt << "  += " << setprecision(1) << fixed << factor() << ";" << endl;
+  return tt.str();
+}
 
 string RDM::multiply_merge(const string itag, string& indent, const list<shared_ptr<Index> >& merged) {
   stringstream tt;
   if (rank() == 0) {
-      tt << "  += " << setprecision(1) << fixed << factor() << ";" << endl;
+      tt << add_rdm0_factor();
   } else { 
     // make data part of summation
     tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
