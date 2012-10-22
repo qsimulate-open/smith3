@@ -35,7 +35,7 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
   list<shared_ptr<Diagram> > out = in->get_all();
 
   if (out.size() != 0) {
-    while ((*(out.begin()))->num_dagger()) {
+    while (out.front()->num_dagger()) {
       list<shared_ptr<Diagram> > out2;
       for (auto& j : out) {
         for (int i = 0; i != j->num_dagger(); ++i) {
@@ -49,6 +49,7 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
         }
       }
       out = out2;
+      if (out.size() == 0) break;
     }
     for (auto& i : diagram_) i->refresh_indices();
   }
