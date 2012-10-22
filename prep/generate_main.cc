@@ -56,14 +56,17 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
     for (auto& j : label) {
       for (auto& k : label) {
         for (auto& l : label) {
-#if 1     // CASPT2 test case
-          if ((l == "x" && k == "x" && j == "a" && i == "a")
-          ||  (l == "x" && k == "x" && j == "x" && i == "a")) {
-#endif
-#if 0     // MP2
+#if 0     // MP2 
           if (l == "c" && k == "c" && j == "a" && i == "a") {
 #endif
-#if 0     // general CASPT2 case
+#if 0     // all eight single configurations work
+          if (l == "x" && k == "x" && j == "a" && i == "a") {
+#endif
+#if  0    // CASPT2 test case  
+          if ((l == "x" && k == "x" && j == "a" && i == "a") 
+          ||  (l == "x" && k == "x" && j == "x" && i == "a")) {
+#endif
+#if 1     // general eight configuration CASPT2 case 
           if (!( l == "x" && k == "x" && j == "x" && i == "x") && !( l == "a" || k == "a" ) && !(j == "c" || i == "c") && !(l == "c" && k == "x") && !(i == "a" && j == "x")) {
 #endif
             stringstream ss; ss << cnt;
