@@ -51,9 +51,8 @@ class RDM {
     std::string make_odata(const std::string itag, std::string& indent, const std::list<std::shared_ptr<Index> >& index);
     std::string make_sort_loops(const std::string itag, std::string& indent, const std::list<std::shared_ptr<Index> >& index, std::vector<std::string>& close);
     std::string make_delta_if(std::string& indent, std::vector<std::string>& close);
+    std::string fdata_mult(const std::string itag, const std::list<std::shared_ptr<Index> >& merged);
 
-    std::string add_rdm0_factor();
-  
     // generate a code for Gamma rdm summation
     std::string generate_not_merged(std::string indent, const std::string tlab, const std::list<std::shared_ptr<Index> >& loop);
     // generates code for Gamma rdm summation with merged object multiplication

@@ -83,7 +83,7 @@ string RDM::generate_not_merged(string indent, const string tag, const list<shar
 
     // make data part of summation
     if (index_.empty()) {
-      tt << add_rdm0_factor();
+      tt << "  += " << setprecision(1) << fixed << factor() << ";" << endl;
     } else {
       tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
       for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {
@@ -224,16 +224,12 @@ string RDM::make_merged_loops(string& indent, const string itag, vector<string>&
   return tt.str();
 }
 
-string RDM::add_rdm0_factor() {
-  stringstream tt;
-  tt << "  += " << setprecision(1) << fixed << factor() << ";" << endl;
-  return tt.str();
-}
 
 string RDM::multiply_merge(const string itag, string& indent, const list<shared_ptr<Index> >& merged) {
   stringstream tt;
   if (rank() == 0) {
-      tt << add_rdm0_factor();
+    tt << "  += " << setprecision(1) << fixed << factor();
+    tt << fdata_mult(itag, merged);
   } else { 
     // make data part of summation
     tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * data[";
@@ -245,21 +241,27 @@ string RDM::multiply_merge(const string itag, string& indent, const list<shared_
       tt << ")";
     tt << "]";
     // multiply merge
-    tt << " * " << "fdata" << "[";
-    for (auto mi = merged.rbegin(); mi != merged.rend()  ; ++mi) { 
-      int inum = (*mi)->num();
-      for (auto& i : delta_)
-        if (i.first->num() == inum) inum = i.second->num(); 
-      const string tmp = "+" + (*mi)->str_gen() + ".size()*(";
-      tt << itag << inum << (mi != --merged.rend() ? tmp : "");
-    }
-    for (auto mi = ++merged.begin(); mi != merged.end()  ; ++mi)  
-      tt << ")";
-    tt << "];" << endl;
+    tt << fdata_mult(itag, merged);
   }
   return tt.str();
 }
 
+string RDM::fdata_mult(const string itag, const list<shared_ptr<Index> >& merged) {
+  stringstream tt;
+  tt << " * " << "fdata" << "[";
+  for (auto mi = merged.rbegin(); mi != merged.rend()  ; ++mi) { 
+    int inum = (*mi)->num();
+    for (auto& i : delta_)
+      if (i.first->num() == inum) inum = i.second->num(); 
+    const string tmp = "+" + (*mi)->str_gen() + ".size()*(";
+    tt << itag << inum << (mi != --merged.rend() ? tmp : "");
+  }
+  for (auto mi = ++merged.begin(); mi != merged.end()  ; ++mi)  
+    tt << ")";
+  tt << "];" << endl;
+
+  return tt.str();
+}
 
 string RDM::make_odata(const string itag, string& indent, const list<shared_ptr<Index> >& index) {
   stringstream tt;
