@@ -72,7 +72,7 @@ string RDM::generate_not_merged(string indent, const string tag, const list<shar
     // first delta if statement 
     tt << make_delta_if(indent, close);
 
-    if (!index_.empty())
+    if (!index_.empty() && rank() != 0)
       tt << make_get_block(indent);
    
     // loops over delta indices
@@ -103,7 +103,8 @@ string RDM::generate_not_merged(string indent, const string tag, const list<shar
   } else {
     // loop up the operator generators
 
-    tt <<  make_get_block(indent);
+    if (rank() != 0)
+      tt <<  make_get_block(indent);
  
     // call sort_indices here
     vector<int> done;
@@ -165,7 +166,8 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
   }
  
   indent += "  ";
-  tt <<  make_get_block(indent);
+  if (rank() != 0)
+    tt <<  make_get_block(indent);
 
   // loops for index and merged 
   tt << make_merged_loops(indent, itag, close);
@@ -186,12 +188,8 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
 // protected functions start //////
 string RDM::make_get_block(string indent) {
   stringstream tt;
-  if (rank() > 0) {
-    tt << indent << "std::vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
-    tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
-  } else {
-    tt << indent << "// rdm0 case" << endl;
-  } 
+  tt << indent << "std::vector<size_t> i0hash = {" << list_keys(index_) << "};" << endl;
+  tt << indent << "std::unique_ptr<double[]> data = rdm" << rank() << "->get_block(i0hash);" << endl;
   return tt.str();
 }
 
@@ -281,11 +279,8 @@ string RDM::make_odata(const string itag, string& indent, const list<shared_ptr<
   for (auto ri = ++index.begin(); ri != index.end(); ++ri)
     tt << ")";
   // factor will now be added on same line in rdm0 case
-  if (rank() > 0) {
-    tt << "]" << endl; 
-  } else { 
-    tt << "]";
-  }
+  tt << "]";
+  if (rank() > 0) tt << endl; 
   return tt.str();
 }
 
