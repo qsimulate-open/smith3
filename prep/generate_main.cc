@@ -43,7 +43,7 @@
 using namespace std;
 
 //const string theory = "MP2";
-const string theory = "CAS_all_active";
+string theory = "CAS_all_active";
 
 using namespace SMITH3::Prep;
 
@@ -58,6 +58,7 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
         for (auto& l : label) {
 #if 0     // MP2 
           if (l == "c" && k == "c" && j == "a" && i == "a") {
+            theory = "MP2";
 #endif
 #if 0     // test case for rdm0
           if (l == "c" && k == "x" && j == "x" && i == "x") {
