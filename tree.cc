@@ -820,9 +820,9 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "    " << tree_name_ << "(std::shared_ptr<const Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info() {" << endl;
     ss << "      this->eig_ = this->f1_->diag();" << endl;
     ss << "      t2 = this->v2_->clone();" << endl;
-    ss << "      e0_ = this->compute_e0();" << endl;
+    ss << "      e0_ = this->e0();" << endl;
     ss << "#if 1" << endl;
-    ss << "      this->update_amplitude_start(t2, this->v2_);" << endl;
+    ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
     ss << "      t2->scale(2.0);" << endl;
     ss << "#endif" << endl;
     ss << "      r = t2->clone();" << endl;
