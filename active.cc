@@ -202,6 +202,8 @@ void RDM::sort() {
             buf.push_back(*j);
             assert((*j)->dagger());
             buf.push_back(*i);
+            ++cnt;
+            cout << "CAUTION ... I have modified the code yet not sure if is working" << endl;
             found = true;
           } else {
             buf.push_back(*j);
@@ -209,7 +211,7 @@ void RDM::sort() {
           }
         }
       }
-      fac_ *= cnt&1 ? 1 : -1;
+      fac_ *= (cnt%2 == 1) ? -1 : 1;
       done_spin.push_back(cs);
     }
     if (index_.size() != buf.size()) {
@@ -250,10 +252,15 @@ bool RDM::done() const {
 Active::Active(const list<shared_ptr<Index> >& in) {
 
   shared_ptr<RDM> tmp(new RDM(in, map<shared_ptr<Index>, shared_ptr<Index> >(), 1.0));
+cout << "============" << endl;
+tmp->print();
+cout << "tmp->print()" << endl;
 
   // this sets list<RDM>
   reduce(tmp);
 
+print();
+cout << "=--=========" << endl;
 }
 
 

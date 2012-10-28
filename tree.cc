@@ -167,15 +167,8 @@ void Tree::find_gamma(shared_ptr<Tensor> o) {
   bool found = false;
   for (auto& i : gamma_) {
     if ((*i) == (*o)) {
-      cout << "Rename: " << o->label() <<  " to " << i->label() <<  endl;
-
       found = true;
       o->set_alias(i);
-
-      o->print();
-      o->active()->print();
-      i->print();
-      i->active()->print();
       break;
     }
   }
