@@ -252,15 +252,10 @@ bool RDM::done() const {
 Active::Active(const list<shared_ptr<Index> >& in) {
 
   shared_ptr<RDM> tmp(new RDM(in, map<shared_ptr<Index>, shared_ptr<Index> >(), 1.0));
-cout << "============" << endl;
-tmp->print();
-cout << "tmp->print()" << endl;
 
   // this sets list<RDM>
   reduce(tmp);
 
-print();
-cout << "=--=========" << endl;
 }
 
 
