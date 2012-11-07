@@ -44,7 +44,11 @@ class RDM {
     // kronecker's delta
     std::map<std::shared_ptr<Index>, std::shared_ptr<Index> > delta_;
    
-    std::string make_get_block(std::string ident);
+    std::string make_get_block(std::string indent, std::string tag, std::string lbl);
+    std::string make_scratch_area(std::string indent, std::string tag, std::string lbl);
+    std::string make_sort_indices(std::string indent, std::string tag, const std::list<std::shared_ptr<Index> >& loop);
+    std::string make_blas_multiply(std::string indent, const std::list<std::shared_ptr<Index> >& loop, const std::list<std::shared_ptr<Index> >& index);
+    std::pair<std::string, std::string> get_dim(const std::list<std::shared_ptr<Index> >& di, const std::list<std::shared_ptr<Index> >& index) const;
     // if delta case also makes index loops then checks to see if merged-or-delta indices are in loops..
     std::string make_merged_loops(std::string& indent, const std::string tag, std::vector<std::string>& close);
     std::string multiply_merge(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<Index> >& merged);
@@ -56,7 +60,7 @@ class RDM {
     // generate a code for Gamma rdm summation
     std::string generate_not_merged(std::string indent, const std::string tlab, const std::list<std::shared_ptr<Index> >& loop);
     // generates code for Gamma rdm summation with merged object multiplication
-    std::string generate_merged(std::string indent, const std::string itag, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged, const std::string mlab);
+    std::string generate_merged(std::string indent, const std::string itag, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged, const std::string mlab, const bool use_blas);
 
   public:
     RDM(const std::list<std::shared_ptr<Index> >& in,
@@ -93,7 +97,7 @@ class RDM {
 
     bool operator==(const RDM& o) const;
 
-    std::string generate(std::string indent, const std::string itag, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged, const std::string mlab);
+    std::string generate(std::string indent, const std::string itag, const std::list<std::shared_ptr<Index> >& index, const std::list<std::shared_ptr<Index> >& merged, const std::string mlab, const bool use_blas);
 
     int rank() const { assert(index_.size()%2 == 0); return index_.size()/2; }; 
 };

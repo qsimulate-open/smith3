@@ -323,10 +323,10 @@ bool Active::operator==(const Active& o) const {
 }
 
 
-string Active::generate(const string indent, const string tag, const list<shared_ptr<Index> > index, const list<shared_ptr<Index> > merged, const string mlab) const {
+string Active::generate(const string indent, const string tag, const list<shared_ptr<Index> > index, const list<shared_ptr<Index> > merged, const string mlab, const bool use_blas) const {
   stringstream tt;
   for (auto& i : rdm_)
-    tt << i->generate(indent, tag, index, merged, mlab);
+    tt << i->generate(indent, tag, index, merged, mlab, use_blas);
   return tt.str();
 }
 

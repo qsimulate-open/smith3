@@ -57,7 +57,7 @@ class Active {
     bool operator==(const Active& o) const;
 
     // this generate does get_block, sort_indices, and the merged mulitiplication
-    std::string generate(const std::string indent, const std::string tag, const std::list<std::shared_ptr<Index> > index, const std::list<std::shared_ptr<Index> > merged = std::list<std::shared_ptr<Index> >(), const std::string mlab = "") const;
+    std::string generate(const std::string indent, const std::string tag, const std::list<std::shared_ptr<Index> > index, const std::list<std::shared_ptr<Index> > merged = std::list<std::shared_ptr<Index> >(), const std::string mlab = "", const bool use_blas = false) const;
     std::vector<int> required_rdm() const;
     
 };

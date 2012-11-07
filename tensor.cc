@@ -222,7 +222,10 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
     for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
       if ((*i)->identical(*j)) break;
     }
-    if (cnt == index_.size()) throw logic_error("should not happen.. Tensor::generate_sort_indices");
+    if (cnt == index_.size()) {
+      //cout << "Potential problem Tensor::generate_sort_indices..did not find loop index in index_" << endl;
+      throw logic_error("should not happen.. Tensor::generate_sort_indices");
+    }
     done.push_back(cnt);
   }
   // then fill out others
@@ -342,15 +345,15 @@ pair<string, string> Tensor::generate_dim(const list<shared_ptr<Index> >& di) co
 }
 
 
-string Tensor::generate_active(string indent, const string tag) const {
+string Tensor::generate_active(string indent, const string tag, const bool use_blas) const {
   assert(label_.find("Gamma") != string::npos);
   stringstream tt;
   if (!merged_) {
     tt << active()->generate(indent, tag, index());
   } else {
-    // add merge loops
+    
     tt << indent <<"// associated with merged" << endl;
-
+    // add merge loops
     vector<string> mclose;
     list<shared_ptr<Index> >& merged = merged_->index();
     // the m->generate() makes active_ this label must be identical on bagel side (src/smith/spinfreebase.h)
@@ -359,11 +362,47 @@ string Tensor::generate_active(string indent, const string tag) const {
       mclose.push_back(indent + "}");
       indent += "  ";
     }
-    // make get block for merge obj
+    
+    // add fdata 
     tt << indent << "std::vector<size_t> fhash = {" << list_keys(merged) << "};" << endl;
     tt << indent << "std::unique_ptr<double[]> fdata = " << merged_->label() << "->get_block(fhash);" << endl;
+   
+    if (use_blas) {
+      tt << indent << "std::unique_ptr<double[]> fdata_sorted(new double["<< merged_->label() << "->get_size(fhash)]);" << endl;
 
-    tt << active()->generate(indent, tag, index(), merged_->index(), merged_->label());
+      // make sort_indices for merged op
+      vector<int> done;
+      tt << indent << "sort_indices<";
+      for (auto i = merged.begin(); i != merged.end(); ++i) {
+        int cnt = 0;
+        for (auto j = merged.rbegin(); j != merged.rend(); ++j, ++cnt) {
+          if ((*i)->identical(*j)) break;
+        }
+        if (cnt == merged.size()) throw logic_error("should not happen... fdata sort indices");
+        done.push_back(cnt);
+      }
+      // then fill out others
+      for (int i = 0; i != merged.size(); ++i) {
+        if (find(done.begin(), done.end(), i) == done.end())
+          done.push_back(i);
+      }
+      // write out
+      for (auto& i : done) 
+        tt << i << ",";
+
+      tt << "0,1,1,1";
+   
+      // add source data dimensions
+      tt << ">(fdata, fdata_sorted, " ;
+      for (auto iter = merged.rbegin(); iter != merged.rend(); ++iter) {
+        if (iter != merged.rbegin()) tt << ", ";
+          tt << (*iter)->str_gen() << ".size()";
+      }
+      tt << ");" << endl;
+    } 
+    
+    // generate  merged and/or rdm 
+    tt << active()->generate(indent, tag, index(), merged_->index(), merged_->label(), use_blas);
 
     // close merge for loops
     for (auto iter = mclose.rbegin(); iter != mclose.rend(); ++iter)
@@ -385,7 +424,7 @@ string Tensor::generate_loop(string& indent, vector<string>& close) const {
 }
 
 
-string Tensor::generate_gamma(const int ic, const bool enlist) const {
+string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_blas) const {
   assert(label_.find("Gamma") != string::npos);
 
   stringstream tt;
@@ -415,8 +454,11 @@ string Tensor::generate_gamma(const int ic, const bool enlist) const {
   tt << generate_loop(indent, close);
   // generate gamma get block, true does a move_block
   tt << generate_get_block(indent, "o", true, true); // first true means move, second true means we don;t scale
+  if (merged_) {
+    if (use_blas) tt << generate_scratch_area(indent,"o",true);
+  }
   // now generate codes for rdm
-  tt << generate_active(indent, "o");
+  tt << generate_active(indent, "o", use_blas);
 
   // generate gamma put block
   tt << indent << label() << "->put_block(ohash, odata);" << endl;

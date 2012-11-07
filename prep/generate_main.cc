@@ -63,14 +63,14 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
 #if 0     // test case for rdm0
           if (l == "c" && k == "x" && j == "x" && i == "x") {
 #endif
-#if 0     // test case for simple CASPT2
+#if 1     // test case for simple CASPT2
           if (l == "x" && k == "x" && j == "a" && i == "a") {
 #endif
-#if  0    // CASPT2 test case  
+#if 0     // CASPT2 test case  
           if ((l == "x" && k == "x" && j == "a" && i == "a") 
           ||  (l == "x" && k == "x" && j == "x" && i == "a")) {
 #endif
-#if 1     // general eight configuration CASPT2 case 
+#if 0     // general eight configuration CASPT2 case 
           if (!( l == "x" && k == "x" && j == "x" && i == "x") && !( l == "a" || k == "a" ) && !(j == "c" || i == "c") && !(l == "c" && k == "x") && !(i == "a" && j == "x")) {
 #endif
             stringstream ss; ss << cnt;
