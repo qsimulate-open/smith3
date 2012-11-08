@@ -115,7 +115,6 @@ string RDM::generate_not_merged(string indent, const string tag, const list<shar
     }
  
     // do sort_indices here
-    //tt << "// mkm do sort" << endl;
     vector<int> done;
     tt << indent << "sort_indices<";
     for (auto i = index.rbegin(); i != index.rend(); ++i) {
@@ -215,17 +214,22 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
         if (!found) source.push_back(*i);
       }
       // go through odata target indices
-      for (auto j = index.rbegin(); j != index.rend(); ++j) {
+      int cnt = 0;
+      for (auto j = index.rbegin(); j != index.rend(); ++j,++cnt) {
         // count
-        int cnt = 0;
         // note that source is already reversed!
-        for (auto i = source.begin(); i != source.end(); ++i, ++cnt) {
-          if ((*i)->identical(*j)) break;
+        if (!source.empty()) { 
+          cnt = 0;
+          for (auto i = source.begin(); i != source.end(); ++i, ++cnt) {
+            if ((*i)->identical(*j)) break;
+          }
+        } 
+        if (cnt == index.size()) {
+          cout << "Check rdm odata targe" << endl;
+          //if (cnt == index.size()) throw logic_error("should not happen.. RDM odata target");
         }
-        if (cnt == index.size()) throw logic_error("should not happen.. RDM odata target");
         tt << cnt << ",";
       }
-
       tt << "1,1,1,1>(odata_sorted, odata";
       for (auto i = source.begin(); i != source.end(); ++i) tt << ", " << (*i)->str_gen() << ".size()";
       tt << ");" << endl;
@@ -327,7 +331,7 @@ string RDM::make_blas_multiply(string dindent, const list<shared_ptr<Index> >& l
     string tt1 = t1.first == "" ? "1" : t1.first;
     string tt2 = t1.second== "" ? "1" : t1.second;
     tt << tt1 << ", " << tt2 << ", " << endl;
-    tt << dindent << "       1.0, i0data_sorted, " << tt1 << ", fdata_sorted, 1.0, "  << endl
+    tt << dindent << "       " << setprecision(1) << fixed << factor() << ", i0data_sorted, " << tt1 << ", fdata_sorted, 1.0, "  << endl
        << dindent << "       1.0, odata_sorted, 1.0);" << endl;
   } else {
     // add check.. 
@@ -379,7 +383,6 @@ pair<string, string> RDM::get_dim(const list<shared_ptr<Index> >& di, const list
 string RDM::make_sort_indices(string indent, string tag, const list<shared_ptr<Index> >& loop) {
   stringstream tt;
     vector<int> done;
-    // mkm strange but needs to be normal order if loop=merged
     // for (auto i = loop.rbegin(); i != loop.rend(); ++i) {
     for (auto i = loop.begin(); i != loop.end(); ++i) {
       int cnt = 0;
@@ -388,9 +391,9 @@ string RDM::make_sort_indices(string indent, string tag, const list<shared_ptr<I
       }
       // mkm failing for more general cases..something wrong with indices
       if (cnt == index_.size()) {
-        cout << "Potential problem in RDM::make_sort_indicies, did not find an upper index in lower set:" <<  endl;
 #if 1
-        tt << "Potentail problem: " << endl;
+        cout << "Potential problem in RDM::make_sort_indicies, did not find an upper index in lower set:" <<  endl;
+        tt << "Potential problem: " << endl;
         for (auto& i : loop) tt << i->str();
         tt << endl;
         for (auto& i : index_) tt << i->str();
