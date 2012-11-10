@@ -201,34 +201,69 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
       tt << endl;
 
 #if 1
-      // todo need to add delta recognition for general caspt2 case
-      // sort indices back to target layout...may need in general case..
-      tt << indent << "sort_indices<";
       // determine mapping
       list<shared_ptr<Index> > source;
+      vector<int> done;
+
       // compare rdm and merged indices
       for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
         bool found = false;
         for (auto& j : merged)
           if ((*i)->identical(j)) found = true;
         if (!found) source.push_back(*i);
+      } 
+
+      // complete source
+      for (auto i = index.rbegin(); i != index.rend(); ++i) {
+        bool found = false;
+        for (auto& j : source)
+          if ((*i)->identical(j)) found = true;
+        if (!found) source.push_back(*i);
       }
+
       // go through odata target indices
-      int cnt = 0;
-      for (auto j = index.rbegin(); j != index.rend(); ++j,++cnt) {
-        // count
-        // note that source is already reversed!
-        if (!source.empty()) { 
-          cnt = 0;
-          for (auto i = source.begin(); i != source.end(); ++i, ++cnt) {
+      for (auto j = source.begin(); j != source.end(); ++j) {
+        // check delta mapping
+        if (!delta_.empty()) {
+          bool matched_first = false;
+          bool matched_second = false;
+          shared_ptr<Index> first_partner;
+          shared_ptr<Index> second_partner;
+          for (auto d = delta_.begin(); d != delta_.end(); ++d) {
+            if ((d->first)->identical(*j)) {
+              matched_first = true;
+              first_partner = d->second;
+            }
+            if ((d->second)->identical(*j)) {
+              matched_second = true;
+              second_partner = d->first;
+            }
+          }
+          int cnt = 0;
+          if (!matched_first && !matched_second) {
+            for (auto i = index.rbegin(); i != index.rend(); ++i, ++cnt) 
+              if ((*i)->identical(*j)) break;
+          } else if (matched_first) {
+            for (auto i = index.rbegin(); i != index.rend(); ++i, ++cnt) 
+              if ((*i)->identical(*j) || first_partner->identical(*j)) break;
+          } else if (matched_second) {
+            for (auto i = index.rbegin(); i != index.rend(); ++i, ++cnt) 
+              if ((*i)->identical(*j) || second_partner->identical(*j)) break;
+          }  
+          if (cnt == index.size()) throw logic_error("should not happen.. RDM odata target, delta case");
+          done.push_back(cnt);
+        } else {
+          int cnt = 0;
+          for (auto i = index.rbegin(); i != index.rend(); ++i, ++cnt) {
             if ((*i)->identical(*j)) break;
           }
-        } 
-        if (cnt == index.size()) {
-          cout << "Check rdm odata targe" << endl;
-          //if (cnt == index.size()) throw logic_error("should not happen.. RDM odata target");
+          if (cnt == index.size()) throw logic_error("should not happen.. RDM odata target, non-delta case");
+          done.push_back(cnt);
         }
-        tt << cnt << ",";
+      }
+      tt << indent << "sort_indices<";
+      for (auto& i : done) { 
+        tt << i << ",";
       }
       tt << "1,1,1,1>(odata_sorted, odata";
       for (auto i = source.begin(); i != source.end(); ++i) tt << ", " << (*i)->str_gen() << ".size()";
@@ -237,15 +272,31 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
       tt << endl;
 
     } else {
-      // for rdm0 case add dscal
+      // for rdm0 case 
+      // add dscal
       tt << indent << "dscal_("; 
       for (auto i = merged.rbegin(); i != merged.rend(); ++i)
         tt << (i != merged.rbegin() ? "*" : "") << (*i)->str_gen() << ".size()";
-      tt << ", " << setprecision(1) << fixed << factor() << ", " << "fdata.get(), 1);" << endl; 
+      tt << ", " << setprecision(1) << fixed << factor() << ", " << "fdata_sorted.get(), 1);" << endl; 
   
       // sort back to target layout (odata layout)
+      list<shared_ptr<Index> > source;
       vector<int> done;
-      tt << indent << "sort_indices<";
+      for (auto i = index.rbegin(); i != index.rend(); ++i) {
+        bool found = false;
+        for (auto& j : merged)
+          if ((*i)->identical(j)) found = true;
+        if (!found) source.push_back(*i);
+      } 
+      // complete source
+      for (auto i = index.rbegin(); i != index.rend(); ++i) {
+        bool found = false;
+        for (auto& j : source)
+          if ((*i)->identical(j)) found = true;
+        if (!found) source.push_back(*i);
+      }
+  
+  
       for (auto i = merged.rbegin(); i != merged.rend(); ++i) {
         // also check if in deltas
         bool matched_first = false;
@@ -283,14 +334,15 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
           done.push_back(i);
       }
       // write out
+      tt << indent << "sort_indices<";
       for (auto& i : done) 
         tt << i << ",";
       // add factor information
       tt << "1,1,1,1";
       // add source data dimensions
-      tt << ">(fdata, odata, " ;
-      for (auto iter = merged.rbegin(); iter != merged.rend(); ++iter) {
-        if (iter != merged.rbegin()) tt << ", ";
+      tt << ">(fdata_sorted, odata, " ;
+      for (auto iter = source.begin(); iter != source.end(); ++iter) {
+        if (iter != source.begin()) tt << ", ";
           tt << (*iter)->str_gen() << ".size()";
       }
       tt << ");" << endl;
@@ -379,32 +431,9 @@ pair<string, string> RDM::get_dim(const list<shared_ptr<Index> >& di, const list
 }
 
 
-
 string RDM::make_sort_indices(string indent, string tag, const list<shared_ptr<Index> >& loop) {
   stringstream tt;
     vector<int> done;
-    // for (auto i = loop.rbegin(); i != loop.rend(); ++i) {
-    for (auto i = loop.begin(); i != loop.end(); ++i) {
-      int cnt = 0;
-      for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
-        if ((*i)->identical(*j)) break;
-      }
-      // mkm failing for more general cases..something wrong with indices
-      if (cnt == index_.size()) {
-#if 1
-        cout << "Potential problem in RDM::make_sort_indicies, did not find an upper index in lower set:" <<  endl;
-        tt << "Potential problem: " << endl;
-        for (auto& i : loop) tt << i->str();
-        tt << endl;
-        for (auto& i : index_) tt << i->str();
-        tt << endl;
-        tt << endl;
-#else
-        throw logic_error("should not happen.. RDM::generate");
-#endif
-      }
-      done.push_back(cnt);
-    }
     // then fill out others
     for (int i = 0; i != index_.size(); ++i) {
       if (find(done.begin(), done.end(), i) == done.end())
