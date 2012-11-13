@@ -455,7 +455,7 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
   // generate gamma get block, true does a move_block
   tt << generate_get_block(indent, "o", true, true); // first true means move, second true means we don;t scale
   if (merged_) {
-    if (use_blas) tt << generate_scratch_area(indent,"o",true);
+    if (use_blas && !index_.empty()) tt << generate_scratch_area(indent,"o",true);
   }
   // now generate codes for rdm
   tt << generate_active(indent, "o", use_blas);

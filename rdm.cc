@@ -200,76 +200,76 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
       tt << make_blas_multiply(indent, merged, index);
       tt << endl;
 
-#if 1
-      // determine mapping
-      list<shared_ptr<Index> > source;
-      vector<int> done;
+      if (!index.empty()) {
+        // determine mapping
+        list<shared_ptr<Index> > source;
+        vector<int> done;
 
-      // compare rdm and merged indices
-      for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
-        bool found = false;
-        for (auto& j : merged)
-          if ((*i)->identical(j)) found = true;
-        if (!found) source.push_back(*i);
-      } 
+        // compare rdm and merged indices
+        for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
+          bool found = false;
+          for (auto& j : merged)
+            if ((*i)->identical(j)) found = true;
+          if (!found) source.push_back(*i);
+        } 
 
-      // complete source
-      for (auto i = index.rbegin(); i != index.rend(); ++i) {
-        bool found = false;
-        for (auto& j : source)
-          if ((*i)->identical(j)) found = true;
-        if (!found) source.push_back(*i);
-      }
-
-      // go through odata target indices
-      for (auto j = source.begin(); j != source.end(); ++j) {
-        // check delta mapping
-        if (!delta_.empty()) {
-          bool matched_first = false;
-          bool matched_second = false;
-          shared_ptr<Index> first_partner;
-          shared_ptr<Index> second_partner;
-          for (auto d = delta_.begin(); d != delta_.end(); ++d) {
-            if ((d->first)->identical(*j)) {
-              matched_first = true;
-              first_partner = d->second;
-            }
-            if ((d->second)->identical(*j)) {
-              matched_second = true;
-              second_partner = d->first;
-            }
-          }
-          int cnt = 0;
-          if (!matched_first && !matched_second) {
-            for (auto i = index.rbegin(); i != index.rend(); ++i, ++cnt) 
-              if ((*i)->identical(*j)) break;
-          } else if (matched_first) {
-            for (auto i = index.rbegin(); i != index.rend(); ++i, ++cnt) 
-              if ((*i)->identical(*j) || first_partner->identical(*j)) break;
-          } else if (matched_second) {
-            for (auto i = index.rbegin(); i != index.rend(); ++i, ++cnt) 
-              if ((*i)->identical(*j) || second_partner->identical(*j)) break;
-          }  
-          if (cnt == index.size()) throw logic_error("should not happen.. RDM odata target, delta case");
-          done.push_back(cnt);
-        } else {
-          int cnt = 0;
-          for (auto i = index.rbegin(); i != index.rend(); ++i, ++cnt) {
-            if ((*i)->identical(*j)) break;
-          }
-          if (cnt == index.size()) throw logic_error("should not happen.. RDM odata target, non-delta case");
-          done.push_back(cnt);
+        // complete source
+        for (auto i = index.rbegin(); i != index.rend(); ++i) {
+          bool found = false;
+          for (auto& j : source)
+            if ((*i)->identical(j)) found = true;
+          if (!found) source.push_back(*i);
         }
+
+        // go through odata target indices
+        for (auto j = source.begin(); j != source.end(); ++j) {
+          // check delta mapping
+          if (!delta_.empty()) {
+            bool matched_first = false;
+            bool matched_second = false;
+            shared_ptr<Index> first_partner;
+            shared_ptr<Index> second_partner;
+            for (auto d = delta_.begin(); d != delta_.end(); ++d) {
+              if ((d->first)->identical(*j)) {
+                matched_first = true;
+                first_partner = d->second;
+              }
+              if ((d->second)->identical(*j)) {
+                matched_second = true;
+                second_partner = d->first;
+              }
+            }
+            int cnt = 0;
+            if (!matched_first && !matched_second) {
+              for (auto i = index.rbegin(); i != index.rend(); ++i, ++cnt) 
+                if ((*i)->identical(*j)) break;
+            } else if (matched_first) {
+              for (auto i = index.rbegin(); i != index.rend(); ++i, ++cnt) 
+                if ((*i)->identical(*j) || first_partner->identical(*j)) break;
+            } else if (matched_second) {
+              for (auto i = index.rbegin(); i != index.rend(); ++i, ++cnt) 
+                if ((*i)->identical(*j) || second_partner->identical(*j)) break;
+            }  
+            if (cnt == index.size()) throw logic_error("should not happen.. RDM odata target, delta case");
+            done.push_back(cnt);
+          } else {
+            int cnt = 0;
+            for (auto i = index.rbegin(); i != index.rend(); ++i, ++cnt) {
+              if ((*i)->identical(*j)) break;
+            }
+            if (cnt == index.size()) throw logic_error("should not happen.. RDM odata target, non-delta case");
+            done.push_back(cnt);
+          }
+        }
+        tt << indent << "sort_indices<";
+        for (auto& i : done) { 
+          tt << i << ",";
+        }
+        tt << "1,1,1,1>(odata_sorted, odata";
+        for (auto i = source.begin(); i != source.end(); ++i) tt << ", " << (*i)->str_gen() << ".size()";
+        tt << ");" << endl;
+        tt << endl;
       }
-      tt << indent << "sort_indices<";
-      for (auto& i : done) { 
-        tt << i << ",";
-      }
-      tt << "1,1,1,1>(odata_sorted, odata";
-      for (auto i = source.begin(); i != source.end(); ++i) tt << ", " << (*i)->str_gen() << ".size()";
-      tt << ");" << endl;
-#endif
-      tt << endl;
 
     } else {
       // for rdm0 case 
