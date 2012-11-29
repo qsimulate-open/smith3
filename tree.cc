@@ -833,7 +833,6 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "        std::shared_ptr<Queue<T> > energ = q.second;" << endl;
     ss << "        while (!queue->done())" << endl;
     ss << "          queue->next_compute();" << endl;
-    ss << "        r->scale(0.25); // FIXME" << endl;
     ss << "//      *r = *(r->add_dagger());" << endl;
     ss << "        this->update_amplitude(t2, r);" << endl;
     ss << "        const double err = r->rms();" << endl;
