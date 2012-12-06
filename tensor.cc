@@ -201,8 +201,7 @@ string Tensor::generate_scratch_area(const string cindent, const string lab, con
   ss << cindent << "std::unique_ptr<double[]> " << lab << "data_sorted(new double["
                 << lbl << "->get_size(" << lab << "hash)]);" << endl;
   if (zero) {
-    ss << cindent << "std::fill(" << lab << "data_sorted.get(), " << lab << "data_sorted.get()+"
-                  << lbl << "->get_size(" << lab << "hash), 0.0);" << endl;
+    ss << cindent << "std::fill_n(" << lab << "data_sorted.get(), " << lbl << "->get_size(" << lab << "hash), 0.0);" << endl;
   }
   return ss.str();
 }
