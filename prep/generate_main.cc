@@ -60,10 +60,10 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
           if (l == "c" && k == "c" && j == "a" && i == "a") {
             theory = "MP2";
 #endif
-#if 0     // test case for rdm0
-          if (l == "c" && k == "x" && j == "x" && i == "x") {
+#if 1     // test case for rdm0
+          if (l == "x" && k == "c" && j == "a" && i == "a") {
 #endif
-#if 1     // test case for simple CASPT2
+#if 0     // test case for simple CASPT2
           if (l == "x" && k == "x" && j == "a" && i == "a") {
 #endif
 #if 0     // CASPT2 test case  
@@ -74,8 +74,8 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
           if (!( l == "x" && k == "x" && j == "x" && i == "x") && !( l == "a" || k == "a" ) && !(j == "c" || i == "c") && !(l == "c" && k == "x") && !(i == "a" && j == "x")) {
 #endif
             stringstream ss; ss << cnt;
-            lp.push_back(shared_ptr<Tensor>(new Tensor("proj", ss.str(), {l, k, j, i}))); 
-            td.push_back(shared_ptr<Tensor>(new Tensor("t2dagger", ss.str(), {l, k, j, i}))); 
+            lp.push_back(shared_ptr<Tensor>(new Tensor("proj", ss.str(), {k, l, i, j}))); 
+            td.push_back(shared_ptr<Tensor>(new Tensor("t2dagger", ss.str(), {k, l, i, j}))); 
             lt.push_back(shared_ptr<Tensor>(new Tensor("t2", ss.str(), {j, i, l, k}))); 
             ls.push_back(shared_ptr<Tensor>(new Tensor("r", ss.str(), {j, i, l, k}))); 
             ++cnt;
@@ -121,8 +121,10 @@ int main() {
 
   // energy equations
   shared_ptr<Equation> eq3(new Equation("ea", {dum, t_dagger, H}));
+#if 0
   shared_ptr<Equation> eq4(new Equation("eb", {dum, t_dagger, r_list}));
   eq3->merge(eq4);
+#endif
   cout << eq3->generate({eq0});
  
 

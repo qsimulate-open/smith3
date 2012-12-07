@@ -40,13 +40,13 @@ using namespace smith;
 int main() {
 
   string theory="CAS_all_active"; 
-  shared_ptr<Op> proj0(new Op("proj", "x", "x", "a", "a"));
-  shared_ptr<Op> t20(new Op("t2", "a", "a", "x", "x"));
-  shared_ptr<Op> r0(new Op("r", "a", "a", "x", "x"));
+  shared_ptr<Op> proj0(new Op("proj", "c", "x", "a", "a"));
+  shared_ptr<Op> t20(new Op("t2", "a", "a", "x", "c"));
+  shared_ptr<Op> r0(new Op("r", "a", "a", "x", "c"));
   shared_ptr<Op> f1(new Op("f1", "g", "g"));
   shared_ptr<Op> v2(new Op("v2", "g", "g", "g", "g"));
   shared_ptr<Op> proje(new Op("proj"));
-  shared_ptr<Op> t2dagger0(new Op("t2dagger", "x", "x", "a", "a"));
+  shared_ptr<Op> t2dagger0(new Op("t2dagger", "c", "x", "a", "a"));
   list<shared_ptr<Op> > da0 = {proj0, f1, t20};
   list<shared_ptr<Op> > db0 = {proj0, t20};
   list<shared_ptr<Op> > dc0 = {proj0, v2};
@@ -63,12 +63,8 @@ int main() {
   shared_ptr<Tree> tda(new Tree(eda0));
   tda->sort_gamma();
   list<shared_ptr<Op> > ea0 = {proje, t2dagger0, v2};
-  list<shared_ptr<Op> > eb0 = {proje, t2dagger0, r0};
   shared_ptr<Diagram> dea0(new Diagram(ea0));
-  shared_ptr<Diagram> deb0(new Diagram(eb0));
   shared_ptr<Equation> eea0(new Equation(dea0, theory));
-  shared_ptr<Equation> eeb0(new Equation(deb0, theory));
-  eea0->merge(eeb0);
   eea0->duplicates();
   eea0->active();
   shared_ptr<Tree> tea(new Tree(eea0));
