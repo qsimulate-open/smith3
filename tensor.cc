@@ -60,7 +60,8 @@ Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0), scalar_("") {
 
 string Tensor::str() const {
   stringstream ss;
-  if (factor_ != 1.0) ss << " " << fixed << setw(4) << setprecision(2) << factor_ << (scalar_.empty() ? "" : " "+scalar_) << " ";
+  if (factor_ != 1.0 || !scalar_.empty())
+    ss << " " << fixed << setw(4) << setprecision(2) << factor_ << (scalar_.empty() ? "" : " "+scalar_) << " ";
   ss << label() << "(";
   for (auto i = index_.begin(); i != index_.end(); ++i) {
     // we don't need the spin part here

@@ -203,7 +203,6 @@ void RDM::sort() {
             assert((*j)->dagger());
             buf.push_back(*i);
             ++cnt;
-            cout << "CAUTION ... I have modified the code yet not sure if is working" << endl;
             found = true;
           } else {
             buf.push_back(*j);
