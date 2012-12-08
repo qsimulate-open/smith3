@@ -163,12 +163,19 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
     tt << list_keys(index_);
   } else {
     assert(!(index_.size() & 1));
+#if 0
     for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
       if (iter != index_.rbegin()) tt << ", ";
       string i0 = (*iter)->str_gen() + ".key()";
       ++iter;
       tt << (*iter)->str_gen() << ".key()" << ", " << i0;
     }
+#else
+    for (auto i = index_.begin(); i != index_.end(); ++i) {
+      if (i != index_.begin()) tt << ", ";
+      tt << (*i)->str_gen() << ".key()";
+    } 
+#endif
   } 
   // for scalar.
   if (index_.empty() && merged_)
@@ -239,10 +246,16 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
   if (trans && index_.size() & 1) throw logic_error("transposition not possible with 3-index objects");
   if (trans) {
     vector<int> tmp;
+#if 0
     for (int i = 0; i != done.size(); i += 2) {
       tmp.push_back(done[i+1]);
       tmp.push_back(done[i]);
     }
+#else
+    // transposition..
+    for (auto i = done.rbegin(); i != done.rend(); ++i)
+      tmp.push_back(*i);
+#endif
     done = tmp;
   }
 
@@ -258,11 +271,17 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
     for (auto i = index_.rbegin(); i != index_.rend(); ++i)
       ss << ", " << (*i)->str_gen() << ".size()";
   } else {
+#if 0
     for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
       string tmp = ", " + (*i)->str_gen() + ".size()";
       ++i;
       ss << ", " << (*i)->str_gen() << ".size()" << tmp;
     }
+#else
+    for (auto i = index_.begin(); i != index_.end(); ++i) {
+      ss << ", " << (*i)->str_gen() << ".size()";
+    }
+#endif
   }
   ss << ");" << endl;
   return ss.str();

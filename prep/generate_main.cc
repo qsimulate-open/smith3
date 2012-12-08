@@ -43,7 +43,7 @@
 using namespace std;
 
 //const string theory = "MP2";
-string theory = "CAS_all_active";
+string theory = "CAS_test";
 
 using namespace SMITH3::Prep;
 
@@ -56,15 +56,16 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
     for (auto& j : label) {
       for (auto& k : label) {
         for (auto& l : label) {
-#if 0     // MP2 
-          if (l == "c" && k == "c" && j == "a" && i == "a") {
-            theory = "MP2";
-#endif
 #if 1     // test case for rdm0
-          if (l == "x" && k == "c" && j == "a" && i == "a") {
+//        if (l == "c" && k == "c" && j == "a" && i == "a") { // TESTED
+          if (l == "x" && k == "c" && j == "a" && i == "a") { // TESTED
+//        if (l == "x" && k == "x" && j == "a" && i == "a") { // TESTED
+//        if (l == "c" && k == "c" && j == "x" && i == "a") { // TESTED
+//        if (l == "c" && k == "c" && j == "x" && i == "x") { // TESTED
+#if 0
+// caseA  if ((l == "c" && k == "x" && j == "x" && i == "a")) {
+          if ((l == "x" && k == "c" && j == "x" && i == "a")) {
 #endif
-#if 0     // test case for simple CASPT2
-          if (l == "x" && k == "x" && j == "a" && i == "a") {
 #endif
 #if 0     // CASPT2 test case  
           if ((l == "x" && k == "x" && j == "a" && i == "a") 
@@ -74,8 +75,8 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
           if (!( l == "x" && k == "x" && j == "x" && i == "x") && !( l == "a" || k == "a" ) && !(j == "c" || i == "c") && !(l == "c" && k == "x") && !(i == "a" && j == "x")) {
 #endif
             stringstream ss; ss << cnt;
-            lp.push_back(shared_ptr<Tensor>(new Tensor("proj", ss.str(), {k, l, i, j}))); 
-            td.push_back(shared_ptr<Tensor>(new Tensor("t2dagger", ss.str(), {k, l, i, j}))); 
+            lp.push_back(shared_ptr<Tensor>(new Tensor("proj", ss.str(), {l, k, j, i}))); 
+            td.push_back(shared_ptr<Tensor>(new Tensor("t2dagger", ss.str(), {l, k, j, i}))); 
             lt.push_back(shared_ptr<Tensor>(new Tensor("t2", ss.str(), {j, i, l, k}))); 
             ls.push_back(shared_ptr<Tensor>(new Tensor("r", ss.str(), {j, i, l, k}))); 
             ++cnt;
