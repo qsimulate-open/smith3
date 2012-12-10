@@ -816,10 +816,8 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "      this->eig_ = this->f1_->diag();" << endl;
     ss << "      t2 = this->v2_->clone();" << endl;
     ss << "      e0_ = this->e0();" << endl;
-    ss << "#if 1" << endl;
     ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
     ss << "      t2->scale(2.0);" << endl;
-    ss << "#endif" << endl;
     ss << "      r = t2->clone();" << endl;
     ss << "    };" << endl;
     ss << "    ~" << tree_name_ << "() {}; " << endl;
@@ -833,7 +831,6 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "        std::shared_ptr<Queue<T> > energ = q.second;" << endl;
     ss << "        while (!queue->done())" << endl;
     ss << "          queue->next_compute();" << endl;
-    ss << "//      *r = *(r->add_dagger());" << endl;
     ss << "        this->update_amplitude(t2, r);" << endl;
     ss << "        const double err = r->rms();" << endl;
     ss << "        r->zero();" << endl;
@@ -848,7 +845,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "      double en = 0.0;" << endl;
     ss << "      while (!energ->done()) {" << endl;
     ss << "        std::shared_ptr<Task<T> > c = energ->next_compute();" << endl;
-    ss << "        en += c->energy() * 0.25; // FIXME" << endl;
+    ss << "        en += c->energy() * 0.25;" << endl;  // 0.25 due to 1/2 each to bra and ket
     ss << "      }   " << endl;
     ss << "      return en; " << endl;
     ss << "    };  " << endl;

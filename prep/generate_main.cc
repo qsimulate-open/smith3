@@ -67,11 +67,11 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
               (l == "x" && k == "x" && j == "x" && i == "a") ||
               (l == "x" && k == "c" && j == "x" && i == "x")) {
 #else   // turn on one of the following lines
-          if (l == "c" && k == "c" && j == "a" && i == "a") {
+//        if (l == "c" && k == "c" && j == "a" && i == "a") {
 //        if (l == "x" && k == "c" && j == "a" && i == "a") {
 //        if (l == "x" && k == "x" && j == "a" && i == "a") {
 //        if (l == "c" && k == "c" && j == "x" && i == "a") {
-//        if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) {
+          if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) {
 //        if (l == "c" && k == "c" && j == "x" && i == "x") {
 //        if (l == "x" && k == "x" && j == "x" && i == "a") {
 //        if (l == "x" && k == "c" && j == "x" && i == "x") {
@@ -124,10 +124,6 @@ int main() {
 
   // energy equations
   shared_ptr<Equation> eq3(new Equation("ea", {dum, t_dagger, H}));
-#if 0
-  shared_ptr<Equation> eq4(new Equation("eb", {dum, t_dagger, r_list}));
-  eq3->merge(eq4);
-#endif
   cout << eq3->generate({eq0});
  
 
