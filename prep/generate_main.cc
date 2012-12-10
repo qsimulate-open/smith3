@@ -100,8 +100,9 @@ int main() {
   tie(proj_list, t_list, r_list, t_dagger) = create_proj();
 
   // make f and H tensors here
-  vector<shared_ptr<Tensor> > f = {shared_ptr<Tensor>(new Tensor("f1", "", {"g", "g"}))};
-  vector<shared_ptr<Tensor> > H = {shared_ptr<Tensor>(new Tensor("v2", "", {"g", "g", "g", "g"}))};
+  vector<shared_ptr<Tensor> > f   = {shared_ptr<Tensor>(new Tensor("f1", "", {"g", "g"}))};
+  vector<shared_ptr<Tensor> > hc  = {shared_ptr<Tensor>(new Tensor("h1", "", {"g", "g"}))};
+  vector<shared_ptr<Tensor> > H   = {shared_ptr<Tensor>(new Tensor("v2", "", {"g", "g", "g", "g"}))};
   vector<shared_ptr<Tensor> > dum = {shared_ptr<Tensor>(new Tensor("proj", "e", {}))};
   
   cout << "  string theory=\"" << theory << "\"; " << endl;
@@ -111,6 +112,7 @@ int main() {
   for (auto& i : r_list)    cout << i->generate();
   for (auto& i : f)         cout << i->generate();
   for (auto& i : H)         cout << i->generate();
+  for (auto& i : hc)        cout << i->generate();
   for (auto& i : dum)       cout << i->generate();
   for (auto& i : t_dagger)  cout << i->generate();
   
@@ -118,12 +120,16 @@ int main() {
   shared_ptr<Equation> eq0(new Equation("da", {proj_list, f, t_list}));
   shared_ptr<Equation> eq1(new Equation("db", {proj_list, t_list}, "e0"));
   shared_ptr<Equation> eq2(new Equation("dc", {proj_list, H}));
+  shared_ptr<Equation> eq2a(new Equation("dd", {proj_list, hc}));
   eq0->merge(eq1);
   eq0->merge(eq2);
+  eq0->merge(eq2a);
   cout << eq0->generate({});
 
   // energy equations
   shared_ptr<Equation> eq3(new Equation("ea", {dum, t_dagger, H}));
+  shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, hc}));
+  eq3->merge(eq3a);
   cout << eq3->generate({eq0});
  
 
