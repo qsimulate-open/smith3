@@ -56,16 +56,21 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
     for (auto& j : label) {
       for (auto& k : label) {
         for (auto& l : label) {
-#if 1     // test case for rdm0
-//        if (l == "c" && k == "c" && j == "a" && i == "a") { // TESTED
-          if (l == "x" && k == "c" && j == "a" && i == "a") { // TESTED
-//        if (l == "x" && k == "x" && j == "a" && i == "a") { // TESTED
-//        if (l == "c" && k == "c" && j == "x" && i == "a") { // TESTED
-//        if (l == "c" && k == "c" && j == "x" && i == "x") { // TESTED
-#if 0
-// caseA  if ((l == "c" && k == "x" && j == "x" && i == "a")) {
-          if ((l == "x" && k == "c" && j == "x" && i == "a")) {
-#endif
+#if 0     // test case for rdm0
+          if ((l == "c" && k == "c" && j == "a" && i == "a") || // TESTED 2
+              (l == "x" && k == "c" && j == "a" && i == "a") || // TESTED 2
+              (l == "x" && k == "x" && j == "a" && i == "a") || // TESTED 2
+              (l == "c" && k == "c" && j == "x" && i == "a") || // TESTED 2
+              (l == "c" && k == "c" && j == "x" && i == "x") || // TESTED 2
+              (l == "c" && k == "x" && j == "x" && i == "a") ||
+              (l == "x" && k == "c" && j == "x" && i == "a")) { //tested
+#else
+//        if (l == "x" && k == "x" && j == "x" && i == "a") { // tested
+//        if ((l == "x" && k == "c" && j == "x" && i == "x")) { //tested
+          if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) { //tested
+//        if (l == "c" && k == "c" && j == "x" && i == "x") { // tested
+//        if (l == "x" && k == "c" && j == "a" && i == "a") { // tested
+//        if (l == "c" && k == "c" && j == "x" && i == "a") {
 #endif
 #if 0     // CASPT2 test case  
           if ((l == "x" && k == "x" && j == "a" && i == "a") 
