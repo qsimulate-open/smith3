@@ -453,7 +453,11 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
   // put data
   {
     string label = target->label();
-    tt << cindent << (label == "proj" ? "r" : label) << "->put_block(ohash, odata);" << endl;
+    list<shared_ptr<Index> > ti = target->index();
+    tt << cindent << (label == "proj" ? "r" : label) << "->put_block(odata";
+    for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
+      tt << ", " << (*i)->str_gen();
+    tt << ");" << endl;
   }
   for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
         tt << *iter << endl;
@@ -577,7 +581,9 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "    std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T> > queue_(new Queue<T>());" << endl;
 
-    ss << indent << "std::vector<IndexRange> index = {this->closed_, this->active_, this->virt_};" << endl << endl;
+    ss << indent << "std::vector<IndexRange> index = {this->closed_, this->active_, this->virt_};" << endl;
+    ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl << endl;
+
     ss << indent << vectensor << " tensor0 = {r};" << endl;
     ss << indent << "std::shared_ptr<Task0<T> > task0(new Task0<T>(tensor0, index));" << endl;
     ss << indent << "queue_->add_task(task0);" << endl << endl;
@@ -590,6 +596,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     tt << "#include <src/smith/indexrange.h>" << endl;
     tt << "#include <src/smith/tensor.h>" << endl;
     tt << "#include <src/smith/task.h>" << endl;
+    tt << "#include <src/smith/subtask.h>" << endl;
     tt << "#include <vector>" << endl;
     tt << "" << endl;
     tt << "namespace bagel {" << endl;
@@ -723,8 +730,9 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
       }
 
       // retrieving tensor_
-      tt << (*i)->tensor()->generate_get_block(dindent, "i0");
-      tt << (*i)->tensor()->generate_sort_indices(dindent, "i0", di) << endl;
+      // nb may need reversal here if combined with dagger
+      tt << (*i)->tensor()->generate_get_block(dindent, "i0", false, false, true);
+      tt << (*i)->tensor()->generate_sort_indices(dindent, "i0", di, false, true) << endl;
       // retrieving subtree_
       tt << (*i)->next_target()->generate_get_block(dindent, "i1");
       tt << (*i)->next_target()->generate_sort_indices(dindent, "i1", di) << endl;
@@ -764,7 +772,11 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
         // put buffer
         {
           string label = target_->label();
-          tt << cindent << (label == "proj" ? "r" : label) << "->put_block(ohash, odata);" << endl;
+          // new interface requires indices for put_block
+          tt << cindent << (label == "proj" ? "r" : label) << "->put_block(odata";
+          for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
+            tt << ", " << (*i)->str_gen();
+          tt << ");" << endl;
         }
         for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
           tt << *iter << endl;

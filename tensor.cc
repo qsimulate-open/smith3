@@ -146,44 +146,37 @@ string Tensor::constructor_str(string indent) const {
   return ss.str();
 }
 
-string Tensor::generate_get_block(const string cindent, const string lab, const bool move, const bool noscale) const {
+string Tensor::generate_get_block(const string cindent, const string lab, const bool move, const bool noscale, const bool rev) const {
   string lbl = label();
   if (lbl == "proj") lbl = "r";
   size_t found = lbl.find("dagger");
-  bool trans = false;
   if (found != string::npos) {
     string tmp(lbl.begin(), lbl.begin()+found);
     lbl = tmp;
-    trans = true;
   }
 
   stringstream tt;
-  tt << cindent << "std::vector<size_t> " << lab << "hash = {";
-  if (!trans) {
-    tt << list_keys(index_);
-  } else {
-    assert(!(index_.size() & 1));
-#if 0
-    for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
-      if (iter != index_.rbegin()) tt << ", ";
-      string i0 = (*iter)->str_gen() + ".key()";
-      ++iter;
-      tt << (*iter)->str_gen() << ".key()" << ", " << i0;
-    }
-#else
-    for (auto i = index_.begin(); i != index_.end(); ++i) {
-      if (i != index_.begin()) tt << ", ";
-      tt << (*i)->str_gen() << ".key()";
-    } 
-#endif
-  } 
-  // for scalar.
-  if (index_.empty() && merged_)
-    tt << "0lu" ; 
-  tt << "};" << endl;
-  {
+  // for scalar. 
+  if (index_.empty() && merged_) {
+   tt << cindent << "// scalar" << endl;
+  }
+
+  { 
     tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
-                  << lbl << "->" << (move ? "move" : "get") << "_block(" << lab << "hash);" << endl;
+                  << lbl << "->" << (move ? "move" : "get") << "_block(";
+    if ((found == 2) && rev) {
+      for (auto i = index_.begin(); i != index_.end(); ++i) {
+        if (i != index_.begin()) tt << ", ";
+        tt << (*i)->str_gen();
+      }
+      tt << ");" << endl;
+    } else { 
+      for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
+        if (i != index_.rbegin()) tt << ", ";
+        tt << (*i)->str_gen();
+      }
+      tt << ");" << endl;
+    }
   }
   if (!scalar_.empty() && !noscale) {
     tt << cindent << "dscal_("; 
@@ -196,7 +189,7 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
 }
 
 
-string Tensor::generate_scratch_area(const string cindent, const string lab, const bool zero) const {
+string Tensor::generate_scratch_area(const string cindent, const string lab, const bool zero, const bool rev) const {
   string lbl = label();
   if (lbl == "proj") lbl = "r";
   size_t found = lbl.find("dagger");
@@ -206,17 +199,35 @@ string Tensor::generate_scratch_area(const string cindent, const string lab, con
   }
 
   stringstream ss;
-  ss << cindent << "std::unique_ptr<double[]> " << lab << "data_sorted(new double["
-                << lbl << "->get_size(" << lab << "hash)]);" << endl;
+  // using new move/get/put block interface
+  ss << cindent << "std::unique_ptr<double[]> " << lab << "data_sorted(new double[" << lbl << "->get_size(";
+  if ((found == 2) && rev) {
+    for (auto i = index_.begin(); i != index_.end(); ++i) {
+      if (i != index_.begin()) ss << ", ";
+      ss << (*i)->str_gen();
+    }
+    ss << ")]);" << endl;
+  } else {
+    for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
+      if (i != index_.rbegin()) ss << ", ";
+      ss << (*i)->str_gen();
+    }
+    ss << ")]);" << endl;
+  }
   if (zero) {
-    ss << cindent << "std::fill_n(" << lab << "data_sorted.get(), " << lbl << "->get_size(" << lab << "hash), 0.0);" << endl;
+    ss << cindent << "std::fill_n(" << lab << "data_sorted.get(), " << lbl << "->get_size(";
+    for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
+      if (i != index_.rbegin()) ss << ", ";
+       ss << (*i)->str_gen();
+    }
+    ss << "), 0.0);" << endl;
   }
   return ss.str();
 }
 
-string Tensor::generate_sort_indices(const string cindent, const string lab, const list<shared_ptr<Index> >& loop, const bool op) const {
+string Tensor::generate_sort_indices(const string cindent, const string lab, const list<shared_ptr<Index> >& loop, const bool op, const bool rev) const {
   stringstream ss;
-  if (!op) ss << generate_scratch_area(cindent, lab);
+  if (!op) ss << generate_scratch_area(cindent, lab, false, rev);
 
   vector<int> map(index_.size());
   ss << cindent << "sort_indices<";
@@ -383,8 +394,12 @@ string Tensor::generate_active(string indent, const string tag, const bool use_b
     }
     
     // add fdata 
-    tt << indent << "std::vector<size_t> fhash = {" << list_keys(merged) << "};" << endl;
-    tt << indent << "std::unique_ptr<double[]> fdata = " << merged_->label() << "->get_block(fhash);" << endl;
+    tt << indent << "std::unique_ptr<double[]> fdata = " << merged_->label() << "->get_block(";
+    for (auto j = merged.rbegin(); j != merged.rend(); ++j) {
+      if (j != merged.rbegin()) tt << ", ";
+      tt << (*j)->str_gen();
+    }
+    tt << ");" << endl;
    
     if (use_blas) {
       tt << indent << "std::unique_ptr<double[]> fdata_sorted(new double["<< merged_->label() << "->get_size(fhash)]);" << endl;
@@ -472,7 +487,7 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
   vector<string> close;
   tt << generate_loop(indent, close);
   // generate gamma get block, true does a move_block
-  tt << generate_get_block(indent, "o", true, true); // first true means move, second true means we don;t scale
+  tt << generate_get_block(indent, "o", true, true); // first true means move, second true means we don't scale
   if (merged_) {
     if (use_blas && !index_.empty()) tt << generate_scratch_area(indent,"o",true);
   }
@@ -480,7 +495,11 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
   tt << generate_active(indent, "o", use_blas);
 
   // generate gamma put block
-  tt << indent << label() << "->put_block(ohash, odata);" << endl;
+  tt << indent << label() << "->put_block(odata";
+  for (auto i = index_.rbegin(); i != index_.rend(); ++i) 
+    tt << ", " << (*i)->str_gen();
+  tt << ");" << endl;
+
   // close the loops
   for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
     tt << *iter << endl;

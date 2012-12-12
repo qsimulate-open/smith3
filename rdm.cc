@@ -361,8 +361,12 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
 // protected functions start //////
 string RDM::make_get_block(string indent, string tag, string lbl) {
   stringstream tt;
-  tt << indent << "std::vector<size_t> "<< tag << "hash = {" << list_keys(index_) << "};" << endl;
-  tt << indent << "std::unique_ptr<double[]> " << tag << "data = " << lbl << "->get_block(i0hash);" << endl;
+  tt << indent << "std::unique_ptr<double[]> " << tag << "data = " << lbl << "->get_block(";
+  for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
+    if (i != index_.rbegin()) tt << ", ";
+    tt << (*i)->str_gen();
+  }
+  tt << ");" << endl;
   return tt.str();
 }
 
