@@ -731,8 +731,8 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
 
       // retrieving tensor_
       // nb may need reversal here if combined with dagger
-      tt << (*i)->tensor()->generate_get_block(dindent, "i0", false, false, true);
-      tt << (*i)->tensor()->generate_sort_indices(dindent, "i0", di, false, true) << endl;
+      tt << (*i)->tensor()->generate_get_block(dindent, "i0", false, false);
+      tt << (*i)->tensor()->generate_sort_indices(dindent, "i0", di, false) << endl;
       // retrieving subtree_
       tt << (*i)->next_target()->generate_get_block(dindent, "i1");
       tt << (*i)->next_target()->generate_sort_indices(dindent, "i1", di) << endl;

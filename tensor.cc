@@ -146,7 +146,7 @@ string Tensor::constructor_str(string indent) const {
   return ss.str();
 }
 
-string Tensor::generate_get_block(const string cindent, const string lab, const bool move, const bool noscale, const bool rev) const {
+string Tensor::generate_get_block(const string cindent, const string lab, const bool move, const bool noscale) const {
   string lbl = label();
   if (lbl == "proj") lbl = "r";
   size_t found = lbl.find("dagger");
@@ -164,7 +164,7 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
   { 
     tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
                   << lbl << "->" << (move ? "move" : "get") << "_block(";
-    if ((found == 2) && rev) {
+    if (found != string::npos) {
       for (auto i = index_.begin(); i != index_.end(); ++i) {
         if (i != index_.begin()) tt << ", ";
         tt << (*i)->str_gen();
@@ -189,7 +189,7 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
 }
 
 
-string Tensor::generate_scratch_area(const string cindent, const string lab, const bool zero, const bool rev) const {
+string Tensor::generate_scratch_area(const string cindent, const string lab, const bool zero) const {
   string lbl = label();
   if (lbl == "proj") lbl = "r";
   size_t found = lbl.find("dagger");
@@ -201,7 +201,7 @@ string Tensor::generate_scratch_area(const string cindent, const string lab, con
   stringstream ss;
   // using new move/get/put block interface
   ss << cindent << "std::unique_ptr<double[]> " << lab << "data_sorted(new double[" << lbl << "->get_size(";
-  if ((found == 2) && rev) {
+  if (found != string::npos) {
     for (auto i = index_.begin(); i != index_.end(); ++i) {
       if (i != index_.begin()) ss << ", ";
       ss << (*i)->str_gen();
@@ -225,9 +225,9 @@ string Tensor::generate_scratch_area(const string cindent, const string lab, con
   return ss.str();
 }
 
-string Tensor::generate_sort_indices(const string cindent, const string lab, const list<shared_ptr<Index> >& loop, const bool op, const bool rev) const {
+string Tensor::generate_sort_indices(const string cindent, const string lab, const list<shared_ptr<Index> >& loop, const bool op) const {
   stringstream ss;
-  if (!op) ss << generate_scratch_area(cindent, lab, false, rev);
+  if (!op) ss << generate_scratch_area(cindent, lab, false);
 
   vector<int> map(index_.size());
   ss << cindent << "sort_indices<";
