@@ -67,11 +67,11 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
               (l == "x" && k == "x" && j == "x" && i == "a") ||
               (l == "x" && k == "c" && j == "x" && i == "x")) {
 #else   // turn on one of the following lines
-//        if (l == "c" && k == "c" && j == "a" && i == "a") {
+//        if (l == "c" && k == "c" && j == "a" && i == "a") { // tested
 //        if (l == "x" && k == "c" && j == "a" && i == "a") {
 //        if (l == "x" && k == "x" && j == "a" && i == "a") {
-//        if (l == "c" && k == "c" && j == "x" && i == "a") {
-          if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) {
+          if (l == "c"&& k == "c" && j == "x" && i == "a") {
+//        if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) {
 //        if (l == "c" && k == "c" && j == "x" && i == "x") {
 //        if (l == "x" && k == "x" && j == "x" && i == "a") {
 //        if (l == "x" && k == "c" && j == "x" && i == "x") {
