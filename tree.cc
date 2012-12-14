@@ -313,7 +313,12 @@ list<shared_ptr<Index> > BinaryContraction::loop_indices() {
 }
 
 
-string Tree::generate_compute_header(const int ic, const list<shared_ptr<Index> > ti, const int ntsr, const bool enlist) const {
+string Tree::generate_compute_header(const int ic, const list<shared_ptr<Index> > ti, const vector<shared_ptr<Tensor> > tensors, const bool enlist) const {
+  const int ninptensors = tensors.size()-1;
+  bool need_e0 = false;
+  for (auto& s : tensors)
+    if (!s->scalar().empty()) need_e0 = true;
+
   const int nindex = ti.size();
   stringstream tt;
   tt << "template <typename T>" << endl;
@@ -323,52 +328,46 @@ string Tree::generate_compute_header(const int ic, const list<shared_ptr<Index> 
     tt << "class Task" << ic << " : public EnergyTask<T> {" << endl;
   }
   tt << "  protected:" << endl;
-  tt << "    class Task_local : public SubTask<" << nindex << "," << ntsr << ",T> {" << endl;
+  tt << "    class Task_local : public SubTask<" << nindex << "," << ninptensors << ",T> {" << endl;
   tt << "      protected:" << endl;
   tt << "        const std::array<std::shared_ptr<const IndexRange>,3> range_;" << endl << endl;
  
   tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
   tt << "        const std::shared_ptr<const Tensor<T> >& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
-  tt << "        const std::shared_ptr<Tensor<T> >& out() const { return this->out_tensor(); }" << endl << endl;
-
+  tt << "        const std::shared_ptr<Tensor<T> >& out() const { return this->out_tensor(); }" << endl;
+  if (need_e0)
+    tt << "        const double e0_;" << endl;
+  if (enlist)
+    tt << "        double energy_;" << endl;
+  tt << endl;
   tt << "      public:" << endl;
-  tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor<T> >," << ntsr <<  ">& in, std::shared_ptr<Tensor<T> >& out," << endl;
-  tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran)" << endl;
-  tt << "          : SubTask<" << nindex << "," << ntsr << ",T>(block, in, out), range_(ran) {" << endl << endl;
-
+  tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor<T> >," << ninptensors <<  ">& in, std::shared_ptr<Tensor<T> >& out," << endl;
+  tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
+  tt << "          : SubTask<" << nindex << "," << ninptensors << ",T>(block, in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
+  if (enlist) {
+    tt << endl;
+    tt << "        double energy() const { return energy_; }" << endl;
+  }
+  tt << endl;
+  tt << "        void compute() override {" << endl;
+  if (enlist)
+    tt << "          energy_ = 0.0;" << endl; 
   int cnt = 0;
   for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
     tt << "          const Index " << (*i)->str_gen() << " = b(" << cnt++ << ");" << endl;
   tt << endl;
 
-#if 0  // should not need this anymore in new sub task model, although need to check what to do with e0
-  vector<string> done;
-  for (auto& s : tensors) {
-    string label = label__(s->label());
-    if (find(done.begin(), done.end(), label) != done.end()) continue;
-    done.push_back(label);
-    tt << "    std::shared_ptr<Tensor<T> > " << label << ";" << endl;
-    // check if scalar needs to be added  
-    if (!s->scalar().empty()) {
-      if (s->scalar() == "e0" ) {
-        tt << "    double " << s->scalar() << "_;" << endl;
-      } else { 
-        throw logic_error ("Implimentation needed");
-      }
-    }
-  }
-
-  tt << "" << endl;
-  tt << "    void compute_() {" << endl;
-  if (enlist)
-    tt << "      this->energy_ = 0.0;" << endl;
-#endif
-
   return tt.str();
 }
 
 
-string Tree::generate_compute_footer(const int ic, const list<shared_ptr<Index> > ti, const int ntsr, const bool enlist) const {
+string Tree::generate_compute_footer(const int ic, const list<shared_ptr<Index> > ti, const vector<shared_ptr<Tensor> > tensors, const bool enlist) const {
+  const int ninptensors = tensors.size()-1;
+  assert(ninptensors > 0);
+  bool need_e0 = false;
+  for (auto& s : tensors)
+    if (!s->scalar().empty()) need_e0 = true;
+
   stringstream tt;
   tt << "        }" << endl;
   tt << "    };" << endl;
@@ -378,78 +377,48 @@ string Tree::generate_compute_footer(const int ic, const list<shared_ptr<Index> 
   tt << "" << endl;
 
   tt << "    void compute_() override {" << endl;
-  if (enlist) 
+  if (enlist) { 
     tt << "      this->energy_ = 0.0;" << endl;
-  tt << "      for (auto& i : subtasks_) i->compute();" << endl;
+    tt << "      for (auto& i : subtasks_) {" << endl;
+    tt << "        i->compute();" << endl;
+    tt << "        this->energy_ += i->energy();" << endl;
+    tt << "      }" << endl;
+  } else {
+    tt << "      for (auto& i : subtasks_) i->compute();" << endl;
+  }
   tt << "    }" << endl << endl; 
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::array<std::shared_ptr<const IndexRange>,3> range) : EnergyTask<T>() {" << endl;
-  tt << "      std::array<std::shared_ptr<const Tensor<T> >," << ntsr << "> in = {{";
-  for (auto i = 1; i < ntsr + 1; ++i) {
-    if (i < ntsr) {
-      tt << "t[" << i << "], ";
-    } else {
-      tt << "t[" << i << "]";
-    } 
+  if (enlist) 
+    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::array<std::shared_ptr<const IndexRange>,3> range) : EnergyTask<T>() {" << endl;
+  else {
+    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t,  std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", const double e" : "") << ") : Task<T>() {" << endl;
   }
+  tt << "      std::array<std::shared_ptr<const Tensor<T> >," << ninptensors << "> in = {{";
+  for (auto i = 1; i < ninptensors + 1; ++i)
+    tt << "t[" << i << "]" << (i < ninptensors ? ", " : "");
   tt << "}};" << endl << endl;
 
   // over original outermost indices
-  tt << "      subtasks_.reserve("; 
-  for (auto i = ti.begin(); i != ti.end(); ++i) {
-    if (i != ti.begin()) tt << "*";
-    tt << (*i)->generate_range() << "->nblock()";
+  if (!ti.empty()) {
+    tt << "      subtasks_.reserve("; 
+    for (auto i = ti.begin(); i != ti.end(); ++i) {
+      if (i != ti.begin()) tt << "*";
+      tt << (*i)->generate_range() << "->nblock()";
+    }
+    tt << ");" << endl;
   }
-  tt << ");" << endl;
   // loops 
   string indent = "      ";
   for (auto i = ti.begin(); i != ti.end(); ++i, indent += "  ") 
     tt << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   // add subtasks
-  tt << indent  << "subtasks_.push_bask(std::shared_ptr<Task_local>(new Task_local(std::array<const Index," << ti.size() << ">{{";
+  tt << indent  << "subtasks_.push_back(std::shared_ptr<Task_local>(new Task_local(std::array<const Index," << ti.size() << ">{{";
   for (auto i = ti.rbegin(); i != ti.rend(); ++i) {
     if (i != ti.rbegin()) tt << ", ";
     tt << (*i)->str_gen();
   }
-  tt << "}}, in, t[0], range)));" << endl;
-
-  
-
-// old footer to be removed:
-#if 0
-  if (!enlist) {
-    bool found = false;
-    for (auto& s : tensors)
-      if (!s->scalar().empty()) found = true;
-    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i" << (found ? ", const double e" : "") << ") : Task<T>() {" << endl;
-  } else {
-    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : EnergyTask<T>() {" << endl;
-  }
-  tt << "      closed_ = i[0];" << endl;
-  tt << "      active_ = i[1];" << endl;
-  tt << "      virt_   = i[2];" << endl;
-
-  int i = 0;
-  vector<string> done;
-  for (auto s = tensors.begin(); s != tensors.end(); ++s) {
-    string label = label__((*s)->label());
-
-    if (find(done.begin(), done.end(), label) != done.end()) continue;
-    done.push_back(label);
-    tt << "      " << (label == "proj" ? "r" : label) << " = t[" << i << "];" << endl;
-    ++i;
-
-    // check if scalar needs to be added  
-    if (!(*s)->scalar().empty()) {
-      if ((*s)->scalar() == "e0") {
-        tt << "      e0_ = e; " << endl;
-      } else { 
-        throw logic_error("Tree::generate_compute_footer, only \"e0\" is accepted so far");
-      }
-    }
-  }
-#endif
+  tt << "}}, in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
 
   tt << "    };" << endl;
   tt << "    ~Task" << icnt << "() {};" << endl;
@@ -458,7 +427,7 @@ string Tree::generate_compute_footer(const int ic, const list<shared_ptr<Index> 
 }
 
 
-string Tree::generate_compute_operators(const string indent, const shared_ptr<Tensor> target, const list<shared_ptr<Tensor> > op,
+string Tree::generate_compute_operators(const string indent, const shared_ptr<Tensor> target, const vector<shared_ptr<Tensor> > op,
                                         const bool dagger) const {
   stringstream tt;
 
@@ -467,16 +436,19 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
   // note that I am using reverse_iterator
 //tt << target->generate_loop(cindent, close);
   // get data
-  tt << target->generate_get_block(cindent, "o", true);
+  tt << target->generate_get_block(cindent, "o", "out()", true);
 
   // add the source data to the target
   int j = 0;
   for (auto s = op.begin(); s != op.end(); ++s, ++j) {
     stringstream uu; uu << "i" << j;
     tt << cindent << "{" << endl;
-    tt << (*s)->generate_get_block(cindent+"  ", uu.str());
+
+    stringstream instr; instr << "in(" << j << ")";
+
+    tt << (*s)->generate_get_block(cindent+"  ", uu.str(), instr.str());
     list<shared_ptr<Index> > di = target->index();
-    tt << (*s)->generate_sort_indices(cindent+"  ", uu.str(), di, true);
+    tt << (*s)->generate_sort_indices(cindent+"  ", uu.str(), instr.str(), di, true);
     tt << cindent << "}" << endl;
 
     // if this is at the top-level and nees to be daggered:
@@ -505,9 +477,9 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
         }
         top->index() = tmp;
         tt << cindent << "{" << endl;
-        tt << top->generate_get_block(cindent+"  ", uu.str());
+        tt << top->generate_get_block(cindent+"  ", uu.str(), instr.str());
         list<shared_ptr<Index> > di = target->index();
-        tt << top->generate_sort_indices(cindent+"  ", uu.str(), di, true);
+        tt << top->generate_sort_indices(cindent+"  ", uu.str(), instr.str(), di, true);
         tt << cindent << "}" << endl;
       }
     }
@@ -517,7 +489,7 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
   {
     string label = target->label();
     list<shared_ptr<Index> > ti = target->index();
-    tt << cindent << (label == "proj" ? "r" : label) << "->put_block(odata";
+    tt << cindent << "out()->put_block(odata";
     for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
       tt << ", " << (*i)->str_gen();
     tt << ");" << endl;
@@ -575,7 +547,7 @@ string Tree::generate_task(const string indent, const int ip, const int ic, cons
   stringstream ss;
   ss << indent << "std::vector<std::shared_ptr<Tensor<T> > > tensor" << ic << " = {" << merge__(op) << "};" << endl;
   ss << indent << "std::shared_ptr<Task" << ic << "<T> > task"
-               << ic << "(new Task" << ic << "<T>(tensor" << ic << ", index" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
+               << ic << "(new Task" << ic << "<T>(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
 
   if (!enlist) {
     if (parent_) {
@@ -644,11 +616,11 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << "    std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T> > queue_(new Queue<T>());" << endl;
 
-    ss << indent << "std::vector<IndexRange> index = {this->closed_, this->active_, this->virt_};" << endl;
+//  ss << indent << "std::vector<IndexRange> index = {this->closed_, this->active_, this->virt_};" << endl;
     ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl << endl;
 
     ss << indent << vectensor << " tensor0 = {r};" << endl;
-    ss << indent << "std::shared_ptr<Task0<T> > task0(new Task0<T>(tensor0, index));" << endl;
+    ss << indent << "std::shared_ptr<Task0<T> > task0(new Task0<T>(tensor0));" << endl;
     ss << indent << "queue_->add_task(task0);" << endl << endl;
 
     tt << "#ifndef __SRC_SMITH_" << tree_name_ << "_TASKS_H " << endl;
@@ -681,11 +653,8 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     tt << "    };  " << endl;
     tt << "" << endl;
     tt << "  public:" << endl;
-    tt << "    Task0(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
+    tt << "    Task0(std::vector<std::shared_ptr<Tensor<T> > > t) : Task<T>() {" << endl;
     tt << "      r_ =  t[0];" << endl;
-    tt << "      closed_ = i[0];" << endl;
-    tt << "      active_ = i[1];" << endl;
-    tt << "      virt_   = i[2];" << endl;
     tt << "    };  " << endl;
     tt << "    ~Task0() {}; " << endl;
     tt << "};" << endl << endl;
@@ -734,13 +703,10 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     op.insert(op.end(), op_.begin(), op_.end());
     ss << generate_task(indent, icnt, op, enlist);
 
-    vector<shared_ptr<Tensor> > op2(op.begin(), op.end());
-
-    int nop2 = op2.size()-1;
     list<shared_ptr<Index> > ti = target_->index();
-    tt << generate_compute_header(icnt, ti, nop2, enlist);
+    tt << generate_compute_header(icnt, ti, op, enlist);
     tt << generate_compute_operators(indent, target_, op_);
-    tt << generate_compute_footer(icnt, ti, nop2, enlist);
+    tt << generate_compute_footer(icnt, ti, op, enlist);
 
     ++icnt;
 
@@ -767,7 +733,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     // write out headers
     {
       list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
-      tt << generate_compute_header(num_, ti, source_tensors.size()-1, enlist);
+      tt << generate_compute_header(num_, ti, source_tensors, enlist);
     }
 
     // here we generate a task for this binary contraction
@@ -776,8 +742,8 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
       string dindent = bindent; 
       // skip if this is the last step in energy contribution
       if (!enlist || depth() != 1) {
-        tt << target_->generate_get_block(dindent, "o", true);
-        tt << target_->generate_scratch_area(dindent, "o", true); // true means zero-out
+        tt << target_->generate_get_block(dindent, "o", "out()", true);
+        tt << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
       }
 
       // inner loop will show up here
@@ -786,16 +752,16 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
       list<shared_ptr<Index> > di = (*i)->loop_indices();
       for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent += "  ") {
         string index = (*iter)->str_gen();
-        tt << dindent << "for (auto& " << index << " : " << (*iter)->generate() << ") {" << endl;
+        tt << dindent << "for (auto& " << index << " : *" << (*iter)->generate_range("_") << ") {" << endl;
         close2.push_back(dindent + "}");
       }
 
       // retrieving tensor_
-      tt << (*i)->tensor()->generate_get_block(dindent, "i0");
-      tt << (*i)->tensor()->generate_sort_indices(dindent, "i0", di) << endl;
+      tt << (*i)->tensor()->generate_get_block(dindent, "i0", "in(0)");
+      tt << (*i)->tensor()->generate_sort_indices(dindent, "i0", "in(0)", di) << endl;
       // retrieving subtree_
-      tt << (*i)->next_target()->generate_get_block(dindent, "i1");
-      tt << (*i)->next_target()->generate_sort_indices(dindent, "i1", di) << endl;
+      tt << (*i)->next_target()->generate_get_block(dindent, "i1", "in(1)");
+      tt << (*i)->next_target()->generate_sort_indices(dindent, "i1", "in(1)", di) << endl;
 
       // call dgemm
       {
@@ -814,7 +780,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
           // so far I am expecting the case of energy contribution
           if (!enlist || depth() != 1) throw logic_error("so far I am expecting the case of energy contribution");
           string ss0 = t1.second== "" ? "1" : t1.second;
-          tt << dindent << "this->energy_ += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
+          tt << dindent << "energy_ += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
         }
       }
 
@@ -833,7 +799,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
         {
           string label = target_->label();
           // new interface requires indices for put_block
-          tt << bindent << (label == "proj" ? "r" : label) << "->put_block(odata";
+          tt << bindent << "out()->put_block(odata";
           list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
           for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
             tt << ", " << (*i)->str_gen();
@@ -852,7 +818,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
         res.push_back(*ii);
       }
       shared_ptr<Tensor> residual(new Tensor(1.0, "r", res));
-      list<shared_ptr<Tensor> > op2(1, (*i)->next_target());
+      vector<shared_ptr<Tensor> > op2 = { (*i)->next_target() };
       tt << generate_compute_operators(indent, residual, op2, (*i)->dagger());
     }
 
@@ -862,7 +828,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
       if (depth() == 0)
         for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
           swap(*i, *j);
-      tt << generate_compute_footer(num_, ti, source_tensors.size()-1, enlist);
+      tt << generate_compute_footer(num_, ti, source_tensors, enlist);
     }
 
     // increment icnt before going to subtrees

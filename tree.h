@@ -90,7 +90,7 @@ class Tree : public std::enable_shared_from_this<Tree> {
     // note that target_ can be NULL (at the very beginning)
     std::shared_ptr<Tensor> target_;
 
-    std::list<std::shared_ptr<Tensor> > op_;
+    std::vector<std::shared_ptr<Tensor> > op_;
 
     bool dagger_;
 
@@ -156,9 +156,9 @@ class Tree : public std::enable_shared_from_this<Tree> {
     std::pair<std::string,std::string> generate_task_list(const bool enlist = false,
         const std::shared_ptr<Tree> energy = std::shared_ptr<Tree>()) const;
 
-    std::string generate_compute_header(const int, const std::list<std::shared_ptr<Index> > ti, const int ntsr, const bool) const;
-    std::string generate_compute_footer(const int, const std::list<std::shared_ptr<Index> > ti, const int ntsr, const bool) const;
-    std::string generate_compute_operators(const std::string, const std::shared_ptr<Tensor>, const std::list<std::shared_ptr<Tensor> >,
+    std::string generate_compute_header(const int, const std::list<std::shared_ptr<Index> > ti, const std::vector<std::shared_ptr<Tensor> >, const bool) const;
+    std::string generate_compute_footer(const int, const std::list<std::shared_ptr<Index> > ti, const std::vector<std::shared_ptr<Tensor> >, const bool) const;
+    std::string generate_compute_operators(const std::string, const std::shared_ptr<Tensor>, const std::vector<std::shared_ptr<Tensor> >,
                                            const bool dagger = false) const;
     // generate a task in xxx.h. ip is the tag of parent, ic is the tag of this 
     std::string generate_task(const std::string, const int ip, const int ic, const std::vector<std::string>, const bool enlist, const std::string scalar = "") const;

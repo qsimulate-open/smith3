@@ -146,7 +146,7 @@ string Tensor::constructor_str(string indent) const {
   return ss.str();
 }
 
-string Tensor::generate_get_block(const string cindent, const string lab, const bool move, const bool noscale) const {
+string Tensor::generate_get_block(const string cindent, const string lab, const string tlab, const bool move, const bool noscale) const {
   string lbl = label();
   if (lbl == "proj") lbl = "r";
   size_t found = lbl.find("dagger");
@@ -163,7 +163,7 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
 
   { 
     tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
-                  << lbl << "->" << (move ? "move" : "get") << "_block(";
+                  << tlab << (move ? "->move" : "->get") << "_block(";
     if (found != string::npos) {
       for (auto i = index_.begin(); i != index_.end(); ++i) {
         if (i != index_.begin()) tt << ", ";
@@ -189,14 +189,9 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
 }
 
 
-string Tensor::generate_scratch_area(const string cindent, const string lab, const bool zero) const {
-  string lbl = label();
-  if (lbl == "proj") lbl = "r";
-  size_t found = lbl.find("dagger");
-  if (found != string::npos) {
-    string tmp(lbl.begin(), lbl.begin()+found);
-    lbl = tmp;
-  }
+string Tensor::generate_scratch_area(const string cindent, const string lab, const string tensor_lab, const bool zero) const {
+  const string lbl = tensor_lab;
+  size_t found = label_.find("dagger");
 
   stringstream ss;
   // using new move/get/put block interface
@@ -225,9 +220,9 @@ string Tensor::generate_scratch_area(const string cindent, const string lab, con
   return ss.str();
 }
 
-string Tensor::generate_sort_indices(const string cindent, const string lab, const list<shared_ptr<Index> >& loop, const bool op) const {
+string Tensor::generate_sort_indices(const string cindent, const string lab, const string tensor_lab, const list<shared_ptr<Index> >& loop, const bool op) const {
   stringstream ss;
-  if (!op) ss << generate_scratch_area(cindent, lab, false);
+  if (!op) ss << generate_scratch_area(cindent, lab, tensor_lab, false);
 
   vector<int> map(index_.size());
   ss << cindent << "sort_indices<";
@@ -482,20 +477,22 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
   tt << endl;
   // loops
   tt << "    void compute_() {" << endl;
+  // TODO temp fix
+  tt << "std::shared_ptr<Tensor<T> > out = " << label() << ";" << endl;
 
   string indent ="      ";
   vector<string> close;
   tt << generate_loop(indent, close);
   // generate gamma get block, true does a move_block
-  tt << generate_get_block(indent, "o", true, true); // first true means move, second true means we don't scale
+  tt << generate_get_block(indent, "o", "out", true, true); // first true means move, second true means we don't scale
   if (merged_) {
-    if (use_blas && !index_.empty()) tt << generate_scratch_area(indent,"o",true);
+    if (use_blas && !index_.empty()) tt << generate_scratch_area(indent, "o", "out", true);
   }
   // now generate codes for rdm
   tt << generate_active(indent, "o", use_blas);
 
   // generate gamma put block
-  tt << indent << label() << "->put_block(odata";
+  tt << indent << "out->put_block(odata";
   for (auto i = index_.rbegin(); i != index_.rend(); ++i) 
     tt << ", " << (*i)->str_gen();
   tt << ");" << endl;
@@ -509,13 +506,13 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
   tt << "" << endl;
   tt << "  public:" << endl;
   if (!enlist) {
-    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : Task<T>() {" << endl;
+    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::array<std::shared_ptr<const IndexRange>,3> i) : Task<T>() {" << endl;
   } else {
-    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::vector<IndexRange> i) : EnergyTask<T>() {" << endl;
+    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t, std::array<std::shared_ptr<const IndexRange>,3> i) : EnergyTask<T>() {" << endl;
   }
-  tt << "      closed_ = i[0];" << endl;
-  tt << "      active_ = i[1];" << endl;
-  tt << "      virt_   = i[2];" << endl;
+  tt << "      closed_ = *i[0];" << endl;
+  tt << "      active_ = *i[1];" << endl;
+  tt << "      virt_   = *i[2];" << endl;
   tt << "      " << label() << "  = t[0];" << endl;
   //this is related to what rdms we have
   {

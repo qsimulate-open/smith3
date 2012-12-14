@@ -120,14 +120,14 @@ class Index {
       return out;
     };
 
-    std::string generate_range() const {
-      std::string out;
+    std::string generate_range(const std::string postfix = "") const {
+      std::string out = "range" + postfix;
       if (label_ == "c") {
-        out = "range[0]";
+        out += "[0]";
       } else if (label_ == "x") {
-        out = "range[1]";
+        out += "[1]";
       } else if (label_ == "a") {
-        out = "range[2]";
+        out += "[2]";
       } else {
         throw std::runtime_error("unkonwn index type in Index::generate_range()");
       }
