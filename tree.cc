@@ -333,9 +333,7 @@ string Tree::generate_compute_header(const int ic, const int nindex, const int n
   tt << "      public:" << endl;
   tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor<T> >," << ntsr <<  ">& in, std::shared_ptr<Tensor<T> >& out," << endl;
   tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran)" << endl;
-  tt << "          : SubTask<" << nindex << "," << ntsr << ",T>(block, in, out), range_(ran) { }" << endl << endl;
-
-  tt << "      void compute() override {" << endl; 
+  tt << "          : SubTask<" << nindex << "," << ntsr << ",T>(block, in, out), range_(ran) {" << endl << endl;
 
 #if 0  // should not need this anymore in new sub task model, although need to check what to do with e0
   vector<string> done;
@@ -366,6 +364,7 @@ string Tree::generate_compute_header(const int ic, const int nindex, const int n
 
 string Tree::generate_compute_footer(const int ic, const list<shared_ptr<Index> > ti, const int ntsr, const bool enlist) const {
   stringstream tt;
+  tt << "        }" << endl;
   tt << "    };" << endl;
   tt << "" << endl;
   tt << "    // subtask queue" << endl; 
@@ -458,9 +457,9 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
   stringstream tt;
 
   vector<string> close;
-  string cindent = indent;
+  string cindent = indent + "    ";
   // note that I am using reverse_iterator
-  tt << target->generate_loop(cindent, close);
+//tt << target->generate_loop(cindent, close);
   // get data
   tt << target->generate_get_block(cindent, "o", true);
 
@@ -767,36 +766,31 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << generate_task(indent, num_, source_tensors, enlist);
 
     // write out headers
-    list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
-    tt << generate_compute_header(num_, ti.size(), source_tensors.size()-1, enlist);
+
+if (depth() == 0) 
+tt << "aaa" << endl;
+    {
+      list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
+      tt << generate_compute_header(num_, ti.size(), source_tensors.size()-1, enlist);
+    }
 
     // here we generate a task for this binary contraction
     if (depth() != 0) {
-      vector<string> close;
-      string cindent = indent;
-      // mkm TO FIX need to move inner loops to subtask footer
-      list<shared_ptr<Index> > ti = (*i)->target_indices();
-      // note that I am using reverse_iterator
+      const string bindent = indent + "    ";
+      string dindent = bindent; 
       // skip if this is the last step in energy contribution
       if (!enlist || depth() != 1) {
-        for (auto iter = ti.begin(); iter != ti.end(); ++iter, cindent += "  ") {
-          string cindex = (*iter)->str_gen();
-          tt << cindent << "for (auto& " << cindex << " : " << (*iter)->generate() << ") {" << endl;
-          close.push_back(cindent + "}");
-        }
-
-        tt << target_->generate_get_block(cindent, "o", true);
-        tt << target_->generate_scratch_area(cindent, "o", true); // true means zero-out
+        tt << target_->generate_get_block(dindent, "o", true);
+        tt << target_->generate_scratch_area(dindent, "o", true); // true means zero-out
       }
 
       // inner loop will show up here
       tt << endl;
       vector<string> close2;
-      string dindent = cindent;
       list<shared_ptr<Index> > di = (*i)->loop_indices();
       for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent += "  ") {
-        string cindex = (*iter)->str_gen();
-        tt << dindent << "for (auto& " << cindex << " : " << (*iter)->generate() << ") {" << endl;
+        string index = (*iter)->str_gen();
+        tt << dindent << "for (auto& " << index << " : " << (*iter)->generate() << ") {" << endl;
         close2.push_back(dindent + "}");
       }
 
@@ -837,19 +831,18 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
       if (!enlist || depth() != 1) {
         // sort buffer
         {
-          tt << (*i)->target()->generate_sort_indices_target(cindent, "o", di, (*i)->tensor(), (*i)->next_target());
+          tt << (*i)->target()->generate_sort_indices_target(bindent, "o", di, (*i)->tensor(), (*i)->next_target());
         }
         // put buffer
         {
           string label = target_->label();
           // new interface requires indices for put_block
-          tt << cindent << (label == "proj" ? "r" : label) << "->put_block(odata";
+          tt << bindent << (label == "proj" ? "r" : label) << "->put_block(odata";
+          list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
           for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
             tt << ", " << (*i)->str_gen();
           tt << ");" << endl;
         }
-        for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-          tt << *iter << endl;
       }
 
     } else {
@@ -870,6 +863,9 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     // send outer loop indices 
     {
       list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
+      if (depth() == 0)
+        for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
+          swap(*i, *j);
       tt << generate_compute_footer(num_, ti, source_tensors.size()-1, enlist);
     }
 
