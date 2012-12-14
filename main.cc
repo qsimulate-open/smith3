@@ -40,14 +40,14 @@ using namespace smith;
 int main() {
 
   string theory="CAS_test"; 
-  shared_ptr<Op> proj0(new Op("proj", "c", "c", "x", "a"));
-  shared_ptr<Op> t20(new Op("t2", "x", "a", "c", "c"));
-  shared_ptr<Op> r0(new Op("r", "x", "a", "c", "c"));
+  shared_ptr<Op> proj0(new Op("proj", "x", "c", "a", "a"));
+  shared_ptr<Op> t20(new Op("t2", "a", "a", "x", "c"));
+  shared_ptr<Op> r0(new Op("r", "a", "a", "x", "c"));
   shared_ptr<Op> f1(new Op("f1", "g", "g"));
   shared_ptr<Op> v2(new Op("v2", "g", "g", "g", "g"));
   shared_ptr<Op> h1(new Op("h1", "g", "g"));
   shared_ptr<Op> proje(new Op("proj"));
-  shared_ptr<Op> t2dagger0(new Op("t2dagger", "c", "c", "x", "a"));
+  shared_ptr<Op> t2dagger0(new Op("t2dagger", "x", "c", "a", "a"));
   list<shared_ptr<Op> > da0 = {proj0, f1, t20};
   list<shared_ptr<Op> > db0 = {proj0, t20};
   list<shared_ptr<Op> > dc0 = {proj0, v2};

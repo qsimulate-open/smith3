@@ -119,6 +119,21 @@ class Index {
       }
       return out;
     };
+
+    std::string generate_range() const {
+      std::string out;
+      if (label_ == "c") {
+        out = "range[0]";
+      } else if (label_ == "a") {
+        out = "range[2]";
+      } else if (label_ == "x") {
+        out = "range[1]";
+      } else {
+        throw std::runtime_error("unkonwn index type in Index::generate_range()");
+      }
+      return out;
+    };
+
 };
 
 // global function
