@@ -156,7 +156,7 @@ class Tree : public std::enable_shared_from_this<Tree> {
     std::pair<std::string,std::string> generate_task_list(const bool enlist = false,
         const std::shared_ptr<Tree> energy = std::shared_ptr<Tree>()) const;
 
-    std::string generate_compute_header(const int, const int, const int, const bool) const;
+    std::string generate_compute_header(const int, const std::list<std::shared_ptr<Index> > ti, const int ntsr, const bool) const;
     std::string generate_compute_footer(const int, const std::list<std::shared_ptr<Index> > ti, const int ntsr, const bool) const;
     std::string generate_compute_operators(const std::string, const std::shared_ptr<Tensor>, const std::list<std::shared_ptr<Tensor> >,
                                            const bool dagger = false) const;

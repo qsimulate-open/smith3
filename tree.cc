@@ -313,7 +313,8 @@ list<shared_ptr<Index> > BinaryContraction::loop_indices() {
 }
 
 
-string Tree::generate_compute_header(const int ic, const int nindex, const int ntsr, const bool enlist) const {
+string Tree::generate_compute_header(const int ic, const list<shared_ptr<Index> > ti, const int ntsr, const bool enlist) const {
+  const int nindex = ti.size();
   stringstream tt;
   tt << "template <typename T>" << endl;
   if (!enlist) {
@@ -334,6 +335,11 @@ string Tree::generate_compute_header(const int ic, const int nindex, const int n
   tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor<T> >," << ntsr <<  ">& in, std::shared_ptr<Tensor<T> >& out," << endl;
   tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran)" << endl;
   tt << "          : SubTask<" << nindex << "," << ntsr << ",T>(block, in, out), range_(ran) {" << endl << endl;
+
+  int cnt = 0;
+  for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
+    tt << "          const Index " << (*i)->str_gen() << " = b(" << cnt++ << ");" << endl;
+  tt << endl;
 
 #if 0  // should not need this anymore in new sub task model, although need to check what to do with e0
   vector<string> done;
@@ -732,14 +738,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
 
     int nop2 = op2.size()-1;
     list<shared_ptr<Index> > ti = target_->index();
-    int nti = ti.size();
-#if 0 //debug
-    tt << "// top" << endl;
-    tt << "// number of tensors: " << sop2 << endl;
-    tt << "// outer loop size: " << ti.size() << endl;
-    for (auto& j : ti ) tt << "// " << j->str_gen() << endl;
-#endif
-    tt << generate_compute_header(icnt, nti, nop2, enlist);
+    tt << generate_compute_header(icnt, ti, nop2, enlist);
     tt << generate_compute_operators(indent, target_, op_);
     tt << generate_compute_footer(icnt, ti, nop2, enlist);
 
@@ -766,12 +765,9 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << generate_task(indent, num_, source_tensors, enlist);
 
     // write out headers
-
-if (depth() == 0) 
-tt << "aaa" << endl;
     {
       list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
-      tt << generate_compute_header(num_, ti.size(), source_tensors.size()-1, enlist);
+      tt << generate_compute_header(num_, ti, source_tensors.size()-1, enlist);
     }
 
     // here we generate a task for this binary contraction
@@ -795,8 +791,8 @@ tt << "aaa" << endl;
       }
 
       // retrieving tensor_
-      tt << (*i)->tensor()->generate_get_block(dindent, "i0", false, false);
-      tt << (*i)->tensor()->generate_sort_indices(dindent, "i0", di, false) << endl;
+      tt << (*i)->tensor()->generate_get_block(dindent, "i0");
+      tt << (*i)->tensor()->generate_sort_indices(dindent, "i0", di) << endl;
       // retrieving subtree_
       tt << (*i)->next_target()->generate_get_block(dindent, "i1");
       tt << (*i)->next_target()->generate_sort_indices(dindent, "i1", di) << endl;
