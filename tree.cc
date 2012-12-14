@@ -313,7 +313,7 @@ list<shared_ptr<Index> > BinaryContraction::loop_indices() {
 }
 
 
-string Tree::generate_compute_header(const int ic, const list<shared_ptr<Index> > ti, const vector<shared_ptr<Tensor> > tensors, const bool enlist) const {
+string Tree::generate_compute_header(const int ic, const list<shared_ptr<Index> > ti, const vector<shared_ptr<Tensor> > tensors, const bool enlist, const bool no_outside) const {
   const int ninptensors = tensors.size()-1;
   bool need_e0 = false;
   for (auto& s : tensors)
@@ -353,16 +353,18 @@ string Tree::generate_compute_header(const int ic, const list<shared_ptr<Index> 
   if (enlist)
     tt << "          energy_ = 0.0;" << endl; 
 
-  list<shared_ptr<Index> > ti_copy = ti;
-  if (depth() == 0) {
-    for (auto i = ti_copy.begin(), j = ++ti_copy.begin(); i != ti_copy.end(); ++i, ++i, ++j, ++j)
-      swap(*i, *j);
-  }
+  if (!no_outside) {
+    list<shared_ptr<Index> > ti_copy = ti;
+    if (depth() == 0) {
+      for (auto i = ti_copy.begin(), j = ++ti_copy.begin(); i != ti_copy.end(); ++i, ++i, ++j, ++j)
+        swap(*i, *j);
+    }
 
-  int cnt = 0;
-  for (auto i = ti_copy.rbegin(); i != ti_copy.rend(); ++i) 
-    tt << "          const Index " << (*i)->str_gen() << " = b(" << cnt++ << ");" << endl;
-  tt << endl;
+    int cnt = 0;
+    for (auto i = ti_copy.rbegin(); i != ti_copy.rend(); ++i) 
+      tt << "          const Index " << (*i)->str_gen() << " = b(" << cnt++ << ");" << endl;
+    tt << endl;
+  }
 
   return tt.str();
 }
@@ -711,6 +713,8 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << generate_task(indent, icnt, op, enlist);
 
     list<shared_ptr<Index> > ti = target_->index();
+    // TODO ccaa case causes problems in new subtask algorithm
+    assert(ti.size() > 0);
     tt << generate_compute_header(icnt, ti, op, enlist);
     tt << generate_compute_operators(indent, target_, op_);
     tt << generate_compute_footer(icnt, ti, op, enlist);
@@ -740,7 +744,14 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     // write out headers
     {
       list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
-      tt << generate_compute_header(num_, ti, source_tensors, enlist);
+      // if outer loop is empty, send inner loop indices to header
+      if (ti.size() == 0) {
+        assert(depth() != 0);
+        list<shared_ptr<Index> > di = (*i)->loop_indices();
+        tt << generate_compute_header(num_, di, source_tensors, enlist, true);
+      } else { 
+        tt << generate_compute_header(num_, ti, source_tensors, enlist);
+      }
     }
 
     // here we generate a task for this binary contraction
@@ -753,14 +764,23 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
         tt << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
       }
 
+      list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
+  
       // inner loop will show up here
-      tt << endl;
-      vector<string> close2;
+      // but only if outer loop is not empty
       list<shared_ptr<Index> > di = (*i)->loop_indices();
-      for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent += "  ") {
-        string index = (*iter)->str_gen();
-        tt << dindent << "for (auto& " << index << " : *" << (*iter)->generate_range("_") << ") {" << endl;
-        close2.push_back(dindent + "}");
+      vector<string> close2;
+      if (ti.size() != 0) {
+        tt << endl;
+        for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent += "  ") {
+          string index = (*iter)->str_gen();
+          tt << dindent << "for (auto& " << index << " : *" << (*iter)->generate_range("_") << ") {" << endl;
+          close2.push_back(dindent + "}");
+        }
+      } else {
+        int cnt = 0;
+        for (auto i = di.begin(); i != di.end(); ++i, cnt++) tt << dindent << "const Index " <<  (*i)->str_gen() << " = b(" << cnt << ");" << endl;
+        tt << endl;
       }
 
       // retrieving tensor_
@@ -791,9 +811,11 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
         }
       }
 
-      for (auto iter = close2.rbegin(); iter != close2.rend(); ++iter)
-        tt << *iter << endl;
-      tt << endl;
+      if (ti.size() != 0) {
+        for (auto iter = close2.rbegin(); iter != close2.rend(); ++iter)
+          tt << *iter << endl;
+        tt << endl;
+      }
       // Inner loop ends here
 
       // skip if this is the last step in energy contribution
@@ -829,13 +851,22 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
       tt << generate_compute_operators(indent, residual, op2, (*i)->dagger());
     }
 
-    // send outer loop indices 
+    // send outer loop indices if outer loop indices exist, otherwise send inner indices
     {
       list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
       if (depth() == 0)
         for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
           swap(*i, *j);
-      tt << generate_compute_footer(num_, ti, source_tensors, enlist);
+      if (ti.size() == 0) { 
+        assert(depth() !=0);
+        // sending inner indices
+        list<shared_ptr<Index> > di = (*i)->loop_indices();
+        di.reverse();
+        tt << generate_compute_footer(num_, di, source_tensors, enlist);
+      } else {
+        // sending outer indices
+        tt << generate_compute_footer(num_, ti, source_tensors, enlist);
+      }
     }
 
     // increment icnt before going to subtrees
