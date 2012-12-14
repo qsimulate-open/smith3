@@ -352,8 +352,15 @@ string Tree::generate_compute_header(const int ic, const list<shared_ptr<Index> 
   tt << "        void compute() override {" << endl;
   if (enlist)
     tt << "          energy_ = 0.0;" << endl; 
+
+  list<shared_ptr<Index> > ti_copy = ti;
+  if (depth() == 0) {
+    for (auto i = ti_copy.begin(), j = ++ti_copy.begin(); i != ti_copy.end(); ++i, ++i, ++j, ++j)
+      swap(*i, *j);
+  }
+
   int cnt = 0;
-  for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
+  for (auto i = ti_copy.rbegin(); i != ti_copy.rend(); ++i) 
     tt << "          const Index " << (*i)->str_gen() << " = b(" << cnt++ << ");" << endl;
   tt << endl;
 
