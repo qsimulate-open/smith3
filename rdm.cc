@@ -29,6 +29,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
+#include <map>
 
 using namespace std;
 using namespace smith;
@@ -50,12 +51,12 @@ bool RDM::operator==(const RDM& o) const {
 }
 
 
-string RDM::generate(string indent, const string tag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, const string mlab, const bool use_blas) {
-  return merged.empty() ? generate_not_merged(indent, tag, index) : generate_merged(indent, tag, index, merged, mlab, use_blas);
+string RDM::generate(string indent, const string tag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, const string mlab, vector<string> in_tensors, const bool use_blas) {
+  return merged.empty() ? generate_not_merged(indent, tag, index, in_tensors) : generate_merged(indent, tag, index, merged, mlab, in_tensors, use_blas);
 }
 
 
-string RDM::generate_not_merged(string indent, const string tag, const list<shared_ptr<Index> >& index) {
+string RDM::generate_not_merged(string indent, const string tag, const list<shared_ptr<Index> >& index, vector<string> in_tensors) {
   stringstream tt;
   tt << indent << "{" << endl;
   const string lindent = indent;
@@ -63,11 +64,14 @@ string RDM::generate_not_merged(string indent, const string tag, const list<shar
   indent += "  ";
   const string itag = "i";
 
+
   // now do the sort
   vector<string> close;
 
   // in case delta_ is not empty
   if (!delta_.empty()) {
+  
+    if (rank() == 0) tt << "// rdm0 non-merged case" << endl;
 
     // first delta if statement 
     tt << make_delta_if(indent, close);
@@ -76,7 +80,12 @@ string RDM::generate_not_merged(string indent, const string tag, const list<shar
       stringstream zz;
       zz << "rdm" << rank();
       string rlab = zz.str();
-      tt << make_get_block(indent, "i0", rlab);
+
+      // make map of in_tensors 
+      map<string, string> inlab;
+      map_in_tensors(in_tensors, inlab);
+  
+      tt << make_get_block(indent, "i0", inlab[rlab]);
     }    
 
     // loops over delta indices
@@ -107,11 +116,15 @@ string RDM::generate_not_merged(string indent, const string tag, const list<shar
   } else {
     // loop up the operator generators
 
+    // make map of in_tensors 
+    map<string, string> inlab;
+    map_in_tensors(in_tensors, inlab);
+
     if (rank() != 0) {
       stringstream zz;
       zz << "rdm" << rank();
       string rlab = zz.str();
-      tt << make_get_block(indent, "i0", rlab);
+      tt << make_get_block(indent, "i0", inlab[rlab]);
     }
  
     // do sort_indices here
@@ -152,7 +165,7 @@ string RDM::generate_not_merged(string indent, const string tag, const list<shar
 }
 
 
-string RDM::generate_merged(string indent, const string tag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, const string mlab, const bool use_blas) {
+string RDM::generate_merged(string indent, const string tag, const list<shared_ptr<Index> >& index, const list<shared_ptr<Index> >& merged, const string mlab, vector<string> in_tensors, const bool use_blas) {
   stringstream tt;
   //indent += "  ";
   const string itag = "i";
@@ -160,9 +173,7 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
   // now do the sort
   vector<string> close;
 
-
-  if (rank() == 0)
-    tt << indent << "// rdm0 merged case" << endl;
+  if (rank() == 0) tt << indent << "// rdm0 merged case" << endl;
 
   // first delta loops for blocks
   if (!delta_.empty()) {
@@ -181,9 +192,14 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
   zz << "rdm" << rank();
   string rlab = zz.str();
 
+  // make map of in_tensors 
+  map<string, string> inlab;
+  map_in_tensors(in_tensors, inlab);
+
   if (!use_blas) {
-    if (rank() !=0)
-      tt <<  make_get_block(indent, "i0", rlab);
+    if (rank() != 0) {
+      tt <<  make_get_block(indent, "i0", inlab[rlab]);
+    }
     // loops for index and merged 
     tt << make_merged_loops(indent, itag, close);
     // make odata part of summation for target
@@ -192,8 +208,8 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
     tt << multiply_merge(itag, indent, merged);
   } else {
     if (rank() != 0) {
-      tt << make_get_block(indent, "i0", rlab);
-      tt << make_scratch_area(indent,"i0", rlab);
+      tt << make_get_block(indent, "i0", inlab[rlab]);
+      tt << make_scratch_area(indent,"i0", inlab[rlab]);
       tt << make_sort_indices(indent, "i0", merged);
       tt << endl;
 
@@ -358,7 +374,17 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
 }
 
 
-// protected functions start //////
+////// protected functions start //////
+void RDM::map_in_tensors(std::vector<string> in_tensors, map<string,string>& inlab) {
+  // make map of in_tensors 
+  int icnt = 0;
+  for (auto& i : in_tensors) {
+    stringstream zz; zz << "in(" << icnt << ")";
+    inlab[i] = zz.str();
+    ++icnt;
+  }
+}
+
 string RDM::make_get_block(string indent, string tag, string lbl) {
   stringstream tt;
   tt << indent << "std::unique_ptr<double[]> " << tag << "data = " << lbl << "->get_block(";

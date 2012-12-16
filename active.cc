@@ -324,8 +324,19 @@ bool Active::operator==(const Active& o) const {
 
 string Active::generate(const string indent, const string tag, const list<shared_ptr<Index> > index, const list<shared_ptr<Index> > merged, const string mlab, const bool use_blas) const {
   stringstream tt;
+
+  vector<string> in_tensors;
+  if (!merged.empty()) {
+    in_tensors.push_back(mlab); 
+  }
+  vector<int> req_rdm = required_rdm();
+  for (auto& i : req_rdm) {
+    stringstream ss; ss << "rdm" << i;
+    in_tensors.push_back(ss.str());
+  }
+  
   for (auto& i : rdm_)
-    tt << i->generate(indent, tag, index, merged, mlab, use_blas);
+    tt << i->generate(indent, tag, index, merged, mlab, in_tensors, use_blas);
   return tt.str();
 }
 
