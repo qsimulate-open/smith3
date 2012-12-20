@@ -679,6 +679,9 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
       // switch for blas, if true merged rdm*f1 tensor multiplication will use blas 
       bool use_blas = false;
       tt << i->generate_gamma(icnt, enlist, use_blas);
+      cout << "Printing gamma" << endl;
+      i->print();
+      i->active()->print();
       vector<string> tmp = {i->label()};
       vector<int> rdms = i->active()->required_rdm(); 
       for (auto& j : rdms) {

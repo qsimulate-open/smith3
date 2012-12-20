@@ -173,7 +173,9 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
   // now do the sort
   vector<string> close;
 
+#if 0
   if (rank() == 0) tt << indent << "// rdm0 merged case" << endl;
+#endif
 
   // first delta loops for blocks
   if (!delta_.empty()) {
