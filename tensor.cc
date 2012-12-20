@@ -370,7 +370,7 @@ pair<string, string> Tensor::generate_dim(const list<shared_ptr<Index> >& di) co
 }
 
 
-string Tensor::generate_active(string indent, const string tag, const bool use_blas) const {
+string Tensor::generate_active(string indent, const string tag, const int ninptensors, const bool use_blas) const {
   assert(label_.find("Gamma") != string::npos);
   stringstream tt;
   if (!merged_) {
@@ -381,8 +381,8 @@ string Tensor::generate_active(string indent, const string tag, const bool use_b
 
     // add fdata 
     list<shared_ptr<Index> >& merged = merged_->index();
-    // caution, this assumes merged tensor is added before other tensors (ie before rdms)
-    tt << indent << "std::unique_ptr<double[]> fdata = in(0)->get_block(";
+    // fdata tensor should be last to mirror gamma footer
+    tt << indent << "std::unique_ptr<double[]> fdata = in("<< ninptensors-1 << ")->get_block(";
     for (auto j = merged.rbegin(); j != merged.rend(); ++j) {
       if (j != merged.rbegin()) tt << ", ";
       tt << (*j)->str_gen();
@@ -520,7 +520,7 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
     if (use_blas && !index_.empty()) tt << generate_scratch_area(indent, "o", "out", true);
   }
   // now generate codes for rdm
-  tt << generate_active(indent, "o", use_blas);
+  tt << generate_active(indent, "o", ninptensors, use_blas);
 
   // generate gamma put block
   tt << indent << "out()->put_block(odata";
@@ -560,10 +560,9 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
       tt << "t[" << i << "]" << (i == 1 ? "" : ", ");
     tt << "}};" << endl << endl;
   } else {
-    tt <<  "t[" << ninptensors << "]" << (ninptensors == 1 ? "" : ", ");
     if (ninptensors > 1) {
-      for (auto i = 1;  i < ninptensors; ++i) 
-        tt << "t[" << i << "]" << (i == ninptensors - 1 ? "" : ", ");
+      for (auto i = 1;  i < ninptensors + 1; ++i) 
+        tt << "t[" << i << "]" << (i == ninptensors ? "" : ", ");
       tt << "}};" << endl << endl;
     }
   }

@@ -113,7 +113,7 @@ class Tensor {
 
     std::pair<std::string, std::string> generate_dim(const std::list<std::shared_ptr<Index> >&) const;
 
-    std::string generate_active(const std::string indent, const std::string tag, const bool) const;
+    std::string generate_active(const std::string indent, const std::string tag, const int ninptensors, const bool) const;
     std::string generate_loop(std::string&, std::vector<std::string>&) const;
     std::string generate_gamma(const int, const bool, const bool) const;
 

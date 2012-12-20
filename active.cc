@@ -326,13 +326,13 @@ string Active::generate(const string indent, const string tag, const list<shared
   stringstream tt;
 
   vector<string> in_tensors;
-  if (!merged.empty()) {
-    in_tensors.push_back(mlab); 
-  }
   vector<int> req_rdm = required_rdm();
   for (auto& i : req_rdm) {
     stringstream ss; ss << "rdm" << i;
     in_tensors.push_back(ss.str());
+  }
+  if (!merged.empty()) {
+    in_tensors.push_back(mlab); 
   }
   
   for (auto& i : rdm_)
