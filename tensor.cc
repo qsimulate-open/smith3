@@ -555,17 +555,16 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
     tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T> > > t,  std::array<std::shared_ptr<const IndexRange>,3> range) : Task<T>() {" << endl;
   }
   tt << "      std::array<std::shared_ptr<const Tensor<T> >," << ninptensors << "> in = {{";
-  if (!merged_) {
-    for (auto i = ninptensors;  i >= 1; i--) 
-      tt << "t[" << i << "]" << (i == 1 ? "" : ", ");
-    tt << "}};" << endl << endl;
-  } else {
-    if (ninptensors > 1) {
-      for (auto i = 1;  i < ninptensors + 1; ++i) 
-        tt << "t[" << i << "]" << (i == ninptensors ? "" : ", ");
-      tt << "}};" << endl << endl;
-    }
-  }
+
+   // write out tensors in increasing order
+   for (auto i = 1;  i < ninptensors + 1; ++i) 
+     tt << "t[" << i << "]" << (i == ninptensors ? "" : ", ");
+   tt << "}};" << endl << endl;
+
+  
+
+
+
 
   // over original outermost indices
   if (!index_.empty()) {

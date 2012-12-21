@@ -71,7 +71,9 @@ string RDM::generate_not_merged(string indent, const string tag, const list<shar
   // in case delta_ is not empty
   if (!delta_.empty()) {
   
-    if (rank() == 0) tt << "// rdm0 non-merged case" << endl;
+#if 1
+    if (rank() == 0) tt << indent <<  "// rdm0 non-merged case" << endl;
+#endif
 
     // first delta if statement 
     tt << make_delta_if(indent, close);
@@ -173,7 +175,7 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
   // now do the sort
   vector<string> close;
 
-#if 0
+#if 1
   if (rank() == 0) tt << indent << "// rdm0 merged case" << endl;
 #endif
 
@@ -422,7 +424,7 @@ string RDM::make_blas_multiply(string dindent, const list<shared_ptr<Index> >& l
 #if 0
     throw logic_error("ddot needed in f1 merged");
 #else  
-    // todo need to check this when general case is available
+    // TODO need to check this when general case is available
     tt << dindent << "odata[0] = " << setprecision(1) << fixed << factor() <<  " * " << "ddot_(" << t1.first << ", fdata_sorted, 1, i0data_sorted, 1);" << endl;
 #endif
   }
