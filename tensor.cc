@@ -556,10 +556,10 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
   }
   tt << "      std::array<std::shared_ptr<const Tensor<T> >," << ninptensors << "> in = {{";
 
-   // write out tensors in increasing order
-   for (auto i = 1;  i < ninptensors + 1; ++i) 
-     tt << "t[" << i << "]" << (i == ninptensors ? "" : ", ");
-   tt << "}};" << endl << endl;
+  // write out tensors in increasing order
+  for (auto i = 1;  i < ninptensors + 1; ++i) 
+    tt << "t[" << i << "]" << (i == ninptensors ? "" : ", ");
+  tt << "}};" << endl << endl;
 
   
 
@@ -594,8 +594,10 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
     tt << (*i)->str_gen();
   }
   if (merged_) {
+    tt << (index_.empty() ? "" : ", ");
     for (auto i = merged.rbegin(); i != merged.rend(); ++i) {
-      tt << ", " << (*i)->str_gen(); 
+      tt << (*i)->str_gen();
+      if (i != --merged.rend()) tt << ", ";
     }
   }
   tt << "}}, in, t[0], range)));" << endl;
