@@ -328,7 +328,8 @@ string Tree::generate_compute_header(const int ic, const list<shared_ptr<Index> 
     tt << "class Task" << ic << " : public EnergyTask<T> {" << endl;
   }
   tt << "  protected:" << endl;
-  tt << "    class Task_local : public SubTask<" << nindex << "," << ninptensors << ",T> {" << endl;
+  // if index is empty give dummy arg
+  tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << ",T> {" << endl;
   tt << "      protected:" << endl;
   tt << "        const std::array<std::shared_ptr<const IndexRange>,3> range_;" << endl << endl;
  
@@ -341,9 +342,16 @@ string Tree::generate_compute_header(const int ic, const list<shared_ptr<Index> 
     tt << "        double energy_;" << endl;
   tt << endl;
   tt << "      public:" << endl;
-  tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor<T> >," << ninptensors <<  ">& in, std::shared_ptr<Tensor<T> >& out," << endl;
-  tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
-  tt << "          : SubTask<" << nindex << "," << ninptensors << ",T>(block, in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
+  // if index is empty use dummy index 1 to subtask
+  if (ti.empty()) {
+    tt << "        Task_local(const std::array<std::shared_ptr<const Tensor<T> >," << ninptensors <<  ">& in, std::shared_ptr<Tensor<T> >& out," << endl;
+    tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
+    tt << "          : SubTask<1," << ninptensors << ",T>(std::array<const Index, 1>(), in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
+  } else {
+    tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor<T> >," << ninptensors <<  ">& in, std::shared_ptr<Tensor<T> >& out," << endl;
+    tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
+    tt << "          : SubTask<" << nindex << "," << ninptensors << ",T>(block, in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
+  }
   if (enlist) {
     tt << endl;
     tt << "        double energy() const { return energy_; }" << endl;
@@ -422,12 +430,16 @@ string Tree::generate_compute_footer(const int ic, const list<shared_ptr<Index> 
   for (auto i = ti.begin(); i != ti.end(); ++i, indent += "  ") 
     tt << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   // add subtasks
-  tt << indent  << "subtasks_.push_back(std::shared_ptr<Task_local>(new Task_local(std::array<const Index," << ti.size() << ">{{";
-  for (auto i = ti.rbegin(); i != ti.rend(); ++i) {
-    if (i != ti.rbegin()) tt << ", ";
-    tt << (*i)->str_gen();
+  if (!ti.empty()) {
+    tt << indent  << "subtasks_.push_back(std::shared_ptr<Task_local>(new Task_local(std::array<const Index," << ti.size() << ">{{";
+    for (auto i = ti.rbegin(); i != ti.rend(); ++i) {
+      if (i != ti.rbegin()) tt << ", ";
+      tt << (*i)->str_gen();
+    }
+    tt << "}}, in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
+  } else { 
+    tt << indent  << "subtasks_.push_back(std::shared_ptr<Task_local>(new Task_local(in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
   }
-  tt << "}}, in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
 
   tt << "    };" << endl;
   tt << "    ~Task" << icnt << "() {};" << endl;
@@ -717,7 +729,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
 
     list<shared_ptr<Index> > ti = target_->index();
     // TODO ccaa case causes problems in new subtask algorithm
-    assert(ti.size() > 0);
+    //assert(ti.size() > 0);
     tt << generate_compute_header(icnt, ti, op, enlist);
     tt << generate_compute_operators(indent, target_, op_);
     tt << generate_compute_footer(icnt, ti, op, enlist);
