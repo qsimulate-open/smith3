@@ -28,6 +28,7 @@
 #include "constants.h"
 #include <algorithm>
 #include <stdexcept>
+#include <map>
 
 using namespace std;
 using namespace smith;
@@ -315,6 +316,7 @@ list<shared_ptr<Index> > BinaryContraction::loop_indices() {
 
 string Tree::generate_compute_header(const int ic, const list<shared_ptr<Index> > ti, const vector<shared_ptr<Tensor> > tensors, const bool enlist, const bool no_outside) const {
   const int ninptensors = tensors.size()-1;
+
   bool need_e0 = false;
   for (auto& s : tensors)
     if (!s->scalar().empty()) need_e0 = true;
@@ -455,9 +457,31 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
   vector<string> close;
   string cindent = indent + "    ";
   // note that I am using reverse_iterator
-//tt << target->generate_loop(cindent, close);
+  //tt << target->generate_loop(cindent, close);
   // get data
   tt << target->generate_get_block(cindent, "o", "out()", true);
+  
+  // needed in case the tensor labels are repeated..
+  vector<shared_ptr<Tensor> > uniq_tensors;
+  vector<string> tensor_labels;
+  // map redundant tensor label to unique tensor label
+  map<string, int> op_tensor_lab;
+
+  int uniq_cnt = 0;
+  for (auto& i : op) {
+    string label = label__(i->label());
+    // if we already have the label in the list..
+    if (find(tensor_labels.begin(), tensor_labels.end(), label) != tensor_labels.end()) {
+      op_tensor_lab[label] = uniq_cnt;
+      continue;
+    }
+    // otherwise, not yet found, so add to list
+    tensor_labels.push_back(label);
+    uniq_tensors.push_back(i);
+    op_tensor_lab[label] = uniq_cnt;
+    ++uniq_cnt;
+  }
+
 
   // add the source data to the target
   int j = 0;
@@ -465,7 +489,9 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
     stringstream uu; uu << "i" << j;
     tt << cindent << "{" << endl;
 
-    stringstream instr; instr << "in(" << j << ")";
+    // uses map to give unique label number
+    string label = label__((*s)->label());
+    stringstream instr; instr << "in(" << op_tensor_lab[label] << ")";
 
     tt << (*s)->generate_get_block(cindent+"  ", uu.str(), instr.str());
     list<shared_ptr<Index> > di = target->index();
@@ -728,11 +754,20 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const shared_pt
     ss << generate_task(indent, icnt, op, enlist);
 
     list<shared_ptr<Index> > ti = target_->index();
-    // TODO ccaa case causes problems in new subtask algorithm
-    //assert(ti.size() > 0);
-    tt << generate_compute_header(icnt, ti, op, enlist);
+
+    // make sure no duplicates in tensor list for compute header & footer
+    vector<shared_ptr<Tensor> > uniq_tensors;
+    vector<string> tensor_labels;
+    for (auto& i : op) {
+      string label = label__(i->label());
+      if (find(tensor_labels.begin(), tensor_labels.end(), label) != tensor_labels.end()) continue;
+      tensor_labels.push_back(label);
+      uniq_tensors.push_back(i);
+    }
+
+    tt << generate_compute_header(icnt, ti, uniq_tensors, enlist);
     tt << generate_compute_operators(indent, target_, op_);
-    tt << generate_compute_footer(icnt, ti, op, enlist);
+    tt << generate_compute_footer(icnt, ti, uniq_tensors, enlist);
 
     ++icnt;
 
