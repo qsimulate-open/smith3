@@ -43,6 +43,7 @@
 
 namespace smith {
 
+/// A class for Tensors. May be active_ (contain RDMs), or be merged (contain additional tensor), or have have alias (equivalent tensor). 
 class Tensor {
   protected:
     /// Tensor prefactor.
@@ -65,20 +66,23 @@ class Tensor {
     mutable int num_;
 
   public:
+    // Constructor for tensor with scalar.
     Tensor(const double& d, const std::string s, const std::string& l, const std::list<std::shared_ptr<Index> >& i)
       : factor_(d), scalar_(s), label_(l), index_(i) { };
     Tensor(const double& d, const std::string& l, const std::list<std::shared_ptr<Index> >& i)
       : factor_(d), label_(l), index_(i) { };
+    /// Constructor for const op tensor.
     Tensor(const std::shared_ptr<Op> op);
+    /// Constructor for const active tensor.
     Tensor(const std::shared_ptr<Active> active);
     Tensor() {};
     ~Tensor() {};
 
-    /// Returns tensor indices.
+    /// Returns list of index pointers for tensor.
     std::list<std::shared_ptr<Index> >& index() { return index_; };
-    /// Returns const indices for tensor.
+    /// Returns const list of index pointers for tensor.
     const std::list<std::shared_ptr<Index> >& index() const { return index_; };
-    /// Returns merged tensor.
+    /// Returns const Tensor pointer.
     const std::shared_ptr<const Tensor> merged() const { return merged_; };
     /// Returns tensor rank, cannot be called by DF tensors so far. 
     int rank() const {
@@ -98,11 +102,11 @@ class Tensor {
     double factor() const { return factor_; };
     /// Returns scalar name.
     std::string scalar() const { return scalar_; };
-    /// Returns tensor label.
+    /// Returns tensor name.
     std::string label() const { return alias_ ? alias_->label() : label_; };
-    /// Returns active tensor.
+    /// Returns active tensor pointer.
     std::shared_ptr<Active> active() { return active_; };
-    /// Returns const active tensor.
+    /// Returns const active tensor pointer.
     const std::shared_ptr<Active> active() const { return active_; };
 
     /// Returns true if all the indices are of active orbitals.
@@ -113,13 +117,15 @@ class Tensor {
 
     /// Adds all-active tensor to Active_.
     void merge(std::shared_ptr<Tensor> o);
-    /// Sets alias used for equivalent Gamma tensors.
+    /// Sets alias used for equivalent Gamma tensor. Used in Tree::find_gamma(). The alias is given to tensor o.
     void set_alias(std::shared_ptr<Tensor> o) { alias_ = o; };
-    /// Generates string fro constructor for tensors in Method.h file
+
+
+    /// Generates string for constructor for tensors in Method.h file
     std::string constructor_str(std::string indent) const;
     /// Generates code for get_block - source block to be added later to target (move) block.
     std::string generate_get_block(const std::string, const std::string, const std::string, const bool move = false, const bool noscale = false) const;
-    /// Generate code for unique_ptr arrays.
+    /// Generate code for unique_ptr scratch arrays.
     std::string generate_scratch_area(const std::string, const std::string, const std::string tensor_lab, const bool zero = false) const;
     /// Generate code for sort_indices.
     std::string generate_sort_indices(const std::string, const std::string, const std::string, const std::list<std::shared_ptr<Index> >&, const bool op = false) const;
@@ -128,15 +134,15 @@ class Tensor {
                                              const std::shared_ptr<Tensor>, const std::shared_ptr<Tensor>) const;
     /// Obtain dimensions for code for tensor multiplication in dgemm.
     std::pair<std::string, std::string> generate_dim(const std::list<std::shared_ptr<Index> >&) const;
-    /// Generates code for RDMS. 
+    /// Generates code for RDMs. 
     std::string generate_active(const std::string indent, const std::string tag, const int ninptensors, const bool) const;
     /// Generate for loops.
     std::string generate_loop(std::string&, std::vector<std::string>&) const;
-    /// Generate code for Gamma task.
+    /// Generate code for Gamma (overlap) task.
     std::string generate_gamma(const int, const bool, const bool) const;
-    /// Returns Gamma number.
+    /// Returns Gamma (overlap) number.
     int num() const { assert(label_.find("Gamma") != std::string::npos); return num_; }; 
-    /// Set Gamma number.
+    /// Set Gamma (overlap) number.
     void set_num(const int n) const { assert(label_.find("Gamma") != std::string::npos); num_ = n; };
 
 };
