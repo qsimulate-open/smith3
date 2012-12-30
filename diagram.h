@@ -37,18 +37,19 @@
 
 namespace smith {
 
+/// This class is used on a collection of operators.
 class Diagram {
   protected:
-    // a list of operators
+    /// A list of operators.
     std::list<std::shared_ptr<Op> > op_;
-    // a constant factor
+    /// A constant factor.
     double fac_;
-    // a scalar to be defined later on bagel side
+    /// A scalar to be defined later on BAGEL side.
     std::string scalar_;
-    // active part
+    /// The active part.
     std::shared_ptr<Active> rdm_;
 
-    // if this Diagram has a daggered counterpart (often the case for residual equations).
+    /// If this Diagram has a daggered counterpart (often the case for residual equations).
     bool dagger_;
 
   public:
@@ -58,62 +59,63 @@ class Diagram {
     // copy constructor is complicated but preserves the same topology as this.
     ~Diagram() {};
 
-    // returns a shared_ptr of a diagram that has the same topology as this.
+    /// Returns a shared_ptr of a diagram that has the same topology as this.
     std::shared_ptr<Diagram> copy() const;
 
-    // generate all combination of diagrams (related to general indices)
+    /// Generate all combination of diagrams (related to general indices).
     std::list<std::shared_ptr<Diagram> > get_all() const;
 
-    // get functions
+    /// Get functions.
     double& fac() { return fac_; };
     const double fac() const { return fac_; };
     std::string& scalar() { return scalar_; }; 
     std::shared_ptr<Active> rdm() { return rdm_; };
     bool dagger() const { return dagger_; };
 
-    // careful returns a const reference
+    /// Careful returns a const reference of op_ operator.
     const std::list<std::shared_ptr<Op> >& op() const { return op_; };
-    // set functions for private members
+    /// Set operator for private members.
     void set_op(const std::list<std::shared_ptr<Op> >& o) { op_ = o; };
+    /// Set factor for private members.
     void set_fac(const double a) { fac_ = a; };
 
-    // refresh the indices
+    /// Refresh the indices. 
     void refresh_indices();
 
-    // processes the active part
+    /// Processes the active part. Performs Wick's in constructor of an Active object.
     void active();
 
-    // daggered Diagram added to the sum
+    /// Daggered Diagram added to the sum.
     void add_dagger() { dagger_ = true; };
 
-    // permute indices in operators. return false when finished
+    /// Permute indices in operators. return false when finished.
     bool permute(const bool proj); 
+    /// If diagrams are same, based on size, indices, and spin. 
     bool identical(std::shared_ptr<Diagram> o) const;
 
-    // printing function
-    // CAUTION: it also refreshes the indices
+    /// Print function for diagram, CAUTION: it also refreshes the indices
     void print();
-    // this version does not refresh indices
+    // This print version does not refresh indices.
     void print() const;
 
-    // the number of daggered indices
+    /// The number of daggered indices.
     int num_dagger() const;
-    // the number of general indices
+    /// The number of general indices.
     int num_general() const;
-    // returns if this diagram has a consistent set of dagger and undaggered indices
+    /// Returns if this diagram has a consistent set of dagger and undaggered indices.
     bool consistent_indices() const;
 
-    // this function performs one contraction ** IN PLACE **
+    /// This function performs one contraction ** IN PLACE **
     bool reduce_one_noactive(const int skip);
 
-    // returns if this diagram is still valid
+    /// Returns if this diagram is still valid.
     bool valid() const;
-    // returns if this diagram is fully contracted and sorted
+    /// Returns if this diagram is fully contracted and sorted.
     bool done() const;
-    // returns if this diagram is fully contracted (looking up only nonactive parts) 
+    /// Returns if this diagram is fully contracted (looking up only nonactive parts).
     bool done_noactive() const;
 
-    // gathers active indices
+    /// Gathers active indices.
     std::list<std::shared_ptr<Index> > active_indices() const; 
 };
 

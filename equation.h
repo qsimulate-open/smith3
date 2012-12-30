@@ -32,11 +32,12 @@
 
 namespace smith {
 
+/// This class enables work on a collection of diagrams.
 class Equation {
   protected:
-    // list of diagrams
+    /// List of diagrams.
     std::list<std::shared_ptr<Diagram> > diagram_;
-    // internal function used by factorize()
+    /// Internal function used by factorize().
     void duplicates_(const bool);
 
     std::string name_;
@@ -45,21 +46,21 @@ class Equation {
     Equation(std::shared_ptr<Diagram>, std::string nam);
     ~Equation() {};
 
-    // merging two set of Equation.
+    /// merging two set of Equation.
     void merge(const std::shared_ptr<Equation> o) {
       diagram_.insert(diagram_.end(), o->diagram_.begin(), o->diagram_.end());
     };
 
-    // print function
+    /// Print function. This triggers Diagram::refresh_indices().
     void print();
-    // active parts are processed
+    /// The active parts are processed. 
     void active();
-    // identifys the same terms
+    /// Identifies the same terms (diagrams).
     void duplicates();
-    // refresh indices in each diagram
+    /// Refresh indices in each diagram.
     void refresh_indices();
 
-    // returns the name of this equation
+    /// Returns the name of this equation.
     std::string name() const { return name_; };
 
     std::list<std::shared_ptr<Diagram> > diagram() { return diagram_; };

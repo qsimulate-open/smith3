@@ -34,13 +34,16 @@
 
 namespace smith {
 
-// class for a vector of tensors
+/// Class for a list of tensors.
 class ListTensor {
   protected:
+    /// Prefactor for listtensor.
     double fac_;
+    /// Scalar for listtensor, to be defined in BAGEL.
     std::string scalar_;
+    /// A list of tensors.
     std::list<std::shared_ptr<Tensor> > list_;
-
+    /// If dagger (transpose).
     bool dagger_;
 
   public:
@@ -48,17 +51,26 @@ class ListTensor {
     ListTensor(double f, std::string sc, std::list<std::shared_ptr<Tensor> > ve, bool d)
       : fac_(f), scalar_(sc), list_(ve), dagger_(d) {};
     ~ListTensor() {};
-
+    
+    /// Prints prefactor, if available: scalar, dagger. Finally prints out each tensor in list.
     void print() const;
+    /// Combines tensors and removes one from list. Todo this, finds active tensor, merges other tensor if other tensor is all_active (has all active indices) and but not active and if not proj (residual). 
     void absorb_all_internal();
 
+    /// Returns the size of the list of tensors.
     int length() const { return list_.size(); };
+    /// Returns first tensor in the list of tensors.
     std::shared_ptr<Tensor> front() const { return list_.front(); };
+    /// Returns the list of tensors (listtensor) minus the front tensor.
     std::shared_ptr<ListTensor> rest() const ;
+    /// Returns the target tensor from the list of tensors.
     std::shared_ptr<Tensor> target() const;
 
+    /// Returns the prefactor for listtensor.
     double fac() const { return fac_; };
+    /// Returns scalar for listtensor.
     std::string scalar() const { return scalar_; };
+    /// Returns dagger (if transpose) for listtensor.
     bool dagger() const { return dagger_; };
 };
 

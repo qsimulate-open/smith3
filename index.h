@@ -33,6 +33,7 @@
 
 namespace smith {
 
+/// Used to describe spin orbital attribute. Index uses this. 
 class Spin {
   protected:
     int num_;
@@ -40,9 +41,12 @@ class Spin {
     Spin() : num_(0) {};
     ~Spin() {};
 
+    /// Returns spin.
     int num() const { return num_; };
+    /// Sets spin.
     void set_num(const int i) { num_ = i; };
-
+   
+    /// Returns spin in parenthesis (number).
     std::string str() const {
       std::stringstream ss;
       ss << "(" << num_ << ")";
@@ -50,33 +54,49 @@ class Spin {
     };
 };
 
-
+/// A class for orbital attributes. Index defined by label (space), spin, electron number and if is transposed (daggered).
 class Index {
   protected:
+    /// Index label, related to closed, active, or virtual (c, x, and a, respectively).
     std::string label_;
+    /// Index number (electron).
     int num_;
+    /// If transposed, ie daggered. Important in Wick's theorem and equations.
     bool dagger_;
+    /// Spin of index.
     std::shared_ptr<Spin> spin_;
 
   public:
     Index(std::string lab, bool dag) : label_(lab), num_(0), dagger_(dag) {};
     ~Index() {};
 
+    /// Return index number. 
     int num() const { return num_; };
+    /// Return if should be transposed.
     bool dagger() const { return dagger_; };
+    /// Set index number.
     void set_num(const int i) { num_ = i; };
+    /// Return index label (orbital type).
     const std::string label() const { return label_; };
+    /// Set index type, default is a (virtual).
     void set_label(const std::string& a) { label_ = a; };
 
+    /// If active (label is x) default is to set to x.
     bool active() const { return label_ == "x"; };
 
+    /// Sets spin, with default to set to s.
     void set_spin(const std::shared_ptr<Spin> s) { spin_ = s; };
+    /// Returns spin.
     std::shared_ptr<Spin> spin() { assert(spin_); return spin_; };
+    /// Returns const spin.
     const std::shared_ptr<Spin> spin() const { assert(spin_); return spin_; };
 
+    /// Returns true if spin is same for both indices.
     bool same_spin(const std::shared_ptr<Index>& o) const { return o->spin() == spin(); };
+    /// Returns true if index number is same for both indices.
     bool same_num(const std::shared_ptr<Index>& o) const { return o->num() == num(); };
 
+    /// Returns string with index label_, dagger_ and spin info.
     std::string str(const bool& opr = true) const {
       std::stringstream ss;
       ss << label_ << num_;
@@ -87,25 +107,29 @@ class Index {
       }
       return ss.str();
     };
+    /// Returns string with index label_ and num_. 
     std::string str_gen() const {
       std::stringstream ss;
       ss << label_ << abs(num_);
       return ss.str();
     };
+    /// Prints index using str().
+    void print() const { std::cout << str() << std::endl; };
 
-    std::shared_ptr<Index> clone() { // note that this does not set spin.
+
+    /// Clone Index with label_, num_ and dagger_ info. Note that this does not set spin.
+    std::shared_ptr<Index> clone() { 
       std::shared_ptr<Index> out(new Index(label_, dagger_));
       out->set_num(num_);
       return out;
     };
 
-    void print() const { std::cout << str() << std::endl; };
-
-    // be careful that this does not check dagger! Should not check, actually. 
+    /// Check if indices are equal by comparing num() and label(). Be careful that this does not check dagger! Should not check, actually. 
     bool identical(std::shared_ptr<Index> o) const {
       return num() == o->num() && label() == o->label();
     };
 
+    /// Gives orbital space name (closed_, virt_, active_) based on index label_.
     std::string generate() const {
       std::string out;
       if (label_ == "c") {
@@ -120,6 +144,7 @@ class Index {
       return out;
     };
 
+    /// Gives orbital space range name ([0], [1], [2] for closed, active, and virtual spaces, respectively) based on index label.
     std::string generate_range(const std::string postfix = "") const {
       std::string out = "range" + postfix;
       if (label_ == "c") {
@@ -136,7 +161,7 @@ class Index {
 
 };
 
-// global function
+/// Global function to list indices in reverse order.
 static std::string list_keys(const std::list<std::shared_ptr<Index> >& index) {
   std::stringstream tt; 
   for (auto iter = index.rbegin(); iter != index.rend(); ++iter) {

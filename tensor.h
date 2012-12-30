@@ -43,7 +43,7 @@
 
 namespace smith {
 
-/// A class for Tensors. May be active_ (contain RDMs), or be merged (contain additional tensor), or have have alias (equivalent tensor). 
+/// A class for Tensors. May be active_ (contain all active indices), or be merged (contain additional tensor), or have have alias (equivalent tensor). 
 class Tensor {
   protected:
     /// Tensor prefactor.
@@ -55,7 +55,7 @@ class Tensor {
     /// List of indices.
     std::list<std::shared_ptr<Index> > index_;
 
-    /// If this tensor is active, it has an internal structure, eg RDMs.
+    /// If this tensor is active, it has an internal structure.
     std::shared_ptr<Active> active_;
     /// If merged, tensor should be multiplied by additional tensor.
     std::shared_ptr<Tensor> merged_;

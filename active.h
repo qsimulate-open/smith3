@@ -40,9 +40,11 @@
 
 namespace smith {
 
+/// A class for active tensors.
 class Active {
   protected:
     std::list<std::shared_ptr<RDM> > rdm_;
+    /// This function calls RDM::reduce_one and RDM::reduce_done functions and does sort to apply Wick's theorem to this RDM.
     void reduce(std::shared_ptr<RDM> in);
 
     mutable int count__;
@@ -50,14 +52,17 @@ class Active {
   public:
     Active(const std::list<std::shared_ptr<Index> >& in);
     ~Active() {};
-
+  
+    /// Prints active tensor prefactor, indices and delta (equivalent indices).
     void print(const std::string& indent = "") const;
     const std::list<std::shared_ptr<Index> > index() const;
 
+    /// Compares active tensors. Comparison is rdm order specific now. TODO could be made more general.
     bool operator==(const Active& o) const;
 
-    // this generate does get_block, sort_indices, and the merged mulitiplication
+    /// This generate does get_block, sort_indices, and the merged (fock) mulitiplication for Gamma (overlap) summation.
     std::string generate(const std::string indent, const std::string tag, const std::list<std::shared_ptr<Index> > index, const std::list<std::shared_ptr<Index> > merged = std::list<std::shared_ptr<Index> >(), const std::string mlab = "", const bool use_blas = false) const;
+    /// Returns vector of int cooresponding to RDM numbers in Gamma (overlap). RDM0 is not included.
     std::vector<int> required_rdm() const;
     
 };

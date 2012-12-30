@@ -39,8 +39,11 @@ namespace smith {
 // This defines the index classes. If you want to generalize this generator
 // to more general cases (RASPT2, for instance), then just add some entry.
 // Indices will be sorted using these numbers when tensors are canonicalized.
+
+/// Defines index classes.
 class IndexMap {
   protected:
+    /// This is list of index classes.
     std::list<std::pair<std::string, std::pair<int,int> > > map_;
   public:
     IndexMap() { 
@@ -49,16 +52,21 @@ class IndexMap {
       map_.push_back(std::make_pair("a", std::make_pair(2, 232)));
     };
     ~IndexMap() {};
+    /// Returns map_ size.
     int num_orb_class() const { return map_.size(); };
+    /// Also returns map_ size.
     int size() const { return num_orb_class(); };
 
+    /// Returns class type based on map_.
     const int type(const std::string& type_) const {
       auto iter = map_.begin();
       for (; iter != map_.end(); ++iter) if (iter->first == type_) break;
       if (iter == map_.end()) throw std::runtime_error("key is no valid in Index::type()"); 
       return iter->second.first;
     };
+    /// Returns index class beginning iterator.
     std::list<std::pair<std::string, std::pair<int,int> > >::const_iterator begin() const { return map_.begin(); };
+    /// Returns index class end iterator.
     std::list<std::pair<std::string, std::pair<int,int> > >::const_iterator end() const { return map_.end(); };
 };
 
