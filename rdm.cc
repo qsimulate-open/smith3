@@ -213,7 +213,6 @@ string RDM::generate_merged(string indent, const string tag, const list<shared_p
   } else {
     if (rank() != 0) {
       tt << make_get_block(indent, "i0", inlab[rlab]);
-      tt << make_scratch_area(indent,"i0", inlab[rlab]);
       tt << make_sort_indices(indent, "i0", merged);
       tt << endl;
 
@@ -400,12 +399,6 @@ string RDM::make_get_block(string indent, string tag, string lbl) {
   return tt.str();
 }
 
-string RDM::make_scratch_area(string indent, string tag, string lbl) {
-  stringstream tt;
-  tt << indent << "std::unique_ptr<double[]> " << tag << "data_sorted(new double["
-                << lbl << "->get_size(" << tag << "hash)]);" << endl;
-  return tt.str();
-}
 
 string RDM::make_blas_multiply(string dindent, const list<shared_ptr<Index> >& loop, const list<shared_ptr<Index> >& index) {
   stringstream tt;

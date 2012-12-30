@@ -187,7 +187,7 @@ list<shared_ptr<Tensor> > Tree::gather_gamma() const {
       out.insert(out.end(), tmp.begin(), tmp.end());
     }
   }
-  for (auto& i : op_)
+  for (auto& i : op_) 
     if (i->label().find("Gamma") != string::npos) out.push_back(i); 
   return out;
 }
@@ -491,7 +491,7 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
     stringstream uu; uu << "i" << j;
     tt << cindent << "{" << endl;
 
-    // uses map to give unique label number
+    // uses map to give label number consistent with operator, needed in case label is repeated (eg ccaa)
     string label = label__((*s)->label());
     stringstream instr; instr << "in(" << op_tensor_lab[label] << ")";
 
@@ -623,9 +623,9 @@ string Tree::generate_task(const string indent, const int ip, const int ic, cons
 
 
 pair<string, string> Tree::generate_task_list(const bool enlist, const shared_ptr<Tree> energy) const {
-  // ss is the X.h driver routine
+  // here ss is the Method.h driver routine
   stringstream ss;
-  // tt is the X_tasks.h driver routine
+  // here tt is the Method_tasks.h driver routine
   stringstream tt;
 
   // just to make sure

@@ -236,7 +236,6 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
       if ((*i)->identical(*j)) break;
     }
     if (cnt == index_.size()) {
-      //cout << "Potential problem Tensor::generate_sort_indices..did not find loop index in index_" << endl;
       throw logic_error("should not happen.. Tensor::generate_sort_indices");
     }
     done.push_back(cnt);
@@ -423,7 +422,7 @@ string Tensor::generate_active(string indent, const string tag, const int ninpte
       tt << ");" << endl;
     } 
     
-    // generate  merged and/or rdm 
+    // generate merged and/or rdm 
     tt << active()->generate(indent, tag, index(), merged_->index(), merged_->label(), use_blas);
 
 
@@ -562,10 +561,6 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
   tt << "}};" << endl << endl;
 
   
-
-
-
-
   // over original outermost indices
   if (!index_.empty()) {
     tt << "      subtasks_.reserve("; 
