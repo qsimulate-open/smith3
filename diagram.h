@@ -93,7 +93,7 @@ class Diagram {
     /// If diagrams are same, based on size, indices, and spin. 
     bool identical(std::shared_ptr<Diagram> o) const;
 
-    /// Print function for diagram, CAUTION: it also refreshes the indices
+    /// Print function for diagram, CAUTION: it also refreshes the indices.
     void print();
     // This print version does not refresh indices.
     void print() const;
@@ -105,7 +105,7 @@ class Diagram {
     /// Returns if this diagram has a consistent set of dagger and undaggered indices.
     bool consistent_indices() const;
 
-    /// This function performs one contraction ** IN PLACE **
+    /// This function performs one contraction ** IN PLACE ** called from equation.
     bool reduce_one_noactive(const int skip);
 
     /// Returns if this diagram is still valid.

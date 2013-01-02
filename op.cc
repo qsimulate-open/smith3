@@ -247,7 +247,7 @@ tuple<double, shared_ptr<Spin>, shared_ptr<Spin> >
       if (cnt == skip) {
         const int n1 = (*dat.first)->num();
         const int n2 = (*get<0>(*i))->num();
-        if (n1 == n2) throw logic_error("should not happen. Op::contract");
+        if (n1 == n2) throw logic_error("Should not happen. Op::contract");
         fac = (abs(n2-n1) & 1) ? 1.0 : -1.0;
 
         *get<0>(*i) = *survive(get<0>(*i), dat.first);

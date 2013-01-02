@@ -100,7 +100,7 @@ class Op {
     /// Makes a possible permutation of indices.
     std::pair<bool, double> permute(const bool proj);
 
-    /// Checks label, and first two operator tuple fields (index and operator contraction info). Note that spin info (third op field) is not checked.
+    /// Checks label, and first two operator tuple fields (index and operator contraction info). **NOTE** that spin info (third op field) is not checked.
     bool identical(std::shared_ptr<Op> o) const;
 
     /// Returns operator name.
@@ -122,26 +122,25 @@ class Op {
     /// Return operator reference.
     std::list<std::tuple<std::shared_ptr<Index>*, int, int> >& op() { return op_; };
 
-    // CAUTION:: this function returns the first daggered operator
-    //           **AND** deletes the corresponding entry from this->op_.
+
+    /// CAUTION:: this function returns the first daggered operator (not an active operator) **AND** deletes the corresponding entry from this->op_, by marking as contracted.
     std::pair<std::shared_ptr<Index>*, std::shared_ptr<Spin>* > first_dagger_noactive();
 
-    /// Returns if you can contract two labels.
-    bool contractable(std::string a, std::string b) { return a == b || a == "g" || b == "g"; };
-
-    // Returns which index to be kept when contraction is performed.
-    std::shared_ptr<Index>* survive(std::shared_ptr<Index>* a, std::shared_ptr<Index>* b);
-
-    // perform a contraction (skipping first "skip" possibilities) and returns the factor to be multiplied.
-    // Should be called from Diagram objects
-    // fac, new, old
+    /// Perform a contraction, skipping first "skip" from equation. Returns the factor, new, and old spin. Called from Diagram::reduce_one_noactive.
     std::tuple<double, std::shared_ptr<Spin>, std::shared_ptr<Spin> >
       contract(std::pair<std::shared_ptr<Index>*, std::shared_ptr<Spin>* >& dat, const int skip);
+
+    /// Returns if you can contract two labels. Labels (type) must be same or one must be of type general in order to do contraction.
+    bool contractable(std::string a, std::string b) { return a == b || a == "g" || b == "g"; };
+
+    /// Returns which index to be kept when contraction is performed.
+    std::shared_ptr<Index>* survive(std::shared_ptr<Index>* a, std::shared_ptr<Index>* b);
 
     /// Function to update num_ fields in Index and Spin. Should be called from Diagram objects.
     void refresh_indices(std::map<std::shared_ptr<Index>, int>& dict,
                          std::map<std::shared_ptr<Index>, int>& done,
                          std::map<std::shared_ptr<Spin>, int>& spin);
+
 
     /// Printing this object out.
     void print() const;
