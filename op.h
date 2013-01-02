@@ -38,13 +38,13 @@
 #include <tuple>
 #include "index.h"
 
-// base class for spin-summed operators
 
 namespace smith {
 
+/// Base class for spin-summed operators. Operator class works on Index.
 class Op {
   protected:
-    // tensor info
+    /// Related to tensor info. 
     std::string label_;
     // this op_ is very important (and does not seem clear...).
     // Here is the convention
@@ -53,9 +53,10 @@ class Op {
     //              -1: no operator (i.e., already contracted)
     //               0: operator
     //               2: active operator 
+    /// Tuple with index object pointer, operator info, and spin info. Operator info is defined as -1: no operator (i.e., already contracted), 0: operator, 2: active operator.
     std::list<std::tuple<std::shared_ptr<Index>*, int, int> > op_;
 
-    // operator info
+    /// Spin operator info.
     std::vector<std::shared_ptr<Spin> > rho_;
 
     std::shared_ptr<Index> a_;
@@ -67,48 +68,68 @@ class Op {
     std::vector<int> perm_;
 
   public:
+    /// Create two-body tensor operator.
     Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td);
+    /// Create one-body tensor operator.
     Op(const std::string lab, const std::string& ta, const std::string& tb);
     // creating tensor..
     Op(const std::string lab, std::shared_ptr<Index> ta, std::shared_ptr<Index> tb, std::shared_ptr<Spin> ts = std::make_shared<Spin>());
     Op(const std::string lab = "") : label_(lab) { };
     virtual ~Op() {};
 
-    // returns if this operator is completely contracted
+    /// Returns if this operator is completely contracted.
     bool contracted() const;
-    // returns if this operator is a general operator (i.e., Hamiltonian)
+    /// Returns if this operator is a general operator (i.e., Hamiltonian), checks for non-zero count of general operators.
     bool general() const; 
+    /// Counts number of general operators.
     int num_general() const;
+
+    /// Counts number of nondaggered active operators.
     int num_active_nodagger() const;
+    /// Counts number of daggered active operators.
     int num_active_dagger() const;
+    /// Change general operator to active operator...
     void mutate_general(int& i);
+    /// Counts number of nondaggered operators.
     int num_nodagger() const;
+    /// Counts number of daggered operators.
     int num_dagger() const;
 
+    /// Creates a new Op pointer.
     std::shared_ptr<Op> copy() const;
+    /// Makes a possible permutation of indices.
     std::pair<bool, double> permute(const bool proj);
 
+    /// Checks label, and first two operator tuple fields (index and operator contraction info). Note that spin info (third op field) is not checked.
     bool identical(std::shared_ptr<Op> o) const;
 
+    /// Returns operator name.
     std::string label() const { return label_; };
 
+    /// Set spin.
     void set_rho(const int i, std::shared_ptr<Spin> a) { rho_[i] = a; };
+    /// Returns spin.
     std::vector<std::shared_ptr<Spin> >& rho() { return rho_; };
+    /// Returns const spin.
     std::shared_ptr<Spin> rho(const int i) const { return rho_.at(i); };
+    /// Returns a const pointer to spin.
     const std::shared_ptr<Spin>* rho_ptr(const int i) const { return &rho_.at(i); };
+    /// Returns a pointer to spin.
     std::shared_ptr<Spin>* rho_ptr(const int i) { return &rho_.at(i); };
 
+    /// Return const operator reference.
     const std::list<std::tuple<std::shared_ptr<Index>*, int, int> >& op() const { return op_; };
+    /// Return operator reference.
     std::list<std::tuple<std::shared_ptr<Index>*, int, int> >& op() { return op_; };
 
     // CAUTION:: this function returns the first daggered operator
     //           **AND** deletes the corresponding entry from this->op_.
     std::pair<std::shared_ptr<Index>*, std::shared_ptr<Spin>* > first_dagger_noactive();
 
-    // returns if you can contract two labels
+    /// Returns if you can contract two labels.
     bool contractable(std::string a, std::string b) { return a == b || a == "g" || b == "g"; };
 
-    // returns which index to be kept when contraction is performed
+    // Returns which index to be kept when contraction is performed.
     std::shared_ptr<Index>* survive(std::shared_ptr<Index>* a, std::shared_ptr<Index>* b);
 
     // perform a contraction (skipping first "skip" possibilities) and returns the factor to be multiplied.
@@ -117,12 +138,12 @@ class Op {
     std::tuple<double, std::shared_ptr<Spin>, std::shared_ptr<Spin> >
       contract(std::pair<std::shared_ptr<Index>*, std::shared_ptr<Spin>* >& dat, const int skip);
 
-    // function to update num_ fields in Index and Spin. Should be called from Diagram objects
+    /// Function to update num_ fields in Index and Spin. Should be called from Diagram objects.
     void refresh_indices(std::map<std::shared_ptr<Index>, int>& dict,
                          std::map<std::shared_ptr<Index>, int>& done,
                          std::map<std::shared_ptr<Spin>, int>& spin);
 
-    // printing this object out
+    /// Printing this object out.
     void print() const;
 };
 
