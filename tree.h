@@ -43,7 +43,7 @@ class BinaryContraction {
     std::shared_ptr<Tensor> target_;
     /// Tensor to be defined (supplied) by BAGEL.
     std::shared_ptr<Tensor> tensor_;
-    // A list of trees
+    /// A list of trees
     std::list<std::shared_ptr<Tree> > subtree_;
 
     // Tree that has this
@@ -53,7 +53,9 @@ class BinaryContraction {
     Tree* parent_;
 
   public:
+    /// Construct binary contraction from tensor and listtensor pointers.
     BinaryContraction(std::shared_ptr<Tensor> o, std::shared_ptr<ListTensor> l);
+    /// Construct binary contraction from  subtree and tensor.
     BinaryContraction(std::list<std::shared_ptr<Tree> > o, std::shared_ptr<Tensor> t) : tensor_(t), subtree_(o) {};
     ~BinaryContraction() {};
 
@@ -65,11 +67,12 @@ class BinaryContraction {
     std::shared_ptr<Tensor> target() { return target_; };
     /// Retrieve next target--next intermediate below, for example I1. This is the front of subtree of target.
     std::shared_ptr<Tensor> next_target();
+    /// Print binary contraction.
     void print() const;
 
     /// Do factorization and then merge subtrees.
     void factorize();
-    /// Set parte to this tree pointer.
+    /// Set parent to this tree pointer.
     void set_parent(Tree* o) { parent_ = o; };
     /// Sets parent and does set_parent_sub for subtree (bc and tree alternate in graph).
     void set_parent_subtree();
@@ -116,10 +119,10 @@ class Tree : public std::enable_shared_from_this<Tree> {
     /// Collection of operator tensors.
     std::vector<std::shared_ptr<Tensor> > op_;
 
-    // If transpose.
+    /// If transpose.
     bool dagger_;
 
-    // TODO raw pointer should be replaced by some better mean
+    /// Points above. TODO raw pointer should be replaced by some better mean
     BinaryContraction* parent_;
 
     /// std::string tree name used in generated code.
@@ -128,14 +131,16 @@ class Tree : public std::enable_shared_from_this<Tree> {
     /// This is only used in the top level for unique Gamma tensors.
     std::list<std::shared_ptr<Tensor> > gamma_;
 
-    // When we generate, a counter is used to generate a list of tasks.
+    /// Add dependency tasks.
     std::string add_depend(const std::shared_ptr<const Tensor> o) const;
+
+    /// When we generate, a counter is used to generate a list of tasks.
     mutable int num_;
 
   public:
-    /// Tree of equation pointers.
+    /// Construct tree of equation pointers.
     Tree(const std::shared_ptr<Equation> eq);
-    /// Tree of listtensor pointers.
+    /// Construct tree of listtensor pointers.
     Tree(const std::shared_ptr<ListTensor> l);
     ~Tree() {};
 

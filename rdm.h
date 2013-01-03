@@ -81,6 +81,7 @@ class RDM {
 
 
   public:
+    /// Make RDM object from list of indices, delta indices and factor.
     RDM(const std::list<std::shared_ptr<Index> >& in,
         const std::map<std::shared_ptr<Index>, std::shared_ptr<Index> >& in2,
         const double& f = 1.0)

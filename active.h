@@ -43,18 +43,22 @@ namespace smith {
 /// A class for active tensors.
 class Active {
   protected:
+    /// List of RDMs.
     std::list<std::shared_ptr<RDM> > rdm_;
     /// This function calls RDM::reduce_one and RDM::reduce_done functions and does sort to apply Wick's theorem to this RDM.
     void reduce(std::shared_ptr<RDM> in);
 
+    /// TODO double check if needed.
     mutable int count__;
 
   public:
+    /// Make active object from const list index.
     Active(const std::list<std::shared_ptr<Index> >& in);
     ~Active() {};
   
     /// Prints active tensor prefactor, indices and delta (equivalent indices).
     void print(const std::string& indent = "") const;
+    /// Return const index list.
     const std::list<std::shared_ptr<Index> > index() const;
 
     /// Compares active tensors. Comparison is rdm order specific now. TODO could be made more general.

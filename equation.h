@@ -40,9 +40,11 @@ class Equation {
     /// Internal function used by factorize().
     void duplicates_(const bool);
 
+    /// Name of theory. Generated code for BAGEL will have this name, set in main.cc.
     std::string name_;
 
   public:
+    /// Construct equation from diagram and name.
     Equation(std::shared_ptr<Diagram>, std::string nam);
     ~Equation() {};
 
@@ -63,6 +65,7 @@ class Equation {
     /// Returns the name of this equation.
     std::string name() const { return name_; };
 
+    /// Returns list of diagram pointers.
     std::list<std::shared_ptr<Diagram> > diagram() { return diagram_; };
 
 };

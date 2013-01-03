@@ -53,8 +53,11 @@ class Diagram {
     bool dagger_;
 
   public:
+    /// Construct diagram from operator list, prefactor and dagger information.
     Diagram(std::list<std::shared_ptr<Op> > op) : op_(op), fac_(1.0), dagger_(false) { };
+    /// Construct diagram from operator list, prefactor, scalar, and dagger information.
     Diagram(std::list<std::shared_ptr<Op> > op, std::string s) : op_(op), fac_(1.0), scalar_(s), dagger_(false) { };
+    /// Construct diagram with prefactor and dagger information.
     Diagram() : fac_(1.0), dagger_(false) { };
     // copy constructor is complicated but preserves the same topology as this.
     ~Diagram() {};
@@ -65,21 +68,26 @@ class Diagram {
     /// Generate all combination of diagrams (related to general indices).
     std::list<std::shared_ptr<Diagram> > get_all() const;
 
-    /// Get functions.
+    // Get functions.
+    /// Return the diagram (term) prefactor.
     double& fac() { return fac_; };
+    /// Return the prefactor for const diagram.
     const double fac() const { return fac_; };
+    /// Return scalar name reference.
     std::string& scalar() { return scalar_; }; 
+    /// Returns rdm pointer.
     std::shared_ptr<Active> rdm() { return rdm_; };
+    /// If diagram is transposed.
     bool dagger() const { return dagger_; };
 
-    /// Careful returns a const reference of op_ operator.
+    /// Careful, returns a const reference of op_ operator.
     const std::list<std::shared_ptr<Op> >& op() const { return op_; };
     /// Set operator for private members.
     void set_op(const std::list<std::shared_ptr<Op> >& o) { op_ = o; };
     /// Set factor for private members.
     void set_fac(const double a) { fac_ = a; };
 
-    /// Refresh the indices. 
+    /// Refresh the indices for each operator in diagram (ie calls operators refresh_indices function).
     void refresh_indices();
 
     /// Processes the active part. Performs Wick's in constructor of an Active object.
@@ -95,7 +103,7 @@ class Diagram {
 
     /// Print function for diagram, CAUTION: it also refreshes the indices.
     void print();
-    // This print version does not refresh indices.
+    /// This print version does not refresh indices. Prints factor, scalar and operators.
     void print() const;
 
     /// The number of daggered indices.

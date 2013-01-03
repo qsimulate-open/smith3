@@ -59,12 +59,16 @@ class Op {
     /// Spin operator info.
     std::vector<std::shared_ptr<Spin> > rho_;
 
+    /// First excitation index.
     std::shared_ptr<Index> a_;
+    /// First excitation index partner.
     std::shared_ptr<Index> b_;
+    /// Second excitation index.
     std::shared_ptr<Index> c_;
+    /// Second excitation index partner.
     std::shared_ptr<Index> d_;
 
-    // perm_count
+    /// This is permutation count. 
     std::vector<int> perm_;
 
   public:
@@ -72,8 +76,9 @@ class Op {
     Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td);
     /// Create one-body tensor operator.
     Op(const std::string lab, const std::string& ta, const std::string& tb);
-    // creating tensor..
+    /// Create one-body tensor operator with spin information.
     Op(const std::string lab, std::shared_ptr<Index> ta, std::shared_ptr<Index> tb, std::shared_ptr<Spin> ts = std::make_shared<Spin>());
+    /// Create operator with label.
     Op(const std::string lab = "") : label_(lab) { };
     virtual ~Op() {};
 
@@ -136,7 +141,7 @@ class Op {
     /// Returns which index to be kept when contraction is performed.
     std::shared_ptr<Index>* survive(std::shared_ptr<Index>* a, std::shared_ptr<Index>* b);
 
-    /// Function to update num_ fields in Index and Spin. Should be called from Diagram objects.
+    /// Function to update Index and Spin and check if contracted.  Should be called from Diagram objects.
     void refresh_indices(std::map<std::shared_ptr<Index>, int>& dict,
                          std::map<std::shared_ptr<Index>, int>& done,
                          std::map<std::shared_ptr<Spin>, int>& spin);

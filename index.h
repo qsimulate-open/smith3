@@ -36,8 +36,10 @@ namespace smith {
 /// Used to describe spin orbital attribute. Index uses this. 
 class Spin {
   protected:
+    /// Spin number.
     int num_;
   public:
+    /// Construct spin with number information.
     Spin() : num_(0) {};
     ~Spin() {};
 
@@ -67,6 +69,7 @@ class Index {
     std::shared_ptr<Spin> spin_;
 
   public:
+    /// Make index object from label, number and dagger info.
     Index(std::string lab, bool dag) : label_(lab), num_(0), dagger_(dag) {};
     ~Index() {};
 

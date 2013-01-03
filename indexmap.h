@@ -46,6 +46,7 @@ class IndexMap {
     /// This is list of index classes.
     std::list<std::pair<std::string, std::pair<int,int> > > map_;
   public:
+    /// Construct index classes.
     IndexMap() { 
       map_.push_back(std::make_pair("c", std::make_pair(0, 28)));
       map_.push_back(std::make_pair("x", std::make_pair(1, 6)));

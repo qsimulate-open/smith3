@@ -47,7 +47,9 @@ class ListTensor {
     bool dagger_;
 
   public:
+    /// Construct listtensor from diagram.
     ListTensor(std::shared_ptr<Diagram> d);
+    /// Construct listtensor using prefactor, scalar, list of tensors and dagger information.
     ListTensor(double f, std::string sc, std::list<std::shared_ptr<Tensor> > ve, bool d)
       : fac_(f), scalar_(sc), list_(ve), dagger_(d) {};
     ~ListTensor() {};

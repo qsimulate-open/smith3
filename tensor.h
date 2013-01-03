@@ -66,15 +66,17 @@ class Tensor {
     mutable int num_;
 
   public:
-    // Constructor for tensor with scalar.
+    /// Constructor for tensor with scalar.
     Tensor(const double& d, const std::string s, const std::string& l, const std::list<std::shared_ptr<Index> >& i)
       : factor_(d), scalar_(s), label_(l), index_(i) { };
+    /// Constructor for tensor without scalar.
     Tensor(const double& d, const std::string& l, const std::list<std::shared_ptr<Index> >& i)
       : factor_(d), label_(l), index_(i) { };
     /// Constructor for const op tensor.
     Tensor(const std::shared_ptr<Op> op);
     /// Constructor for const active tensor.
     Tensor(const std::shared_ptr<Active> active);
+    /// Construct tensor with no arguements.
     Tensor() {};
     ~Tensor() {};
 
