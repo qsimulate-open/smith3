@@ -56,7 +56,7 @@ class ListTensor {
     
     /// Prints prefactor, if available: scalar, dagger. Finally prints out each tensor in list.
     void print() const;
-    /// Combines tensors and removes one from list. Todo this, finds active tensor, merges other tensor if other tensor is all_active (has all active indices) and but not active and if not proj (residual). 
+    /// Combines tensors and removes one from list. Todo this, finds active tensor, merges other tensor if other tensor is all_active (has all active indices) and but not active and if not proj. 
     void absorb_all_internal();
 
     /// Returns the size of the list of tensors.

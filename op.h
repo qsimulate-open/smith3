@@ -53,7 +53,7 @@ class Op {
     //              -1: no operator (i.e., already contracted)
     //               0: operator
     //               2: active operator 
-    /// Tuple with index object pointer, operator info, and spin info. Operator info is defined as -1: no operator (i.e., already contracted), 0: operator, 2: active operator.
+    /// Tuple with index object pointer, operator info, and spin info (0 or 1). Operator info is defined as -1: no operator (i.e., already contracted), 0: operator, 2: active operator.
     std::list<std::tuple<std::shared_ptr<Index>*, int, int> > op_;
 
     /// Spin operator info.
@@ -61,11 +61,11 @@ class Op {
 
     /// First excitation index.
     std::shared_ptr<Index> a_;
-    /// First excitation index partner.
+    /// Second excitation index in two-body tensor. In one-body tensor this is the first excitation index partner.
     std::shared_ptr<Index> b_;
-    /// Second excitation index.
-    std::shared_ptr<Index> c_;
     /// Second excitation index partner.
+    std::shared_ptr<Index> c_;
+    /// First excitation index partner.
     std::shared_ptr<Index> d_;
 
     /// This is permutation count. 
@@ -76,7 +76,7 @@ class Op {
     Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td);
     /// Create one-body tensor operator.
     Op(const std::string lab, const std::string& ta, const std::string& tb);
-    /// Create one-body tensor operator with spin information.
+    /// Create one-body tensor with spin information. No operator is created.
     Op(const std::string lab, std::shared_ptr<Index> ta, std::shared_ptr<Index> tb, std::shared_ptr<Spin> ts = std::make_shared<Spin>());
     /// Create operator with label.
     Op(const std::string lab = "") : label_(lab) { };
@@ -102,7 +102,7 @@ class Op {
 
     /// Creates a new Op pointer.
     std::shared_ptr<Op> copy() const;
-    /// Makes a possible permutation of indices.
+    /// Makes a possible permutation of indices. Cannot permute if there are active daggered and no-daggered operators or if label is proj.
     std::pair<bool, double> permute(const bool proj);
 
     /// Checks label, and first two operator tuple fields (index and operator contraction info). **NOTE** that spin info (third op field) is not checked.
@@ -135,7 +135,7 @@ class Op {
     std::tuple<double, std::shared_ptr<Spin>, std::shared_ptr<Spin> >
       contract(std::pair<std::shared_ptr<Index>*, std::shared_ptr<Spin>* >& dat, const int skip);
 
-    /// Returns if you can contract two labels. Labels (type) must be same or one must be of type general in order to do contraction.
+    /// Returns if you can contract two labels. Labels (type) must be same or one must be of type general in order to do contraction. Dagger info is not checked here but in contract function.
     bool contractable(std::string a, std::string b) { return a == b || a == "g" || b == "g"; };
 
     /// Returns which index to be kept when contraction is performed.
