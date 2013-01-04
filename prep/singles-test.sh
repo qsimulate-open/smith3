@@ -19,11 +19,11 @@ input=$1
 
 # must give input file name
 if [[ -z "$@" ]]; then
-    echo >&2 "You must supply an argument!"
+    echo >&2 "You must supply a BAGEL input file name!"
     exit 1
 fi
 
-#check to see if input exists
+# check to see if input exists
 if [[ ! -f "$bageldir/obj/src/$input" ]]; then
     echo >&2 "Your input file doesn't exist!"
     echo >&2 "File needed:"
@@ -31,17 +31,19 @@ if [[ ! -f "$bageldir/obj/src/$input" ]]; then
     exit 1
 fi
 
+# Single configuration test cases. Order is important, corresponds to original Roos ordering.
+cases="ccaa xcaa xxaa ccxa cxxa ccxx xxxa xcxx"
+
 ## run script ###
 
 echo "Testing input: "
 echo $bageldir/obj/src/$input
 cat $bageldir/obj/src/$input
 
-
-for i in ccaa xcaa xxaa ccxa cxxa xxxa ccxx xcxx
+for i in `echo "$cases"`
  do
-   echo "$i"
-   cp $smithdir/prep/test-single-cases/generate_main.cc-"$i" $smithdir/prep/generate_main.cc
+   echo "Starting test case: $i"
+   sed -i "/[/][/] *[*]test single configuration cases[*]/,/[/][/] *[*]end test single configuration cases[*]/s/\(^  \)\( *if.*\)/\/\/\2/;/[/][/] *${i} */s/^ *[/][/]/  /" $smithdir/prep/generate_main.cc
    cd $smithdir/obj
    make -j
    ./prep/Prep > ../main.cc 
@@ -53,7 +55,7 @@ for i in ccaa xcaa xxaa ccxa cxxa xxxa ccxx xcxx
    cd $bageldir/obj/src
    make
    ./BAGEL "$input"
-   echo "energy was for case: $i"
+   echo "Energy was for case: $i"
    cd $smithdir/obj
  done
 
