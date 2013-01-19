@@ -39,7 +39,7 @@ class Spin {
     /// Spin number.
     int num_;
   public:
-    /// Construct spin with number information.
+    /// Construct spin, initialize number information.
     Spin() : num_(0) {};
     ~Spin() {};
 
@@ -69,7 +69,7 @@ class Index {
     std::shared_ptr<Spin> spin_;
 
   public:
-    /// Make index object from label, number and dagger info.
+    /// Make index object from label and dagger info. Initialize label, number, and dagger.
     Index(std::string lab, bool dag) : label_(lab), num_(0), dagger_(dag) {};
     ~Index() {};
 
@@ -87,7 +87,7 @@ class Index {
     /// If active (label is x) default is to set to x.
     bool active() const { return label_ == "x"; };
 
-    /// Sets spin, with default to set to s.
+    /// Sets spin.
     void set_spin(const std::shared_ptr<Spin> s) { spin_ = s; };
     /// Returns spin.
     std::shared_ptr<Spin> spin() { assert(spin_); return spin_; };

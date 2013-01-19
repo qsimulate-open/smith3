@@ -44,7 +44,7 @@ class Equation {
     std::string name_;
 
   public:
-    /// Construct equation from diagram and name.
+    /// Construct equation from diagram and name. Contract operators in diagram.
     Equation(std::shared_ptr<Diagram>, std::string nam);
     ~Equation() {};
 
@@ -57,7 +57,7 @@ class Equation {
     void print();
     /// The active parts are processed. 
     void active();
-    /// Identifies the same terms (diagrams).
+    /// Identifies terms which are the same (possible permutations) and combines them, updating term prefactor.
     void duplicates();
     /// Refresh indices in each diagram.
     void refresh_indices();

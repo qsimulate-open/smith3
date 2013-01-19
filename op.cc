@@ -70,6 +70,7 @@ Op::Op(const string lab, shared_ptr<Index> ta, shared_ptr<Index> tb, shared_ptr<
 }
 
 
+
 shared_ptr<Op> Op::copy() const {
   // in the case of two-body operators
   if (c_) {
@@ -136,7 +137,7 @@ void Op::mutate_general(int& in) {
         (*get<0>(i))->set_label("x");
         get<1>(i) += 2;
       }
-      in >>= 1;
+      in >>= 1;  // decrease in by one bit
     }
   } 
 }
@@ -215,7 +216,7 @@ pair<shared_ptr<Index>*, shared_ptr<Spin>* > Op::first_dagger_noactive() {
   pair<shared_ptr<Index>*, shared_ptr<Spin>* > out;
   auto i = op_.begin();
   for (; i != op_.end(); ++i) {
-    if (get<1>(*i)==0 && (*get<0>(*i))->dagger()) { // "x" is active orbitals
+    if (get<1>(*i)==0 && (*get<0>(*i))->dagger()) { // "x" is active orbitals = 2
       out = make_pair(get<0>(*i), rho_ptr(get<2>(*i)));
       break;
     }

@@ -61,7 +61,7 @@ class Op {
 
     /// First excitation index.
     std::shared_ptr<Index> a_;
-    /// Second excitation index in two-body tensor. In one-body tensor this is the first excitation index partner.
+    /// Second excitation index in two-body operator. In one-body case, this is the first excitation index partner.
     std::shared_ptr<Index> b_;
     /// Second excitation index partner.
     std::shared_ptr<Index> c_;
@@ -93,7 +93,7 @@ class Op {
     int num_active_nodagger() const;
     /// Counts number of daggered active operators.
     int num_active_dagger() const;
-    /// Change general operator to active operator...
+    /// Change general operator to active operator, based on bitwise comparisons with i & 1. Used in diagram generation, see diagram get_all.
     void mutate_general(int& i);
     /// Counts number of nondaggered operators.
     int num_nodagger() const;
@@ -128,7 +128,7 @@ class Op {
     std::list<std::tuple<std::shared_ptr<Index>*, int, int> >& op() { return op_; };
 
 
-    /// CAUTION:: this function returns the first daggered operator (not an active operator) **AND** deletes the corresponding entry from this->op_, by marking as contracted.
+    /// CAUTION:: this function returns the first daggered operator (not an active operator, nor already contracted) **AND** deletes the corresponding entry from this->op_, by marking as contracted.
     std::pair<std::shared_ptr<Index>*, std::shared_ptr<Spin>* > first_dagger_noactive();
 
     /// Perform a contraction, skipping first "skip" from equation. Returns the factor, new, and old spin. Called from Diagram::reduce_one_noactive.

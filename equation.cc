@@ -40,8 +40,8 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
       for (auto& j : out) {
         for (int i = 0; i != j->num_dagger(); ++i) {
           shared_ptr<Diagram> n = j->copy();
-          bool done = n->reduce_one_noactive(i);
-          if (!done) break;
+          bool found = n->reduce_one_noactive(i);
+          if (!found) break;
           if (n->valid() || n->done()) {
             out2.push_back(n);
             if (n->done_noactive()) diagram_.push_back(n);
