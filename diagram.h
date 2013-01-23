@@ -28,7 +28,7 @@
 #define __DIAGRAM_H
 
 #include "active.h"
-#include "op.h"
+#include "operator.h"
 #include <iostream>
 #include <iomanip>
 #include <memory>

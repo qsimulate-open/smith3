@@ -1,6 +1,6 @@
 //
 // SMITH3 - generates spin-free multireference electron correlation programs.
-// Filename: op.h
+// Filename: ex.h
 // Copyright (C) 2012 Toru Shiozaki
 //
 // Author: Toru Shiozaki <shiozaki@northwestern.edu>
@@ -37,24 +37,31 @@
 #include <list>
 #include <tuple>
 #include "index.h"
-#include "op.h"
+#include "operator.h"
 
 
 namespace smith {
 
-/// Class for excitation operators, derived from Op base class.  The ex operators are not directly associated with a tensor. 
-class Ex : public Op {
-
+/// Derived class for excitation operators.  The Ex operators are not directly associated with a tensor. 
+class Ex : public Operator {
 
 
   public:
-    /// Create one-body operator. label, daggered index, partner index
-    Ex(const std::string lab, const std::string& oa, const std::string& ob);
+    /// Create one-body operator. daggered index, partner index
+    Ex(const std::string& oa, const std::string& ob);
     ~Ex() {};
 
+    /// Print out operator.
+    void print() const;
 
+    /// checks first two operator tuple fields (index and operator contraction info). **NOTE** that spin info (third op field) is not checked.
+    bool identical(std::shared_ptr<Ex> o) const;
 
+    /// Creates a new Ex pointer.
+    std::shared_ptr<Ex> copy() const;
 
+    /// Makes a possible permutation of indices. Cannot permute if there are active daggered and no-daggered operators.
+    std::pair<bool, double> permute(const bool proj);
 
 };
 
