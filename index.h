@@ -67,10 +67,13 @@ class Index {
     bool dagger_;
     /// Spin of index.
     std::shared_ptr<Spin> spin_;
+    /// If target, index will not be summed over in code generation.
+    bool target_;
+  
 
   public:
-    /// Make index object from label and dagger info. Initialize label, number, and dagger.
-    Index(std::string lab, bool dag) : label_(lab), num_(0), dagger_(dag) {};
+    /// Make index object from label and dagger info. Initialize label, number(0), dagger, and target(false).
+    Index(std::string lab, bool dag) : label_(lab), num_(0), dagger_(dag), target_(false){};
     ~Index() {};
 
     /// Return index number. 
@@ -84,8 +87,14 @@ class Index {
     /// Set index type, default is a (virtual).
     void set_label(const std::string& a) { label_ = a; };
 
-    /// If active (label is x) default is to set to x.
+    /// If active.  Checks label if active (x).
     bool active() const { return label_ == "x"; };
+  
+    /// Return target index status.
+    bool target() const { return target_; };
+    /// set target as true
+    void mark_target() { target_ = true; };
+  
 
     /// Sets spin.
     void set_spin(const std::shared_ptr<Spin> s) { spin_ = s; };
@@ -99,7 +108,7 @@ class Index {
     /// Returns true if index number is same for both indices.
     bool same_num(const std::shared_ptr<Index>& o) const { return o->num() == num(); };
 
-    /// Returns string with index label_, dagger_ and spin info.
+    /// Returns string with index label_, and if argument is true: dagger info (nothing or if daggered, +) and spin info.
     std::string str(const bool& opr = true) const {
       std::stringstream ss;
       ss << label_ << num_;

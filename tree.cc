@@ -34,10 +34,6 @@ using namespace std;
 using namespace smith;
 
 
-shared_ptr<Tensor> BinaryContraction::next_target() {
-  return subtree().front()->target();
-}
-
 BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor> l) {
   // o is a target tensor NOT included in l
   target_ = o;
@@ -45,6 +41,11 @@ BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor
   shared_ptr<ListTensor> rest = l->rest();
   shared_ptr<Tree> tr(new Tree(rest));
   subtree_.push_back(tr);
+}
+
+
+shared_ptr<Tensor> BinaryContraction::next_target() {
+  return subtree().front()->target();
 }
 
 
@@ -90,8 +91,7 @@ Tree::Tree(const shared_ptr<ListTensor> l) : num_(-1) {
 }
 
 
-Tree::Tree(shared_ptr<Equation> eq) : parent_(NULL), tree_name_(eq->name()), num_(-1) {
-
+Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->name()), num_(-1), label_(lab) {
   // First make ListTensor for all the diagrams
   list<shared_ptr<Diagram> > d = eq->diagram();
   for (auto i = d.begin(); i != d.end(); ++i) {
@@ -114,6 +114,8 @@ Tree::Tree(shared_ptr<Equation> eq) : parent_(NULL), tree_name_(eq->name()), num
   set_target_rec();
 }
 
+
+  
 
 void Tree::print() const {
   string indent = "";
@@ -622,381 +624,386 @@ string Tree::generate_task(const string indent, const int ip, const int ic, cons
 }
 
 
-pair<string, string> Tree::generate_task_list(const bool enlist, const shared_ptr<Tree> energy) const {
+pair<string, string> Tree::generate_task_list(const bool enlist, const list<shared_ptr<Tree> > tree_list) const {
   // here ss is the Method.h driver routine
   stringstream ss;
   // here tt is the Method_tasks.h driver routine
   stringstream tt;
+  
 
-  // just to make sure
-  if (energy && depth() != 0) throw logic_error("Energy tree passed in a wrong place.");
+    // may need to check proper tree here. TODO 
 
-  string indent = "      ";
-  string vectensor = "std::vector<std::shared_ptr<Tensor<T> > >";
-  // if this is the top tree, we want to initialize index, as well as to create a task that zeros out the residual vector
-  if (depth() == 0) {
-    assert(icnt == 0 && tree_name_ != "");
-    ss << header(tree_name_);
-    tt << header(tree_name_ + "_tasks");
+    string indent = "      ";
+    string vectensor = "std::vector<std::shared_ptr<Tensor<T> > >";
+    // if this is the top tree, we want to initialize index, as well as to create a task that zeros out the residual vector
+    if (depth() == 0) {
+      assert(icnt == 0 && tree_name_ != "");
+      ss << header(tree_name_);
+      tt << header(tree_name_ + "_tasks");
 
-    ss << "#ifndef __SRC_SMITH_" << tree_name_ << "_H " << endl;
-    ss << "#define __SRC_SMITH_" << tree_name_ << "_H " << endl;
-    ss << "" << endl;
-    ss << "#include <src/smith/spinfreebase.h>" << endl;
-    ss << "#include <src/scf/fock.h>" << endl;
-    ss << "#include <src/util/f77.h>" << endl;
-    ss << "#include <iostream>" << endl;
-    ss << "#include <iomanip>" << endl;
-    ss << "#include <src/smith/queue.h>" << endl;
-    ss << "#include <src/smith/" << tree_name_ << "_tasks.h>" << endl;
-    ss << "#include <src/smith/smith_info.h>" << endl;
-    ss << "" << endl;
-    ss << "namespace bagel {" << endl;
-    ss << "namespace SMITH {" << endl;
-    ss << "namespace " << tree_name_ << "{" << endl;
-    ss << "" << endl;
-    ss << "template <typename T>" << endl;
-    ss << "class " << tree_name_ << " : public SpinFreeMethod<T>, SMITH_info {" << endl;
-    ss << "  protected:" << endl;
-    ss << "    std::shared_ptr<Tensor<T> > t2;" << endl;
-    ss << "    std::shared_ptr<Tensor<T> > r;" << endl;
-    ss << "    double e0_;" << endl;
-    ss << "" << endl;
-    ss << "    std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > make_queue_() {" << endl;
-    ss << "      std::shared_ptr<Queue<T> > queue_(new Queue<T>());" << endl;
+      ss << "#ifndef __SRC_SMITH_" << tree_name_ << "_H " << endl;
+      ss << "#define __SRC_SMITH_" << tree_name_ << "_H " << endl;
+      ss << "" << endl;
+      ss << "#include <src/smith/spinfreebase.h>" << endl;
+      ss << "#include <src/scf/fock.h>" << endl;
+      ss << "#include <src/util/f77.h>" << endl;
+      ss << "#include <iostream>" << endl;
+      ss << "#include <iomanip>" << endl;
+      ss << "#include <src/smith/queue.h>" << endl;
+      ss << "#include <src/smith/" << tree_name_ << "_tasks.h>" << endl;
+      ss << "#include <src/smith/smith_info.h>" << endl;
+      ss << "" << endl;
+      ss << "namespace bagel {" << endl;
+      ss << "namespace SMITH {" << endl;
+      ss << "namespace " << tree_name_ << "{" << endl;
+      ss << "" << endl;
+      ss << "template <typename T>" << endl;
+      ss << "class " << tree_name_ << " : public SpinFreeMethod<T>, SMITH_info {" << endl;
+      ss << "  protected:" << endl;
+      ss << "    std::shared_ptr<Tensor<T> > t2;" << endl;
+      ss << "    std::shared_ptr<Tensor<T> > r;" << endl;
+      ss << "    double e0_;" << endl;
+      ss << "" << endl;
+      ss << "    std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > make_queue_() {" << endl;
+      ss << "      std::shared_ptr<Queue<T> > queue_(new Queue<T>());" << endl;
 
 //  ss << indent << "std::vector<IndexRange> index = {this->closed_, this->active_, this->virt_};" << endl;
-    ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl << endl;
+      ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl << endl;
 
-    ss << indent << vectensor << " tensor0 = {r};" << endl;
-    ss << indent << "std::shared_ptr<Task0<T> > task0(new Task0<T>(tensor0));" << endl;
-    ss << indent << "queue_->add_task(task0);" << endl << endl;
+      ss << indent << vectensor << " tensor0 = {r};" << endl;
+      ss << indent << "std::shared_ptr<Task0<T> > task0(new Task0<T>(tensor0));" << endl;
+      ss << indent << "queue_->add_task(task0);" << endl << endl;
 
-    tt << "#ifndef __SRC_SMITH_" << tree_name_ << "_TASKS_H " << endl;
-    tt << "#define __SRC_SMITH_" << tree_name_ << "_TASKS_H " << endl;
-    tt << "" << endl;
-    tt << "#include <memory>" << endl;
-    tt << "#include <algorithm>" << endl;
-    tt << "#include <src/smith/indexrange.h>" << endl;
-    tt << "#include <src/smith/tensor.h>" << endl;
-    tt << "#include <src/smith/task.h>" << endl;
-    tt << "#include <src/smith/subtask.h>" << endl;
-    tt << "#include <vector>" << endl;
-    tt << "" << endl;
-    tt << "namespace bagel {" << endl;
-    tt << "namespace SMITH {" << endl;
-    tt << "namespace " << tree_name_ << "{" << endl;
-    tt << "" << endl;
+      tt << "#ifndef __SRC_SMITH_" << tree_name_ << "_TASKS_H " << endl;
+      tt << "#define __SRC_SMITH_" << tree_name_ << "_TASKS_H " << endl;
+      tt << "" << endl;
+      tt << "#include <memory>" << endl;
+      tt << "#include <algorithm>" << endl;
+      tt << "#include <src/smith/indexrange.h>" << endl;
+      tt << "#include <src/smith/tensor.h>" << endl;
+      tt << "#include <src/smith/task.h>" << endl;
+      tt << "#include <src/smith/subtask.h>" << endl;
+      tt << "#include <vector>" << endl;
+      tt << "" << endl;
+      tt << "namespace bagel {" << endl;
+      tt << "namespace SMITH {" << endl;
+      tt << "namespace " << tree_name_ << "{" << endl;
+      tt << "" << endl;
 
-    // here generate Task0 that zeros out the residual
-    tt << "template <typename T>" << endl;
-    tt << "class Task0 : public Task<T> {" << endl;
-    tt << "  protected:" << endl;
-    tt << "    std::shared_ptr<Tensor<T> > r_;" << endl;
-    tt << "    IndexRange closed_;" << endl;
-    tt << "    IndexRange active_;" << endl;
-    tt << "    IndexRange virt_;" << endl;
-    tt << "" << endl;
-    tt << "    void compute_() {" << endl;
-    tt << "      r_->zero();" << endl;
-    tt << "    };  " << endl;
-    tt << "" << endl;
-    tt << "  public:" << endl;
-    tt << "    Task0(std::vector<std::shared_ptr<Tensor<T> > > t) : Task<T>() {" << endl;
-    tt << "      r_ =  t[0];" << endl;
-    tt << "    };  " << endl;
-    tt << "    ~Task0() {}; " << endl;
-    tt << "};" << endl << endl;
+      // here generate Task0 that zeros out the residual
+      tt << "template <typename T>" << endl;
+      tt << "class Task0 : public Task<T> {" << endl;
+      tt << "  protected:" << endl;
+      tt << "    std::shared_ptr<Tensor<T> > r_;" << endl;
+      tt << "    IndexRange closed_;" << endl;
+      tt << "    IndexRange active_;" << endl;
+      tt << "    IndexRange virt_;" << endl;
+      tt << "" << endl;
+      tt << "    void compute_() {" << endl;
+      tt << "      r_->zero();" << endl;
+      tt << "    };  " << endl;
+      tt << "" << endl;
+      tt << "  public:" << endl;
+      tt << "    Task0(std::vector<std::shared_ptr<Tensor<T> > > t) : Task<T>() {" << endl;
+      tt << "      r_ =  t[0];" << endl;
+      tt << "    };  " << endl;
+      tt << "    ~Task0() {}; " << endl;
+      tt << "};" << endl << endl;
 
-    ++icnt;
-
-    // all the gamma tensors should be defined here. Only distinct Gammas are computed
-    for (auto& i : gamma_) {
-      i->set_num(icnt);
-      assert(i->label().find("Gamma") != string::npos);
-      ss << i->constructor_str(indent) << endl; 
-
-      // switch for blas, if true merged rdm*f1 tensor multiplication will use blas 
-      bool use_blas = false;
-      tt << i->generate_gamma(icnt, enlist, use_blas);
-      cout << "Printing gamma" << endl;
-      i->print();
-      i->active()->print();
-      vector<string> tmp = {i->label()};
-      vector<int> rdms = i->active()->required_rdm(); 
-      for (auto& j : rdms) {
-        stringstream zz; 
-        zz << "this->rdm" << j << "_";
-        tmp.push_back(zz.str());
-      }
-      if (i->merged()) {
-        stringstream mm;
-        mm << "this->" << i->merged()->label() << "_";
-        tmp.push_back(mm.str());
-      }
-      ss << generate_task(indent, 0, icnt, tmp, enlist);
       ++icnt;
-    }
 
-  }
+      // all the gamma tensors should be defined here. Only distinct Gammas are computed
+      for (auto& i : gamma_) {
+        i->set_num(icnt);
+        assert(i->label().find("Gamma") != string::npos);
+        ss << i->constructor_str(indent) << endl; 
 
-  /////////////////////////////////////////////////////////////////
-  // if op_ is not empty, we add a task that adds up op_.
-  /////////////////////////////////////////////////////////////////
-  if (!op_.empty()) {
-
-    // step through operators and if they are new, construct them.
-    if (find(ii.begin(), ii.end(), target_) == ii.end()) {
-      ii.push_back(target_);
-      ss << target_->constructor_str(indent) << endl;
-    }
-
-    vector<shared_ptr<Tensor> > op = {target_};
-    op.insert(op.end(), op_.begin(), op_.end());
-    ss << generate_task(indent, icnt, op, enlist);
-
-    list<shared_ptr<Index> > ti = target_->index();
-
-    // make sure no duplicates in tensor list for compute header & footer
-    vector<shared_ptr<Tensor> > uniq_tensors;
-    vector<string> tensor_labels;
-    for (auto& i : op) {
-      string label = label__(i->label());
-      if (find(tensor_labels.begin(), tensor_labels.end(), label) != tensor_labels.end()) continue;
-      tensor_labels.push_back(label);
-      uniq_tensors.push_back(i);
-    }
-
-    tt << generate_compute_header(icnt, ti, uniq_tensors, enlist);
-    tt << generate_compute_operators(indent, target_, op_);
-    tt << generate_compute_footer(icnt, ti, uniq_tensors, enlist);
-
-    ++icnt;
-
-  }
-
-  /////////////////////////////////////////////////////////////////
-  // step through BinaryContraction
-  /////////////////////////////////////////////////////////////////
-  for (auto i = bc_.begin(); i != bc_.end(); ++i) {
-    vector<shared_ptr<Tensor> > source_tensors = (*i)->tensors_str();
-
-    for (auto& s : source_tensors) {
-      // if it contains a new intermediate tensor, dump a constructor
-      // (while registering in ii - note that ii is a static variable here).
-      if (find(ii.begin(), ii.end(), s) == ii.end() && s->label().find("I") != string::npos) {
-        ii.push_back(s);
-        ss << s->constructor_str(indent) << endl;
-      }
-    }
-    // saving a counter to a protected member for dependency checks
-    num_ = icnt;
-    ss << generate_task(indent, num_, source_tensors, enlist);
-
-    // write out headers
-    {
-      list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
-      // if outer loop is empty, send inner loop indices to header
-      if (ti.size() == 0) {
-        assert(depth() != 0);
-        list<shared_ptr<Index> > di = (*i)->loop_indices();
-        tt << generate_compute_header(num_, di, source_tensors, enlist, true);
-      } else { 
-        tt << generate_compute_header(num_, ti, source_tensors, enlist);
-      }
-    }
-
-    // here we generate a task for this binary contraction
-    if (depth() != 0) {
-      const string bindent = indent + "    ";
-      string dindent = bindent; 
-      // skip if this is the last step in energy contribution
-      if (!enlist || depth() != 1) {
-        tt << target_->generate_get_block(dindent, "o", "out()", true);
-        tt << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
-      }
-
-      list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
-  
-      // inner loop will show up here
-      // but only if outer loop is not empty
-      list<shared_ptr<Index> > di = (*i)->loop_indices();
-      vector<string> close2;
-      if (ti.size() != 0) {
-        tt << endl;
-        for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent += "  ") {
-          string index = (*iter)->str_gen();
-          tt << dindent << "for (auto& " << index << " : *" << (*iter)->generate_range("_") << ") {" << endl;
-          close2.push_back(dindent + "}");
+        // switch for blas, if true merged rdm*f1 tensor multiplication will use blas 
+        bool use_blas = false;
+        tt << i->generate_gamma(icnt, enlist, use_blas);
+#if 0 // mkm turn off temp
+        cout << "Printing gamma" << endl;
+        i->print();
+        i->active()->print();
+#endif
+        vector<string> tmp = {i->label()};
+        vector<int> rdms = i->active()->required_rdm(); 
+        for (auto& j : rdms) {
+          stringstream zz; 
+          zz << "this->rdm" << j << "_";
+          tmp.push_back(zz.str());
         }
-      } else {
-        int cnt = 0;
-        for (auto i = di.begin(); i != di.end(); ++i, cnt++) tt << dindent << "const Index " <<  (*i)->str_gen() << " = b(" << cnt << ");" << endl;
-        tt << endl;
+        if (i->merged()) {
+          stringstream mm;
+          mm << "this->" << i->merged()->label() << "_";
+          tmp.push_back(mm.str());
+        }
+        ss << generate_task(indent, 0, icnt, tmp, enlist);
+        ++icnt;
       }
 
-      // retrieving tensor_
-      tt << (*i)->tensor()->generate_get_block(dindent, "i0", "in(0)");
-      tt << (*i)->tensor()->generate_sort_indices(dindent, "i0", "in(0)", di) << endl;
-      // retrieving subtree_
-      tt << (*i)->next_target()->generate_get_block(dindent, "i1", "in(1)");
-      tt << (*i)->next_target()->generate_sort_indices(dindent, "i1", "in(1)", di) << endl;
+    }
 
-      // call dgemm
+    /////////////////////////////////////////////////////////////////
+    // if op_ is not empty, we add a task that adds up op_.
+    /////////////////////////////////////////////////////////////////
+    if (!op_.empty()) {
+
+      // step through operators and if they are new, construct them.
+      if (find(ii.begin(), ii.end(), target_) == ii.end()) {
+        ii.push_back(target_);
+        ss << target_->constructor_str(indent) << endl;
+      }
+
+      vector<shared_ptr<Tensor> > op = {target_};
+      op.insert(op.end(), op_.begin(), op_.end());
+      ss << generate_task(indent, icnt, op, enlist);
+
+      list<shared_ptr<Index> > ti = target_->index();
+
+      // make sure no duplicates in tensor list for compute header & footer
+      vector<shared_ptr<Tensor> > uniq_tensors;
+      vector<string> tensor_labels;
+      for (auto& i : op) {
+        string label = label__(i->label());
+        if (find(tensor_labels.begin(), tensor_labels.end(), label) != tensor_labels.end()) continue;
+        tensor_labels.push_back(label);
+        uniq_tensors.push_back(i);
+      }
+
+      tt << generate_compute_header(icnt, ti, uniq_tensors, enlist);
+      tt << generate_compute_operators(indent, target_, op_);
+      tt << generate_compute_footer(icnt, ti, uniq_tensors, enlist);
+
+      ++icnt;
+
+    }
+
+    /////////////////////////////////////////////////////////////////
+    // step through BinaryContraction
+    /////////////////////////////////////////////////////////////////
+    for (auto i = bc_.begin(); i != bc_.end(); ++i) {
+      vector<shared_ptr<Tensor> > source_tensors = (*i)->tensors_str();
+
+      for (auto& s : source_tensors) {
+        // if it contains a new intermediate tensor, dump a constructor
+        // (while registering in ii - note that ii is a static variable here).
+        if (find(ii.begin(), ii.end(), s) == ii.end() && s->label().find("I") != string::npos) {
+          ii.push_back(s);
+          ss << s->constructor_str(indent) << endl;
+        }
+      }
+      // saving a counter to a protected member for dependency checks
+      num_ = icnt;
+      ss << generate_task(indent, num_, source_tensors, enlist);
+
+      // write out headers
       {
-        pair<string, string> t0 = (*i)->tensor()->generate_dim(di);
-        pair<string, string> t1 = (*i)->next_target()->generate_dim(di);
-        if (t0.first != "" || t1.first != "") {
-          tt << dindent << "dgemm_(\"T\", \"N\", ";
-          string tt0 = t0.first == "" ? "1" : t0.first;
-          string tt1 = t1.first == "" ? "1" : t1.first;
-          string ss0 = t1.second== "" ? "1" : t1.second;
-          tt << tt0 << ", " << tt1 << ", " << ss0 << "," << endl;
-          tt << dindent << "       1.0, i0data_sorted, " << ss0 << ", i1data_sorted, " << ss0 << "," << endl
-             << dindent << "       1.0, odata_sorted, " << tt0;
-          tt << ");" << endl;
-        } else {
-          // so far I am expecting the case of energy contribution
-          if (!enlist || depth() != 1) throw logic_error("so far I am expecting the case of energy contribution");
-          string ss0 = t1.second== "" ? "1" : t1.second;
-          tt << dindent << "energy_ += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
+        list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
+        // if outer loop is empty, send inner loop indices to header
+        if (ti.size() == 0) {
+          assert(depth() != 0);
+          list<shared_ptr<Index> > di = (*i)->loop_indices();
+          tt << generate_compute_header(num_, di, source_tensors, enlist, true);
+        } else { 
+          tt << generate_compute_header(num_, ti, source_tensors, enlist);
         }
       }
 
-      if (ti.size() != 0) {
-        for (auto iter = close2.rbegin(); iter != close2.rend(); ++iter)
-          tt << *iter << endl;
-        tt << endl;
-      }
-      // Inner loop ends here
-
-      // skip if this is the last step in energy contribution
-      if (!enlist || depth() != 1) {
-        // sort buffer
-        {
-          tt << (*i)->target()->generate_sort_indices_target(bindent, "o", di, (*i)->tensor(), (*i)->next_target());
+      // here we generate a task for this binary contraction
+      if (depth() != 0) {
+        const string bindent = indent + "    ";
+        string dindent = bindent; 
+        // skip if this is the last step in energy contribution
+        if (!enlist || depth() != 1) {
+          tt << target_->generate_get_block(dindent, "o", "out()", true);
+          tt << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
         }
-        // put buffer
-        {
-          string label = target_->label();
-          // new interface requires indices for put_block
-          tt << bindent << "out()->put_block(odata";
-          list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
-          for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
-            tt << ", " << (*i)->str_gen();
-          tt << ");" << endl;
-        }
-      }
 
-    } else {
-      // making residual vector...
-      list<shared_ptr<Index> > proj = (*i)->tensor()->index();
-      list<shared_ptr<Index> > res;
-      assert(!(proj.size() & 1));
-      for (auto ii = proj.begin(); ii != proj.end(); ++ii, ++ii) {
-        auto j = ii; ++j;
-        res.push_back(*j);
-        res.push_back(*ii);
-      }
-      shared_ptr<Tensor> residual(new Tensor(1.0, "r", res));
-      vector<shared_ptr<Tensor> > op2 = { (*i)->next_target() };
-      tt << generate_compute_operators(indent, residual, op2, (*i)->dagger());
-    }
-
-    // send outer loop indices if outer loop indices exist, otherwise send inner indices
-    {
-      list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
-      if (depth() == 0)
-        for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
-          swap(*i, *j);
-      if (ti.size() == 0) { 
-        assert(depth() !=0);
-        // sending inner indices
+        list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
+    
+        // inner loop will show up here
+        // but only if outer loop is not empty
         list<shared_ptr<Index> > di = (*i)->loop_indices();
-        di.reverse();
-        tt << generate_compute_footer(num_, di, source_tensors, enlist);
-      } else {
-        // sending outer indices
-        tt << generate_compute_footer(num_, ti, source_tensors, enlist);
-      }
-    }
+        vector<string> close2;
+        if (ti.size() != 0) {
+          tt << endl;
+          for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent += "  ") {
+            string index = (*iter)->str_gen();
+            tt << dindent << "for (auto& " << index << " : *" << (*iter)->generate_range("_") << ") {" << endl;
+            close2.push_back(dindent + "}");
+          }
+        } else {
+          int cnt = 0;
+          for (auto i = di.begin(); i != di.end(); ++i, cnt++) tt << dindent << "const Index " <<  (*i)->str_gen() << " = b(" << cnt << ");" << endl;
+          tt << endl;
+        }
 
-    // increment icnt before going to subtrees
-    ++icnt;
-    // triggers a recursive call
-    pair<string, string> tmp = (*i)->generate_task_list(enlist);
-    ss << tmp.first;
-    tt << tmp.second;
-  }
+        // retrieving tensor_
+        tt << (*i)->tensor()->generate_get_block(dindent, "i0", "in(0)");
+        tt << (*i)->tensor()->generate_sort_indices(dindent, "i0", "in(0)", di) << endl;
+        // retrieving subtree_
+        tt << (*i)->next_target()->generate_get_block(dindent, "i1", "in(1)");
+        tt << (*i)->next_target()->generate_sort_indices(dindent, "i1", "in(1)", di) << endl;
 
-  if (depth() == 0) {
-    // energy queue here
-    ss << "      std::shared_ptr<Queue<T> > energy_(new Queue<T>());" << endl;
-    if (energy) {
-      energy->num_ = icnt;
-      for (auto& i : energy->bc_) {
-        pair<string, string> tmp = i->generate_task_list(true); // true triggers energy list
+        // call dgemm
+        {
+          pair<string, string> t0 = (*i)->tensor()->generate_dim(di);
+          pair<string, string> t1 = (*i)->next_target()->generate_dim(di);
+          if (t0.first != "" || t1.first != "") {
+            tt << dindent << "dgemm_(\"T\", \"N\", ";
+            string tt0 = t0.first == "" ? "1" : t0.first;
+            string tt1 = t1.first == "" ? "1" : t1.first;
+            string ss0 = t1.second== "" ? "1" : t1.second;
+            tt << tt0 << ", " << tt1 << ", " << ss0 << "," << endl;
+            tt << dindent << "       1.0, i0data_sorted, " << ss0 << ", i1data_sorted, " << ss0 << "," << endl
+               << dindent << "       1.0, odata_sorted, " << tt0;
+            tt << ");" << endl;
+          } else {
+            // so far I am expecting the case of energy contribution
+            if (!enlist || depth() != 1) throw logic_error("so far I am expecting the case of energy contribution");
+            string ss0 = t1.second== "" ? "1" : t1.second;
+            tt << dindent << "energy_ += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
+          }
+        }
+
+        if (ti.size() != 0) {
+          for (auto iter = close2.rbegin(); iter != close2.rend(); ++iter)
+            tt << *iter << endl;
+          tt << endl;
+        }
+        // Inner loop ends here
+
+        // skip if this is the last step in energy contribution
+        if (!enlist || depth() != 1) {
+          // sort buffer
+          {
+            tt << (*i)->target()->generate_sort_indices_target(bindent, "o", di, (*i)->tensor(), (*i)->next_target());
+          }
+          // put buffer
+          {
+            string label = target_->label();
+            // new interface requires indices for put_block
+            tt << bindent << "out()->put_block(odata";
+            list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
+            for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
+              tt << ", " << (*i)->str_gen();
+            tt << ");" << endl;
+          }
+        }
+
+        } else {
+          // making residual vector...
+          list<shared_ptr<Index> > proj = (*i)->tensor()->index();
+          list<shared_ptr<Index> > res;
+          assert(!(proj.size() & 1));
+          for (auto ii = proj.begin(); ii != proj.end(); ++ii, ++ii) {
+            auto j = ii; ++j;
+            res.push_back(*j);
+            res.push_back(*ii);
+          }
+          shared_ptr<Tensor> residual(new Tensor(1.0, "r", res));
+          vector<shared_ptr<Tensor> > op2 = { (*i)->next_target() };
+          tt << generate_compute_operators(indent, residual, op2, (*i)->dagger());
+        }
+
+        // send outer loop indices if outer loop indices exist, otherwise send inner indices
+        {
+          list<shared_ptr<Index> > ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
+          if (depth() == 0)
+            for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
+              swap(*i, *j);
+          if (ti.size() == 0) { 
+            assert(depth() !=0);
+            // sending inner indices
+            list<shared_ptr<Index> > di = (*i)->loop_indices();
+            di.reverse();
+            tt << generate_compute_footer(num_, di, source_tensors, enlist);
+          } else {
+            // sending outer indices
+            tt << generate_compute_footer(num_, ti, source_tensors, enlist);
+          }
+        }
+
+        // increment icnt before going to subtrees
+        ++icnt;
+        // triggers a recursive call
+        pair<string, string> tmp = (*i)->generate_task_list(enlist);
         ss << tmp.first;
         tt << tmp.second;
       }
-      ++icnt;
-    }
-    ss << "      return make_pair(queue_, energy_);" << endl;
-    ss << "    };" << endl;
-    ss << endl;
-    ss << "  public:" << endl;
-    ss << "    " << tree_name_ << "(std::shared_ptr<const Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info() {" << endl;
-    ss << "      this->eig_ = this->f1_->diag();" << endl;
-    ss << "      t2 = this->v2_->clone();" << endl;
-    ss << "      e0_ = this->e0();" << endl;
-    ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
-    ss << "      t2->scale(2.0);" << endl;
-    ss << "      r = t2->clone();" << endl;
-    ss << "    };" << endl;
-    ss << "    ~" << tree_name_ << "() {}; " << endl;
-    ss << "" << endl;
-    ss << "    void solve() {" << endl;
-    ss << "      this->print_iteration();" << endl;
-    ss << "      int iter = 0;" << endl;
-    ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
-    ss << "        std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > q = make_queue_();" << endl;
-    ss << "        std::shared_ptr<Queue<T> > queue = q.first;" << endl;
-    ss << "        std::shared_ptr<Queue<T> > energ = q.second;" << endl;
-    ss << "        while (!queue->done())" << endl;
-    ss << "          queue->next_compute();" << endl;
-    ss << "        this->update_amplitude(t2, r);" << endl;
-    ss << "        const double err = r->rms();" << endl;
-    ss << "        r->zero();" << endl;
-    ss << "        const double en = energy(energ);" << endl;
-    ss << "        this->print_iteration(iter, en, err);" << endl;
-    ss << "        if (err < thresh_residual()) break;" << endl;
-    ss << "      }" << endl;
-    ss << "      this->print_iteration(iter == maxiter_);" << endl;
-    ss << "    };" << endl;
-    ss << "" << endl;
-    ss << "    double energy(std::shared_ptr<Queue<T> > energ) {" << endl;
-    ss << "      double en = 0.0;" << endl;
-    ss << "      while (!energ->done()) {" << endl;
-    ss << "        std::shared_ptr<Task<T> > c = energ->next_compute();" << endl;
-    ss << "        en += c->energy() * 0.25;" << endl;  // 0.25 due to 1/2 each to bra and ket
-    ss << "      }   " << endl;
-    ss << "      return en; " << endl;
-    ss << "    };  " << endl;
-    ss << "};" << endl;
-    ss << endl;
-    ss << "}" << endl;
-    ss << "}" << endl;
-    ss << "}" << endl;
 
-    ss << "#endif" << endl << endl;
+  // go through additional tree graphs
+  for (auto& t : tree_list) {
+      if (depth() == 0) {
+        // energy queue here
+        ss << "      std::shared_ptr<Queue<T> > energy_(new Queue<T>());" << endl;
+        if (t->label()=="energy") {
+          t->num_ = icnt;
+          for (auto& j : t->bc_) {
+            pair<string, string> tmp = j->generate_task_list(true); // true triggers energy list
+            ss << tmp.first;
+            tt << tmp.second;
+          }
+          ++icnt;
+        }
+        ss << "      return make_pair(queue_, energy_);" << endl;
+        ss << "    };" << endl;
+        ss << endl;
+        ss << "  public:" << endl;
+        ss << "    " << tree_name_ << "(std::shared_ptr<const Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info() {" << endl;
+        ss << "      this->eig_ = this->f1_->diag();" << endl;
+        ss << "      t2 = this->v2_->clone();" << endl;
+        ss << "      e0_ = this->e0();" << endl;
+        ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
+        ss << "      t2->scale(2.0);" << endl;
+        ss << "      r = t2->clone();" << endl;
+        ss << "    };" << endl;
+        ss << "    ~" << tree_name_ << "() {}; " << endl;
+        ss << "" << endl;
+        ss << "    void solve() {" << endl;
+        ss << "      this->print_iteration();" << endl;
+        ss << "      int iter = 0;" << endl;
+        ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
+        ss << "        std::pair<std::shared_ptr<Queue<T> >, std::shared_ptr<Queue<T> > > q = make_queue_();" << endl;
+        ss << "        std::shared_ptr<Queue<T> > queue = q.first;" << endl;
+        ss << "        std::shared_ptr<Queue<T> > energ = q.second;" << endl;
+        ss << "        while (!queue->done())" << endl;
+        ss << "          queue->next_compute();" << endl;
+        ss << "        this->update_amplitude(t2, r);" << endl;
+        ss << "        const double err = r->rms();" << endl;
+        ss << "        r->zero();" << endl;
+        ss << "        const double en = energy(energ);" << endl;
+        ss << "        this->print_iteration(iter, en, err);" << endl;
+        ss << "        if (err < thresh_residual()) break;" << endl;
+        ss << "      }" << endl;
+        ss << "      this->print_iteration(iter == maxiter_);" << endl;
+        ss << "    };" << endl;
+        ss << "" << endl;
+        ss << "    double energy(std::shared_ptr<Queue<T> > energ) {" << endl;
+        ss << "      double en = 0.0;" << endl;
+        ss << "      while (!energ->done()) {" << endl;
+        ss << "        std::shared_ptr<Task<T> > c = energ->next_compute();" << endl;
+        ss << "        en += c->energy() * 0.25;" << endl;  // 0.25 due to 1/2 each to bra and ket
+        ss << "      }   " << endl;
+        ss << "      return en; " << endl;
+        ss << "    };  " << endl;
+        ss << "};" << endl;
+        ss << endl;
+        ss << "}" << endl;
+        ss << "}" << endl;
+        ss << "}" << endl;
 
-    tt << endl;
-    tt << "}" << endl;
-    tt << "}" << endl;
-    tt << "}" << endl;
-    tt << "#endif" << endl << endl;
-  }
-  return make_pair(ss.str(), tt.str());
+        ss << "#endif" << endl << endl;
+
+        tt << endl;
+        tt << "}" << endl;
+        tt << "}" << endl;
+        tt << "}" << endl;
+        tt << "#endif" << endl << endl;
+      }
+    } // end tree_list loop
+    return make_pair(ss.str(), tt.str());
 }
 
 

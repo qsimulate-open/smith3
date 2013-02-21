@@ -68,8 +68,8 @@ tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_pt
               (l == "x" && k == "c" && j == "x" && i == "x")) {
 #else   // turn on one of the following lines
 // *test single configuration cases*
-//        if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
-          if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
+          if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
+//        if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
 //        if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
 //        if (l == "c" && k == "c" && j == "x" && i == "a") { // ccxa
 //        if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) { // cxxa or xcxa
@@ -132,6 +132,7 @@ int main() {
   shared_ptr<Equation> eq3(new Equation("ea", {dum, t_dagger, H}));
   shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, hc}));
   eq3->merge(eq3a);
+  eq3->set_tree_type("energy");
   cout << eq3->generate({eq0});
  
 

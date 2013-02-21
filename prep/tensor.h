@@ -63,7 +63,7 @@ class Tensor {
 
     std::string generate() const {
       std::stringstream ss;
-      ss << "  shared_ptr<Op> " << tag_ << "(new Op(\"" << base_ << "\"" << (indices_.empty() ? "" : ", ") << str_index() << "));" << std::endl; 
+      ss << "  shared_ptr<Operator> " << tag_ << "(new Op(\"" << base_ << "\"" << (indices_.empty() ? "" : ", ") << str_index() << "));" << std::endl; 
       return ss.str();
     };
 

@@ -52,12 +52,12 @@ shared_ptr<Diagram> Diagram::copy() const {
 
   // creates Diagram without any info
   shared_ptr<Diagram> out(new Diagram());
-  list<shared_ptr<Op> > outop;
+  list<shared_ptr<Operator> > outop;
 
   // loop over operators
   for (auto& it : op()) {
     // cloning...
-    shared_ptr<Op> a = it->copy();
+    shared_ptr<Operator> a = it->copy();
 
     auto j = a->op().begin();
     for (auto i = it->op().begin(); i != it->op().end(); ++i, ++j) {

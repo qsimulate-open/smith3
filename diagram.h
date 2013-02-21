@@ -41,7 +41,8 @@ namespace smith {
 class Diagram {
   protected:
     /// A list of operators.
-    std::list<std::shared_ptr<Op> > op_;
+    std::list<std::shared_ptr<Operator> > op_;
+
     /// A constant factor.
     double fac_;
     /// A scalar to be defined later on BAGEL side.
@@ -54,9 +55,9 @@ class Diagram {
 
   public:
     /// Construct diagram from operator list, prefactor and dagger information.
-    Diagram(std::list<std::shared_ptr<Op> > op) : op_(op), fac_(1.0), dagger_(false) { };
+    Diagram(std::list<std::shared_ptr<Operator> > op) : op_(op), fac_(1.0), dagger_(false) { };
     /// Construct diagram from operator list, prefactor, scalar, and dagger information.
-    Diagram(std::list<std::shared_ptr<Op> > op, std::string s) : op_(op), fac_(1.0), scalar_(s), dagger_(false) { };
+    Diagram(std::list<std::shared_ptr<Operator> > op, std::string s) : op_(op), fac_(1.0), scalar_(s), dagger_(false) { };
     /// Construct diagram with prefactor and dagger information.
     Diagram() : fac_(1.0), dagger_(false) { };
     // copy constructor is complicated but preserves the same topology as this.
@@ -81,9 +82,9 @@ class Diagram {
     bool dagger() const { return dagger_; };
 
     /// Careful, returns a const reference of op_ operator.
-    const std::list<std::shared_ptr<Op> >& op() const { return op_; };
+    const std::list<std::shared_ptr<Operator> >& op() const { return op_; };
     /// Set operator for private members.
-    void set_op(const std::list<std::shared_ptr<Op> >& o) { op_ = o; };
+    void set_op(const std::list<std::shared_ptr<Operator> >& o) { op_ = o; };
     /// Set factor for private members.
     void set_fac(const double a) { fac_ = a; };
 

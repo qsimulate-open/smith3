@@ -63,24 +63,25 @@ void Op::print() const {
 }
 
 
-shared_ptr<Op> Op::copy() const {
+shared_ptr<Operator> Op::copy() const {
   // in the case of two-body operators
   if (c_) {
-    shared_ptr<Op> tmp(new Op(label_, a_->label(), b_->label(), c_->label(), d_->label()));
+    shared_ptr<Operator> tmp(new Op(label_, a_->label(), b_->label(), c_->label(), d_->label()));
     return tmp;
   } else if (a_)  {
-    shared_ptr<Op> tmp(new Op(label_, a_->label(), b_->label()));
+    shared_ptr<Operator> tmp(new Op(label_, a_->label(), b_->label()));
     return tmp;
   } else {
-    shared_ptr<Op> tmp(new Op(label_));
+    shared_ptr<Operator> tmp(new Op(label_));
     return tmp;
   }
 }
 
 
 // Note that spin info is not checked. 
-bool Op::identical(shared_ptr<Op> o) const {
+bool Op::identical(shared_ptr<Operator> o) const {
   bool out = true;
+  // TODO check if I need to re-introduce this check somehow differently. mkm
   out &= label_ == o->label();
   auto j = o->op().begin();
   for (auto i = op_.begin(); i != op_.end(); ++i, ++j) {

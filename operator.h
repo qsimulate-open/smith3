@@ -80,6 +80,18 @@ class Operator {
     Operator(){};
     virtual ~Operator() {};
 
+    /// pure virtual print out operator.
+    virtual void print() const = 0; // pure virtual function to force derived classes to define these members.
+    /// pure virtual permute.
+    virtual std::pair<bool, double> permute(const bool proj) = 0;
+    /// pure virtual comparison.
+    virtual bool identical(std::shared_ptr<Operator> o) const = 0;
+    /// pure virtual copy operatory pointer. 
+    virtual std::shared_ptr<Operator> copy() const = 0;
+    /// not all derived classes have this, but needed for cast-to-base class pointers.
+    virtual std::string label() const = 0;
+
+
 
 
     /// Returns if this operator is completely contracted.

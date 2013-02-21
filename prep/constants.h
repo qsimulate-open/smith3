@@ -58,7 +58,8 @@ static std::string footer(const std::string res, const std::string energy) {
   mm << "" <<  std::endl; 
   mm << "  ofstream fs(" << res << "->tree_name() + \".h\");" << std::endl;
   mm << "  ofstream es(" << res << "->tree_name() + \"_tasks.h\");" << std::endl;
-  mm << "  pair<string, std::string> tmp = " << res << "->generate_task_list(false, " << energy << ");" << std::endl;
+  mm << "  list<shared_ptr<Tree>> " << energy << "_list = {" << energy << "};" << std::endl;
+  mm << "  pair<string, string> tmp = " << res << "->generate_task_list(false, " << energy << "_list" << ");" << std::endl;
   mm << "  fs << tmp.first;" << std::endl;
   mm << "  es << tmp.second;" << std::endl;
   mm << "  fs.close();" << std::endl;

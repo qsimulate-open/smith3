@@ -57,23 +57,24 @@ class Op : public Operator {
     Op(const std::string lab, std::shared_ptr<Index> ta, std::shared_ptr<Index> tb, std::shared_ptr<Spin> ts = std::make_shared<Spin>());
     /// Create operator with label.
     Op(const std::string lab = "") : label_(lab) { };
-    ~Op() {};
+    virtual ~Op() {};
 
 
     /// Returns operator name.
-    std::string label() const { return label_; };
+    std::string label() const override { return label_; };
 
     /// Print out operator.
-    void print() const;
+    void print() const override;
+
+    /// Makes a possible permutation of indices. Cannot permute if there are active daggered and no-daggered operators or if label is proj.
+    std::pair<bool, double> permute(const bool proj) override;
 
     /// Checks label, and first two operator tuple fields (index and operator contraction info). **NOTE** that spin info (third op field) is not checked.
-    bool identical(std::shared_ptr<Op> o) const;
+    bool identical(std::shared_ptr<Operator> o) const override;
 
-    /// Creates a new Op pointer.
-    std::shared_ptr<Op> copy() const;
+    /// Creates a new Operator pointer.
+    std::shared_ptr<Operator> copy() const override;
    
-    /// Makes a possible permutation of indices. Cannot permute if there are active daggered and no-daggered operators or if label is proj.
-    std::pair<bool, double> permute(const bool proj);
 
 };
 

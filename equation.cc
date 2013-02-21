@@ -57,6 +57,63 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
 }
 
 
+void Equation::term_select(string t){
+  // go through diagrams and if do not contain correct target indices, remove.
+  list<list<shared_ptr<Diagram> >::iterator> rm;
+  bool keep = true;
+  for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
+    const list<shared_ptr<Operator>> ops = (*i)->op();
+    for (auto& j : ops) {
+      if (j->label().empty()) {
+        // compare op index label
+        list<tuple<shared_ptr<Index>*,int, int>> q_ops = j->op();
+        for (auto& k : q_ops) {
+          if ((*get<0>(k))->label() !=  t) {
+            rm.push_back(i);
+            break;   
+          }
+        }   
+      } 
+    }
+  } 
+  for (auto& it : rm) diagram_.erase(it);
+}
+
+
+// marks target indices in equation, ie those not to be summed over.
+void Equation::mark_targets() {
+  list<shared_ptr<Diagram>>  new_diagram;
+  for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
+    // target_indices can differ between diagrams, so keep list definition inside 
+    list<shared_ptr<Index>> target_indices;
+    const list<shared_ptr<Operator>> ops = (*i)->op();
+    // go find excitation operator, add indices to target list 
+    for (auto& j : ops) {
+      if (j->label().empty()) {
+        list<tuple<shared_ptr<Index>*,int, int>> q_ops = j->op();
+        for (auto& k : q_ops) {
+          target_indices.push_back((*get<0>(k)));
+        }   
+      } 
+    }
+    // now go through indices in operators and mark targets
+    for (auto& j : ops) {
+      if (j->label().empty()) continue;
+      list<tuple<shared_ptr<Index>*,int, int>> q_ops = j->op();
+      // find equivalent target index in other operators, 
+      for (auto& k : q_ops) {
+        for (auto& t : target_indices) {
+          if (t == (*get<0>(k))) { 
+            // mark index as target 
+            (*get<0>(k))->mark_target();
+          }
+        }
+      }   
+    }
+  } 
+}
+
+
 // print. This triggers Diagram::refresh_indices().
 void Equation::print() {
   for (auto& i : diagram_) i->print();

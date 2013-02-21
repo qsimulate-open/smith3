@@ -53,6 +53,13 @@ class Equation {
       diagram_.insert(diagram_.end(), o->diagram_.begin(), o->diagram_.end());
     };
 
+    /// Mark target indices in equation, ie those which are not to be summed over.
+    void mark_targets();
+
+    /// Prunes equation to those terms containing target indices.
+    void term_select(std::string t);
+    
+
     /// Print function. This triggers Diagram::refresh_indices().
     void print();
     /// The active parts are processed. 

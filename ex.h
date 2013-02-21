@@ -45,23 +45,25 @@ namespace smith {
 /// Derived class for excitation operators.  The Ex operators are not directly associated with a tensor. 
 class Ex : public Operator {
 
-
   public:
     /// Create one-body operator. daggered index, partner index
     Ex(const std::string& oa, const std::string& ob);
-    ~Ex() {};
+    virtual ~Ex() {};
 
     /// Print out operator.
-    void print() const;
-
-    /// checks first two operator tuple fields (index and operator contraction info). **NOTE** that spin info (third op field) is not checked.
-    bool identical(std::shared_ptr<Ex> o) const;
-
-    /// Creates a new Ex pointer.
-    std::shared_ptr<Ex> copy() const;
+    void print() const override;
 
     /// Makes a possible permutation of indices. Cannot permute if there are active daggered and no-daggered operators.
-    std::pair<bool, double> permute(const bool proj);
+    std::pair<bool, double> permute(const bool proj) override;
+
+    /// checks first two operator tuple fields (index and operator contraction info). **NOTE** that spin info (third op field) is not checked.
+    bool identical(std::shared_ptr<Operator> o) const override;
+
+    /// Creates a new Ex pointer.
+    std::shared_ptr<Operator> copy() const override;
+
+    /// this is perhaps not correct..TODO mkm check.
+    std::string label() const override { return ""; };
 
 };
 

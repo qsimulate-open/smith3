@@ -32,7 +32,7 @@ class Diagram {
 
     std::string construct_str() const {
       std::stringstream ss;
-      ss << "  list<shared_ptr<Op> > " << label_ << " = {" << index_str() << "};" << std::endl;
+      ss << "  list<shared_ptr<Operator> > " << label_ << " = {" << index_str() << "};" << std::endl;
       return ss.str();
     }
 

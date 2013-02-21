@@ -38,7 +38,9 @@
 #include <memory>
 #include <string>
 #include <list>
+#include "operator.h"
 #include "op.h"
+#include "ex.h"
 #include "active.h"
 
 namespace smith {
@@ -72,8 +74,8 @@ class Tensor {
     /// Constructor for tensor without scalar.
     Tensor(const double& d, const std::string& l, const std::list<std::shared_ptr<Index> >& i)
       : factor_(d), label_(l), index_(i) { };
-    /// Constructor for const op tensor.
-    Tensor(const std::shared_ptr<Op> op);
+    /// Constructor for const operator tensor, creates index list and checks for target indices. Called from listtensor after labels are checked in listtensor constructor. 
+    Tensor(const std::shared_ptr<Operator> op);
     /// Constructor for const active tensor.
     Tensor(const std::shared_ptr<Active> active);
     /// Construct tensor with no arguements.

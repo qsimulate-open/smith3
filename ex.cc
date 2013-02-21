@@ -35,13 +35,13 @@ Ex::Ex(const std::string& oa, const std::string& ob)
 
 
 
-shared_ptr<Ex> Ex::copy() const {
-  shared_ptr<Ex> tmp(new Ex(a_->label(), b_->label()));
+shared_ptr<Operator> Ex::copy() const {
+  shared_ptr<Operator> tmp(new Ex(a_->label(), b_->label()));
   return tmp;
 }
 
 
-bool Ex::identical(shared_ptr<Ex> o) const {
+bool Ex::identical(shared_ptr<Operator> o) const {
   bool out = true;
   auto j = o->op().begin();
   for (auto i = op_.begin(); i != op_.end(); ++i, ++j) {

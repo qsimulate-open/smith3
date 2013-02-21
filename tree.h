@@ -36,7 +36,7 @@ namespace smith {
 
 class Tree;
 
-/// Class framework for tensor multiplication and factorization contains tree.
+/// Class framework for tensor multiplication and factorization, contains tree.
 class BinaryContraction {
   protected:
     /// An intermediate, target_ = tensor_ * subtrees
@@ -137,12 +137,20 @@ class Tree : public std::enable_shared_from_this<Tree> {
     /// When we generate, a counter is used to generate a list of tasks.
     mutable int num_;
 
+    /// Tree label, used for graph-specific code generation. 
+    std::string label_;
+
+
   public:
-    /// Construct tree of equation pointers.
-    Tree(const std::shared_ptr<Equation> eq);
+    /// Construct tree of equation pointers and set tree label.
+    Tree(const std::shared_ptr<Equation> eq, std::string lab="");
     /// Construct tree of listtensor pointers.
     Tree(const std::shared_ptr<ListTensor> l);
     ~Tree() {};
+
+    /// Return label of tree.
+    std::string label() { return label_; };
+  
 
     /// TODO check, this seems to be not needed.
     bool done() const;
@@ -193,7 +201,7 @@ class Tree : public std::enable_shared_from_this<Tree> {
     /// Returns gamma_, list of unique Gamma tensors.
     std::list<std::shared_ptr<Tensor> > gamma() const { return gamma_; };
 
-    /// Returns depth, 0 is top.
+    /// Returns depth, 0 is top of graph.
     int depth() const;
 
     /// This function returns the rank of required RDMs here + inp. Goes through bc_ and op_ tensor lists.
@@ -202,7 +210,7 @@ class Tree : public std::enable_shared_from_this<Tree> {
     // code generators!
     /// Generate task and task list files.
     std::pair<std::string,std::string> generate_task_list(const bool enlist = false,
-        const std::shared_ptr<Tree> energy = std::shared_ptr<Tree>()) const;
+        const std::list<std::shared_ptr<Tree> > energy = std::list<std::shared_ptr<Tree> >()) const;
 
     /// Generate task header.
     std::string generate_compute_header(const int, const std::list<std::shared_ptr<Index> > ti, const std::vector<std::shared_ptr<Tensor> >, const bool, const bool = false) const;

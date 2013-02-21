@@ -35,7 +35,9 @@
 #include <string>
 #include <list>
 #include <memory>
+#include "operator.h"
 #include "op.h"
+#include "ex.h"
 #include "rdm.h"
 
 namespace smith {
@@ -64,9 +66,9 @@ class Active {
     /// Compares active tensors. Comparison is rdm order specific now. TODO could be made more general.
     bool operator==(const Active& o) const;
 
-    /// This generate does get_block, sort_indices, and the merged (fock) mulitiplication for Gamma (overlap) summation.
+    /// This generate does get_block, sort_indices, and the merged (fock) multiplication for Gamma summation.
     std::string generate(const std::string indent, const std::string tag, const std::list<std::shared_ptr<Index> > index, const std::list<std::shared_ptr<Index> > merged = std::list<std::shared_ptr<Index> >(), const std::string mlab = "", const bool use_blas = false) const;
-    /// Returns vector of int cooresponding to RDM numbers in Gamma (overlap). RDM0 is not included.
+    /// Returns vector of int cooresponding to RDM numbers in Gamma. RDM0 is not included.
     std::vector<int> required_rdm() const;
     
 };
