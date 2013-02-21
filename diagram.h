@@ -41,7 +41,7 @@ namespace smith {
 class Diagram {
   protected:
     /// A list of operators.
-    std::list<std::shared_ptr<Operator> > op_;
+    std::list<std::shared_ptr<Operator>> op_;
 
     /// A constant factor.
     double fac_;
@@ -55,9 +55,9 @@ class Diagram {
 
   public:
     /// Construct diagram from operator list, prefactor and dagger information.
-    Diagram(std::list<std::shared_ptr<Operator> > op) : op_(op), fac_(1.0), dagger_(false) { };
+    Diagram(std::list<std::shared_ptr<Operator>> op) : op_(op), fac_(1.0), dagger_(false) { };
     /// Construct diagram from operator list, prefactor, scalar, and dagger information.
-    Diagram(std::list<std::shared_ptr<Operator> > op, std::string s) : op_(op), fac_(1.0), scalar_(s), dagger_(false) { };
+    Diagram(std::list<std::shared_ptr<Operator>> op, std::string s) : op_(op), fac_(1.0), scalar_(s), dagger_(false) { };
     /// Construct diagram with prefactor and dagger information.
     Diagram() : fac_(1.0), dagger_(false) { };
     // copy constructor is complicated but preserves the same topology as this.
@@ -67,7 +67,7 @@ class Diagram {
     std::shared_ptr<Diagram> copy() const;
 
     /// Generate all combination of diagrams (related to general indices).
-    std::list<std::shared_ptr<Diagram> > get_all() const;
+    std::list<std::shared_ptr<Diagram>> get_all() const;
 
     // Get functions.
     /// Return the diagram (term) prefactor.
@@ -82,9 +82,9 @@ class Diagram {
     bool dagger() const { return dagger_; };
 
     /// Careful, returns a const reference of op_ operator.
-    const std::list<std::shared_ptr<Operator> >& op() const { return op_; };
+    const std::list<std::shared_ptr<Operator>>& op() const { return op_; };
     /// Set operator for private members.
-    void set_op(const std::list<std::shared_ptr<Operator> >& o) { op_ = o; };
+    void set_op(const std::list<std::shared_ptr<Operator>>& o) { op_ = o; };
     /// Set factor for private members.
     void set_fac(const double a) { fac_ = a; };
 
@@ -125,7 +125,7 @@ class Diagram {
     bool done_noactive() const;
 
     /// Gathers active indices.
-    std::list<std::shared_ptr<Index> > active_indices() const; 
+    std::list<std::shared_ptr<Index>> active_indices() const; 
 };
 
 }

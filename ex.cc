@@ -94,7 +94,7 @@ pair<bool, double> Ex::permute(const bool proj) {
     }
   }
   // permute indices (I don't remember why op_ is list...)
-  vector<tuple<shared_ptr<Index>*, int, int> > tmp(size*2);
+  vector<tuple<shared_ptr<Index>*, int, int>> tmp(size*2);
   auto oiter = op_.begin();
   for (int i = 0; i != size; ++i, ++oiter) {
     tmp[map[i]*2  ] = *oiter; ++oiter; 

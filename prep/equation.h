@@ -13,21 +13,21 @@ namespace Prep {
 
 class Equation {
   protected:
-    std::list<std::shared_ptr<Diagram> > diagram_;
+    std::list<std::shared_ptr<Diagram>> diagram_;
     std::string label_;
     std::string tree_type_;
 
   public:
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor> > > in, const std::string scalar = "") : label_(l), tree_type_("") {
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::string scalar = "") : label_(l), tree_type_("") {
       std::list<int> max;
       for (auto& i : in) max.push_back(i.size());
 
-      std::list<std::list<std::shared_ptr<Tensor> > > out;
+      std::list<std::list<std::shared_ptr<Tensor>> > out;
       std::list<int> current(in.size(), 0);
       std::list<int> start = current;
       do {
         // set the current vector 
-        std::list<std::shared_ptr<Tensor> > cc;
+        std::list<std::shared_ptr<Tensor>> cc;
         auto inp = in.begin();
         for (auto i = current.begin(); i != current.end(); ++i, ++inp) cc.push_back((*inp)[*i]);
         out.push_back(cc);
@@ -62,7 +62,7 @@ class Equation {
       diagram_.insert(diagram_.end(), o->diagram_.begin(), o->diagram_.end());
     }
 
-    std::string generate(std::initializer_list<std::shared_ptr<Equation> > o) const {
+    std::string generate(std::initializer_list<std::shared_ptr<Equation>> o) const {
       std::stringstream ss;
       for (auto& i : diagram_) ss << i->construct_str();
       for (auto& i : diagram_) ss << i->diagram_str();

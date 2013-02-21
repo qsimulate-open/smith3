@@ -36,7 +36,7 @@ namespace smith {
 class Equation {
   protected:
     /// List of diagrams.
-    std::list<std::shared_ptr<Diagram> > diagram_;
+    std::list<std::shared_ptr<Diagram>> diagram_;
     /// Internal function used by factorize().
     void duplicates_(const bool);
 
@@ -73,7 +73,7 @@ class Equation {
     std::string name() const { return name_; };
 
     /// Returns list of diagram pointers.
-    std::list<std::shared_ptr<Diagram> > diagram() { return diagram_; };
+    std::list<std::shared_ptr<Diagram>> diagram() { return diagram_; };
 
 };
 

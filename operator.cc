@@ -202,7 +202,7 @@ shared_ptr<Index>* Operator::survive(shared_ptr<Index>* a, shared_ptr<Index>* b)
 };
 
 
-tuple<double, shared_ptr<Spin>, shared_ptr<Spin> >
+tuple<double, shared_ptr<Spin>, shared_ptr<Spin>>
      Operator::contract(pair<shared_ptr<Index>*, shared_ptr<Spin>* >& dat, const int skip) {
   int cnt = 0;
   auto i = op_.begin();

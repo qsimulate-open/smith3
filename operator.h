@@ -52,10 +52,10 @@ class Operator {
     //               0: operator
     //               2: active operator 
     /// Tuple with index object pointer, operator info, and spin info (0 or 1). Operator info is defined as -1: no operator (i.e., already contracted), 0: operator, 2: active operator.
-    std::list<std::tuple<std::shared_ptr<Index>*, int, int> > op_;
+    std::list<std::tuple<std::shared_ptr<Index>*, int, int>> op_;
 
     /// Spin operator info.
-    std::vector<std::shared_ptr<Spin> > rho_;
+    std::vector<std::shared_ptr<Spin>> rho_;
 
     /// First excitation index.
     std::shared_ptr<Index> a_;
@@ -117,7 +117,7 @@ class Operator {
     /// Set spin.
     void set_rho(const int i, std::shared_ptr<Spin> a) { rho_[i] = a; };
     /// Returns spin.
-    std::vector<std::shared_ptr<Spin> >& rho() { return rho_; };
+    std::vector<std::shared_ptr<Spin>>& rho() { return rho_; };
     /// Returns const spin.
     std::shared_ptr<Spin> rho(const int i) const { return rho_.at(i); };
     /// Returns a const pointer to spin.
@@ -126,16 +126,16 @@ class Operator {
     std::shared_ptr<Spin>* rho_ptr(const int i) { return &rho_.at(i); };
 
     /// Return const operator reference.
-    const std::list<std::tuple<std::shared_ptr<Index>*, int, int> >& op() const { return op_; };
+    const std::list<std::tuple<std::shared_ptr<Index>*, int, int>>& op() const { return op_; };
     /// Return operator reference.
-    std::list<std::tuple<std::shared_ptr<Index>*, int, int> >& op() { return op_; };
+    std::list<std::tuple<std::shared_ptr<Index>*, int, int>>& op() { return op_; };
 
 
     /// CAUTION:: this function returns the first daggered operator (not an active operator, nor already contracted) **AND** deletes the corresponding entry from this->op_, by marking as contracted.
     std::pair<std::shared_ptr<Index>*, std::shared_ptr<Spin>* > first_dagger_noactive();
 
     /// Perform a contraction, skipping first "skip" from equation. Returns the factor, new, and old spin. Called from Diagram::reduce_one_noactive.
-    std::tuple<double, std::shared_ptr<Spin>, std::shared_ptr<Spin> >
+    std::tuple<double, std::shared_ptr<Spin>, std::shared_ptr<Spin>>
       contract(std::pair<std::shared_ptr<Index>*, std::shared_ptr<Spin>* >& dat, const int skip);
 
     /// Returns if you can contract two labels. Labels (type) must be same or one must be of type general in order to do contraction. Dagger info is not checked here but in contract function.

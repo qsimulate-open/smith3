@@ -29,8 +29,8 @@
 using namespace std;
 using namespace smith;
 
-list<shared_ptr<Diagram> > Diagram::get_all() const {
-  list<shared_ptr<Diagram> > out;
+list<shared_ptr<Diagram>> Diagram::get_all() const {
+  list<shared_ptr<Diagram>> out;
 
   const int max = 1 << num_general();
   for (int i = 0; i != max; ++i) {
@@ -47,12 +47,12 @@ list<shared_ptr<Diagram> > Diagram::get_all() const {
 // copying diagram with the same connectivity and so on.
 shared_ptr<Diagram> Diagram::copy() const {
   // mapping of indices and spins. map<old, new>
-  map<shared_ptr<Index>, shared_ptr<Index> > indexmap;
-  map<shared_ptr<Spin>, shared_ptr<Spin> > spinmap;
+  map<shared_ptr<Index>, shared_ptr<Index>> indexmap;
+  map<shared_ptr<Spin>, shared_ptr<Spin>> spinmap;
 
   // creates Diagram without any info
   shared_ptr<Diagram> out(new Diagram());
-  list<shared_ptr<Operator> > outop;
+  list<shared_ptr<Operator>> outop;
 
   // loop over operators
   for (auto& it : op()) {
@@ -119,8 +119,8 @@ void Diagram::print() {
 }
 
 
-list<shared_ptr<Index> > Diagram::active_indices() const {
-  list<shared_ptr<Index> > out;
+list<shared_ptr<Index>> Diagram::active_indices() const {
+  list<shared_ptr<Index>> out;
   for (auto& i : op_) {
     if (i->num_active_nodagger() + i->num_active_dagger() != 0) {
       for (auto& j : i->op())
@@ -160,7 +160,7 @@ bool Diagram::reduce_one_noactive(const int skip) {
     if (i == j) continue;
     // all possible contraction pattern taken for *j (returned as a list).
     if (cnt + (*j)->num_nodagger() > skip) {
-      tuple<double,shared_ptr<Spin>,shared_ptr<Spin> > tmp = (*j)->contract(data, skip-cnt);
+      tuple<double,shared_ptr<Spin>,shared_ptr<Spin>> tmp = (*j)->contract(data, skip-cnt);
       fac_ *= get<0>(tmp);
       newspin = get<1>(tmp);
       oldspin = get<2>(tmp);
@@ -233,7 +233,7 @@ bool Diagram::consistent_indices() const {
 void Diagram::active() {
   // Index should be updated.
   refresh_indices();
-  list<shared_ptr<Index> >  ac = active_indices();
+  list<shared_ptr<Index>>  ac = active_indices();
   if (ac.size()) {
     // Performs Wick in constructor of an Active object
     rdm_ = shared_ptr<Active>(new Active(ac));
@@ -275,9 +275,9 @@ bool Diagram::identical(shared_ptr<Diagram> o) const {
   }
   // then, we check spins.
   if (out) {
-    list<shared_ptr<Index> > act = active_indices();
-    list<shared_ptr<Index> > oact = o->active_indices();
-    map<shared_ptr<Spin>, shared_ptr<Spin> > myo;
+    list<shared_ptr<Index>> act = active_indices();
+    list<shared_ptr<Index>> oact = o->active_indices();
+    map<shared_ptr<Spin>, shared_ptr<Spin>> myo;
     if (act.size() != oact.size()) {
       out = false;
     } else {

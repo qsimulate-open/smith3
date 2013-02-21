@@ -44,7 +44,7 @@ namespace smith {
 class IndexMap {
   protected:
     /// This is list of index classes.
-    std::list<std::pair<std::string, std::pair<int,int> > > map_;
+    std::list<std::pair<std::string, std::pair<int,int>> > map_;
   public:
     /// Construct index classes.
     IndexMap() { 
@@ -66,9 +66,9 @@ class IndexMap {
       return iter->second.first;
     };
     /// Returns index class beginning iterator.
-    std::list<std::pair<std::string, std::pair<int,int> > >::const_iterator begin() const { return map_.begin(); };
+    std::list<std::pair<std::string, std::pair<int,int>> >::const_iterator begin() const { return map_.begin(); };
     /// Returns index class end iterator.
-    std::list<std::pair<std::string, std::pair<int,int> > >::const_iterator end() const { return map_.end(); };
+    std::list<std::pair<std::string, std::pair<int,int>> >::const_iterator end() const { return map_.end(); };
 };
 
 }

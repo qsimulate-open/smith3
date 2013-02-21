@@ -32,11 +32,11 @@ using namespace smith;
 
 Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
 
-  list<shared_ptr<Diagram> > out = in->get_all();
+  list<shared_ptr<Diagram>> out = in->get_all();
 
   if (out.size() != 0) {
     while (out.front()->num_dagger()) {
-      list<shared_ptr<Diagram> > out2;
+      list<shared_ptr<Diagram>> out2;
       for (auto& j : out) {
         for (int i = 0; i != j->num_dagger(); ++i) {
           shared_ptr<Diagram> n = j->copy();
@@ -59,7 +59,7 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
 
 void Equation::term_select(string t){
   // go through diagrams and if do not contain correct target indices, remove.
-  list<list<shared_ptr<Diagram> >::iterator> rm;
+  list<list<shared_ptr<Diagram>>::iterator> rm;
   bool keep = true;
   for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
     const list<shared_ptr<Operator>> ops = (*i)->op();
@@ -139,7 +139,7 @@ void Equation::duplicates() {
 }
 
 void Equation::duplicates_(const bool proj) {
-  list<list<shared_ptr<Diagram> >::iterator> rm;
+  list<list<shared_ptr<Diagram>>::iterator> rm;
   for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
     bool found = false;
     // all possible permutations generated here

@@ -9,14 +9,14 @@ namespace Prep {
 
 class Diagram {
   protected:
-    std::list<std::shared_ptr<Tensor> > op_;
+    std::list<std::shared_ptr<Tensor>> op_;
     std::string label_;
     std::string scalar_;
 
   public:
-    Diagram(const std::list<std::shared_ptr<Tensor> > o, const std::string la, std::string s) : op_(o), label_(la), scalar_(s) {}; 
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, std::string s) : op_(o), label_(la), scalar_(s) {}; 
 
-    const std::list<std::shared_ptr<Tensor> >& op() const { return op_; }; 
+    const std::list<std::shared_ptr<Tensor>>& op() const { return op_; }; 
     std::string label() const { return label_; };
     std::string diag_label() const { return "d" + label_; };
     std::string eqn_label() const { return "e" + label_; };
@@ -32,7 +32,7 @@ class Diagram {
 
     std::string construct_str() const {
       std::stringstream ss;
-      ss << "  list<shared_ptr<Operator> > " << label_ << " = {" << index_str() << "};" << std::endl;
+      ss << "  list<shared_ptr<Operator>> " << label_ << " = {" << index_str() << "};" << std::endl;
       return ss.str();
     }
 

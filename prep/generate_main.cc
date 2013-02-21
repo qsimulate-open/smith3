@@ -47,8 +47,8 @@ string theory = "CAS_test";
 
 using namespace SMITH3::Prep;
 
-tuple<vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> >, vector<shared_ptr<Tensor> > > create_proj() {
-  vector<shared_ptr<Tensor> > lp, lt, ls, td;
+tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>> > create_proj() {
+  vector<shared_ptr<Tensor>> lp, lt, ls, td;
   array<string, 3> label = {{"c", "x", "a"}};
 
   int cnt = 0;
@@ -98,14 +98,14 @@ int main() {
   // generate common header
   cout << header() << endl;
 
-  vector<shared_ptr<Tensor> > proj_list, t_list, r_list, t_dagger;
+  vector<shared_ptr<Tensor>> proj_list, t_list, r_list, t_dagger;
   tie(proj_list, t_list, r_list, t_dagger) = create_proj();
 
   // make f and H tensors here
-  vector<shared_ptr<Tensor> > f   = {shared_ptr<Tensor>(new Tensor("f1", "", {"g", "g"}))};
-  vector<shared_ptr<Tensor> > hc  = {shared_ptr<Tensor>(new Tensor("h1", "", {"g", "g"}))};
-  vector<shared_ptr<Tensor> > H   = {shared_ptr<Tensor>(new Tensor("v2", "", {"g", "g", "g", "g"}))};
-  vector<shared_ptr<Tensor> > dum = {shared_ptr<Tensor>(new Tensor("proj", "e", {}))};
+  vector<shared_ptr<Tensor>> f   = {shared_ptr<Tensor>(new Tensor("f1", "", {"g", "g"}))};
+  vector<shared_ptr<Tensor>> hc  = {shared_ptr<Tensor>(new Tensor("h1", "", {"g", "g"}))};
+  vector<shared_ptr<Tensor>> H   = {shared_ptr<Tensor>(new Tensor("v2", "", {"g", "g", "g", "g"}))};
+  vector<shared_ptr<Tensor>> dum = {shared_ptr<Tensor>(new Tensor("proj", "e", {}))};
   
   cout << "  string theory=\"" << theory << "\"; " << endl;
   

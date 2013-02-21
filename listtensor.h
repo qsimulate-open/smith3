@@ -42,7 +42,7 @@ class ListTensor {
     /// Scalar for listtensor, to be defined in BAGEL.
     std::string scalar_;
     /// A list of tensors.
-    std::list<std::shared_ptr<Tensor> > list_;
+    std::list<std::shared_ptr<Tensor>> list_;
     /// If dagger (transpose).
     bool dagger_;
 
@@ -50,7 +50,7 @@ class ListTensor {
     /// Constructs a list of tensors by constructing tensors from operators in diagram, if they have labels.
     ListTensor(std::shared_ptr<Diagram> d);
     /// Construct listtensor using prefactor, scalar, list of tensors and dagger information.
-    ListTensor(double f, std::string sc, std::list<std::shared_ptr<Tensor> > ve, bool d)
+    ListTensor(double f, std::string sc, std::list<std::shared_ptr<Tensor>> ve, bool d)
       : fac_(f), scalar_(sc), list_(ve), dagger_(d) {};
     ~ListTensor() {};
     

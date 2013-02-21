@@ -50,10 +50,10 @@ void RDM::print(const string& indent) const {
 
 shared_ptr<RDM> RDM::copy() const {
   // first clone all the indices
-  list<shared_ptr<Index> > in;
+  list<shared_ptr<Index>> in;
   for (auto& i : index_) in.push_back(i->clone());
 
-  map<shared_ptr<Spin>, shared_ptr<Spin> > dict;
+  map<shared_ptr<Spin>, shared_ptr<Spin>> dict;
   auto j = in.begin();
   for (auto i = index_.begin(); i != index_.end(); ++i, ++j) {
     // get the original spin
@@ -69,7 +69,7 @@ shared_ptr<RDM> RDM::copy() const {
   }
 
   // lastly clone all the delta functions
-  map<shared_ptr<Index>, shared_ptr<Index> > d;
+  map<shared_ptr<Index>, shared_ptr<Index>> d;
   for (auto& i : delta_) d.insert(make_pair(i.first->clone(), i.second->clone()));
 
   shared_ptr<RDM> out(new RDM(in, d));
@@ -81,9 +81,9 @@ shared_ptr<RDM> RDM::copy() const {
 // An application of "Wick's theorem"
 // This function is controlled by Index::num_. Not a great code, it could have been driven by pointers... lazy me.
 //
-list<shared_ptr<RDM> > RDM::reduce_one(list<int>& done) const {
+list<shared_ptr<RDM>> RDM::reduce_one(list<int>& done) const {
   // first find non-daggered operator which is not aligned
-  list<shared_ptr<RDM> > out;
+  list<shared_ptr<RDM>> out;
 
   for (auto i = index_.begin(); i != index_.end(); ++i) {
 
@@ -101,7 +101,7 @@ list<shared_ptr<RDM> > RDM::reduce_one(list<int>& done) const {
       shared_ptr<RDM> tmp = this->copy();
 
       // find the indices to be deleted.
-      vector<list<shared_ptr<Index> >::iterator> rml;
+      vector<list<shared_ptr<Index>>::iterator> rml;
       int cnt0 = -1;
       int cnt = 0;
       for (auto k = tmp->index().begin(); k != tmp->index().end(); ++k, ++cnt) {
@@ -162,10 +162,10 @@ void RDM::sort() {
   // first we align indices so that
   // 0+ 0 1+ 1 2+ 2...
   // actually this might be better for actually implementation.
-  vector<shared_ptr<Spin> > done_spin;
+  vector<shared_ptr<Spin>> done_spin;
   while (!done()) {
 
-    list<shared_ptr<Index> > buf;
+    list<shared_ptr<Index>> buf;
     auto i = index_.begin();
     // continue to spin which is not processed
     for (; i != index_.end(); ++i) {
@@ -248,9 +248,9 @@ bool RDM::done() const {
 }
 
 
-Active::Active(const list<shared_ptr<Index> >& in) {
+Active::Active(const list<shared_ptr<Index>>& in) {
 
-  shared_ptr<RDM> tmp(new RDM(in, map<shared_ptr<Index>, shared_ptr<Index> >(), 1.0));
+  shared_ptr<RDM> tmp(new RDM(in, map<shared_ptr<Index>, shared_ptr<Index>>(), 1.0));
 
   // this sets list<RDM>
   reduce(tmp);
@@ -260,17 +260,17 @@ Active::Active(const list<shared_ptr<Index> >& in) {
 
 void Active::reduce(shared_ptr<RDM> in) {
   list<int> d;
-  list<pair<shared_ptr<RDM>, list<int> > > buf(1, make_pair(in,d));
+  list<pair<shared_ptr<RDM>, list<int>> > buf(1, make_pair(in,d));
 
   while (buf.size() != 0) {
-    list<pair<shared_ptr<RDM>, list<int> > > buf2;
+    list<pair<shared_ptr<RDM>, list<int>> > buf2;
 
     for (auto& it : buf) {
       shared_ptr<RDM> tmp = it.first;
       list<int> done = it.second;
 
       // taking delta
-      list<shared_ptr<RDM> > out = tmp->reduce_one(done);
+      list<shared_ptr<RDM>> out = tmp->reduce_one(done);
       // this is also needed!
       out.push_back(tmp);
       for (auto& i : out) {
@@ -294,7 +294,7 @@ void Active::print(const string& indent) const {
 }
 
 
-const list<shared_ptr<Index> > Active::index() const {
+const list<shared_ptr<Index>> Active::index() const {
   // first find RDM object that does not have any delta functions
   bool done = false;
   auto j = rdm_.begin();
@@ -322,7 +322,7 @@ bool Active::operator==(const Active& o) const {
 }
 
 
-string Active::generate(const string indent, const string tag, const list<shared_ptr<Index> > index, const list<shared_ptr<Index> > merged, const string mlab, const bool use_blas) const {
+string Active::generate(const string indent, const string tag, const list<shared_ptr<Index>> index, const list<shared_ptr<Index>> merged, const string mlab, const bool use_blas) const {
   stringstream tt;
 
   vector<string> in_tensors;
