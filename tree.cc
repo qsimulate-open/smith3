@@ -647,7 +647,10 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const list<shar
       ss << "#include <src/smith/spinfreebase.h>" << endl;
       ss << "#include <src/scf/fock.h>" << endl;
       ss << "#include <src/util/f77.h>" << endl;
+      ss << "#include <src/wfn/reference.h>" << endl;
+      ss << "#include <src/prop/dipole.h>" << endl;
       ss << "#include <iostream>" << endl;
+      ss << "#include <tuple>" << endl;
       ss << "#include <iomanip>" << endl;
       ss << "#include <src/smith/queue.h>" << endl;
       ss << "#include <src/smith/" << tree_name_ << "_tasks.h>" << endl;
@@ -664,7 +667,7 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const list<shar
       ss << "    std::shared_ptr<Tensor<T>> r;" << endl;
       ss << "    double e0_;" << endl;
       ss << "" << endl;
-      ss << "    std::pair<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>> > make_queue_() {" << endl;
+      ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>> > make_queue_() {" << endl;
       ss << "      std::shared_ptr<Queue<T>> queue_(new Queue<T>());" << endl;
 
 //  ss << indent << "std::vector<IndexRange> index = {this->closed_, this->active_, this->virt_};" << endl;
@@ -934,11 +937,11 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const list<shar
       }
 
   // go through additional tree graphs
-  for (auto& t : tree_list) {
-      if (depth() == 0) {
+  if (depth() == 0) {
+    for (auto& t : tree_list) {
         // energy queue here
-        ss << "      std::shared_ptr<Queue<T>> energy_(new Queue<T>());" << endl;
         if (t->label()=="energy") {
+          ss << "      std::shared_ptr<Queue<T>> energy_(new Queue<T>());" << endl;
           t->num_ = icnt;
           for (auto& j : t->bc_) {
             pair<string, string> tmp = j->generate_task_list(true); // true triggers energy list
@@ -946,64 +949,74 @@ pair<string, string> Tree::generate_task_list(const bool enlist, const list<shar
             tt << tmp.second;
           }
           ++icnt;
+          // end the energy tree and start density matrix generation
+          ss << "      std::shared_ptr<Queue<T>> density_(new Queue<T>());" << endl;
+        } else if (t->label()=="density") { 
+          t->num_ = icnt;
+          for (auto& j : t->bc_) {
+            pair<string, string> tmp = j->generate_task_list(false); // true triggers energy list
+            ss << tmp.first;
+            tt << tmp.second;
+          }
+          ++icnt;
         }
-        ss << "      return make_pair(queue_, energy_);" << endl;
-        ss << "    };" << endl;
-        ss << endl;
-        ss << "  public:" << endl;
-        ss << "    " << tree_name_ << "(std::shared_ptr<const Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info() {" << endl;
-        ss << "      this->eig_ = this->f1_->diag();" << endl;
-        ss << "      t2 = this->v2_->clone();" << endl;
-        ss << "      e0_ = this->e0();" << endl;
-        ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
-        ss << "      t2->scale(2.0);" << endl;
-        ss << "      r = t2->clone();" << endl;
-        ss << "    };" << endl;
-        ss << "    ~" << tree_name_ << "() {}; " << endl;
-        ss << "" << endl;
-        ss << "    void solve() {" << endl;
-        ss << "      this->print_iteration();" << endl;
-        ss << "      int iter = 0;" << endl;
-        ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
-        ss << "        std::pair<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>> > q = make_queue_();" << endl;
-        ss << "        std::shared_ptr<Queue<T>> queue = q.first;" << endl;
-        ss << "        std::shared_ptr<Queue<T>> energ = q.second;" << endl;
-        ss << "        while (!queue->done())" << endl;
-        ss << "          queue->next_compute();" << endl;
-        ss << "        this->update_amplitude(t2, r);" << endl;
-        ss << "        const double err = r->rms();" << endl;
-        ss << "        r->zero();" << endl;
-        ss << "        const double en = energy(energ);" << endl;
-        ss << "        this->print_iteration(iter, en, err);" << endl;
-        ss << "        if (err < thresh_residual()) break;" << endl;
-        ss << "      }" << endl;
-        ss << "      this->print_iteration(iter == maxiter_);" << endl;
-        ss << "    };" << endl;
-        ss << "" << endl;
-        ss << "    double energy(std::shared_ptr<Queue<T>> energ) {" << endl;
-        ss << "      double en = 0.0;" << endl;
-        ss << "      while (!energ->done()) {" << endl;
-        ss << "        std::shared_ptr<Task<T>> c = energ->next_compute();" << endl;
-        ss << "        en += c->energy() * 0.25;" << endl;  // 0.25 due to 1/2 each to bra and ket
-        ss << "      }   " << endl;
-        ss << "      return en; " << endl;
-        ss << "    };  " << endl;
-        ss << "};" << endl;
-        ss << endl;
-        ss << "}" << endl;
-        ss << "}" << endl;
-        ss << "}" << endl;
-
-        ss << "#endif" << endl << endl;
-
-        tt << endl;
-        tt << "}" << endl;
-        tt << "}" << endl;
-        tt << "}" << endl;
-        tt << "#endif" << endl << endl;
-      }
     } // end tree_list loop
-    return make_pair(ss.str(), tt.str());
+    ss << "      return make_tuple(queue_, energy_, density_);" << endl;
+    ss << "    };" << endl;
+    ss << endl;
+    ss << "  public:" << endl;
+    ss << "    " << tree_name_ << "(std::shared_ptr<const Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info() {" << endl;
+    ss << "      this->eig_ = this->f1_->diag();" << endl;
+    ss << "      t2 = this->v2_->clone();" << endl;
+    ss << "      e0_ = this->e0();" << endl;
+    ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
+    ss << "      t2->scale(2.0);" << endl;
+    ss << "      r = t2->clone();" << endl;
+    ss << "    };" << endl;
+    ss << "    ~" << tree_name_ << "() {}; " << endl;
+    ss << "" << endl;
+    ss << "    void solve() {" << endl;
+    ss << "      this->print_iteration();" << endl;
+    ss << "      int iter = 0;" << endl;
+    ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
+    ss << "        std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>> > q = make_queue_();" << endl;
+    ss << "        std::shared_ptr<Queue<T>> queue = std::get<0>(q);" << endl;
+    ss << "        std::shared_ptr<Queue<T>> energ = std::get<1>(q);" << endl;
+    ss << "        while (!queue->done())" << endl;
+    ss << "          queue->next_compute();" << endl;
+    ss << "        this->update_amplitude(t2, r);" << endl;
+    ss << "        const double err = r->rms();" << endl;
+    ss << "        r->zero();" << endl;
+    ss << "        const double en = energy(energ);" << endl;
+    ss << "        this->print_iteration(iter, en, err);" << endl;
+    ss << "        if (err < thresh_residual()) break;" << endl;
+    ss << "      }" << endl;
+    ss << "      this->print_iteration(iter == maxiter_);" << endl;
+    ss << "    };" << endl;
+    ss << "" << endl;
+    ss << "    double energy(std::shared_ptr<Queue<T>> energ) {" << endl;
+    ss << "      double en = 0.0;" << endl;
+    ss << "      while (!energ->done()) {" << endl;
+    ss << "        std::shared_ptr<Task<T>> c = energ->next_compute();" << endl;
+    ss << "        en += c->energy() * 0.25;" << endl;  // 0.25 due to 1/2 each to bra and ket
+    ss << "      }   " << endl;
+    ss << "      return en; " << endl;
+    ss << "    };  " << endl;
+    ss << "};" << endl;
+    ss << endl;
+    ss << "}" << endl;
+    ss << "}" << endl;
+    ss << "}" << endl;
+
+    ss << "#endif" << endl << endl;
+
+    tt << endl;
+    tt << "}" << endl;
+    tt << "}" << endl;
+    tt << "}" << endl;
+    tt << "#endif" << endl << endl; 
+  }
+  return make_pair(ss.str(), tt.str());
 }
 
 
