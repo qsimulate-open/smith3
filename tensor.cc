@@ -166,6 +166,9 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
   }
 
   { 
+#if 0 // if needed, eg debug
+    tt  << cindent << "// tensor label: " << lbl << endl;
+#endif
     tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
                   << tlab << (move ? "->move" : "->get") << "_block(";
     if (found != string::npos) {
@@ -446,7 +449,7 @@ string Tensor::generate_loop(string& indent, vector<string>& close) const {
 }
 
 
-string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_blas) const {
+string Tensor::generate_gamma(const int ic, const bool use_blas) const {
   // TODO split generate_gamma function up to header/body/footer once working (too large now)
   assert(label_.find("Gamma") != string::npos);
   stringstream tt;
@@ -473,11 +476,7 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
 
   //////////// gamma header ////////////
   tt << "template <typename T>" << endl;
-  if (!enlist) {
-    tt << "class Task" << ic << " : public Task<T> {" <<  "  // associated with gamma" << endl;
-  } else {
-    tt << "class Task" << ic << " : public EnergyTask<T> {" <<  "  // associated with gamma" << endl;
-  }
+  tt << "class Task" << ic << " : public Task<T> {" <<  "  // associated with gamma" << endl;
   tt << "  protected:" << endl;
   tt << "    class Task_local : public SubTask<" << nindex << "," << ninptensors << ",T> {" << endl;
   tt << "      protected:" << endl;
@@ -488,22 +487,13 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
   tt << "        const std::shared_ptr<const Tensor<T>>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
   tt << "        const std::shared_ptr<Tensor<T>>& out() const { return this->out_tensor(); }" << endl;
   tt << endl;
-  if (enlist)
-    tt << "        double energy_;" << endl;
-  tt << endl;
   tt << "      public:" << endl;
   tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor<T>>," << ninptensors <<  ">& in, std::shared_ptr<Tensor<T>>& out," << endl;
   tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran)" << endl;
   tt << "          : SubTask<" << nindex << "," << ninptensors << ",T>(block, in, out), range_(ran) { }" << endl;
   tt << endl;
-  if (enlist) {
-    tt << endl;
-    tt << "        double energy() const { return energy_; }" << endl;
-  }
   tt << endl;
   tt << "        void compute() override {" << endl;
-  if (enlist)
-    tt << "          energy_ = 0.0;" << endl; 
 
   //////////// gamma body  ////////////
   string indent ="          ";
@@ -516,6 +506,14 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
       tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
   }    
   
+#if 0 // debug purposes
+   tt << "//   std::shared_ptr<Tensor<T> > " << label() << ";" << endl;
+   for (auto& i: rdmn)
+     tt << "//   std::shared_ptr<Tensor<T> > rdm" << i << ";" << endl;
+   if (merged_)
+     tt << "//   std::shared_ptr<Tensor<T> > " << merged_->label() << ";" << endl;
+   tt << endl;
+#endif
   
   // generate gamma get block, true does a move_block
   tt << generate_get_block(indent, "o", "out()", true, true); // first true means move, second true means we don't scale
@@ -540,23 +538,11 @@ string Tensor::generate_gamma(const int ic, const bool enlist, const bool use_bl
   tt << "" << endl;
 
   tt << "    void compute_() override {" << endl;
-  if (enlist) { 
-    tt << "      this->energy_ = 0.0;" << endl;
-    tt << "      for (auto& i : subtasks_) {" << endl;
-    tt << "        i->compute();" << endl;
-    tt << "        this->energy_ += i->energy();" << endl;
-    tt << "      }" << endl;
-  } else {
-    tt << "      for (auto& i : subtasks_) i->compute();" << endl;
-  }
+  tt << "      for (auto& i : subtasks_) i->compute();" << endl;
   tt << "    }" << endl << endl; 
 
   tt << "  public:" << endl;
-  if (enlist) 
-    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>> > t, std::array<std::shared_ptr<const IndexRange>,3> range) : EnergyTask<T>() {" << endl;
-  else {
-    tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>> > t,  std::array<std::shared_ptr<const IndexRange>,3> range) : Task<T>() {" << endl;
-  }
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>> > t,  std::array<std::shared_ptr<const IndexRange>,3> range) : Task<T>() {" << endl;
   tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
 
   // write out tensors in increasing order

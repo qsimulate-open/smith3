@@ -41,7 +41,7 @@
 
 namespace smith {
 
-/// Base class for spin-summed operators.
+/// Abstract base class for spin-summed operators.
 class Operator {
   protected:
     // this op_ is very important (and does not seem clear...).

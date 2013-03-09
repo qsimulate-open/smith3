@@ -33,6 +33,9 @@
 #include <string>
 #include "equation.h"
 #include "tree.h"
+#include "residual.h"
+#include "energy.h"
+#include "density.h"
 
 using namespace std;
 using namespace smith;
@@ -40,18 +43,18 @@ using namespace smith;
 int main() {
 
   string theory="CAS_test"; 
-  shared_ptr<Op> proj0(new Op("proj", "x", "c", "a", "a"));
-  shared_ptr<Op> t20(new Op("t2", "a", "a", "x", "c"));
-  shared_ptr<Op> r0(new Op("r", "a", "a", "x", "c"));
-  shared_ptr<Op> f1(new Op("f1", "g", "g"));
-  shared_ptr<Op> v2(new Op("v2", "g", "g", "g", "g"));
-  shared_ptr<Op> h1(new Op("h1", "g", "g"));
-  shared_ptr<Op> proje(new Op("proj"));
-  shared_ptr<Op> t2dagger0(new Op("t2dagger", "x", "c", "a", "a"));
-  list<shared_ptr<Op> > da0 = {proj0, f1, t20};
-  list<shared_ptr<Op> > db0 = {proj0, t20};
-  list<shared_ptr<Op> > dc0 = {proj0, v2};
-  list<shared_ptr<Op> > dd0 = {proj0, h1};
+  shared_ptr<Operator> proj0(new Op("proj", "x", "c", "x", "x"));
+  shared_ptr<Operator> t20(new Op("t2", "x", "x", "x", "c"));
+  shared_ptr<Operator> r0(new Op("r", "x", "x", "x", "c"));
+  shared_ptr<Operator> f1(new Op("f1", "g", "g"));
+  shared_ptr<Operator> v2(new Op("v2", "g", "g", "g", "g"));
+  shared_ptr<Operator> h1(new Op("h1", "g", "g"));
+  shared_ptr<Operator> proje(new Op("proj"));
+  shared_ptr<Operator> t2dagger0(new Op("t2dagger", "x", "c", "x", "x"));
+  list<shared_ptr<Operator>> da0 = {proj0, f1, t20};
+  list<shared_ptr<Operator>> db0 = {proj0, t20};
+  list<shared_ptr<Operator>> dc0 = {proj0, v2};
+  list<shared_ptr<Operator>> dd0 = {proj0, h1};
   shared_ptr<Diagram> dda0(new Diagram(da0));
   shared_ptr<Diagram> ddb0(new Diagram(db0, "e0"));
   shared_ptr<Diagram> ddc0(new Diagram(dc0));
@@ -65,10 +68,10 @@ int main() {
   eda0->merge(edd0);
   eda0->duplicates();
   eda0->active();
-  shared_ptr<Tree> tda(new Tree(eda0));
+  shared_ptr<Tree> tda(new Residual(eda0, "residual"));
   tda->sort_gamma();
-  list<shared_ptr<Op> > ea0 = {proje, t2dagger0, v2};
-  list<shared_ptr<Op> > eb0 = {proje, t2dagger0, h1};
+  list<shared_ptr<Operator>> ea0 = {proje, t2dagger0, v2};
+  list<shared_ptr<Operator>> eb0 = {proje, t2dagger0, h1};
   shared_ptr<Diagram> dea0(new Diagram(ea0));
   shared_ptr<Diagram> deb0(new Diagram(eb0));
   shared_ptr<Equation> eea0(new Equation(dea0, theory));
@@ -76,12 +79,13 @@ int main() {
   eea0->merge(eeb0);
   eea0->duplicates();
   eea0->active();
-  shared_ptr<Tree> tea(new Tree(eea0));
+  shared_ptr<Tree> tea(new Energy(eea0, "energy"));
   tea->sort_gamma(tda->gamma());
 
   ofstream fs(tda->tree_name() + ".h");
   ofstream es(tda->tree_name() + "_tasks.h");
-  pair<string, std::string> tmp = tda->generate_task_list(false, tea);
+  list<shared_ptr<Tree>> tea_list = {tea};
+  pair<string, string> tmp = tda->generate_task_list(tea_list);
   fs << tmp.first;
   es << tmp.second;
   fs.close();

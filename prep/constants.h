@@ -44,6 +44,9 @@ static std::string header() {
   mm << "#include <string>" << std::endl;
   mm << "#include \"equation.h\"" << std::endl;
   mm << "#include \"tree.h\"" << std::endl;
+  mm << "#include \"residual.h\"" << std::endl;
+  mm << "#include \"energy.h\"" << std::endl;
+  mm << "#include \"density.h\"" << std::endl;
   mm << "" << std::endl;
   mm << "using namespace std;" << std::endl;
   mm << "using namespace smith;" << std::endl;
@@ -59,7 +62,7 @@ static std::string footer(const std::string res, const std::string energy) {
   mm << "  ofstream fs(" << res << "->tree_name() + \".h\");" << std::endl;
   mm << "  ofstream es(" << res << "->tree_name() + \"_tasks.h\");" << std::endl;
   mm << "  list<shared_ptr<Tree>> " << energy << "_list = {" << energy << "};" << std::endl;
-  mm << "  pair<string, string> tmp = " << res << "->generate_task_list(false, " << energy << "_list" << ");" << std::endl;
+  mm << "  pair<string, string> tmp = " << res << "->generate_task_list(" << energy << "_list" << ");" << std::endl;
   mm << "  fs << tmp.first;" << std::endl;
   mm << "  es << tmp.second;" << std::endl;
   mm << "  fs.close();" << std::endl;

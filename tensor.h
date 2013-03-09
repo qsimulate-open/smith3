@@ -143,7 +143,7 @@ class Tensor {
     /// Generate for loops.
     std::string generate_loop(std::string&, std::vector<std::string>&) const;
     /// Generate code for Gamma (overlap) task.
-    std::string generate_gamma(const int, const bool, const bool) const;
+    std::string generate_gamma(const int, const bool) const;
     /// Returns Gamma (overlap) number.
     int num() const { assert(label_.find("Gamma") != std::string::npos); return num_; }; 
     /// Set Gamma (overlap) number.

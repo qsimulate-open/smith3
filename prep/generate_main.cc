@@ -68,14 +68,14 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
               (l == "x" && k == "c" && j == "x" && i == "x")) {
 #else   // turn on one of the following lines
 // *test single configuration cases*
-          if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
+//        if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
 //        if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
 //        if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
 //        if (l == "c" && k == "c" && j == "x" && i == "a") { // ccxa
 //        if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) { // cxxa or xcxa
 //        if (l == "c" && k == "c" && j == "x" && i == "x") { // ccxx
 //        if (l == "x" && k == "x" && j == "x" && i == "a") { // xxxa
-//        if (l == "x" && k == "c" && j == "x" && i == "x") { // xcxx
+          if (l == "x" && k == "c" && j == "x" && i == "x") { // xcxx
 // *end test single configuration cases*
 #endif
             stringstream ss; ss << cnt;
@@ -126,6 +126,7 @@ int main() {
   eq0->merge(eq1);
   eq0->merge(eq2);
   eq0->merge(eq2a);
+  eq0->set_tree_type("residual");
   cout << eq0->generate({});
 
   // energy equations

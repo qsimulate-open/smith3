@@ -74,10 +74,13 @@ class Equation {
       ss << "  " << diagram_.front()->eqn_label() << "->duplicates();" << std::endl;
       ss << "  " << diagram_.front()->eqn_label() << "->active();" << std::endl;
 
-      if (!tree_type_.empty()) {
-        ss << "  shared_ptr<Tree> " << tree_label() << "(new Tree(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
+      if (!tree_type_.empty() && tree_type_ == "residual") {
+          ss << "  shared_ptr<Tree> " << tree_label() << "(new Residual(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
+      } else if (!tree_type_.empty() && tree_type_ == "energy") {
+          ss << "  shared_ptr<Tree> " << tree_label() << "(new Energy(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else {
-        ss << "  shared_ptr<Tree> " << tree_label() << "(new Tree(e" << diagram_.front()->label() << "));" << std::endl;
+          throw std::logic_error("prep/equation.cc error, tree must be of derived type");
+          // ss << "  shared_ptr<Tree> " << tree_label() << "(new Tree(e" << diagram_.front()->label() << "));" << std::endl;
       }
 
       if (o.size() == 0) {
