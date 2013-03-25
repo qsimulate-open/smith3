@@ -155,8 +155,6 @@ class Tree {
     /// Return label of tree. 
     virtual std::string label() const = 0;
   
-    /// TODO may be useful later.
-    bool done() const;
 
     /// Returns depth, 0 is top of graph.
     int depth() const;

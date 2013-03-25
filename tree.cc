@@ -271,6 +271,7 @@ void Tree::print() const {
       cout << indent << target_->str() << " += " << (*i)->str() << (dagger_ ? " *" : "") << endl;
   }
   // print target indices for top level 
+  // note that right now these do not appear in print out if multiple zero depth levels are printed..todo fix.
   if (depth() == 0 && !target_index_.empty()) {
     stringstream zz;
     zz << "(";
@@ -282,19 +283,6 @@ void Tree::print() const {
   }
   for (auto i = bc_.begin(); i != bc_.end(); ++i)
     (*i)->print();
-}
-
-
-bool Tree::done() const {
-  // vectensor should be really a tensor
-#if 0
-  bool out = true;
-  for (auto i = tensor_.begin(); i != tensor_.end(); ++i) out &= ((*i)->length() == 1);
-  return out;
-#endif
-// todo check this
- cout << "Check Tree::done" << endl;
- return true;
 }
 
 
@@ -543,7 +531,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>> > make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T>> queue_(new Queue<T>());" << endl;
 
-    ss << indent << "std::array<std::shared_ptr<const const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl << endl;
+    ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl << endl;
 
     ss << indent << vectensor << " tensor0 = {r};" << endl;
     ss << indent << "std::shared_ptr<Task0<T>> task0(new Task0<T>(tensor0));" << endl;
@@ -570,9 +558,9 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     tt << "class Task0 : public Task<T> {" << endl;
     tt << "  protected:" << endl;
     tt << "    std::shared_ptr<Tensor<T>> r_;" << endl;
-    tt << "    const IndexRange closed_;" << endl;
-    tt << "    const IndexRange active_;" << endl;
-    tt << "    const IndexRange virt_;" << endl;
+    tt << "    IndexRange closed_;" << endl;
+    tt << "    IndexRange active_;" << endl;
+    tt << "    IndexRange virt_;" << endl;
     tt << "" << endl;
     tt << "    void compute_() {" << endl;
     tt << "      r_->zero();" << endl;
@@ -676,10 +664,12 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     // write out headers
     if (label_ == "residual" ) {
       {
+#if 0 // targets are working for both zero depths
         if ( depth() == 0 ) {
           cout << "top residual, targets:" << endl;
           for (auto i : target_index_) i->print();
         }
+#endif
         // ti is short for target indices. Modify to use tree target_index() for excitation operator/proj indices at root - top level
         list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : target_index();
         // if outer loop is empty, send inner loop indices to header
