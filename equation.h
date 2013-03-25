@@ -42,9 +42,12 @@ class Equation {
 
     /// Name of theory. Generated code for BAGEL will have this name, set in main.cc.
     std::string name_;
+  
+    /// target indices 
+    std::list<std::shared_ptr<const Index>> target_index_;
 
   public:
-    /// Construct equation from diagram and name. Contract operators in diagram.
+    /// Construct equation from diagram and name. Contract operators in diagram. Saves target indices.
     Equation(std::shared_ptr<Diagram>, std::string nam);
     ~Equation() {};
 
@@ -68,6 +71,9 @@ class Equation {
     void duplicates();
     /// Refresh indices in each diagram.
     void refresh_indices();
+
+    /// Returns target_index_, needed for top-level binary contractions.
+    std::list<std::shared_ptr<const Index>> target_index() const { return target_index_; }
 
     /// Returns the name of this equation.
     std::string name() const { return name_; };

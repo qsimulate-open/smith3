@@ -28,10 +28,10 @@
 #define __TENSOR_H
 
 // In order to treat Active and Op on the same footing.
-// To make it easy, this is again driven by Index::num_.
+// To make it easy, this is again driven by const Index::num_.
 // Perhaps it's better if it is done by pointer itself, but for the time being it's fine...
 //
-// Index::spin_ is not set.
+// const Index::spin_ is not set.
 
 // this object should generate some codes.
 
@@ -55,7 +55,7 @@ class Tensor {
     /// Label of this tensor.
     std::string label_;
     /// List of indices.
-    std::list<std::shared_ptr<Index>> index_;
+    std::list<std::shared_ptr<const Index>> index_;
 
     /// If this tensor is active, it has an internal structure.
     std::shared_ptr<Active> active_;
@@ -67,12 +67,13 @@ class Tensor {
     /// For counting Gamma tensors, used when adding all active tensor, see merge().
     mutable int num_;
 
+
   public:
     /// Constructor for tensor with scalar.
-    Tensor(const double& d, const std::string s, const std::string& l, const std::list<std::shared_ptr<Index>>& i)
+    Tensor(const double& d, const std::string s, const std::string& l, const std::list<std::shared_ptr<const Index>>& i)
       : factor_(d), scalar_(s), label_(l), index_(i) { };
     /// Constructor for tensor without scalar.
-    Tensor(const double& d, const std::string& l, const std::list<std::shared_ptr<Index>>& i)
+    Tensor(const double& d, const std::string& l, const std::list<std::shared_ptr<const Index>>& i)
       : factor_(d), label_(l), index_(i) { };
     /// Constructor for const operator tensor, creates index list and checks for target indices. Called from listtensor after labels are checked in listtensor constructor. 
     Tensor(const std::shared_ptr<Operator> op);
@@ -83,9 +84,9 @@ class Tensor {
     ~Tensor() {};
 
     /// Returns list of index pointers for tensor.
-    std::list<std::shared_ptr<Index>>& index() { return index_; };
+    std::list<std::shared_ptr<const Index>>& index() { return index_; };
     /// Returns const list of index pointers for tensor.
-    const std::list<std::shared_ptr<Index>>& index() const { return index_; };
+    const std::list<std::shared_ptr<const Index>>& index() const { return index_; };
     /// Returns const Tensor pointer.
     const std::shared_ptr<const Tensor> merged() const { return merged_; };
     /// Returns tensor rank, cannot be called by DF tensors so far. 
@@ -132,12 +133,12 @@ class Tensor {
     /// Generate code for unique_ptr scratch arrays.
     std::string generate_scratch_area(const std::string, const std::string, const std::string tensor_lab, const bool zero = false) const;
     /// Generate code for sort_indices.
-    std::string generate_sort_indices(const std::string, const std::string, const std::string, const std::list<std::shared_ptr<Index>>&, const bool op = false) const;
+    std::string generate_sort_indices(const std::string, const std::string, const std::string, const std::list<std::shared_ptr<const Index>>&, const bool op = false) const;
     /// Generate code for final sort_indices back to target (tensor specified with move block).
-    std::string generate_sort_indices_target(const std::string, const std::string, const std::list<std::shared_ptr<Index>>&,
+    std::string generate_sort_indices_target(const std::string, const std::string, const std::list<std::shared_ptr<const Index>>&,
                                              const std::shared_ptr<Tensor>, const std::shared_ptr<Tensor>) const;
     /// Obtain dimensions for code for tensor multiplication in dgemm.
-    std::pair<std::string, std::string> generate_dim(const std::list<std::shared_ptr<Index>>&) const;
+    std::pair<std::string, std::string> generate_dim(const std::list<std::shared_ptr<const Index>>&) const;
     /// Generates code for RDMs. 
     std::string generate_active(const std::string indent, const std::string tag, const int ninptensors, const bool) const;
     /// Generate for loops.

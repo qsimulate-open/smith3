@@ -48,10 +48,14 @@ class Ex : public Operator {
   public:
     /// Create one-body operator. daggered index, partner index
     Ex(const std::string& oa, const std::string& ob);
+    /// Create two-body operator. Projection operator should be replaced via this.
+    Ex(const std::string& oa, const std::string& ob, const std::string& oc, const std::string& od);
     virtual ~Ex() {};
 
     /// Print out operator.
     void print() const override;
+
+    bool is_ex() const { return true; }
 
     /// Makes a possible permutation of indices. Cannot permute if there are active daggered and no-daggered operators.
     std::pair<bool, double> permute(const bool proj) override;

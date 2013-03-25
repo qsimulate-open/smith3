@@ -42,7 +42,7 @@
 
 namespace smith {
 
-/// Derived class for spin-summed operators which are also related to tensors. 
+/// Derived class for spin-summed operators which produce tensors. 
 class Op : public Operator {
   protected:
     /// Related to tensor info. 
@@ -59,6 +59,7 @@ class Op : public Operator {
     Op(const std::string lab = "") : label_(lab) { };
     virtual ~Op() {};
 
+    bool is_ex() const { return false; }
 
     /// Returns operator name.
     std::string label() const override { return label_; };

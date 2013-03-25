@@ -35,11 +35,11 @@ ListTensor::ListTensor(shared_ptr<Diagram> d) {
   scalar_ = d->scalar();
   // vector of tensors
   for (auto& i : d->op()) {
-    // add only labeled operators, eg not excitation operator
+    // careful, add only labeled operators! eg not excitation operator
     if (!i->label().empty()) {
       shared_ptr<Tensor> t(new Tensor(i));
       list_.push_back(t);
-    }
+    }  
   }
   if (d->rdm()) {
     shared_ptr<Tensor> t(new Tensor(d->rdm()));
@@ -83,12 +83,12 @@ void ListTensor::absorb_all_internal() {
 
 static int target_num__;
 shared_ptr<Tensor> ListTensor::target() const {
-  list<shared_ptr<Index>> ind;
+  list<shared_ptr<const Index>> ind;
   for (auto t = list_.begin(); t != list_.end(); ++t) {
-    list<shared_ptr<Index>> index = (*t)->index();
+    list<shared_ptr<const Index>> index = (*t)->index();
     for (auto j = index.begin(); j != index.end(); ++j) {
       bool found = false;
-      list<shared_ptr<Index>>::iterator remove;
+      list<shared_ptr<const Index>>::iterator remove;
       for (auto i = ind.begin(); i != ind.end(); ++i) {
         if ((*i)->num() == (*j)->num()) {
           found = true;

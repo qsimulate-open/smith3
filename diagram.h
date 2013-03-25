@@ -102,6 +102,9 @@ class Diagram {
     /// If diagrams are same, based on size, indices, and spin. 
     bool identical(std::shared_ptr<Diagram> o) const;
 
+    /// Returns list of target indices from excitation operators in diagram.
+    std::list<std::shared_ptr<const Index>> target_index() const;
+
     /// Print function for diagram, CAUTION: it also refreshes the indices.
     void print();
     /// This print version does not refresh indices. Prints factor, scalar and operators.
@@ -125,7 +128,7 @@ class Diagram {
     bool done_noactive() const;
 
     /// Gathers active indices.
-    std::list<std::shared_ptr<Index>> active_indices() const; 
+    std::list<std::shared_ptr<const Index>> active_indices() const; 
 };
 
 }

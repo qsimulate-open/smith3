@@ -41,14 +41,14 @@ class RDM {
     /// Prefactor for RDM.
     double fac_;
     /// Operators that constitute RDM.
-    std::list<std::shared_ptr<Index>> index_;
+    std::list<std::shared_ptr<const Index>> index_;
     /// Kronecker's delta, map with two index pointers.
-    std::map<std::shared_ptr<Index>, std::shared_ptr<Index>> delta_;
+    std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>> delta_;
    
     /// Generate entire task code for Gamma RDM summation.
-    std::string generate_not_merged(std::string indent, const std::string tlab, const std::list<std::shared_ptr<Index>>& loop, std::vector<std::string> in_tensors);
+    std::string generate_not_merged(std::string indent, const std::string tlab, const std::list<std::shared_ptr<const Index>>& loop, std::vector<std::string> in_tensors);
     /// Generates entire task code for Gamma RDM summation with merged object (additional tensor, here fock tensor) multiplication.
-    std::string generate_merged(std::string indent, const std::string itag, const std::list<std::shared_ptr<Index>>& index, const std::list<std::shared_ptr<Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas);
+    std::string generate_merged(std::string indent, const std::string itag, const std::list<std::shared_ptr<const Index>>& index, const std::list<std::shared_ptr<const Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas);
 
     /// Makes if statement in delta cases ie index equivalency check line.
     std::string make_delta_if(std::string& indent, std::vector<std::string>& close);
@@ -59,31 +59,31 @@ class RDM {
     /// Generate get block - source data to be added to target (move block).
     std::string make_get_block(std::string indent, std::string tag, std::string lbl);
     /// Generate sort_indices which makes array. This version has no addition (or factor multiplication-0111).
-    std::string make_sort_indices(std::string indent, std::string tag, const std::list<std::shared_ptr<Index>>& loop);
+    std::string make_sort_indices(std::string indent, std::string tag, const std::list<std::shared_ptr<const Index>>& loop);
 
     /// If delta case, also makes index loops then checks to see if merged-or-delta indices are in loops..
     std::string make_merged_loops(std::string& indent, const std::string tag, std::vector<std::string>& close);
     /// Loops over delta indices in Gamma summation.
-    std::string make_sort_loops(const std::string itag, std::string& indent, const std::list<std::shared_ptr<Index>>& index, std::vector<std::string>& close);
+    std::string make_sort_loops(const std::string itag, std::string& indent, const std::list<std::shared_ptr<const Index>>& index, std::vector<std::string>& close);
 
     // for task summation line 
     /// Generates odata (Gamma) part of for summation ie LHS in equations gamma += rdm or gamma += rdm * f1
-    std::string make_odata(const std::string itag, std::string& indent, const std::list<std::shared_ptr<Index>>& index);
+    std::string make_odata(const std::string itag, std::string& indent, const std::list<std::shared_ptr<const Index>>& index);
     /// Generates RDM and merged (fock) tensor multipication.
-    std::string multiply_merge(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<Index>>& merged);
+    std::string multiply_merge(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<const Index>>& merged);
     /// Adds merged (fock) tensor with indices, used by muliply_merge member.
-    std::string fdata_mult(const std::string itag, const std::list<std::shared_ptr<Index>>& merged);
+    std::string fdata_mult(const std::string itag, const std::list<std::shared_ptr<const Index>>& merged);
   
     /// Do blas multiplication of Gamma and fock tensors...not implemented yet for subtask code!
-    std::string make_blas_multiply(std::string indent, const std::list<std::shared_ptr<Index>>& loop, const std::list<std::shared_ptr<Index>>& index);
+    std::string make_blas_multiply(std::string indent, const std::list<std::shared_ptr<const Index>>& loop, const std::list<std::shared_ptr<const Index>>& index);
     /// Used for blas multiplication of RDM and merged (fock) tensors. NB not implemented yet for subtask code!
-    std::pair<std::string, std::string> get_dim(const std::list<std::shared_ptr<Index>>& di, const std::list<std::shared_ptr<Index>>& index) const;
+    std::pair<std::string, std::string> get_dim(const std::list<std::shared_ptr<const Index>>& di, const std::list<std::shared_ptr<const Index>>& index) const;
 
 
   public:
     /// Make RDM object from list of indices, delta indices and factor.
-    RDM(const std::list<std::shared_ptr<Index>>& in,
-        const std::map<std::shared_ptr<Index>, std::shared_ptr<Index>>& in2,
+    RDM(const std::list<std::shared_ptr<const Index>>& in,
+        const std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>>& in2,
         const double& f = 1.0)
       : fac_(f), index_(in), delta_(in2) { };
     ~RDM() {};
@@ -103,28 +103,28 @@ class RDM {
     double& fac() { return fac_; };
 
     /// Returns a reference of index_.
-    std::list<std::shared_ptr<Index>>& index() { return index_; };
+    std::list<std::shared_ptr<const Index>>& index() { return index_; };
     /// Returns a const reference of index_.
-    const std::list<std::shared_ptr<Index>>& index() const { return index_; };
+    const std::list<std::shared_ptr<const Index>>& index() const { return index_; };
 
     /// Returns a const reference of delta_.
-    const std::map<std::shared_ptr<Index>, std::shared_ptr<Index>>& delta() const { return delta_; };
+    const std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>>& delta() const { return delta_; };
     /// Returns a reference of delta_.
-    std::map<std::shared_ptr<Index>, std::shared_ptr<Index>>& delta() { return delta_; };
+    std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>>& delta() { return delta_; };
 
     /// Returns if this is in the final form..ie aligned as a0+ a0 a1+ a1..Member function located in active.cc
     bool done() const;
     /// Checks if there is an annihilation operator with creation operators to the right hand side.
     bool reduce_done(const std::list<int>& done) const;
 
-    /// Application of Wick's theorem and is controlled by Index::num_. See active.cc. One index is going to be annihilated. done is updated inside the function.
+    /// Application of Wick's theorem and is controlled by const Index::num_. See active.cc. One index is going to be annihilated. done is updated inside the function.
     std::list<std::shared_ptr<RDM>> reduce_one(std::list<int>& done) const;
 
     /// Compares for equivalency based on prefactor, indices and delta.
     bool operator==(const RDM& o) const;
 
     /// Generate Gamma summation task, for both non-merged and merged case (RDM * f1 tensor multiplication).
-    std::string generate(std::string indent, const std::string itag, const std::list<std::shared_ptr<Index>>& index, const std::list<std::shared_ptr<Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas);
+    std::string generate(std::string indent, const std::string itag, const std::list<std::shared_ptr<const Index>>& index, const std::list<std::shared_ptr<const Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas);
 
     /// Returns an integer representing rdm rank value, ie (index size)/2
     int rank() const { assert(index_.size()%2 == 0); return index_.size()/2; }; 

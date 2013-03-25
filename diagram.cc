@@ -85,9 +85,24 @@ shared_ptr<Diagram> Diagram::copy() const {
 }
 
 
+list<shared_ptr<const Index>> Diagram::target_index() const {
+  bool found = false;
+  list<shared_ptr<const Index>> out;
+  for (auto& i : op_) {
+    if (i->is_ex()) {
+      assert(!found);
+      found = true;
+      list<tuple<shared_ptr<Index>*, int, int>> ops = i->op();
+      for (auto& j : ops) out.push_back(*get<0>(j));
+    } 
+  }
+  return out;
+}
+
+
 void Diagram::refresh_indices() {
-  map<shared_ptr<Index>, int> dict;
-  map<shared_ptr<Index>, int> done;
+  map<shared_ptr<const Index>, int> dict;
+  map<shared_ptr<const Index>, int> done;
   map<shared_ptr<Spin>, int> spin;
   for (auto& i : op_)
     i->refresh_indices(dict, done, spin);
@@ -119,8 +134,8 @@ void Diagram::print() {
 }
 
 
-list<shared_ptr<Index>> Diagram::active_indices() const {
-  list<shared_ptr<Index>> out;
+list<shared_ptr<const Index>> Diagram::active_indices() const {
+  list<shared_ptr<const Index>> out;
   for (auto& i : op_) {
     if (i->num_active_nodagger() + i->num_active_dagger() != 0) {
       for (auto& j : i->op())
@@ -231,9 +246,9 @@ bool Diagram::consistent_indices() const {
 }
 
 void Diagram::active() {
-  // Index should be updated.
+  // const Index should be updated.
   refresh_indices();
-  list<shared_ptr<Index>>  ac = active_indices();
+  list<shared_ptr<const Index>>  ac = active_indices();
   if (ac.size()) {
     // Performs Wick in constructor of an Active object
     rdm_ = shared_ptr<Active>(new Active(ac));
@@ -275,8 +290,8 @@ bool Diagram::identical(shared_ptr<Diagram> o) const {
   }
   // then, we check spins.
   if (out) {
-    list<shared_ptr<Index>> act = active_indices();
-    list<shared_ptr<Index>> oact = o->active_indices();
+    list<shared_ptr<const Index>> act = active_indices();
+    list<shared_ptr<const Index>> oact = o->active_indices();
     map<shared_ptr<Spin>, shared_ptr<Spin>> myo;
     if (act.size() != oact.size()) {
       out = false;

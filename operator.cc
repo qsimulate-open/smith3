@@ -136,8 +136,8 @@ bool Operator::contracted() const {
 }
 
 
-void Operator::refresh_indices(map<shared_ptr<Index>, int>& dict,
-                         map<shared_ptr<Index>, int>& done,
+void Operator::refresh_indices(map<shared_ptr<const Index>, int>& dict,
+                         map<shared_ptr<const Index>, int>& done,
                          map<shared_ptr<Spin>, int>& spin) {
   //
   // Note: seperate labeling for those still in the operators and those
@@ -174,6 +174,7 @@ void Operator::refresh_indices(map<shared_ptr<Index>, int>& dict,
 
     // set all the spins into operators
     (*get<0>(i))->set_spin(rho(get<2>(i)));
+//  *get<0>(i) = (*get<0>(i))->set_spin(rho(get<2>(i)));
   }
 }
 

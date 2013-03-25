@@ -47,7 +47,7 @@ class ListTensor {
     bool dagger_;
 
   public:
-    /// Constructs a list of tensors by constructing tensors from operators in diagram, if they have labels.
+    /// Constructs a list of tensors by constructing tensors from operators in diagram, IF they have labels.
     ListTensor(std::shared_ptr<Diagram> d);
     /// Construct listtensor using prefactor, scalar, list of tensors and dagger information.
     ListTensor(double f, std::string sc, std::list<std::shared_ptr<Tensor>> ve, bool d)
@@ -56,7 +56,7 @@ class ListTensor {
     
     /// Prints prefactor, if available: scalar, dagger. Finally prints out each tensor in list.
     void print() const;
-    /// Combines tensors and removes one from list. Todo this, finds active tensor, merges other tensor if other tensor is all_active (has all active indices) and but not active and if not proj. 
+    /// Combines tensors and removes one from list. To do this, finds active tensor then merges other tensor if other tensor is all_active (has all active indices) but not if active and if not proj. 
     void absorb_all_internal();
 
     /// Returns the size of the list of tensors.

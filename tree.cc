@@ -75,9 +75,10 @@ Tree::Tree(const shared_ptr<ListTensor> l, string lab) : num_(-1), label_(lab) {
 }
 
 
-Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->name()), num_(-1), label_(lab) {
+Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->name()), num_(-1), label_(lab), target_index_(eq->target_index()) {
   // First make ListTensor for all the diagrams
   list<shared_ptr<Diagram>> d = eq->diagram();
+
   for (auto i = d.begin(); i != d.end(); ++i) {
     shared_ptr<ListTensor> tmp(new ListTensor(*i));
     // All internal tensor should be included in the active part
@@ -255,6 +256,7 @@ list<shared_ptr<Tensor>> Tree::gather_gamma() const {
 
 void BinaryContraction::print() const {
   string indent = "";
+  //if (depth() == 0 && !target_index_.empty()) cout << "je" << endl;
   for (int i = 0; i != depth(); ++i) indent += "  ";
   cout << indent << (target_ ? (target_->str()+" = ") : "") << tensor_->str() << " * " << subtree_.front()->target()->str() << endl;
   for (auto& i : subtree_) i->print();
@@ -267,6 +269,16 @@ void Tree::print() const {
   if (target_) {
     for (auto i = op_.begin(); i != op_.end(); ++i)
       cout << indent << target_->str() << " += " << (*i)->str() << (dagger_ ? " *" : "") << endl;
+  }
+  // print target indices for top level 
+  if (depth() == 0 && !target_index_.empty()) {
+    stringstream zz;
+    zz << "(";
+    for (auto i = target_index_.begin(); i != target_index_.end(); ++i) {
+      zz << (*i)->str(false) << (i != --target_index_.end() ? ", " : "");
+    } 
+    zz << ") ";
+    cout << zz.str(); 
   }
   for (auto i = bc_.begin(); i != bc_.end(); ++i)
     (*i)->print();
@@ -305,17 +317,16 @@ static string label__(const string& lbl) {
 
 
 
-
-list<shared_ptr<Index>> BinaryContraction::target_indices() {
+list<shared_ptr<const Index>> BinaryContraction::target_indices() {
   // returns a list of target indices
   return target_->index();
 }
 
 
-list<shared_ptr<Index>> BinaryContraction::loop_indices() {
+list<shared_ptr<const Index>> BinaryContraction::loop_indices() {
   // returns a list of inner loop indices.
-  list<shared_ptr<Index>> out;
-  list<shared_ptr<Index>> ti = target_->index();
+  list<shared_ptr<const Index>> out;
+  list<shared_ptr<const Index>> ti = target_->index();
   for (auto iter = tensor_->index().begin(); iter != tensor_->index().end(); ++iter) {
     bool found = false;
     for (auto i = ti.begin(); i != ti.end(); ++i) {
@@ -378,11 +389,11 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
     stringstream instr; instr << "in(" << op_tensor_lab[label] << ")";
 
     tt << (*s)->generate_get_block(cindent+"  ", uu.str(), instr.str());
-    list<shared_ptr<Index>> di = target->index();
+    list<shared_ptr<const Index>> di = target->index();
     tt << (*s)->generate_sort_indices(cindent+"  ", uu.str(), instr.str(), di, true);
     tt << cindent << "}" << endl;
 
-    // if this is at the top-level and nees to be daggered:
+    // if this is at the top-level and needs to be daggered:
     if (depth() == 0 && dagger) {
       shared_ptr<Tensor> top(new Tensor(**s));
       // swap operators so that tensor is daggered
@@ -390,12 +401,12 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
          throw logic_error("Daggered object is only supported for 4-index tensors");
       } else {
         auto k0 = di.begin(); auto k1 = k0; ++k1; auto k2 = k1; ++k2; auto k3 = k2; ++k3;
-        list<pair<list<shared_ptr<Index>>::iterator, list<shared_ptr<Index>>::iterator>> map;
+        list<pair<list<shared_ptr<const Index>>::iterator, list<shared_ptr<const Index>>::iterator>> map;
         map.push_back(make_pair(k0, k2));
         map.push_back(make_pair(k2, k0));
         map.push_back(make_pair(k1, k3));
         map.push_back(make_pair(k3, k1));
-        list<shared_ptr<Index>> tmp;
+        list<shared_ptr<const Index>> tmp;
         for (auto& k : top->index()) {
           for (auto l = map.begin(); l != map.end(); ++l) {
             if (k->identical(*l->first)) {
@@ -409,7 +420,7 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
         top->index() = tmp;
         tt << cindent << "{" << endl;
         tt << top->generate_get_block(cindent+"  ", uu.str(), instr.str());
-        list<shared_ptr<Index>> di = target->index();
+        list<shared_ptr<const Index>> di = target->index();
         tt << top->generate_sort_indices(cindent+"  ", uu.str(), instr.str(), di, true);
         tt << cindent << "}" << endl;
       }
@@ -419,7 +430,7 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
   // put data
   {
     string label = target->label();
-    list<shared_ptr<Index>> ti = target->index();
+    list<shared_ptr<const Index>> ti = target->index();
     tt << cindent << "out()->put_block(odata";
     for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
       tt << ", " << (*i)->str_gen();
@@ -525,12 +536,14 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "  protected:" << endl;
     ss << "    std::shared_ptr<Tensor<T>> t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> r;" << endl;
+    // mkm to work out
+    ss << "    std::shared_ptr<Tensor<T>> dm_;" << endl;
     ss << "    double e0_;" << endl;
     ss << "" << endl;
     ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>> > make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T>> queue_(new Queue<T>());" << endl;
 
-    ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl << endl;
+    ss << indent << "std::array<std::shared_ptr<const const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl << endl;
 
     ss << indent << vectensor << " tensor0 = {r};" << endl;
     ss << indent << "std::shared_ptr<Task0<T>> task0(new Task0<T>(tensor0));" << endl;
@@ -557,9 +570,9 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     tt << "class Task0 : public Task<T> {" << endl;
     tt << "  protected:" << endl;
     tt << "    std::shared_ptr<Tensor<T>> r_;" << endl;
-    tt << "    IndexRange closed_;" << endl;
-    tt << "    IndexRange active_;" << endl;
-    tt << "    IndexRange virt_;" << endl;
+    tt << "    const IndexRange closed_;" << endl;
+    tt << "    const IndexRange active_;" << endl;
+    tt << "    const IndexRange virt_;" << endl;
     tt << "" << endl;
     tt << "    void compute_() {" << endl;
     tt << "      r_->zero();" << endl;
@@ -623,7 +636,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     op.insert(op.end(), op_.begin(), op_.end());
     ss << generate_task(indent, icnt, op);
 
-    list<shared_ptr<Index>> ti = target_->index();
+    list<shared_ptr<const Index>> ti = target_->index();
 
     // make sure no duplicates in tensor list for compute header & footer
     vector<shared_ptr<Tensor>> uniq_tensors;
@@ -661,41 +674,82 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << generate_task(indent, num_, source_tensors);
 
     // write out headers
-    {
-      list<shared_ptr<Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
-      // if outer loop is empty, send inner loop indices to header
-      if (ti.size() == 0) {
-        assert(depth() != 0);
-        list<shared_ptr<Index>> di = (*i)->loop_indices();
-        tt << generate_compute_header(num_, di, source_tensors, true);
-      } else { 
-        tt << generate_compute_header(num_, ti, source_tensors);
+    if (label_ == "residual" ) {
+      {
+        if ( depth() == 0 ) {
+          cout << "top residual, targets:" << endl;
+          for (auto i : target_index_) i->print();
+        }
+        // ti is short for target indices. Modify to use tree target_index() for excitation operator/proj indices at root - top level
+        list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : target_index();
+        // if outer loop is empty, send inner loop indices to header
+        if (ti.size() == 0) {
+          assert(depth() != 0);  
+          list<shared_ptr<const Index>> di = (*i)->loop_indices();
+          tt << generate_compute_header(num_, di, source_tensors, true);
+        } else { 
+          tt << generate_compute_header(num_, ti, source_tensors);
+        }
       }
-    }
+    } else {  
+      {
+        list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
+        // if outer loop is empty, send inner loop indices to header
+        if (ti.size() == 0) {
+          assert(depth() != 0); 
+          list<shared_ptr<const Index>> di = (*i)->loop_indices();
+          tt << generate_compute_header(num_, di, source_tensors, true);
+        } else { 
+          tt << generate_compute_header(num_, ti, source_tensors);
+        }
+     }
+   }
 
+#if 1   // mkm error here
     // use virtual function to generate a task for this binary contraction
     pair<string, string> btmp = generate_bc(indent, (*i));
     ss << btmp.first;
     tt << btmp.second;
+#endif
 
-
-    // send outer loop indices if outer loop indices exist, otherwise send inner indices
-    {
-      list<shared_ptr<Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
-      if (depth() == 0)
-        for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
-          swap(*i, *j);
-      if (ti.size() == 0) { 
-        assert(depth() !=0);
-        // sending inner indices
-        list<shared_ptr<Index>> di = (*i)->loop_indices();
-        di.reverse();
-        tt << generate_compute_footer(num_, di, source_tensors);
-      } else {
-        // sending outer indices
-        tt << generate_compute_footer(num_, ti, source_tensors);
+    if (label_ == "residual") {
+      {
+        list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : target_index_;
+        if (depth() == 0)
+          for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
+            swap(*i, *j);
+        if (ti.size() == 0) { 
+          assert(depth() != 0);
+          // sending inner indices
+          list<shared_ptr<const Index>> di = (*i)->loop_indices();
+          di.reverse();
+          tt << generate_compute_footer(num_, di, source_tensors);
+        } else {
+          // sending outer indices
+          tt << generate_compute_footer(num_, ti, source_tensors);
+        }
       }
-    }
+    } else {
+      {
+        // send outer loop indices if outer loop indices exist, otherwise send inner indices
+        list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
+        if (depth() == 0)
+          for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
+            swap(*i, *j);
+        if (ti.size() == 0) { 
+          assert(depth() != 0);
+          // sending inner indices
+          list<shared_ptr<const Index>> di = (*i)->loop_indices();
+          di.reverse();
+          tt << generate_compute_footer(num_, di, source_tensors);
+        } else {
+          // sending outer indices
+          tt << generate_compute_footer(num_, ti, source_tensors);
+        }
+     }
+   }
+
+///////////////////////////////////////////////////////////////////////
 
     // increment icnt before going to subtrees
     ++icnt;
@@ -724,7 +778,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
         } else if (t->label()=="density") { 
           t->num_ = icnt;
           for (auto& j : t->bc_) {
-            pair<string, string> tmp = j->generate_task_list();  // TODO code density tree specifics
+            pair<string, string> tmp = j->generate_task_list();  
             ss << tmp.first;
             tt << tmp.second;
           }
@@ -751,10 +805,12 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "    void solve() {" << endl;
     ss << "      this->print_iteration();" << endl;
     ss << "      int iter = 0;" << endl;
+    ss << "      std::shared_ptr<Queue<T>> dens;" << endl;
     ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
     ss << "        std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>> > q = make_queue_();" << endl;
     ss << "        std::shared_ptr<Queue<T>> queue = std::get<0>(q);" << endl;
     ss << "        std::shared_ptr<Queue<T>> energ = std::get<1>(q);" << endl;
+    ss << "        dens = std::get<2>(q);" << endl;
     ss << "        while (!queue->done())" << endl;
     ss << "          queue->next_compute();" << endl;
     ss << "        this->update_amplitude(t2, r);" << endl;
@@ -765,6 +821,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "        if (err < thresh_residual()) break;" << endl;
     ss << "      }" << endl;
     ss << "      this->print_iteration(iter == maxiter_);" << endl;
+    ss << "      density(dens); " << endl;
     ss << "    };" << endl;
     ss << "" << endl;
     ss << "    double energy(std::shared_ptr<Queue<T>> energ) {" << endl;
@@ -775,6 +832,14 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "      }   " << endl;
     ss << "      return en; " << endl;
     ss << "    };  " << endl;
+    ss << endl;
+    ss << "    void density(std::shared_ptr<Queue<T>> dens) {" << endl;
+    ss << "      std::cout << \" === Unrelaxed density matrix ===\" << std::endl; " << endl;
+    ss << "      while (!dens->done()) {" << endl;
+    ss << "        std::shared_ptr<Task<T>> d = dens->next_compute();" << endl;
+    ss << "      }   " << endl;
+    ss << "    };  " << endl;
+    ss << endl;
     ss << "};" << endl;
     ss << endl;
     ss << "}" << endl;

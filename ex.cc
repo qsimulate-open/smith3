@@ -33,11 +33,18 @@ using namespace smith;
 Ex::Ex(const std::string& oa, const std::string& ob)
   : Operator(oa, ob) {};
 
+Ex::Ex(const std::string& oa, const std::string& ob, const std::string& oc, const std::string& od) 
+  : Operator(oa, ob, oc, od) {};
 
 
 shared_ptr<Operator> Ex::copy() const {
-  shared_ptr<Operator> tmp(new Ex(a_->label(), b_->label()));
-  return tmp;
+  if (c_) {
+    shared_ptr<Operator> tmp(new Ex(a_->label(), b_->label(), c_->label(), d_->label()));
+    return tmp;
+  } else { 
+    shared_ptr<Operator> tmp(new Ex(a_->label(), b_->label()));
+    return tmp;
+  }
 }
 
 

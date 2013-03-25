@@ -56,7 +56,7 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 
 
 
-string Energy::generate_compute_header(const int ic, const list<shared_ptr<Index>> ti, const vector<shared_ptr<Tensor>> tensors, const bool no_outside) const {
+string Energy::generate_compute_header(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors, const bool no_outside) const {
   const int ninptensors = tensors.size()-1;
 
   bool need_e0 = false;
@@ -71,9 +71,9 @@ string Energy::generate_compute_header(const int ic, const list<shared_ptr<Index
   // if index is empty give dummy arg
   tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << ",T> {" << endl;
   tt << "      protected:" << endl;
-  tt << "        const std::array<std::shared_ptr<const IndexRange>,3> range_;" << endl << endl;
+  tt << "        const std::array<std::shared_ptr<const const IndexRange>,3> range_;" << endl << endl;
  
-  tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
+  tt << "        const const Index& b(const size_t& i) const { return this->block(i); }" << endl;
   tt << "        const std::shared_ptr<const Tensor<T>>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
   tt << "        const std::shared_ptr<Tensor<T>>& out() const { return this->out_tensor(); }" << endl;
   tt << "        double energy_;" << endl;
@@ -82,11 +82,11 @@ string Energy::generate_compute_header(const int ic, const list<shared_ptr<Index
   // if index is empty use dummy index 1 to subtask
   if (ti.empty()) {
     tt << "        Task_local(const std::array<std::shared_ptr<const Tensor<T>>," << ninptensors <<  ">& in, std::shared_ptr<Tensor<T>>& out," << endl;
-    tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
-    tt << "          : SubTask<1," << ninptensors << ",T>(std::array<const Index, 1>(), in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
+    tt << "                   std::array<std::shared_ptr<const const IndexRange>,3>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
+    tt << "          : SubTask<1," << ninptensors << ",T>(std::array<const const Index, 1>(), in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
   } else {
-    tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor<T>>," << ninptensors <<  ">& in, std::shared_ptr<Tensor<T>>& out," << endl;
-    tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
+    tt << "        Task_local(const std::array<const const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor<T>>," << ninptensors <<  ">& in, std::shared_ptr<Tensor<T>>& out," << endl;
+    tt << "                   std::array<std::shared_ptr<const const IndexRange>,3>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
     tt << "          : SubTask<" << nindex << "," << ninptensors << ",T>(block, in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
   }
   tt << endl;
@@ -96,7 +96,7 @@ string Energy::generate_compute_header(const int ic, const list<shared_ptr<Index
   tt << "          energy_ = 0.0;" << endl; 
 
   if (!no_outside) {
-    list<shared_ptr<Index>> ti_copy = ti;
+    list<shared_ptr<const Index>> ti_copy = ti;
     if (depth() == 0) {
       for (auto i = ti_copy.begin(), j = ++ti_copy.begin(); i != ti_copy.end(); ++i, ++i, ++j, ++j)
         swap(*i, *j);
@@ -104,7 +104,7 @@ string Energy::generate_compute_header(const int ic, const list<shared_ptr<Index
 
     int cnt = 0;
     for (auto i = ti_copy.rbegin(); i != ti_copy.rend(); ++i) 
-      tt << "          const Index " << (*i)->str_gen() << " = b(" << cnt++ << ");" << endl;
+      tt << "          const const Index " << (*i)->str_gen() << " = b(" << cnt++ << ");" << endl;
     tt << endl;
   }
 
@@ -112,7 +112,7 @@ string Energy::generate_compute_header(const int ic, const list<shared_ptr<Index
 }
 
 
-string Energy::generate_compute_footer(const int ic, const list<shared_ptr<Index>> ti, const vector<shared_ptr<Tensor>> tensors) const {
+string Energy::generate_compute_footer(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors) const {
   const int ninptensors = tensors.size()-1;
   assert(ninptensors > 0);
   bool need_e0 = false;
@@ -136,7 +136,7 @@ string Energy::generate_compute_footer(const int ic, const list<shared_ptr<Index
   tt << "    }" << endl << endl; 
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>> > t, std::array<std::shared_ptr<const IndexRange>,3> range) : EnergyTask<T>() {" << endl;
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>> > t, std::array<std::shared_ptr<const const IndexRange>,3> range) : EnergyTask<T>() {" << endl;
   tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
   for (auto i = 1; i < ninptensors + 1; ++i)
     tt << "t[" << i << "]" << (i < ninptensors ? ", " : "");
@@ -157,7 +157,7 @@ string Energy::generate_compute_footer(const int ic, const list<shared_ptr<Index
     tt << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   // add subtasks
   if (!ti.empty()) {
-    tt << indent  << "subtasks_.push_back(std::shared_ptr<Task_local>(new Task_local(std::array<const Index," << ti.size() << ">{{";
+    tt << indent  << "subtasks_.push_back(std::shared_ptr<Task_local>(new Task_local(std::array<const const Index," << ti.size() << ">{{";
     for (auto i = ti.rbegin(); i != ti.rend(); ++i) {
       if (i != ti.rbegin()) tt << ", ";
       tt << (*i)->str_gen();
@@ -206,11 +206,11 @@ pair<string, string> Energy::generate_bc(const string indent, const shared_ptr<B
       tt << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
     }
 
-    list<shared_ptr<Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
+    list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
 
     // inner loop will show up here
     // but only if outer loop is not empty
-    list<shared_ptr<Index>> di = (i)->loop_indices();
+    list<shared_ptr<const Index>> di = (i)->loop_indices();
     vector<string> close2;
     if (ti.size() != 0) {
       tt << endl;
@@ -221,7 +221,7 @@ pair<string, string> Energy::generate_bc(const string indent, const shared_ptr<B
       }
     } else {
       int cnt = 0;
-      for (auto k = di.begin(); k != di.end(); ++k, cnt++) tt << dindent << "const Index " <<  (*k)->str_gen() << " = b(" << cnt << ");" << endl;
+      for (auto k = di.begin(); k != di.end(); ++k, cnt++) tt << dindent << "const const Index " <<  (*k)->str_gen() << " = b(" << cnt << ");" << endl;
       tt << endl;
     }
 
@@ -270,31 +270,16 @@ pair<string, string> Energy::generate_bc(const string indent, const shared_ptr<B
         string label = target_->label();
         // new interface requires indices for put_block
         tt << bindent << "out()->put_block(odata";
-        list<shared_ptr<Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
+        list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
         for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
           tt << ", " << (*i)->str_gen();
         tt << ");" << endl;
       }
     }
   } else {
+    // depth should not equal 0 in energy tree
     throw logic_error("shouldn't happen in Energy::generate_bc");
-#if 0
-      // making residual vector...
-      list<shared_ptr<Index>> proj = (i)->tensor()->index();
-      list<shared_ptr<Index>> res;
-      assert(!(proj.size() & 1));
-      for (auto ii = proj.begin(); ii != proj.end(); ++ii, ++ii) {
-        auto j = ii; ++j;
-        res.push_back(*j);
-        res.push_back(*ii);
-      }
-      shared_ptr<Tensor> residual(new Tensor(1.0, "r", res));
-      vector<shared_ptr<Tensor>> op2 = { (i)->next_target() };
-      tt << generate_compute_operators(indent, residual, op2, (i)->dagger());
-#endif
   }
-
-
 
 
   return make_pair(ss.str(), tt.str());

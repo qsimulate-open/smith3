@@ -91,8 +91,7 @@ class Operator {
     /// not all derived classes have this, but needed for cast-to-base class pointers.
     virtual std::string label() const = 0;
 
-
-
+    virtual bool is_ex() const = 0;
 
     /// Returns if this operator is completely contracted.
     bool contracted() const;
@@ -145,8 +144,8 @@ class Operator {
     std::shared_ptr<Index>* survive(std::shared_ptr<Index>* a, std::shared_ptr<Index>* b);
 
     /// Function to update Index and Spin and check if contracted.  Should be called from Diagram objects.
-    void refresh_indices(std::map<std::shared_ptr<Index>, int>& dict,
-                         std::map<std::shared_ptr<Index>, int>& done,
+    void refresh_indices(std::map<std::shared_ptr<const Index>, int>& dict,
+                         std::map<std::shared_ptr<const Index>, int>& done,
                          std::map<std::shared_ptr<Spin>, int>& spin);
 
 

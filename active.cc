@@ -69,17 +69,20 @@ shared_ptr<RDM> RDM::copy() const {
   }
 
   // lastly clone all the delta functions
-  map<shared_ptr<Index>, shared_ptr<Index>> d;
+  map<shared_ptr<const Index>, shared_ptr<const Index>> d;
   for (auto& i : delta_) d.insert(make_pair(i.first->clone(), i.second->clone()));
 
-  shared_ptr<RDM> out(new RDM(in, d));
+  list<shared_ptr<const Index>> inc;
+  for (auto& i : in) inc.push_back(i);
+
+  shared_ptr<RDM> out(new RDM(inc, d));
   out->fac() = fac_;
   return out;
 }
 
 //
 // An application of "Wick's theorem"
-// This function is controlled by Index::num_. Not a great code, it could have been driven by pointers... lazy me.
+// This function is controlled by const Index::num_. Not a great code, it could have been driven by pointers... lazy me.
 //
 list<shared_ptr<RDM>> RDM::reduce_one(list<int>& done) const {
   // first find non-daggered operator which is not aligned
@@ -101,7 +104,7 @@ list<shared_ptr<RDM>> RDM::reduce_one(list<int>& done) const {
       shared_ptr<RDM> tmp = this->copy();
 
       // find the indices to be deleted.
-      vector<list<shared_ptr<Index>>::iterator> rml;
+      vector<list<shared_ptr<const Index>>::iterator> rml;
       int cnt0 = -1;
       int cnt = 0;
       for (auto k = tmp->index().begin(); k != tmp->index().end(); ++k, ++cnt) {
@@ -165,7 +168,7 @@ void RDM::sort() {
   vector<shared_ptr<Spin>> done_spin;
   while (!done()) {
 
-    list<shared_ptr<Index>> buf;
+    list<shared_ptr<const Index>> buf;
     auto i = index_.begin();
     // continue to spin which is not processed
     for (; i != index_.end(); ++i) {
@@ -248,9 +251,9 @@ bool RDM::done() const {
 }
 
 
-Active::Active(const list<shared_ptr<Index>>& in) {
+Active::Active(const list<shared_ptr<const Index>>& in) {
 
-  shared_ptr<RDM> tmp(new RDM(in, map<shared_ptr<Index>, shared_ptr<Index>>(), 1.0));
+  shared_ptr<RDM> tmp(new RDM(in, map<shared_ptr<const Index>, shared_ptr<const Index>>(), 1.0));
 
   // this sets list<RDM>
   reduce(tmp);
@@ -294,7 +297,7 @@ void Active::print(const string& indent) const {
 }
 
 
-const list<shared_ptr<Index>> Active::index() const {
+const list<shared_ptr<const Index>> Active::index() const {
   // first find RDM object that does not have any delta functions
   bool done = false;
   auto j = rdm_.begin();
@@ -322,7 +325,7 @@ bool Active::operator==(const Active& o) const {
 }
 
 
-string Active::generate(const string indent, const string tag, const list<shared_ptr<Index>> index, const list<shared_ptr<Index>> merged, const string mlab, const bool use_blas) const {
+string Active::generate(const string indent, const string tag, const list<shared_ptr<const Index>> index, const list<shared_ptr<const Index>> merged, const string mlab, const bool use_blas) const {
   stringstream tt;
 
   vector<string> in_tensors;

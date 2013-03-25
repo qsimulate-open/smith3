@@ -39,14 +39,14 @@ class Tree;
 /// Class framework for tensor multiplication and factorization, contains tree.
 class BinaryContraction {
   protected:
-    /// An intermediate, target_ = tensor_ * subtrees
+    /// Intermediate on LHS of equation:  target_ = tensor_ * subtrees
     std::shared_ptr<Tensor> target_;
-    /// Tensor to be defined (supplied) by BAGEL.
+    /// Tensor. Can be defined (supplied) by BAGEL.
     std::shared_ptr<Tensor> tensor_;
     /// A list of trees
     std::list<std::shared_ptr<Tree>> subtree_;
 
-    /// label for code generation
+    /// label for code generation specifics.
     std::string label_;
   
     // Tree that has this
@@ -85,9 +85,9 @@ class BinaryContraction {
     void set_target(std::shared_ptr<Tensor> o) { target_ = o; };
 
     /// Returns a list of inner loop indices, i.e., those which are the same between tensor_ and target_.
-    std::list<std::shared_ptr<Index>> loop_indices();
-    /// Returns a list of target indices.
-    std::list<std::shared_ptr<Index>> target_indices();
+    std::list<std::shared_ptr<const Index>> loop_indices();
+    /// Returns a list of target indices..these are to be stored (via put_block).
+    std::list<std::shared_ptr<const Index>> target_indices();
 
     /// If transpose.
     bool dagger() const;
@@ -141,11 +141,13 @@ class Tree {
     /// Tree label, used for graph-specific code generation. 
     std::string label_;
 
+    /// Target indices for top level of graph.
+    const std::list<std::shared_ptr<const Index>> target_index_;
 
   public:
-    /// Construct tree of equation pointers and set tree label.
+    /// Construct tree from equation pointers and set tree label.
     Tree(const std::shared_ptr<Equation> eq, std::string lab="");
-    /// Construct tree of listtensor pointers.
+    /// Construct tree of listtensors.
     Tree(const std::shared_ptr<ListTensor> l, std::string lab);
     virtual ~Tree() {};
 
@@ -158,6 +160,8 @@ class Tree {
 
     /// Returns depth, 0 is top of graph.
     int depth() const;
+
+    const std::list<std::shared_ptr<const Index>> target_index() const { return target_index_; };
 
     /// Prints tree which is the list of operator tensors (op_) if target_ otherwise the binary contraction list (bc_).
     void print() const;
@@ -218,9 +222,9 @@ class Tree {
 
     // Tree specific code generation moved to derived classes. 
     /// Generate task header.
-    virtual std::string generate_compute_header(const int, const std::list<std::shared_ptr<Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool = false) const = 0;
+    virtual std::string generate_compute_header(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool = false) const = 0;
     /// Generate task footer.
-    virtual std::string generate_compute_footer(const int, const std::list<std::shared_ptr<Index>> ti, const std::vector<std::shared_ptr<Tensor>>) const = 0;
+    virtual std::string generate_compute_footer(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>) const = 0;
     /// Generate a task. Here ip is the tag of parent, ic is the tag of this.
     virtual std::string generate_task(const std::string, const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "") const = 0;
     /// Generate Binary contraction code.

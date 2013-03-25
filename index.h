@@ -66,7 +66,7 @@ class Index {
     /// If transposed, ie daggered. Important in Wick's theorem and equations.
     bool dagger_;
     /// Spin of index.
-    std::shared_ptr<Spin> spin_;
+    mutable std::shared_ptr<Spin> spin_; // TODO mutable should be removed
     /// If target, index will not be summed over in code generation.
     bool target_;
   
@@ -74,6 +74,7 @@ class Index {
   public:
     /// Make index object from label and dagger info. Initialize label, number(0), dagger, and target(false).
     Index(std::string lab, bool dag) : label_(lab), num_(0), dagger_(dag), target_(false){};
+    Index(const Index& o) : label_(o.label_), num_(o.num_), dagger_(o.dagger_), spin_(o.spin_), target_(o.target_) { }
     ~Index() {};
 
     /// Return index number. 
@@ -97,24 +98,26 @@ class Index {
   
 
     /// Sets spin.
-    void set_spin(const std::shared_ptr<Spin> s) { spin_ = s; };
+    void set_spin(const std::shared_ptr<Spin> s) const { spin_ = s; }
+//  std::shared_ptr<Index> set_spin(const std::shared_ptr<Spin> s) const { std::shared_ptr<Index> out(new Index(*this)); out->spin_ = s; return out; }
     /// Returns spin.
     std::shared_ptr<Spin> spin() { assert(spin_); return spin_; };
     /// Returns const spin.
     const std::shared_ptr<Spin> spin() const { assert(spin_); return spin_; };
 
     /// Returns true if spin is same for both indices.
-    bool same_spin(const std::shared_ptr<Index>& o) const { return o->spin() == spin(); };
+    bool same_spin(const std::shared_ptr<const Index>& o) const { return o->spin() == spin(); };
     /// Returns true if index number is same for both indices.
-    bool same_num(const std::shared_ptr<Index>& o) const { return o->num() == num(); };
+    bool same_num(const std::shared_ptr<const Index>& o) const { return o->num() == num(); };
 
     /// Returns string with index label_, and if argument is true: dagger info (nothing or if daggered, +) and spin info.
-    std::string str(const bool& opr = true) const {
+    std::string str(const bool opr = true) const {
       std::stringstream ss;
       ss << label_ << num_;
       if (dagger_ && opr) ss << "+";
       if (opr) {
-        assert(spin_);
+//      assert(spin_);
+        if (spin_)
         ss << spin_->str();
       }
       return ss.str();
@@ -130,14 +133,14 @@ class Index {
 
 
     /// Clone Index with label_, num_ and dagger_ info. Note that this does not set spin.
-    std::shared_ptr<Index> clone() { 
+    std::shared_ptr<Index> clone() const { 
       std::shared_ptr<Index> out(new Index(label_, dagger_));
       out->set_num(num_);
       return out;
     };
 
     /// Check if indices are equal by comparing num() and label(). Be careful that this does not check dagger! Should not check, actually. 
-    bool identical(std::shared_ptr<Index> o) const {
+    bool identical(std::shared_ptr<const Index> o) const {
       return num() == o->num() && label() == o->label();
     };
 

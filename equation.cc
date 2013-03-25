@@ -52,8 +52,10 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
       if (out.size() == 0) break;
     }
     for (auto& i : diagram_) i->refresh_indices();
+    if (!diagram_.empty()) {
+      target_index_ = diagram_.front()->target_index(); 
+    }
   }
-
 }
 
 
@@ -64,6 +66,7 @@ void Equation::term_select(string t){
   for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
     const list<shared_ptr<Operator>> ops = (*i)->op();
     for (auto& j : ops) {
+      // find excitation operator
       if (j->label().empty()) {
         // compare op index label
         list<tuple<shared_ptr<Index>*,int, int>> q_ops = j->op();
@@ -80,7 +83,7 @@ void Equation::term_select(string t){
 }
 
 
-// marks target indices in equation, ie those not to be summed over.
+// marks target indices in equation.
 void Equation::mark_targets() {
   list<shared_ptr<Diagram>>  new_diagram;
   for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
