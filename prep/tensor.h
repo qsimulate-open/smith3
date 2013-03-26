@@ -52,6 +52,11 @@ class Tensor {
       for (auto& i : o) indices_.push_back(i);
     };
 
+    Tensor(const std::string postfix, const std::initializer_list<std::string> o)
+     : tag_("ex_" + postfix), base_("") {
+      for (auto& i : o) indices_.push_back(i);
+    };
+
     std::string str_index() const {
       std::stringstream ss;
       for (auto i = indices_.begin(); i != indices_.end(); ++i) {
@@ -63,7 +68,11 @@ class Tensor {
 
     std::string generate() const {
       std::stringstream ss;
-      ss << "  shared_ptr<Operator> " << tag_ << "(new Op(\"" << base_ << "\"" << (indices_.empty() ? "" : ", ") << str_index() << "));" << std::endl; 
+      if (!base_.empty()) {
+        ss << "  shared_ptr<Operator> " << tag_ << "(new Op(\"" << base_ << "\"" << (indices_.empty() ? "" : ", ") << str_index() << "));" << std::endl; 
+      } else {
+        ss << "  shared_ptr<Operator> " << tag_ << "(new Ex(" << str_index() << "));" << std::endl; 
+      }
       return ss.str();
     };
 

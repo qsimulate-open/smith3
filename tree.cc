@@ -256,7 +256,6 @@ list<shared_ptr<Tensor>> Tree::gather_gamma() const {
 
 void BinaryContraction::print() const {
   string indent = "";
-  //if (depth() == 0 && !target_index_.empty()) cout << "je" << endl;
   for (int i = 0; i != depth(); ++i) indent += "  ";
   cout << indent << (target_ ? (target_->str()+" = ") : "") << tensor_->str() << " * " << subtree_.front()->target()->str() << endl;
   for (auto& i : subtree_) i->print();
@@ -664,7 +663,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     // write out headers
     if (label_ == "residual" ) {
       {
-#if 0 // targets are working for both zero depths
+#if 0 // mkm debug targets are working for both zero depths
         if ( depth() == 0 ) {
           cout << "top residual, targets:" << endl;
           for (auto i : target_index_) i->print();
@@ -695,7 +694,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
      }
    }
 
-#if 1   // mkm error here
+#if 1   // mkm error here and/or before here as tree is not identical when this is turned off.
     // use virtual function to generate a task for this binary contraction
     pair<string, string> btmp = generate_bc(indent, (*i));
     ss << btmp.first;

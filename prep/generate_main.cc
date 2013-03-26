@@ -68,18 +68,19 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
               (l == "x" && k == "c" && j == "x" && i == "x")) {
 #else   // turn on one of the following lines
 // *test single configuration cases*
-//        if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
+          if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
+//        if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a")) { // temp testing: ccaa or xcaa 
 //        if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
 //        if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
 //        if (l == "c" && k == "c" && j == "x" && i == "a") { // ccxa
 //        if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) { // cxxa or xcxa
 //        if (l == "c" && k == "c" && j == "x" && i == "x") { // ccxx
 //        if (l == "x" && k == "x" && j == "x" && i == "a") { // xxxa
-          if (l == "x" && k == "c" && j == "x" && i == "x") { // xcxx
+//        if (l == "x" && k == "c" && j == "x" && i == "x") { // xcxx
 // *end test single configuration cases*
 #endif
             stringstream ss; ss << cnt;
-            lp.push_back(shared_ptr<Tensor>(new Tensor("proj", ss.str(), {l, k, j, i}))); 
+            lp.push_back(shared_ptr<Tensor>(new Tensor(ss.str(), {l, k, j, i})));
             td.push_back(shared_ptr<Tensor>(new Tensor("t2dagger", ss.str(), {l, k, j, i}))); 
             lt.push_back(shared_ptr<Tensor>(new Tensor("t2", ss.str(), {j, i, l, k}))); 
             ls.push_back(shared_ptr<Tensor>(new Tensor("r", ss.str(), {j, i, l, k}))); 
@@ -119,10 +120,10 @@ int main() {
   for (auto& i : t_dagger)  cout << i->generate();
   
   // residual equations
-  shared_ptr<Equation> eq0(new Equation("da", {proj_list, f, t_list}));
-  shared_ptr<Equation> eq1(new Equation("db", {proj_list, t_list}, "e0"));
-  shared_ptr<Equation> eq2(new Equation("dc", {proj_list, H}));
-  shared_ptr<Equation> eq2a(new Equation("dd", {proj_list, hc}));
+  shared_ptr<Equation> eq0(new Equation("da", {dum, proj_list, f, t_list}));
+  shared_ptr<Equation> eq1(new Equation("db", {dum, proj_list, t_list}, "e0"));
+  shared_ptr<Equation> eq2(new Equation("dc", {dum, proj_list, H}));
+  shared_ptr<Equation> eq2a(new Equation("dd", {dum, proj_list, hc}));
   eq0->merge(eq1);
   eq0->merge(eq2);
   eq0->merge(eq2a);
@@ -136,10 +137,8 @@ int main() {
   eq3->set_tree_type("energy");
   cout << eq3->generate({eq0});
  
-
   // done generate the footer
   cout << footer(eq0->tree_label(), eq3->tree_label()) << endl;
-
 
   return 0;
 }
