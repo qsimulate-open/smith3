@@ -75,7 +75,7 @@ Tree::Tree(const shared_ptr<ListTensor> l, string lab) : num_(-1), label_(lab) {
 }
 
 
-Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->name()), num_(-1), label_(lab), target_index_(eq->target_index()) {
+Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->name()), num_(-1), label_(lab) {
   // First make ListTensor for all the diagrams
   list<shared_ptr<Diagram>> d = eq->diagram();
 
@@ -86,23 +86,22 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
 
     shared_ptr<Tensor> first = tmp->front();
     shared_ptr<ListTensor> rest = tmp->rest();
-    
 
     // convert it to tree
     if (label_ == "residual") { 
       shared_ptr<Tree> tr(new Residual(rest, lab));
       list<shared_ptr<Tree>> lt; lt.push_back(tr);
-      shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first));
+      shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first, (*i)->ex_target_index()));
       bc_.push_back(b);
     } else if (label_ == "energy") {
       shared_ptr<Tree> tr(new Energy(rest, lab));
       list<shared_ptr<Tree>> lt; lt.push_back(tr);
-      shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first));
+      shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first, (*i)->ex_target_index()));
       bc_.push_back(b);
     } else if (label_ == "density") {
       shared_ptr<Tree> tr(new Density(rest, lab));
       list<shared_ptr<Tree>> lt; lt.push_back(tr);
-      shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first));
+      shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first, (*i)->ex_target_index()));
       bc_.push_back(b);
     } else {
       throw logic_error("Error Tree::Tree, code generation for this tree type not implemented");
@@ -254,10 +253,24 @@ list<shared_ptr<Tensor>> Tree::gather_gamma() const {
 }
 
 
+string BinaryContraction::ex_target_str() const { 
+  stringstream zz;
+  if (!ex_target_index_.empty()) {
+    zz << "(";
+    for (auto i = ex_target_index_.begin(); i != ex_target_index_.end(); ++i) {
+      if (i != ex_target_index_.begin()) zz << ", ";
+      zz << (*i)->str(false);
+    }
+    zz << ")";
+  } 
+  return zz.str(); 
+}
+
+
 void BinaryContraction::print() const {
   string indent = "";
   for (int i = 0; i != depth(); ++i) indent += "  ";
-  cout << indent << (target_ ? (target_->str()+" = ") : "") << tensor_->str() << " * " << subtree_.front()->target()->str() << endl;
+  cout << indent << (target_ ? (target_->str() + " = ") : "") << tensor_->str() << (depth() == 0 ? ex_target_str() : "") << " * " << subtree_.front()->target()->str() << endl;
   for (auto& i : subtree_) i->print();
 }
 
@@ -268,17 +281,6 @@ void Tree::print() const {
   if (target_) {
     for (auto i = op_.begin(); i != op_.end(); ++i)
       cout << indent << target_->str() << " += " << (*i)->str() << (dagger_ ? " *" : "") << endl;
-  }
-  // print target indices for top level 
-  // note that right now these do not appear in print out if multiple zero depth levels are printed..todo fix.
-  if (depth() == 0 && !target_index_.empty()) {
-    stringstream zz;
-    zz << "(";
-    for (auto i = target_index_.begin(); i != target_index_.end(); ++i) {
-      zz << (*i)->str(false) << (i != --target_index_.end() ? ", " : "");
-    } 
-    zz << ") ";
-    cout << zz.str(); 
   }
   for (auto i = bc_.begin(); i != bc_.end(); ++i)
     (*i)->print();
@@ -661,81 +663,41 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << generate_task(indent, num_, source_tensors);
 
     // write out headers
-    if (label_ == "residual" ) {
-      {
-#if 0 // mkm debug targets are working for both zero depths
-        if ( depth() == 0 ) {
-          cout << "top residual, targets:" << endl;
-          for (auto i : target_index_) i->print();
-        }
-#endif
-        // ti is short for target indices. Modify to use tree target_index() for excitation operator/proj indices at root - top level
-        list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : target_index();
-        // if outer loop is empty, send inner loop indices to header
-        if (ti.size() == 0) {
-          assert(depth() != 0);  
-          list<shared_ptr<const Index>> di = (*i)->loop_indices();
-          tt << generate_compute_header(num_, di, source_tensors, true);
-        } else { 
-          tt << generate_compute_header(num_, ti, source_tensors);
-        }
+    {
+      list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->ex_target_index();
+      // if outer loop is empty, send inner loop indices to header
+      if (ti.size() == 0) {
+        assert(depth() != 0); 
+        list<shared_ptr<const Index>> di = (*i)->loop_indices();
+        tt << generate_compute_header(num_, di, source_tensors, true);
+      } else { 
+        tt << generate_compute_header(num_, ti, source_tensors);
       }
-    } else {  
-      {
-        list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
-        // if outer loop is empty, send inner loop indices to header
-        if (ti.size() == 0) {
-          assert(depth() != 0); 
-          list<shared_ptr<const Index>> di = (*i)->loop_indices();
-          tt << generate_compute_header(num_, di, source_tensors, true);
-        } else { 
-          tt << generate_compute_header(num_, ti, source_tensors);
-        }
-     }
-   }
+    }
 
-#if 1   // mkm error here and/or before here as tree is not identical when this is turned off.
+#if 1   // mkm error with multiple proj and/or before here as tree is not identical when this is turned off.
     // use virtual function to generate a task for this binary contraction
     pair<string, string> btmp = generate_bc(indent, (*i));
     ss << btmp.first;
     tt << btmp.second;
 #endif
 
-    if (label_ == "residual") {
-      {
-        list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : target_index_;
-        if (depth() == 0)
-          for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
-            swap(*i, *j);
-        if (ti.size() == 0) { 
-          assert(depth() != 0);
-          // sending inner indices
-          list<shared_ptr<const Index>> di = (*i)->loop_indices();
-          di.reverse();
-          tt << generate_compute_footer(num_, di, source_tensors);
-        } else {
-          // sending outer indices
-          tt << generate_compute_footer(num_, ti, source_tensors);
-        }
+    {
+      // send outer loop indices if outer loop indices exist, otherwise send inner indices
+      list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->ex_target_index();
+      if (depth() == 0)
+        for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
+          swap(*i, *j);
+      if (ti.size() == 0) { 
+        assert(depth() != 0);
+        // sending inner indices
+        list<shared_ptr<const Index>> di = (*i)->loop_indices();
+        di.reverse();
+        tt << generate_compute_footer(num_, di, source_tensors);
+      } else {
+        // sending outer indices
+        tt << generate_compute_footer(num_, ti, source_tensors);
       }
-    } else {
-      {
-        // send outer loop indices if outer loop indices exist, otherwise send inner indices
-        list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->tensor()->index();
-        if (depth() == 0)
-          for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
-            swap(*i, *j);
-        if (ti.size() == 0) { 
-          assert(depth() != 0);
-          // sending inner indices
-          list<shared_ptr<const Index>> di = (*i)->loop_indices();
-          di.reverse();
-          tt << generate_compute_footer(num_, di, source_tensors);
-        } else {
-          // sending outer indices
-          tt << generate_compute_footer(num_, ti, source_tensors);
-        }
-     }
    }
 
 ///////////////////////////////////////////////////////////////////////

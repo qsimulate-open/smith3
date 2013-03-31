@@ -87,6 +87,8 @@ class Tensor {
     std::list<std::shared_ptr<const Index>>& index() { return index_; };
     /// Returns const list of index pointers for tensor.
     const std::list<std::shared_ptr<const Index>>& index() const { return index_; };
+
+
     /// Returns const Tensor pointer.
     const std::shared_ptr<const Tensor> merged() const { return merged_; };
     /// Returns tensor rank, cannot be called by DF tensors so far. 

@@ -26,6 +26,7 @@
 
 #include "equation.h"
 #include <cassert>
+#include <iostream>
 
 using namespace std;
 using namespace smith;
@@ -51,10 +52,8 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
       out = out2;
       if (out.size() == 0) break;
     }
+    // collect target indices from excitation operators.
     for (auto& i : diagram_) i->refresh_indices();
-    if (!diagram_.empty()) {
-      target_index_ = diagram_.front()->target_index(); 
-    }
   }
 }
 
@@ -80,40 +79,6 @@ void Equation::term_select(string t){
     }
   } 
   for (auto& it : rm) diagram_.erase(it);
-}
-
-
-// marks target indices in equation.
-void Equation::mark_targets() {
-  list<shared_ptr<Diagram>>  new_diagram;
-  for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
-    // target_indices can differ between diagrams, so keep list definition inside 
-    list<shared_ptr<Index>> target_indices;
-    const list<shared_ptr<Operator>> ops = (*i)->op();
-    // go find excitation operator, add indices to target list 
-    for (auto& j : ops) {
-      if (j->label().empty()) {
-        list<tuple<shared_ptr<Index>*,int, int>> q_ops = j->op();
-        for (auto& k : q_ops) {
-          target_indices.push_back((*get<0>(k)));
-        }   
-      } 
-    }
-    // now go through indices in operators and mark targets
-    for (auto& j : ops) {
-      if (j->label().empty()) continue;
-      list<tuple<shared_ptr<Index>*,int, int>> q_ops = j->op();
-      // find equivalent target index in other operators, 
-      for (auto& k : q_ops) {
-        for (auto& t : target_indices) {
-          if (t == (*get<0>(k))) { 
-            // mark index as target 
-            (*get<0>(k))->mark_target();
-          }
-        }
-      }   
-    }
-  } 
 }
 
 

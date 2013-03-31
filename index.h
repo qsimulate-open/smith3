@@ -67,14 +67,12 @@ class Index {
     bool dagger_;
     /// Spin of index.
     mutable std::shared_ptr<Spin> spin_; // TODO mutable should be removed
-    /// If target, index will not be summed over in code generation.
-    bool target_;
   
 
   public:
     /// Make index object from label and dagger info. Initialize label, number(0), dagger, and target(false).
-    Index(std::string lab, bool dag) : label_(lab), num_(0), dagger_(dag), target_(false){};
-    Index(const Index& o) : label_(o.label_), num_(o.num_), dagger_(o.dagger_), spin_(o.spin_), target_(o.target_) { }
+    Index(std::string lab, bool dag) : label_(lab), num_(0), dagger_(dag) {};
+    Index(const Index& o) : label_(o.label_), num_(o.num_), dagger_(o.dagger_), spin_(o.spin_) { }
     ~Index() {};
 
     /// Return index number. 
@@ -90,11 +88,6 @@ class Index {
 
     /// If active.  Checks label if active (x).
     bool active() const { return label_ == "x"; };
-  
-    /// Return target index status.
-    bool target() const { return target_; };
-    /// set target as true
-    void mark_target() { target_ = true; };
   
 
     /// Sets spin.

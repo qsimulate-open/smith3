@@ -33,6 +33,7 @@
 using namespace std;
 using namespace smith;
 
+
 Tensor::Tensor(const shared_ptr<Operator> op) : factor_(1.0), scalar_("")  {
   // scalar quantity..defined on bagel side
   // label

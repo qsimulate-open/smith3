@@ -263,8 +263,7 @@ pair<string, string> Residual::generate_bc(const string indent, const shared_ptr
     }
   } else {
       // making residual vector...
-      //list<shared_ptr<const Index>> proj = (i)->tensor()->index();
-      list<shared_ptr<const Index>> proj = target_index();
+      list<shared_ptr<const Index>> proj = (i)->ex_target_index();
       list<shared_ptr<const Index>> res;
       assert(!(proj.size() & 1));
       for (auto ii = proj.begin(); ii != proj.end(); ++ii, ++ii) {

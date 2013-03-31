@@ -37,7 +37,7 @@
 
 namespace smith {
 
-/// This class is used on a collection of operators.
+/// This class is used for a collection of operators.
 class Diagram {
   protected:
     /// A list of operators.
@@ -102,9 +102,12 @@ class Diagram {
     /// If diagrams are same, based on size, indices, and spin. 
     bool identical(std::shared_ptr<Diagram> o) const;
 
-    /// Returns list of target indices from excitation operators in diagram.
-    std::list<std::shared_ptr<const Index>> target_index() const;
+    /// checks if diagram has target indices from exciation operators.
+    bool has_ex_target_index() const;
 
+    /// Returns list of target indices from excitation operators in diagram.
+    std::list<std::shared_ptr<const Index>> ex_target_index() const;
+    
     /// Print function for diagram, CAUTION: it also refreshes the indices.
     void print();
     /// This print version does not refresh indices. Prints factor, scalar and operators.

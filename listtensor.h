@@ -41,10 +41,11 @@ class ListTensor {
     double fac_;
     /// Scalar for listtensor, to be defined in BAGEL.
     std::string scalar_;
-    /// A list of tensors.
+    /// A list of tensors in a diagram.
     std::list<std::shared_ptr<Tensor>> list_;
     /// If dagger (transpose).
     bool dagger_;
+
 
   public:
     /// Constructs a list of tensors by constructing tensors from operators in diagram, IF they have labels.

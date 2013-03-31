@@ -85,7 +85,7 @@ shared_ptr<Diagram> Diagram::copy() const {
 }
 
 
-list<shared_ptr<const Index>> Diagram::target_index() const {
+list<shared_ptr<const Index>> Diagram::ex_target_index() const {
   bool found = false;
   list<shared_ptr<const Index>> out;
   for (auto& i : op_) {
@@ -97,6 +97,18 @@ list<shared_ptr<const Index>> Diagram::target_index() const {
     } 
   }
   return out;
+}
+
+
+bool Diagram::has_ex_target_index() const { 
+  bool found = false;
+  for (auto & i : op_) {
+     if (i->is_ex()) {
+       found = true;
+       continue;
+     }
+  }
+  return found;
 }
 
 

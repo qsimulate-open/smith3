@@ -55,11 +55,14 @@ class BinaryContraction {
     /// Points up in graph.
     Tree* parent_;
 
+    /// Excitation operator target indices
+    std::list<std::shared_ptr<const Index>> ex_target_index_;
+ 
   public:
     /// Construct binary contraction from tensor and listtensor pointers.
     BinaryContraction(std::shared_ptr<Tensor> o, std::shared_ptr<ListTensor> l, std::string lab);
-    /// Construct binary contraction from subtree and tensor.
-    BinaryContraction(std::list<std::shared_ptr<Tree>> o, std::shared_ptr<Tensor> t) : tensor_(t), subtree_(o) {};
+    /// Construct binary contraction from subtree and tensor if diagram has excitation operator target indices, index list will not be empty.
+    BinaryContraction(std::list<std::shared_ptr<Tree>> o, std::shared_ptr<Tensor> t, std::list<std::shared_ptr<const Index>> ti) : tensor_(t), subtree_(o), ex_target_index_(ti) {};
     ~BinaryContraction() {};
 
     /// Return list of trees below.
@@ -70,8 +73,12 @@ class BinaryContraction {
     std::shared_ptr<Tensor> target() { return target_; };
     /// Retrieve next target--next intermediate below, for example I1. This is the front of subtree of target.
     std::shared_ptr<Tensor> next_target();
+
+  
     /// Print binary contraction.
     void print() const;
+    /// Returns excitation target indices.
+    std::string ex_target_str() const; 
 
     /// Do factorization and then merge subtrees.
     void factorize();
@@ -88,6 +95,11 @@ class BinaryContraction {
     std::list<std::shared_ptr<const Index>> loop_indices();
     /// Returns a list of target indices..these are to be stored (via put_block).
     std::list<std::shared_ptr<const Index>> target_indices();
+    
+    /// Return excitation target indices.
+    std::list<std::shared_ptr<const Index>> ex_target_index() { return ex_target_index_; };
+    /// If bc is associated with excitation target indices.
+    bool has_ex_target_index() { return !ex_target_index_.empty(); };
 
     /// If transpose.
     bool dagger() const;
@@ -141,8 +153,6 @@ class Tree {
     /// Tree label, used for graph-specific code generation. 
     std::string label_;
 
-    /// Target indices for top level of graph.
-    const std::list<std::shared_ptr<const Index>> target_index_;
 
   public:
     /// Construct tree from equation pointers and set tree label.
@@ -158,8 +168,6 @@ class Tree {
 
     /// Returns depth, 0 is top of graph.
     int depth() const;
-
-    const std::list<std::shared_ptr<const Index>> target_index() const { return target_index_; };
 
     /// Prints tree which is the list of operator tensors (op_) if target_ otherwise the binary contraction list (bc_).
     void print() const;

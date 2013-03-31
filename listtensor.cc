@@ -35,17 +35,17 @@ ListTensor::ListTensor(shared_ptr<Diagram> d) {
   scalar_ = d->scalar();
   // vector of tensors
   for (auto& i : d->op()) {
-    // careful, add only labeled operators! eg not excitation operator
+    // careful, add only labeled operators! eg not excitation operators
     if (!i->label().empty()) {
       shared_ptr<Tensor> t(new Tensor(i));
       list_.push_back(t);
-    }  
+    }
   }
   if (d->rdm()) {
     shared_ptr<Tensor> t(new Tensor(d->rdm()));
     list_.push_back(t);
   }
-  // dag
+  // dagger
   dagger_ = d->dagger();
 }
 
