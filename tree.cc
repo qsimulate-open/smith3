@@ -37,44 +37,6 @@ using namespace std;
 using namespace smith;
 
 
-BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor> l, string lab) : label_(lab) {
-  // o is a target tensor NOT included in l
-  target_ = o;
-  tensor_ = l->front();
-  shared_ptr<ListTensor> rest = l->rest();
-  
-  // convert to correct subtree
-  if (label_ == "residual") { 
-    shared_ptr<Tree> tr(new Residual(rest, lab));
-    subtree_.push_back(tr);
-  } else if (label_ == "energy") {
-    shared_ptr<Tree> tr(new Energy(rest, lab));
-    subtree_.push_back(tr);
-  } else if (label_ == "density") {
-    shared_ptr<Tree> tr(new Density(rest, lab));
-    subtree_.push_back(tr);
-  } else {
-    throw logic_error("Error BinaryContraction::BinaryContraction, code generation for this tree type not implemented");
-  }
-
-}
-
-
-Tree::Tree(const shared_ptr<ListTensor> l, string lab) : num_(-1), label_(lab) {
-  target_ = l->target();
-  dagger_ = l->dagger();
-  if (l->length() > 1) {
-    shared_ptr<BinaryContraction> bc(new BinaryContraction(target_, l, lab));
-    bc_.push_back(bc);
-  } else {
-    shared_ptr<Tensor> t = l->front();
-    t->set_factor(l->fac());
-    t->set_scalar(l->scalar());
-    op_.push_back(t);
-  }
-}
-
-
 Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->name()), num_(-1), label_(lab) {
   // First make ListTensor for all the diagrams
   list<shared_ptr<Diagram>> d = eq->diagram();
@@ -87,7 +49,7 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
     shared_ptr<Tensor> first = tmp->front();
     shared_ptr<ListTensor> rest = tmp->rest();
 
-    // convert it to tree
+    // convert to tree and then bc
     if (label_ == "residual") { 
       shared_ptr<Tree> tr(new Residual(rest, lab));
       list<shared_ptr<Tree>> lt; lt.push_back(tr);
@@ -115,6 +77,62 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
 }
 
 
+Tree::Tree(const shared_ptr<ListTensor> l, string lab) : num_(-1), label_(lab) {
+  target_ = l->target();
+  dagger_ = l->dagger();
+  if (l->length() > 1) {
+    shared_ptr<BinaryContraction> bc(new BinaryContraction(target_, l, lab));
+    bc_.push_back(bc);
+  } else {
+    shared_ptr<Tensor> t = l->front();
+    t->set_factor(l->fac());
+    t->set_scalar(l->scalar());
+    op_.push_back(t);
+  }
+}
+
+
+BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor> l, string lab) : label_(lab) {
+  // o is a target tensor NOT included in l
+  target_ = o;
+  tensor_ = l->front();
+  shared_ptr<ListTensor> rest = l->rest();
+  
+  // convert to correct subtree
+  if (label_ == "residual") { 
+    shared_ptr<Tree> tr(new Residual(rest, lab));
+    subtree_.push_back(tr);
+  } else if (label_ == "energy") {
+    shared_ptr<Tree> tr(new Energy(rest, lab));
+    subtree_.push_back(tr);
+  } else if (label_ == "density") {
+    shared_ptr<Tree> tr(new Density(rest, lab));
+    subtree_.push_back(tr);
+  } else {
+    throw logic_error("Error BinaryContraction::BinaryContraction, code generation for this tree type not implemented");
+  }
+
+}
+
+
+void Tree::factorize() {
+  list<list<shared_ptr<BinaryContraction>>::iterator> done;
+  for (auto i = bc_.begin(); i != bc_.end(); ++i) {
+    if (find(done.begin(), done.end(), i) != done.end()) continue;
+    auto j = i; ++j;
+    for ( ; j != bc_.end(); ++j) {
+      // bc is factorized according to excitation target indices
+      if (*(*i)->tensor() == *(*j)->tensor() && (*i)->dagger() == (*j)->dagger() && (*i)->ex_target_index_str() == (*j)->ex_target_index_str()) {
+        done.push_back(j);
+        (*i)->subtree().insert((*i)->subtree().end(), (*j)->subtree().begin(), (*j)->subtree().end());
+      }
+    }
+  }
+  for (auto& i : done) bc_.erase(i);
+  for (auto& i : bc_) i->factorize();
+}
+
+
 void BinaryContraction::factorize() {
   list<list<shared_ptr<Tree>>::iterator> done;
   // and then merge subtrees
@@ -131,36 +149,21 @@ void BinaryContraction::factorize() {
 }
   
 
-void Tree::factorize() {
-  list<list<shared_ptr<BinaryContraction>>::iterator> done;
-  for (auto i = bc_.begin(); i != bc_.end(); ++i) {
-    if (find(done.begin(), done.end(), i) != done.end()) continue;
-    auto j = i; ++j;
-    for ( ; j != bc_.end(); ++j) {
-      if (*(*i)->tensor() == *(*j)->tensor() && (*i)->dagger() == (*j)->dagger()) {
-        done.push_back(j);
-        (*i)->subtree().insert((*i)->subtree().end(), (*j)->subtree().begin(), (*j)->subtree().end());
-      }
+bool Tree::merge(shared_ptr<Tree> o) {
+  bool out = false;
+  if (o->bc_.size() > 0) {
+    shared_ptr<Tensor> a = bc_.front()->tensor();
+    shared_ptr<Tensor> b = o->bc_.front()->tensor();
+    if (*a == *b) {
+      out = true;
+      bc_.insert(bc_.end(), o->bc_.begin(), o->bc_.end());
+      for (auto i = bc_.begin(); i != bc_.end(); ++i) (*i)->set_target(target_);
     }
+  } else if (o->op_.size() > 0) {
+    out = true;
+    op_.insert(op_.end(), o->op_.begin(), o->op_.end());
   }
-  for (auto& i : done) bc_.erase(i);
-  for (auto& i : bc_) i->factorize();
-}
-
-
-void BinaryContraction::set_parent_subtree() {
-  for (auto i = subtree_.begin(); i != subtree_.end(); ++i) {
-    (*i)->set_parent(this);
-    (*i)->set_parent_sub();
-  }
-}
-
-
-void Tree::set_parent_sub() {
-  for (auto i = bc_.begin(); i != bc_.end(); ++i) {
-    (*i)->set_parent(this);
-    (*i)->set_parent_subtree();
-  }
+  return out;
 }
 
 
@@ -184,6 +187,22 @@ void Tree::set_target_rec() {
 }
 
 
+void BinaryContraction::set_parent_subtree() {
+  for (auto i = subtree_.begin(); i != subtree_.end(); ++i) {
+    (*i)->set_parent(this);
+    (*i)->set_parent_sub();
+  }
+}
+
+
+void Tree::set_parent_sub() {
+  for (auto i = bc_.begin(); i != bc_.end(); ++i) {
+    (*i)->set_parent(this);
+    (*i)->set_parent_subtree();
+  }
+}
+
+
 int BinaryContraction::depth() const { return parent_->depth(); }
 
 int Tree::depth() const { return parent_ ? parent_->parent()->depth()+1 : 0; }
@@ -193,23 +212,6 @@ bool BinaryContraction::dagger() const {
   return subtree_.front()->dagger();
 }
 
-
-bool Tree::merge(shared_ptr<Tree> o) {
-  bool out = false;
-  if (o->bc_.size() > 0) {
-    shared_ptr<Tensor> a = bc_.front()->tensor();
-    shared_ptr<Tensor> b = o->bc_.front()->tensor();
-    if (*a == *b) {
-      out = true;
-      bc_.insert(bc_.end(), o->bc_.begin(), o->bc_.end());
-      for (auto i = bc_.begin(); i != bc_.end(); ++i) (*i)->set_target(target_);
-    }
-  } else if (o->op_.size() > 0) {
-    out = true;
-    op_.insert(op_.end(), o->op_.begin(), o->op_.end());
-  }
-  return out;
-}
 
 shared_ptr<Tensor> BinaryContraction::next_target() {
   return subtree().front()->target();
@@ -253,7 +255,7 @@ list<shared_ptr<Tensor>> Tree::gather_gamma() const {
 }
 
 
-string BinaryContraction::ex_target_str() const { 
+string BinaryContraction::ex_target_index_str() const { 
   stringstream zz;
   if (!ex_target_index_.empty()) {
     zz << "(";
@@ -270,7 +272,7 @@ string BinaryContraction::ex_target_str() const {
 void BinaryContraction::print() const {
   string indent = "";
   for (int i = 0; i != depth(); ++i) indent += "  ";
-  cout << indent << (target_ ? (target_->str() + " = ") : "") << tensor_->str() << (depth() == 0 ? ex_target_str() : "") << " * " << subtree_.front()->target()->str() << endl;
+  cout << indent << (target_ ? (target_->str() + " = ") : "") << tensor_->str() << (depth() == 0 ? ex_target_index_str() : "") << " * " << subtree_.front()->target()->str() << endl;
   for (auto& i : subtree_) i->print();
 }
 
@@ -648,7 +650,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
   // step through BinaryContraction
   /////////////////////////////////////////////////////////////////
   for (auto i = bc_.begin(); i != bc_.end(); ++i) {
-    vector<shared_ptr<Tensor>> source_tensors = (*i)->tensors_str();
+    vector<shared_ptr<Tensor>> source_tensors = (*i)->tensors_vec();
 
     for (auto& s : source_tensors) {
       // if it contains a new intermediate tensor, dump a constructor
@@ -675,12 +677,10 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
       }
     }
 
-#if 1   // mkm error with multiple proj and/or before here as tree is not identical when this is turned off.
     // use virtual function to generate a task for this binary contraction
     pair<string, string> btmp = generate_bc(indent, (*i));
     ss << btmp.first;
     tt << btmp.second;
-#endif
 
     {
       // send outer loop indices if outer loop indices exist, otherwise send inner indices
@@ -809,7 +809,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
 }
 
 
-vector<shared_ptr<Tensor>> BinaryContraction::tensors_str() {
+vector<shared_ptr<Tensor>> BinaryContraction::tensors_vec() {
   vector<shared_ptr<Tensor>> out;
   if (target_) out.push_back(target_);
   out.push_back(tensor_);

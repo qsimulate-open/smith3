@@ -81,7 +81,6 @@ shared_ptr<Operator> Op::copy() const {
 // Note that spin info is not checked. 
 bool Op::identical(shared_ptr<Operator> o) const {
   bool out = true;
-  // TODO check if I need to re-introduce this check somehow differently. mkm
   out &= label_ == o->label();
   auto j = o->op().begin();
   for (auto i = op_.begin(); i != op_.end(); ++i, ++j) {

@@ -105,7 +105,7 @@ bool Diagram::has_ex_target_index() const {
   for (auto & i : op_) {
      if (i->is_ex()) {
        found = true;
-       continue;
+       break;
      }
   }
   return found;

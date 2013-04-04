@@ -50,20 +50,6 @@ ListTensor::ListTensor(shared_ptr<Diagram> d) {
 }
 
 
-void ListTensor::print() const {
-  cout << setw(4) << setprecision(1) << fixed <<  fac_ << (scalar_.empty() ? "" : " * "+ scalar_) << " ";
-  for (auto& i : list_) cout << i->str();
-  if (dagger_) cout << " ** Daggered object added **";
-  cout << endl;
-  for (auto& i : list_) {
-    if (i->active()) i->active()->print("   ");
-  }
-
-  cout << endl;
-  
-}
-
-
 void ListTensor::absorb_all_internal() {
   auto j = list_.begin();
   // first find active
@@ -117,4 +103,17 @@ shared_ptr<ListTensor> ListTensor::rest() const {
   shared_ptr<ListTensor> out(new ListTensor(fac_, scalar_, r, dagger_));
   return out;
 }
+
+
+void ListTensor::print() const {
+  cout << setw(4) << setprecision(1) << fixed <<  fac_ << (scalar_.empty() ? "" : " * "+ scalar_) << " ";
+  for (auto& i : list_) cout << i->str();
+  if (dagger_) cout << " ** Daggered object added **";
+  cout << endl;
+  for (auto& i : list_) {
+    if (i->active()) i->active()->print("   ");
+  }
+  cout << endl;
+}
+
 

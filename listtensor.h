@@ -48,7 +48,7 @@ class ListTensor {
 
 
   public:
-    /// Constructs a list of tensors by constructing tensors from operators in diagram, IF they have labels.
+    /// Constructs a list of tensors in a diagram by constructing tensors from the operators in diagram, IF they have labels.
     ListTensor(std::shared_ptr<Diagram> d);
     /// Construct listtensor using prefactor, scalar, list of tensors and dagger information.
     ListTensor(double f, std::string sc, std::list<std::shared_ptr<Tensor>> ve, bool d)
@@ -66,7 +66,7 @@ class ListTensor {
     std::shared_ptr<Tensor> front() const { return list_.front(); };
     /// Returns the list of tensors (listtensor) minus the front tensor.
     std::shared_ptr<ListTensor> rest() const ;
-    /// Returns the target tensor from the list of tensors.
+    /// Creates! and returns a target tensor from the list of tensors.
     std::shared_ptr<Tensor> target() const;
 
     /// Returns the prefactor for listtensor.

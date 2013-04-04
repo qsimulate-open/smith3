@@ -66,7 +66,7 @@ class Ex : public Operator {
     /// Creates a new Ex pointer.
     std::shared_ptr<Operator> copy() const override;
 
-    /// this is perhaps not correct..TODO mkm check.
+    /// Excitation operators have no label as not associated with tensor.
     std::string label() const override { return ""; };
 
 };
