@@ -129,7 +129,7 @@ string Residual::generate_compute_footer(const int ic, const list<shared_ptr<con
   tt << "    }" << endl << endl; 
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>> > t,  std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", const double e" : "") << ") : Task<T>() {" << endl;
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t,  std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", const double e" : "") << ") : Task<T>() {" << endl;
   tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
   for (auto i = 1; i < ninptensors + 1; ++i)
     tt << "t[" << i << "]" << (i < ninptensors ? ", " : "");
@@ -169,7 +169,7 @@ string Residual::generate_compute_footer(const int ic, const list<shared_ptr<con
 
 string Residual::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar) const {
   stringstream ss;
-  ss << indent << "std::vector<std::shared_ptr<Tensor<T>> > tensor" << ic << " = {" << merge__(op) << "};" << endl;
+  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
   ss << indent << "std::shared_ptr<Task" << ic << "<T>> task"
                << ic << "(new Task" << ic << "<T>(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
 

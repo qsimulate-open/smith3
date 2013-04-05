@@ -496,7 +496,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
   // may need to check proper tree here. TODO 
 
   string indent = "      ";
-  string vectensor = "std::vector<std::shared_ptr<Tensor<T>> >";
+  string vectensor = "std::vector<std::shared_ptr<Tensor<T>>>";
   // if this is the top tree, we want to initialize index, as well as to create a task that zeros out the residual vector
   if (depth() == 0) {
     assert(icnt == 0 && tree_name_ != "");
@@ -531,7 +531,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "    std::shared_ptr<Tensor<T>> dm_;" << endl;
     ss << "    double e0_;" << endl;
     ss << "" << endl;
-    ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>> > make_queue_() {" << endl;
+    ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T>> queue_(new Queue<T>());" << endl;
 
     ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl << endl;
@@ -570,7 +570,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     tt << "    };  " << endl;
     tt << "" << endl;
     tt << "  public:" << endl;
-    tt << "    Task0(std::vector<std::shared_ptr<Tensor<T>> > t) : Task<T>() {" << endl;
+    tt << "    Task0(std::vector<std::shared_ptr<Tensor<T>>> t) : Task<T>() {" << endl;
     tt << "      r_ =  t[0];" << endl;
     tt << "    };  " << endl;
     tt << "    ~Task0() {}; " << endl;
@@ -669,7 +669,8 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
       list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->ex_target_index();
       // if outer loop is empty, send inner loop indices to header
       if (ti.size() == 0) {
-        assert(depth() != 0); 
+        // mkm problem
+        //assert(depth() != 0); 
         list<shared_ptr<const Index>> di = (*i)->loop_indices();
         tt << generate_compute_header(num_, di, source_tensors, true);
       } else { 
@@ -677,10 +678,12 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
       }
     }
 
+#if 1
     // use virtual function to generate a task for this binary contraction
     pair<string, string> btmp = generate_bc(indent, (*i));
     ss << btmp.first;
     tt << btmp.second;
+#endif
 
     {
       // send outer loop indices if outer loop indices exist, otherwise send inner indices
@@ -758,7 +761,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "      int iter = 0;" << endl;
     ss << "      std::shared_ptr<Queue<T>> dens;" << endl;
     ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
-    ss << "        std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>> > q = make_queue_();" << endl;
+    ss << "        std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> q = make_queue_();" << endl;
     ss << "        std::shared_ptr<Queue<T>> queue = std::get<0>(q);" << endl;
     ss << "        std::shared_ptr<Queue<T>> energ = std::get<1>(q);" << endl;
     ss << "        dens = std::get<2>(q);" << endl;

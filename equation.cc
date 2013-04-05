@@ -58,7 +58,7 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
 }
 
 
-void Equation::term_select(string t){
+void Equation::term_select(list<string> t){
   // go through diagrams and if do not contain correct target indices, remove.
   list<list<shared_ptr<Diagram>>::iterator> rm;
   bool keep = true;
@@ -70,7 +70,10 @@ void Equation::term_select(string t){
         // compare op index label
         list<tuple<shared_ptr<Index>*,int, int>> q_ops = j->op();
         for (auto& k : q_ops) {
-          if ((*get<0>(k))->label() !=  t) {
+          bool found = false;
+          for (auto& term : t)
+            if ((*get<0>(k))->label() == term) found = true;
+          if (!found) {
             rm.push_back(i);
             break;   
           }

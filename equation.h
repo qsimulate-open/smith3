@@ -55,7 +55,7 @@ class Equation {
     };
 
     /// Prunes equation to those terms containing target indices.
-    void term_select(std::string t);
+    void term_select(std::list<std::string> t);
 
     /// Print function. This triggers Diagram::refresh_indices().
     void print();

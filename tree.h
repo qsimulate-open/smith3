@@ -168,7 +168,7 @@ class Tree {
     /// Returns depth, 0 is top of graph.
     int depth() const;
 
-    /// Prints tree which is the list of operator tensors (op_) if target_ otherwise the binary contraction list (bc_).
+    /// Prints tree which consists of tensor binary contrations between tensors and tensor additions. If excitation targets are present,  these printed without tensor label at top of tree.
     void print() const;
 
     /// Returns num_. Should be greater than zero, otherwise throws an error.
