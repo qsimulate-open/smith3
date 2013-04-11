@@ -54,6 +54,22 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 // local functions... (not a good practice...) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
+string Energy::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int i0) const {
+  stringstream ss;
+  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
+  ss << indent << "std::shared_ptr<Task" << ic << "<T>> task"
+               << ic << "(new Task" << ic << "<T>(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
+
+  if (parent_) {
+    if (ip != ic)
+      ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
+  } else {
+    assert(depth() == 0);
+  }
+  ss << indent << "energy_->add_task(task" << ic << ");" << endl;
+  ss << endl;
+  return ss.str();
+}
 
 
 string Energy::generate_compute_header(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors, const bool no_outside) const {
@@ -123,7 +139,6 @@ string Energy::generate_compute_footer(const int ic, const list<shared_ptr<const
   tt << "        }" << endl;
   tt << "    };" << endl;
   tt << "" << endl;
-  tt << "    // subtask queue" << endl; 
   tt << "    std::vector<std::shared_ptr<Task_local>> subtasks_;" << endl;
   tt << "" << endl;
 
@@ -171,24 +186,6 @@ string Energy::generate_compute_footer(const int ic, const list<shared_ptr<const
   tt << "    ~Task" << ic << "() {};" << endl;
   tt << "};" << endl << endl;
   return tt.str();
-}
-
-
-string Energy::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar) const {
-  stringstream ss;
-  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
-  ss << indent << "std::shared_ptr<Task" << ic << "<T>> task"
-               << ic << "(new Task" << ic << "<T>(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
-
-  if (parent_) {
-    if (ip != ic)
-      ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
-  } else {
-    assert(depth() == 0);
-  }
-  ss << indent << "energy_->add_task(task" << ic << ");" << endl;
-  ss << endl;
-  return ss.str();
 }
 
 

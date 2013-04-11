@@ -30,6 +30,8 @@
 #include <iomanip>
 #include <algorithm>
 
+#define debug_tasks
+
 using namespace std;
 using namespace smith;
 
@@ -147,6 +149,7 @@ string Tensor::constructor_str(string indent) const {
   return ss.str();
 }
 
+
 string Tensor::generate_get_block(const string cindent, const string lab, const string tlab, const bool move, const bool noscale) const {
   string lbl = label();
   if (lbl == "proj") lbl = "r";
@@ -159,11 +162,14 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
   stringstream tt;
   // for scalar. 
   if (index_.empty() && merged_) {
+#ifdef debug_tasks
    tt << cindent << "// scalar" << endl;
+#endif
   }
 
   { 
-#if 1 // if needed, eg debug
+
+#ifdef debug_tasks // if needed, eg debug
     tt  << cindent << "// tensor label: " << lbl << endl;
 #endif
     tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
@@ -380,7 +386,9 @@ string Tensor::generate_active(string indent, const string tag, const int ninpte
     tt << active()->generate(indent, tag, index());
   } else {
     
+#ifdef debug_tasks
     tt << indent <<"// associated with merged" << endl;
+#endif
 
     // add fdata 
     list<shared_ptr<const Index>>& merged = merged_->index();
@@ -473,7 +481,11 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
 
   //////////// gamma header ////////////
   tt << "template <typename T>" << endl;
+#ifdef debug_tasks
   tt << "class Task" << ic << " : public Task<T> {" <<  "  // associated with gamma" << endl;
+#else
+  tt << "class Task" << ic << " : public Task<T> {" << endl;
+#endif
   tt << "  protected:" << endl;
   tt << "    class Task_local : public SubTask<" << nindex << "," << ninptensors << ",T> {" << endl;
   tt << "      protected:" << endl;
@@ -503,7 +515,7 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
       tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
   }    
   
-#if 1 // debug purposes
+#ifdef debug_tasks // debug purposes
    tt << "//   std::shared_ptr<Tensor<T> > " << label() << ";" << endl;
    for (auto& i: rdmn)
      tt << "//   std::shared_ptr<Tensor<T> > rdm" << i << ";" << endl;
@@ -530,7 +542,6 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
   tt << "        }  " << endl;
   tt << "    };  " << endl;
   tt << "" << endl;
-  tt << "    // subtask queue" << endl; 
   tt << "    std::vector<std::shared_ptr<Task_local>> subtasks_;" << endl;
   tt << "" << endl;
 
@@ -539,7 +550,7 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
   tt << "    }" << endl << endl; 
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>> > t,  std::array<std::shared_ptr<const IndexRange>,3> range) : Task<T>() {" << endl;
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t,  std::array<std::shared_ptr<const IndexRange>,3> range) : Task<T>() {" << endl;
   tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
 
   // write out tensors in increasing order

@@ -46,7 +46,7 @@ class BinaryContraction {
     /// A list of trees
     std::list<std::shared_ptr<Tree>> subtree_;
 
-    /// label for code generation specifics.
+    /// label for code generation specifics, corresponds to derived tree name.
     std::string label_;
   
     // Tree that has this
@@ -81,7 +81,9 @@ class BinaryContraction {
     void print() const;
     /// Returns excitation target indices.
     std::string ex_target_index_str() const; 
-
+    /// Returns bc label.
+    std::string label() { return label_; };
+  
     /// Do factorization and then merge subtrees.
     void factorize();
     /// Set parent to this tree pointer.
@@ -221,16 +223,18 @@ class Tree {
     /// Generate task for operator task (ie not a binary contraction task).
     std::string generate_compute_operators(const std::string, const std::shared_ptr<Tensor>, const std::vector<std::shared_ptr<Tensor>>,
                                            const bool dagger = false) const;
-
-    std::string generate_task(const std::string, const int, const std::vector<std::shared_ptr<Tensor>>) const;
+    /// Generate task in dependency file with ic as task number
+    std::string generate_task(const std::string indent, const int ic, const std::vector<std::shared_ptr<Tensor>>, const int i0 = 0) const;
 
     // Tree specific code generation moved to derived classes. 
+    /// Needed for zero level target tensors. Generates a Task '0' ie task to initialize top (zero depth) target tensor also sets up dependency queue.
+    virtual std::pair<std::string, std::string> create_target(const std::string, const int i) const = 0;
+    /// Generate a task. Here ip is the tag of parent, ic is the tag of this.
+    virtual std::string generate_task(const std::string, const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0) const = 0;
     /// Generate task header.
     virtual std::string generate_compute_header(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool = false) const = 0;
     /// Generate task footer.
     virtual std::string generate_compute_footer(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>) const = 0;
-    /// Generate a task. Here ip is the tag of parent, ic is the tag of this.
-    virtual std::string generate_task(const std::string, const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "") const = 0;
     /// Generate Binary contraction code.
     virtual std::pair<std::string, std::string> generate_bc(const std::string, const std::shared_ptr<BinaryContraction>) const = 0;
 

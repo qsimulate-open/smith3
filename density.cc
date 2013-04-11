@@ -46,7 +46,7 @@ static string merge__(vector<string> array) {
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
     if (label == "f1" || label == "v2" || label == "h1") label = "this->" + label + "_";
-    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? "r" : label);
+    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? "d" : label);
   }
   return ss.str();
 }
@@ -54,6 +54,54 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 // local functions... (not a good practice...) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
+pair<string, string> Density::create_target(const string indent, const int i) const {
+  stringstream ss;
+  stringstream tt;
+  tt << "template <typename T>" << endl;
+  tt << "class Task" << i << " : public DensityTask<T> {" << endl;
+  tt << "  protected:" << endl;
+  tt << "    std::shared_ptr<Tensor<T>> d_;" << endl;
+  tt << "    IndexRange closed_;" << endl;
+  tt << "    IndexRange active_;" << endl;
+  tt << "    IndexRange virt_;" << endl;
+  tt << "" << endl;
+  tt << "    void compute_() {" << endl;
+  tt << "      d_->zero();" << endl;
+  tt << "    };  " << endl;
+  tt << "" << endl;
+  tt << "  public:" << endl;
+  tt << "    Task" << i << "(std::vector<std::shared_ptr<Tensor<T>>> t) : DensityTask<T>() {" << endl;
+  tt << "      d_ =  t[0];" << endl;
+  tt << "    };  " << endl;
+  tt << "    ~Task" << i << "() {}; " << endl;
+  tt << "};" << endl << endl;
+
+  ss << "      std::shared_ptr<Queue<T>> density_(new Queue<T>());" << endl;
+  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << i << " = {d};" << endl;
+  ss << indent << "std::shared_ptr<Task" << i << "<T>> task" << i << "(new Task" << i << "<T>(tensor" << i << "));" << endl;
+  ss << indent << "density_->add_task(task" << i << ");" << endl << endl;
+
+  return make_pair(ss.str(), tt.str());
+}
+
+
+string Density::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int iz) const {
+  stringstream ss;
+  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
+  ss << indent << "std::shared_ptr<Task" << ic << "<T>> task"
+               << ic << "(new Task" << ic << "<T>(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
+  if (parent_) {
+    assert(parent_->parent());
+    ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
+    ss << indent << "task" << ic << "->add_dep(task" << iz << ");" << endl;
+  } else {
+    assert(depth() == 0);
+    ss << indent << "task" << ic << "->add_dep(task" << iz << ");" << endl;
+  }
+  ss << indent << "density_->add_task(task" << ic << ");" << endl;
+  ss << endl;
+  return ss.str();
+}
 
 
 string Density::generate_compute_header(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors, const bool no_outside) const {
@@ -120,7 +168,6 @@ string Density::generate_compute_footer(const int ic, const list<shared_ptr<cons
   tt << "        }" << endl;
   tt << "    };" << endl;
   tt << "" << endl;
-  tt << "    // subtask queue" << endl; 
   tt << "    std::vector<std::shared_ptr<Task_local>> subtasks_;" << endl;
   tt << "" << endl;
 
@@ -131,7 +178,7 @@ string Density::generate_compute_footer(const int ic, const list<shared_ptr<cons
   tt << "    }" << endl << endl; 
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>> > t, std::array<std::shared_ptr<const IndexRange>,3> range) : DensityTask<T>() {" << endl;
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t, std::array<std::shared_ptr<const IndexRange>,3> range) : DensityTask<T>() {" << endl;
   tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
   for (auto i = 1; i < ninptensors + 1; ++i)
     tt << "t[" << i << "]" << (i < ninptensors ? ", " : "");
@@ -169,37 +216,16 @@ string Density::generate_compute_footer(const int ic, const list<shared_ptr<cons
 }
 
 
-string Density::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar) const {
-  stringstream ss;
-  ss << indent << "std::vector<std::shared_ptr<Tensor<T>> > tensor" << ic << " = {" << merge__(op) << "};" << endl;
-  ss << indent << "std::shared_ptr<Task" << ic << "<T>> task"
-               << ic << "(new Task" << ic << "<T>(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
-
-  if (parent_) {
-    if (ip != ic)
-      ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
-  } else {
-    assert(depth() == 0);
-  }
-  ss << indent << "density_->add_task(task" << ic << ");" << endl;
-  ss << endl;
-  return ss.str();
-}
-
-
 pair<string, string> Density::generate_bc(const string indent, const shared_ptr<BinaryContraction> i) const {
   stringstream ss;
   stringstream tt;
   
-
     if (depth() != 0) {
       const string bindent = indent + "    ";
       string dindent = bindent; 
 
-#if 1
       tt << target_->generate_get_block(dindent, "o", "out()", true);
       tt << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
-#endif
 
       list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
   
@@ -270,22 +296,9 @@ pair<string, string> Density::generate_bc(const string indent, const shared_ptr<
         tt << ");" << endl;
       }
 
-    } else { // depth = 0
-#if 0
-        cout << "Make DM TENSOR!" << endl;
-        // making residual vector... mkm need to make ... dm specific here
-        list<shared_ptr<const Index>> proj = (i)->tensor()->index();
-        list<shared_ptr<const Index>> res;
-        assert(!(proj.size() & 1));
-        for (auto ii = proj.begin(); ii != proj.end(); ++ii, ++ii) {
-          auto j = ii; ++j;
-          res.push_back(*j);
-          res.push_back(*ii);
-        }
-        shared_ptr<Tensor> residual(new Tensor(1.0, "r", res));
-        vector<shared_ptr<Tensor>> op2 = { (i)->next_target() };
-        tt << generate_compute_operators(indent, residual, op2, (i)->dagger());
-#endif
+    } else { // bc depth = 0
+      // depth should only be zero here in residual tree
+      throw logic_error("shouldn't happen in Density::generate_bc");
     }
 
   return make_pair(ss.str(), tt.str());

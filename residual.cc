@@ -52,6 +52,55 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 // local functions... (not a good practice...) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
+pair<string, string> Residual::create_target(const string indent, const int i) const {
+  stringstream ss;
+  stringstream tt;
+
+  tt << "template <typename T>" << endl;
+  tt << "class Task0 : public Task<T> {" << endl;
+  tt << "  protected:" << endl;
+  tt << "    std::shared_ptr<Tensor<T>> r_;" << endl;
+  tt << "    IndexRange closed_;" << endl;
+  tt << "    IndexRange active_;" << endl;
+  tt << "    IndexRange virt_;" << endl;
+  tt << "" << endl;
+  tt << "    void compute_() {" << endl;
+  tt << "      r_->zero();" << endl;
+  tt << "    };  " << endl;
+  tt << "" << endl;
+  tt << "  public:" << endl;
+  tt << "    Task0(std::vector<std::shared_ptr<Tensor<T>>> t) : Task<T>() {" << endl;
+  tt << "      r_ =  t[0];" << endl;
+  tt << "    };  " << endl;
+  tt << "    ~Task0() {}; " << endl;
+  tt << "};" << endl << endl;
+  
+  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor0 = {r};" << endl;
+  ss << indent << "std::shared_ptr<Task0<T>> task0(new Task0<T>(tensor0));" << endl;
+  ss << indent << "queue_->add_task(task0);" << endl << endl;
+
+  return make_pair(ss.str(), tt.str());
+}
+
+
+string Residual::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int i0) const {
+  stringstream ss;
+  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
+  ss << indent << "std::shared_ptr<Task" << ic << "<T>> task"
+               << ic << "(new Task" << ic << "<T>(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
+
+  if (parent_) {
+    assert(parent_->parent());
+    ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
+    ss << indent << "task" << ic << "->add_dep(task0);" << endl;
+  } else {
+    assert(depth() == 0);
+    ss << indent << "task" << ic << "->add_dep(task0);" << endl;
+  }
+  ss << indent << "queue_->add_task(task" << ic << ");" << endl;
+  ss << endl;
+  return ss.str();
+}
 
 
 string Residual::generate_compute_header(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors, const bool no_outside) const {
@@ -120,7 +169,6 @@ string Residual::generate_compute_footer(const int ic, const list<shared_ptr<con
   tt << "        }" << endl;
   tt << "    };" << endl;
   tt << "" << endl;
-  tt << "    // subtask queue" << endl; 
   tt << "    std::vector<std::shared_ptr<Task_local>> subtasks_;" << endl;
   tt << "" << endl;
 
@@ -165,27 +213,6 @@ string Residual::generate_compute_footer(const int ic, const list<shared_ptr<con
   tt << "};" << endl << endl;
   return tt.str();
 }
-
-
-string Residual::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar) const {
-  stringstream ss;
-  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
-  ss << indent << "std::shared_ptr<Task" << ic << "<T>> task"
-               << ic << "(new Task" << ic << "<T>(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
-
-  if (parent_) {
-    assert(parent_->parent());
-    ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
-    ss << indent << "task" << ic << "->add_dep(task0);" << endl;
-  } else {
-    assert(depth() == 0);
-    ss << indent << "task" << ic << "->add_dep(task0);" << endl;
-  }
-  ss << indent << "queue_->add_task(task" << ic << ");" << endl;
-  ss << endl;
-  return ss.str();
-}
-
 
 
 pair<string, string> Residual::generate_bc(const string indent, const shared_ptr<BinaryContraction> i) const {
@@ -261,7 +288,7 @@ pair<string, string> Residual::generate_bc(const string indent, const shared_ptr
         tt << ", " << (*i)->str_gen();
       tt << ");" << endl;
     }
-  } else {
+  } else {  // now at bc depth 0 
       // making residual vector...
       list<shared_ptr<const Index>> proj = (i)->ex_target_index();
       list<shared_ptr<const Index>> res;

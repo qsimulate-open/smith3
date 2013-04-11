@@ -290,6 +290,7 @@ void Tree::print() const {
 
 
 static int icnt;
+static int i0;
 // not a good implementation...
 vector<shared_ptr<Tensor>> ii;
 
@@ -433,7 +434,7 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
 }
 
 
-string Tree::generate_task(const string indent, const int ic, const vector<shared_ptr<Tensor>> op) const {
+string Tree::generate_task(const string indent, const int ic, const vector<shared_ptr<Tensor>> op, const int iz) const {
   stringstream ss;
 
   vector<string> ops;
@@ -450,8 +451,8 @@ string Tree::generate_task(const string indent, const int ic, const vector<share
     }
   }
 
-  // if gamma, we need to add dependency. We need to go up to the root tree.
-  ss << generate_task(indent, ip, ic, ops, scalar);
+  // if gamma, we need to add dependency. We need to go up to the root tree. 
+  ss << generate_task(indent, ip, ic, ops, scalar, iz);
   for (auto& i : op) {
     if (i->label().find("Gamma") != string::npos)
       ss << indent << "task" << ic << "->" << add_depend(i) << endl;
@@ -492,14 +493,15 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
   stringstream ss;
   // here tt is the Method_tasks.h driver routine
   stringstream tt;
-
-  // may need to check proper tree here. TODO 
-
+  
   string indent = "      ";
-  string vectensor = "std::vector<std::shared_ptr<Tensor<T>>>";
   // if this is the top tree, we want to initialize index, as well as to create a task that zeros out the residual vector
   if (depth() == 0) {
     assert(icnt == 0 && tree_name_ != "");
+
+    // save task zero
+    i0 = icnt;
+
     ss << header(tree_name_);
     tt << header(tree_name_ + "_tasks");
 
@@ -509,8 +511,6 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "#include <src/smith/spinfreebase.h>" << endl;
     ss << "#include <src/scf/fock.h>" << endl;
     ss << "#include <src/util/f77.h>" << endl;
-    ss << "#include <src/wfn/reference.h>" << endl;
-    ss << "#include <src/prop/dipole.h>" << endl;
     ss << "#include <iostream>" << endl;
     ss << "#include <tuple>" << endl;
     ss << "#include <iomanip>" << endl;
@@ -527,18 +527,12 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "  protected:" << endl;
     ss << "    std::shared_ptr<Tensor<T>> t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> r;" << endl;
-    // mkm to work out
-    ss << "    std::shared_ptr<Tensor<T>> dm_;" << endl;
+    ss << "    std::shared_ptr<Tensor<T>> d;" << endl;
     ss << "    double e0_;" << endl;
     ss << "" << endl;
     ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T>> queue_(new Queue<T>());" << endl;
-
     ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl << endl;
-
-    ss << indent << vectensor << " tensor0 = {r};" << endl;
-    ss << indent << "std::shared_ptr<Task0<T>> task0(new Task0<T>(tensor0));" << endl;
-    ss << indent << "queue_->add_task(task0);" << endl << endl;
 
     tt << "#ifndef __SRC_SMITH_" << tree_name_ << "_TASKS_H " << endl;
     tt << "#define __SRC_SMITH_" << tree_name_ << "_TASKS_H " << endl;
@@ -556,26 +550,10 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     tt << "namespace " << tree_name_ << "{" << endl;
     tt << "" << endl;
 
-    // here generate Task0 that zeros out the residual
-    tt << "template <typename T>" << endl;
-    tt << "class Task0 : public Task<T> {" << endl;
-    tt << "  protected:" << endl;
-    tt << "    std::shared_ptr<Tensor<T>> r_;" << endl;
-    tt << "    IndexRange closed_;" << endl;
-    tt << "    IndexRange active_;" << endl;
-    tt << "    IndexRange virt_;" << endl;
-    tt << "" << endl;
-    tt << "    void compute_() {" << endl;
-    tt << "      r_->zero();" << endl;
-    tt << "    };  " << endl;
-    tt << "" << endl;
-    tt << "  public:" << endl;
-    tt << "    Task0(std::vector<std::shared_ptr<Tensor<T>>> t) : Task<T>() {" << endl;
-    tt << "      r_ =  t[0];" << endl;
-    tt << "    };  " << endl;
-    tt << "    ~Task0() {}; " << endl;
-    tt << "};" << endl << endl;
-
+    // virtual function, generate Task0 which zeros out the residual and starts zero level dependency queue.
+    pair<string, string> rtmp = create_target(indent, icnt);
+    ss << rtmp.first;
+    tt << rtmp.second;
     ++icnt;
 
     // all the gamma tensors should be defined here. Only distinct Gammas are computed
@@ -588,8 +566,8 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
       bool use_blas = false;
       tt << i->generate_gamma(icnt, use_blas);
 
-#if 0 // debug
-      cout << "Printing gamma" << endl;
+#ifdef debug_gamma
+      cout << "\ndebug gamma" << endl;
       i->print();
       i->active()->print();
 #endif
@@ -625,7 +603,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
 
     vector<shared_ptr<Tensor>> op = {target_};
     op.insert(op.end(), op_.begin(), op_.end());
-    ss << generate_task(indent, icnt, op);
+    ss << generate_task(indent, icnt, op, i0);
 
     list<shared_ptr<const Index>> ti = target_->index();
 
@@ -662,28 +640,26 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     }
     // saving a counter to a protected member for dependency checks
     num_ = icnt;
-    ss << generate_task(indent, num_, source_tensors);
+    ss << generate_task(indent, num_, source_tensors, i0);
+
 
     // write out headers
     {
       list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->ex_target_index();
       // if outer loop is empty, send inner loop indices to header
       if (ti.size() == 0) {
-        // mkm problem
-        //assert(depth() != 0); 
+        assert(depth() != 0); 
         list<shared_ptr<const Index>> di = (*i)->loop_indices();
         tt << generate_compute_header(num_, di, source_tensors, true);
       } else { 
         tt << generate_compute_header(num_, ti, source_tensors);
       }
     }
-
-#if 1
+    
     // use virtual function to generate a task for this binary contraction
     pair<string, string> btmp = generate_bc(indent, (*i));
     ss << btmp.first;
     tt << btmp.second;
-#endif
 
     {
       // send outer loop indices if outer loop indices exist, otherwise send inner indices
@@ -716,6 +692,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
 
   // go through additional tree graphs
   if (depth() == 0) {
+    bool found_density = false; // temporary for testing  
     for (auto& t : tree_list) {
         // energy queue here
         if (t->label()=="energy") {
@@ -726,22 +703,123 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
             ss << tmp.first;
             tt << tmp.second;
           }
-          ++icnt;
           // end the energy tree and start density matrix generation
-          ss << "      std::shared_ptr<Queue<T>> density_(new Queue<T>());" << endl;
         } else if (t->label()=="density") { 
+          found_density = true; 
           t->num_ = icnt;
+
+          // save density task zero 
+          i0 = icnt;
+
+          // Create new task0 by using virtual function. Here the task0 target tensor is the density matrix.
+          pair<string, string> dtmp = t->create_target(indent, icnt);
+          ss << dtmp.first;
+          tt << dtmp.second;
+          ++icnt;
+
+
+          // process the active space ie gamma..
+          for (auto& g : t->gamma_) {
+#ifdef debug_gamma
+            cout << "\ndebug gamma dm" << endl;
+            g->print();
+            g->active()->print();
+#endif
+            assert(!g->merged());
+            g->set_num(icnt);
+            assert(g->label().find("Gamma") != string::npos);
+            ss << g->constructor_str(indent) << endl; 
+
+            // switch for blas, if true merged rdm*f1 tensor multiplication will use blas 
+            bool use_blas = false;
+            tt << g->generate_gamma(icnt, use_blas);
+            vector<string> tmp = {g->label()};
+            vector<int> rdms = g->active()->required_rdm(); 
+            for (auto& j : rdms) {
+              stringstream zz; 
+              zz << "this->rdm" << j << "_";
+              tmp.push_back(zz.str());
+            }
+            ss << t->generate_task(indent, i0, icnt, tmp, "", i0);
+            ++icnt;
+          }
+
           for (auto& j : t->bc_) {
+            // if at top bc, add a task to for top level contraction for density matrix tensor 
+            if (depth() == 0 ) { 
+
+              vector<shared_ptr<Tensor>> source_tensors = j->tensors_vec();
+              t->num_ = icnt;
+              for (auto& s : source_tensors) {
+                // if it contains a new intermediate tensor, dump a constructor
+                // (while registering in ii - note that ii is a static variable here).
+                if (find(ii.begin(), ii.end(), s) == ii.end() && s->label().find("I") != string::npos) {
+                  ii.push_back(s);
+                  ss << s->constructor_str(indent) << endl;
+                }
+              }
+              ss << t->generate_task(indent, t->num_, source_tensors, i0);
+
+              // write out headers
+              {
+                list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : j->ex_target_index();
+                // if outer loop is empty, send inner loop indices to header
+                if (ti.size() == 0) {
+                  assert(depth() != 0); 
+                  list<shared_ptr<const Index>> di = j->loop_indices();
+                  tt << t->generate_compute_header(t->num_, di, source_tensors, true);
+                } else { 
+                  tt << t->generate_compute_header(t->num_, ti, source_tensors);
+                }
+              }
+
+              list<shared_ptr<const Index>> proj = j->ex_target_index();
+              list<shared_ptr<const Index>> dm;
+              assert(!(proj.size() & 1));
+              for (auto ii = proj.begin(); ii != proj.end(); ++ii, ++ii) {
+                auto k = ii; ++k;
+                dm.push_back(*k);
+                dm.push_back(*ii);
+              }
+              shared_ptr<Tensor> density(new Tensor(1.0, "d", dm));
+              vector<shared_ptr<Tensor>> op2 = { j->next_target() };
+              tt << generate_compute_operators(indent, density, op2, j->dagger());
+
+              {
+                // send outer loop indices if outer loop indices exist, otherwise send inner indices
+                list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : j->ex_target_index();
+                if (depth() == 0)
+                  for (auto m = ti.begin(), n = ++ti.begin(); m != ti.end(); ++m, ++m, ++n, ++n)
+                    swap(*m, *n);
+                if (ti.size() == 0) { 
+                  assert(depth() != 0);
+                  // sending inner indices
+                  list<shared_ptr<const Index>> di = j->loop_indices();
+                  di.reverse();
+                  tt << t->generate_compute_footer(t->num_, di, source_tensors);
+                } else {
+                  // sending outer indices
+                  tt << t->generate_compute_footer(t->num_, ti, source_tensors);
+                }
+             }
+            // increment task counter
+            ++icnt;
+            }
+       
+
             pair<string, string> tmp = j->generate_task_list();  
             ss << tmp.first;
             tt << tmp.second;
           }
           ++icnt;
         }
+      
     } // end tree_list loop
 
 
-    // computational algorithm generation
+    // generate computational algorithm
+    if (!found_density) ss << "      std::shared_ptr<Queue<T>> density_(new Queue<T>());" << endl; 
+
     ss << "      return make_tuple(queue_, energy_, density_);" << endl;
     ss << "    };" << endl;
     ss << endl;
@@ -753,6 +831,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
     ss << "      t2->scale(2.0);" << endl;
     ss << "      r = t2->clone();" << endl;
+    ss << "      d = this->h1_->clone();" << endl;
     ss << "    };" << endl;
     ss << "    ~" << tree_name_ << "() {}; " << endl;
     ss << "" << endl;
@@ -775,7 +854,13 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "        if (err < thresh_residual()) break;" << endl;
     ss << "      }" << endl;
     ss << "      this->print_iteration(iter == maxiter_);" << endl;
-    ss << "      density(dens); " << endl;
+    if (found_density) {
+      ss << "      std::cout << \" === Unrelaxed density matrix ===\" << std::endl; " << endl;
+      ss << "      while (!dens->done())" << endl;
+      ss << "        dens->next_compute();" << endl;
+      ss << "      d->scale(0.25);" << endl;
+      ss << "      d->print2(\"density matrix\", 1.0e-5);" << endl;
+    }
     ss << "    };" << endl;
     ss << "" << endl;
     ss << "    double energy(std::shared_ptr<Queue<T>> energ) {" << endl;
@@ -785,13 +870,6 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "        en += c->energy() * 0.25;" << endl;  // 0.25 due to 1/2 each to bra and ket
     ss << "      }   " << endl;
     ss << "      return en; " << endl;
-    ss << "    };  " << endl;
-    ss << endl;
-    ss << "    void density(std::shared_ptr<Queue<T>> dens) {" << endl;
-    ss << "      std::cout << \" === Unrelaxed density matrix ===\" << std::endl; " << endl;
-    ss << "      while (!dens->done()) {" << endl;
-    ss << "        std::shared_ptr<Task<T>> d = dens->next_compute();" << endl;
-    ss << "      }   " << endl;
     ss << "    };  " << endl;
     ss << endl;
     ss << "};" << endl;
