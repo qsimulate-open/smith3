@@ -36,6 +36,7 @@
 #include "residual.h"
 #include "energy.h"
 #include "density.h"
+#include "correction.h"
 
 using namespace std;
 using namespace smith;
@@ -44,14 +45,14 @@ int main() {
 
   string theory="CAS_test"; 
 
-  shared_ptr<Operator> ex_0(new Ex("c", "c", "x", "x"));
-  shared_ptr<Operator> t20(new Op("t2", "x", "x", "c", "c"));
-  shared_ptr<Operator> r0(new Op("r", "x", "x", "c", "c"));
+  shared_ptr<Operator> ex_0(new Ex("x", "x", "a", "a"));
+  shared_ptr<Operator> t20(new Op("t2", "a", "a", "x", "x"));
+  shared_ptr<Operator> r0(new Op("r", "a", "a", "x", "x"));
   shared_ptr<Operator> f1(new Op("f1", "g", "g"));
   shared_ptr<Operator> v2(new Op("v2", "g", "g", "g", "g"));
   shared_ptr<Operator> h1(new Op("h1", "g", "g"));
   shared_ptr<Operator> proje(new Op("proj"));
-  shared_ptr<Operator> t2dagger0(new Op("t2dagger", "c", "c", "x", "x"));
+  shared_ptr<Operator> t2dagger0(new Op("t2dagger", "x", "x", "a", "a"));
   shared_ptr<Operator> ex_1b(new Ex("g", "g"));
   list<shared_ptr<Operator>> ra0 = {proje, ex_0, f1, t20};
   list<shared_ptr<Operator>> rb0 = {proje, ex_0, t20};
@@ -85,6 +86,14 @@ int main() {
   shared_ptr<Tree> tea(new Energy(eea0, "energy"));
   tea->sort_gamma(tra->gamma());
 
+  list<shared_ptr<Operator>> ca0 = {proje, t2dagger0, t20};
+  shared_ptr<Diagram> dca0(new Diagram(ca0));
+  shared_ptr<Equation> eca0(new Equation(dca0, theory));
+  eca0->duplicates();
+  eca0->active();
+  shared_ptr<Tree> tca(new Correction(eca0, "correction"));
+  tca->sort_gamma(tra->gamma());
+
   list<shared_ptr<Operator>> da0 = {proje, t2dagger0, ex_1b, t20};
   list<shared_ptr<Operator>> db0 = {proje, ex_1b, t20};
   shared_ptr<Diagram> dda0(new Diagram(da0));
@@ -102,7 +111,7 @@ int main() {
 
   ofstream fs(tra->tree_name() + ".h");
   ofstream es(tra->tree_name() + "_tasks.h");
-  list<shared_ptr<Tree>> tda_list = {tea, tda};
+  list<shared_ptr<Tree>> tda_list = {tea, tca, tda};
   pair<string, string> tmp = tra->generate_task_list(tda_list);
   fs << tmp.first;
   es << tmp.second;
@@ -115,6 +124,8 @@ int main() {
   tra->print();
   cout << std::endl << "   ***  Energy  ***" << std::endl << std::endl;
   tea->print();
+  cout << std::endl << "   ***  Correction  ***" << std::endl << std::endl;
+  tca->print();
   cout << std::endl << "   ***  Density Matrix  ***" << std::endl << std::endl;
   tda->print();
   cout << std::endl << std::endl;

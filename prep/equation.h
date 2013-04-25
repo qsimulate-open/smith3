@@ -79,11 +79,12 @@ class Equation {
       ss << "  " << diagram_.front()->eqn_label() << "->duplicates();" << std::endl;
       ss << "  " << diagram_.front()->eqn_label() << "->active();" << std::endl;
 
-#if 1 // prune equations for testing
+#if 1 // prune density matrix equation to keep following terms, for testing
       if (!tree_type_.empty() && tree_type_ == "density") {
+        //ss << "  " << "list<string> terms = {\"x\"};" << std::endl;
         //ss << "  " << "list<string> terms = {\"c\"};" << std::endl;
+          ss << "  " << "list<string> terms = {\"c\", \"x\"};" << std::endl;
         //ss << "  " << "list<string> terms = {\"c\", \"a\"};" << std::endl;
-        ss << "  " << "list<string> terms = {\"c\", \"x\"};" << std::endl;
         ss << "  " <<  diagram_.front()->eqn_label() << "->term_select(terms);" << std::endl;
       }
 #endif
@@ -92,6 +93,8 @@ class Equation {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Residual(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else if (!tree_type_.empty() && tree_type_ == "energy") {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Energy(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
+      } else if (!tree_type_.empty() && tree_type_ == "correction") {
+          ss << "  shared_ptr<Tree> " << tree_label() << "(new Correction(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else if (!tree_type_.empty() && tree_type_ == "density") {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Density(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else {

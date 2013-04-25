@@ -26,6 +26,7 @@
 
 #include "tree.h"
 #include "energy.h"
+#include "correction.h"
 #include "residual.h"
 #include "density.h"
 #include "constants.h"
@@ -57,6 +58,11 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
       bc_.push_back(b);
     } else if (label_ == "energy") {
       shared_ptr<Tree> tr(new Energy(rest, lab));
+      list<shared_ptr<Tree>> lt; lt.push_back(tr);
+      shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first, (*i)->ex_target_index()));
+      bc_.push_back(b);
+    } else if (label_ == "correction") {
+      shared_ptr<Tree> tr(new Correction(rest, lab));
       list<shared_ptr<Tree>> lt; lt.push_back(tr);
       shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first, (*i)->ex_target_index()));
       bc_.push_back(b);
@@ -104,6 +110,9 @@ BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor
     subtree_.push_back(tr);
   } else if (label_ == "energy") {
     shared_ptr<Tree> tr(new Energy(rest, lab));
+    subtree_.push_back(tr);
+  } else if (label_ == "correction") {
+    shared_ptr<Tree> tr(new Correction(rest, lab));
     subtree_.push_back(tr);
   } else if (label_ == "density") {
     shared_ptr<Tree> tr(new Density(rest, lab));
@@ -530,7 +539,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "    std::shared_ptr<Tensor<T>> d;" << endl;
     ss << "    double e0_;" << endl;
     ss << "" << endl;
-    ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
+    ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T>> queue_(new Queue<T>());" << endl;
     ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl << endl;
 
@@ -566,6 +575,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
       bool use_blas = false;
       tt << i->generate_gamma(icnt, use_blas);
 
+#define debug_gamma
 #ifdef debug_gamma
       cout << "\ndebug gamma" << endl;
       i->print();
@@ -693,10 +703,20 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
   // go through additional tree graphs
   if (depth() == 0) {
     bool found_density = false; // temporary for testing  
+    bool found_correction = false; // temporary for testing  
     for (auto& t : tree_list) {
         // energy queue here
         if (t->label()=="energy") {
           ss << "      std::shared_ptr<Queue<T>> energy_(new Queue<T>());" << endl;
+          t->num_ = icnt;
+          for (auto& j : t->bc_) {
+            pair<string, string> tmp = j->generate_task_list(); 
+            ss << tmp.first;
+            tt << tmp.second;
+          }
+        } else if (t->label()=="correction") { 
+          found_correction = true;
+          ss << "      std::shared_ptr<Queue<T>> correction_(new Queue<T>());" << endl;
           t->num_ = icnt;
           for (auto& j : t->bc_) {
             pair<string, string> tmp = j->generate_task_list(); 
@@ -821,8 +841,9 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
 
     // generate computational algorithm
     if (!found_density) ss << "      std::shared_ptr<Queue<T>> density_(new Queue<T>());" << endl; 
+    if (!found_correction) ss << "      std::shared_ptr<Queue<T>> correction_(new Queue<T>());" << endl; 
 
-    ss << "      return make_tuple(queue_, energy_, density_);" << endl;
+    ss << "      return make_tuple(queue_, energy_, density_, correction_);" << endl;
     ss << "    };" << endl;
     ss << endl;
     ss << "  public:" << endl;
@@ -841,11 +862,13 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "      this->print_iteration();" << endl;
     ss << "      int iter = 0;" << endl;
     ss << "      std::shared_ptr<Queue<T>> dens;" << endl;
+    ss << "      std::shared_ptr<Queue<T>> correct;" << endl;
     ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
-    ss << "        std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> q = make_queue_();" << endl;
+    ss << "        std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> q = make_queue_();" << endl;
     ss << "        std::shared_ptr<Queue<T>> queue = std::get<0>(q);" << endl;
     ss << "        std::shared_ptr<Queue<T>> energ = std::get<1>(q);" << endl;
     ss << "        dens = std::get<2>(q);" << endl;
+    ss << "        correct = std::get<3>(q);" << endl;
     ss << "        while (!queue->done())" << endl;
     ss << "          queue->next_compute();" << endl;
     ss << "        this->update_amplitude(t2, r);" << endl;
@@ -862,6 +885,10 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
       ss << "        dens->next_compute();" << endl;
       ss << "      d->scale(0.25);" << endl;
       ss << "      d->print2(\"density matrix\", 1.0e-5);" << endl;
+    } if (found_correction) {
+      ss << "      const double n = correction(correct);" << endl;
+      ss << "      std::cout << \" correction: \" << n << std::endl;" << endl;
+      ss << "      this->rdm1_->print2(\"rdm1\", 1.0e-5);" << endl;
     }
     ss << "    };" << endl;
     ss << "" << endl;
@@ -874,6 +901,16 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "      return en; " << endl;
     ss << "    };  " << endl;
     ss << endl;
+    // compute density matrix correction term needed for comparison to MP2 density  
+    ss << "    double correction(std::shared_ptr<Queue<T>> correct) {" << endl;
+    ss << "      double n = 0.0;" << endl;
+    ss << "      while (!correct->done()) {" << endl;
+    ss << "        std::shared_ptr<Task<T>> c = correct->next_compute();" << endl;
+    ss << "        n += c->correction() * 0.25;" << endl;  // 0.25 due to 1/2 each to bra and ket
+    ss << "      }   " << endl;
+    ss << "      return n; " << endl;
+    ss << "    };  " << endl;
+    ss << endl;  // end comparison correction
     ss << "};" << endl;
     ss << endl;
     ss << "}" << endl;

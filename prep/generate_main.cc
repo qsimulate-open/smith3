@@ -70,10 +70,10 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
 // *test single configuration cases*
 //        if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
 //        if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
-//        if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
+          if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
 //        if (l == "c" && k == "c" && j == "x" && i == "a") { // ccxa
 //        if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) { // cxxa or xcxa
-          if (l == "c" && k == "c" && j == "x" && i == "x") { // ccxx
+//        if (l == "c" && k == "c" && j == "x" && i == "x") { // ccxx
 //        if (l == "x" && k == "x" && j == "x" && i == "a") { // xxxa
 //        if (l == "x" && k == "c" && j == "x" && i == "x") { // xcxx
 // *end test single configuration cases*
@@ -140,14 +140,21 @@ int main() {
   cout << eq3->generate({eq0});
 
 #if 1
+  // generate density unlinked correction term for testing
+  shared_ptr<Equation> eq4(new Equation("ca", {dum, t_dagger, t_list}));
+  eq4->set_tree_type("correction");
+  cout << eq4->generate({eq0});
+
   // density matrix equations 
-  shared_ptr<Equation> eq4(new Equation("da", {dum, t_dagger, ex1b, t_list}));
-  shared_ptr<Equation> eq4a(new Equation("db", {dum, ex1b, t_list}, "", 2.0));
-  eq4->merge(eq4a);
-  eq4->set_tree_type("density");
-  cout << eq4->generate({});
+  shared_ptr<Equation> eq5(new Equation("da", {dum, t_dagger, ex1b, t_list}));
+  shared_ptr<Equation> eq5a(new Equation("db", {dum, ex1b, t_list}, "", 2.0));
+  eq5->merge(eq5a);
+  eq5->set_tree_type("density");
+  cout << eq5->generate({});
+
   // done. generate the footer
-  cout << footer(eq0->tree_label(), eq3->tree_label(), eq4->tree_label()) << endl;
+  cout << footer(eq0->tree_label(), eq3->tree_label(), eq4->tree_label(), eq5->tree_label()) << endl;
+
 #else
   // done. generate the footer
   cout << footer(eq0->tree_label(), eq3->tree_label()) << endl;

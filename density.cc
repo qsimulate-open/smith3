@@ -232,7 +232,9 @@ pair<string, string> Density::generate_bc(const string indent, const shared_ptr<
       // inner loop (where similar indices in dgemm tensors are summed over) will show up here
       // but only if outer loop is not empty
       list<shared_ptr<const Index>> di = (i)->loop_indices();
+#if 0 // mkm double check..seems this might not be needed?
       di.reverse();
+#endif
   
       vector<string> close2;
       if (ti.size() != 0) {
@@ -271,10 +273,7 @@ pair<string, string> Density::generate_bc(const string indent, const shared_ptr<
         } else {
           // so far I am expecting the case of density matrix contribution
           if (depth() != 1) throw logic_error("expecting density matrix contribution");
-#if 0     // mkm probably get rid of this
-          string ss0 = t1.second== "" ? "1" : t1.second;
-          tt << dindent << "energy_ += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
-#endif
+          throw logic_error("should not have ddot in density matrix");
         }
       }
 
@@ -301,7 +300,7 @@ pair<string, string> Density::generate_bc(const string indent, const shared_ptr<
       }
 
     } else { // bc depth = 0
-      // depth should only be zero here in residual tree
+      // depth should only be zero and here in residual tree
       throw logic_error("shouldn't happen in Density::generate_bc");
     }
 

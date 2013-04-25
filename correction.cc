@@ -1,6 +1,6 @@
 //
 // SMITH3 - generates spin-free multireference electron correlation programs.
-// Filename: residual.cc
+// Filename: correction.cc
 // Copyright (C) 2012 Toru Shiozaki
 //
 // Author: Toru Shiozaki <shiozaki@northwestern.edu>
@@ -24,11 +24,13 @@
 //
 
 
-#include "residual.h"
+#include "correction.h"
 #include <algorithm>
 
 using namespace std;
 using namespace smith;
+
+
 
 
 // local functions... (not a good practice...) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -52,58 +54,25 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 // local functions... (not a good practice...) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
-pair<string, string> Residual::create_target(const string indent, const int i) const {
-  stringstream ss;
-  stringstream tt;
-
-  tt << "template <typename T>" << endl;
-  tt << "class Task0 : public Task<T> {" << endl;
-  tt << "  protected:" << endl;
-  tt << "    std::shared_ptr<Tensor<T>> r_;" << endl;
-  tt << "    IndexRange closed_;" << endl;
-  tt << "    IndexRange active_;" << endl;
-  tt << "    IndexRange virt_;" << endl;
-  tt << "" << endl;
-  tt << "    void compute_() {" << endl;
-  tt << "      r_->zero();" << endl;
-  tt << "    };  " << endl;
-  tt << "" << endl;
-  tt << "  public:" << endl;
-  tt << "    Task0(std::vector<std::shared_ptr<Tensor<T>>> t) : Task<T>() {" << endl;
-  tt << "      r_ =  t[0];" << endl;
-  tt << "    };  " << endl;
-  tt << "    ~Task0() {}; " << endl;
-  tt << "};" << endl << endl;
-  
-  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor0 = {r};" << endl;
-  ss << indent << "std::shared_ptr<Task0<T>> task0(new Task0<T>(tensor0));" << endl;
-  ss << indent << "queue_->add_task(task0);" << endl << endl;
-
-  return make_pair(ss.str(), tt.str());
-}
-
-
-string Residual::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int i0) const {
+string Correction::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int i0) const {
   stringstream ss;
   ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
   ss << indent << "std::shared_ptr<Task" << ic << "<T>> task"
                << ic << "(new Task" << ic << "<T>(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
 
   if (parent_) {
-    assert(parent_->parent());
-    ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
-    ss << indent << "task" << ic << "->add_dep(task0);" << endl;
+    if (ip != ic)
+      ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
   } else {
     assert(depth() == 0);
-    ss << indent << "task" << ic << "->add_dep(task0);" << endl;
   }
-  ss << indent << "queue_->add_task(task" << ic << ");" << endl;
+  ss << indent << "correction_->add_task(task" << ic << ");" << endl;
   ss << endl;
   return ss.str();
 }
 
 
-string Residual::generate_compute_header(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors, const bool no_outside) const {
+string Correction::generate_compute_header(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors, const bool no_outside) const {
   const int ninptensors = tensors.size()-1;
 
   bool need_e0 = false;
@@ -113,7 +82,7 @@ string Residual::generate_compute_header(const int ic, const list<shared_ptr<con
   const int nindex = ti.size();
   stringstream tt;
   tt << "template <typename T>" << endl;
-  tt << "class Task" << ic << " : public Task<T> {" << endl;
+  tt << "class Task" << ic << " : public CorrectionTask<T> {" << endl;
   tt << "  protected:" << endl;
   // if index is empty give dummy arg
   tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << ",T> {" << endl;
@@ -123,10 +92,8 @@ string Residual::generate_compute_header(const int ic, const list<shared_ptr<con
   tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
   tt << "        const std::shared_ptr<const Tensor<T>>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
   tt << "        const std::shared_ptr<Tensor<T>>& out() const { return this->out_tensor(); }" << endl;
-  if (need_e0)
-    tt << "        const double e0_;" << endl;
+  tt << "        double correction_;" << endl;
   tt << endl;
-
   tt << "      public:" << endl;
   // if index is empty use dummy index 1 to subtask
   if (ti.empty()) {
@@ -139,7 +106,10 @@ string Residual::generate_compute_header(const int ic, const list<shared_ptr<con
     tt << "          : SubTask<" << nindex << "," << ninptensors << ",T>(block, in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
   }
   tt << endl;
+  tt << "        double correction() const { return correction_; }" << endl;
+  tt << endl;
   tt << "        void compute() override {" << endl;
+  tt << "          correction_ = 0.0;" << endl; 
 
   if (!no_outside) {
     list<shared_ptr<const Index>> ti_copy = ti;
@@ -158,7 +128,7 @@ string Residual::generate_compute_header(const int ic, const list<shared_ptr<con
 }
 
 
-string Residual::generate_compute_footer(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors) const {
+string Correction::generate_compute_footer(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors) const {
   const int ninptensors = tensors.size()-1;
   assert(ninptensors > 0);
   bool need_e0 = false;
@@ -173,11 +143,15 @@ string Residual::generate_compute_footer(const int ic, const list<shared_ptr<con
   tt << "" << endl;
 
   tt << "    void compute_() override {" << endl;
-  tt << "      for (auto& i : subtasks_) i->compute();" << endl;
+  tt << "      this->correction_ = 0.0;" << endl;
+  tt << "      for (auto& i : subtasks_) {" << endl;
+  tt << "        i->compute();" << endl;
+  tt << "        this->correction_ += i->correction();" << endl;
+  tt << "      }" << endl;
   tt << "    }" << endl << endl; 
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t,  std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", const double e" : "") << ") : Task<T>() {" << endl;
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t, std::array<std::shared_ptr<const IndexRange>,3> range) : CorrectionTask<T>() {" << endl;
   tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
   for (auto i = 1; i < ninptensors + 1; ++i)
     tt << "t[" << i << "]" << (i < ninptensors ? ", " : "");
@@ -215,15 +189,19 @@ string Residual::generate_compute_footer(const int ic, const list<shared_ptr<con
 }
 
 
-pair<string, string> Residual::generate_bc(const string indent, const shared_ptr<BinaryContraction> i) const {
+pair<string, string> Correction::generate_bc(const string indent, const shared_ptr<BinaryContraction> i) const {
   stringstream ss;
   stringstream tt;
+  
+
   if (depth() != 0) {
     const string bindent = indent + "    ";
     string dindent = bindent; 
-
-    tt << target_->generate_get_block(dindent, "o", "out()", true);
-    tt << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
+    // skip if correction tree depth is 1
+    if (depth() != 1) {
+      tt << target_->generate_get_block(dindent, "o", "out()", true);
+      tt << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
+    }
 
     list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
 
@@ -265,7 +243,9 @@ pair<string, string> Residual::generate_bc(const string indent, const shared_ptr
            << dindent << "       1.0, odata_sorted, " << tt0;
         tt << ");" << endl;
       } else {
-        if (depth() != 1) throw logic_error("should not happen in residual case");
+        if (depth() != 1) throw logic_error("Not expecting this in depth() != 1 see Correction::generate_bc");
+        string ss0 = t1.second== "" ? "1" : t1.second;
+        tt << dindent << "correction_ += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
       }
     }
 
@@ -276,38 +256,34 @@ pair<string, string> Residual::generate_bc(const string indent, const shared_ptr
     }
     // Inner loop ends here
 
-    // sort buffer
-    {
-      tt << (i)->target()->generate_sort_indices_target(bindent, "o", di, (i)->tensor(), (i)->next_target());
-    }
-    // put buffer
-    {
-      string label = target_->label();
-      // new interface requires indices for put_block
-      tt << bindent << "out()->put_block(odata";
-      list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
-      for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
-        tt << ", " << (*i)->str_gen();
-      tt << ");" << endl;
-    }
-  } else {  // now at bc depth 0 
-      // making residual vector...
-      list<shared_ptr<const Index>> proj = (i)->ex_target_index();
-      list<shared_ptr<const Index>> res;
-      assert(!(proj.size() & 1));
-      for (auto ii = proj.begin(); ii != proj.end(); ++ii, ++ii) {
-        auto j = ii; ++j;
-        res.push_back(*j);
-        res.push_back(*ii);
+    // skip if correction tree depth is 1
+    if (depth() != 1) {
+      // sort buffer
+      {
+        tt << (i)->target()->generate_sort_indices_target(bindent, "o", di, (i)->tensor(), (i)->next_target());
       }
-      shared_ptr<Tensor> residual(new Tensor(1.0, "r", res));
-      vector<shared_ptr<Tensor>> op2 = { (i)->next_target() };
-      tt << generate_compute_operators(indent, residual, op2, (i)->dagger());
+      // put buffer
+      {
+        string label = target_->label();
+        // new interface requires indices for put_block
+        tt << bindent << "out()->put_block(odata";
+        list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
+        for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
+          tt << ", " << (*i)->str_gen();
+        tt << ");" << endl;
+      }
+    }
+  } else {
+    // depth should not equal 0 in correction tree
+    throw logic_error("shouldn't happen in Correction::generate_bc");
   }
 
 
   return make_pair(ss.str(), tt.str());
 }
+
+
+
 
 
 

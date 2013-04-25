@@ -520,11 +520,11 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
   }    
   
 #ifdef debug_tasks // debug purposes
-   tt << "//   std::shared_ptr<Tensor<T> > " << label() << ";" << endl;
+   tt << indent <<  "// std::shared_ptr<Tensor<T> > " << label() << ";" << endl;
    for (auto& i: rdmn)
-     tt << "//   std::shared_ptr<Tensor<T> > rdm" << i << ";" << endl;
+     tt << indent << "// std::shared_ptr<Tensor<T> > rdm" << i << ";" << endl;
    if (merged_)
-     tt << "//   std::shared_ptr<Tensor<T> > " << merged_->label() << ";" << endl;
+     tt << indent <<  "// std::shared_ptr<Tensor<T> > " << merged_->label() << ";" << endl;
    tt << endl;
 #endif
   

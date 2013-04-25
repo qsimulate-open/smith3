@@ -47,6 +47,7 @@ static std::string header() {
   mm << "#include \"residual.h\"" << std::endl;
   mm << "#include \"energy.h\"" << std::endl;
   mm << "#include \"density.h\"" << std::endl;
+  mm << "#include \"correction.h\"" << std::endl;
   mm << "" << std::endl;
   mm << "using namespace std;" << std::endl;
   mm << "using namespace smith;" << std::endl;
@@ -101,6 +102,37 @@ static std::string footer(const std::string res, const std::string energy, const
   mm << "  " << res << "->print();" << std::endl;
   mm << "  cout << std::endl << \"   ***  Energy  ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << energy << "->print();" << std::endl;
+  mm << "  cout << std::endl << \"   ***  Density Matrix  ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  " << density << "->print();" << std::endl;
+  mm << "  cout << std::endl << std::endl;" << std::endl;
+  mm << "" <<  std::endl; 
+  mm << "  return 0;" << std::endl;
+  mm << "}" << std::endl;
+  return mm.str();
+};
+
+static std::string footer(const std::string res, const std::string energy, const std::string correction, const std::string density) {
+  std::stringstream mm;
+  mm << "" <<  std::endl; 
+  mm << "  ofstream fs(" << res << "->tree_name() + \".h\");" << std::endl;
+  mm << "  ofstream es(" << res << "->tree_name() + \"_tasks.h\");" << std::endl;
+
+  mm << "  list<shared_ptr<Tree>> " << density << "_list = {" << energy << ", " << correction << ", " << density << "};" << std::endl;
+  mm << "  pair<string, string> tmp = " << res << "->generate_task_list(" << density << "_list" << ");" << std::endl;
+
+  mm << "  fs << tmp.first;" << std::endl;
+  mm << "  es << tmp.second;" << std::endl;
+  mm << "  fs.close();" << std::endl;
+  mm << "  es.close();" << std::endl;
+  mm << "  cout << std::endl;" << std::endl;
+  mm << "" <<  std::endl; 
+  mm << "  // output" << std::endl;
+  mm << "  cout << std::endl << \"   ***  Residual  ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  " << res << "->print();" << std::endl;
+  mm << "  cout << std::endl << \"   ***  Energy  ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  " << energy << "->print();" << std::endl;
+  mm << "  cout << std::endl << \"   ***  Correction  ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  " << correction << "->print();" << std::endl;
   mm << "  cout << std::endl << \"   ***  Density Matrix  ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << density << "->print();" << std::endl;
   mm << "  cout << std::endl << std::endl;" << std::endl;

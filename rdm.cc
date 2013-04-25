@@ -70,8 +70,8 @@ string RDM::generate_not_merged(string indent, const string tag, const list<shar
 
   // in case delta_ is not empty
   if (!delta_.empty()) {
-  
-#if 1
+#define debug_rdm_tasks  
+#ifdef debug_rdm_tasks
     if (rank() == 0) tt << indent <<  "// rdm0 non-merged case" << endl;
 #endif
 
