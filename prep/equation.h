@@ -15,14 +15,15 @@ class Equation {
   protected:
     std::list<std::shared_ptr<Diagram>> diagram_;
     std::string label_;
+    double fac_;
     std::string tree_type_;
 
   public:
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::string scalar = "") : label_(l), tree_type_("") {
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::string scalar = "", const double d = 1.0) : label_(l), fac_(d), tree_type_("") {
       std::list<int> max;
       for (auto& i : in) max.push_back(i.size());
 
-      std::list<std::list<std::shared_ptr<Tensor>> > out;
+      std::list<std::list<std::shared_ptr<Tensor>>> out;
       std::list<int> current(in.size(), 0);
       std::list<int> start = current;
       do {
@@ -47,7 +48,11 @@ class Equation {
       int cnt = 0;
       for (auto& i : out) {
         std::stringstream ss; ss << label_ << cnt; 
-        diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), scalar)));
+        if (d == 1.0) {
+          diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), scalar)));
+        } else {
+          diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), d)));
+        }
         ++cnt;
       }
 
@@ -74,10 +79,21 @@ class Equation {
       ss << "  " << diagram_.front()->eqn_label() << "->duplicates();" << std::endl;
       ss << "  " << diagram_.front()->eqn_label() << "->active();" << std::endl;
 
+#if 1 // prune equations for testing
+      if (!tree_type_.empty() && tree_type_ == "density") {
+        //ss << "  " << "list<string> terms = {\"c\"};" << std::endl;
+        //ss << "  " << "list<string> terms = {\"c\", \"a\"};" << std::endl;
+        ss << "  " << "list<string> terms = {\"c\", \"x\"};" << std::endl;
+        ss << "  " <<  diagram_.front()->eqn_label() << "->term_select(terms);" << std::endl;
+      }
+#endif
+
       if (!tree_type_.empty() && tree_type_ == "residual") {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Residual(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else if (!tree_type_.empty() && tree_type_ == "energy") {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Energy(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
+      } else if (!tree_type_.empty() && tree_type_ == "density") {
+          ss << "  shared_ptr<Tree> " << tree_label() << "(new Density(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else {
           throw std::logic_error("prep/equation.cc error, tree must be of derived type");
           // ss << "  shared_ptr<Tree> " << tree_label() << "(new Tree(e" << diagram_.front()->label() << "));" << std::endl;
@@ -89,6 +105,7 @@ class Equation {
         for (auto i = o.begin(); i != o.end(); ++i)
           ss << "  " << tree_label() << "->sort_gamma(" << (*i)->tree_label() << "->gamma());" << std::endl;
       }
+      ss << std::endl;
       return ss.str();
     };
 

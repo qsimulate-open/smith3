@@ -47,7 +47,7 @@ string theory = "CAS_test";
 
 using namespace SMITH3::Prep;
 
-tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>> > create_proj() {
+tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>> create_proj() {
   vector<shared_ptr<Tensor>> lp, lt, ls, td;
   array<string, 3> label = {{"c", "x", "a"}};
 
@@ -68,13 +68,12 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
               (l == "x" && k == "c" && j == "x" && i == "x")) {
 #else   // turn on one of the following lines
 // *test single configuration cases*
-          if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
-//        if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a")) { // temp testing: ccaa or xcaa 
+//        if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
 //        if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
 //        if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
 //        if (l == "c" && k == "c" && j == "x" && i == "a") { // ccxa
 //        if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) { // cxxa or xcxa
-//        if (l == "c" && k == "c" && j == "x" && i == "x") { // ccxx
+          if (l == "c" && k == "c" && j == "x" && i == "x") { // ccxx
 //        if (l == "x" && k == "x" && j == "x" && i == "a") { // xxxa
 //        if (l == "x" && k == "c" && j == "x" && i == "x") { // xcxx
 // *end test single configuration cases*
@@ -107,8 +106,10 @@ int main() {
   vector<shared_ptr<Tensor>> hc  = {shared_ptr<Tensor>(new Tensor("h1", "", {"g", "g"}))};
   vector<shared_ptr<Tensor>> H   = {shared_ptr<Tensor>(new Tensor("v2", "", {"g", "g", "g", "g"}))};
   vector<shared_ptr<Tensor>> dum = {shared_ptr<Tensor>(new Tensor("proj", "e", {}))};
+  vector<shared_ptr<Tensor>> ex1b = {shared_ptr<Tensor>(new Tensor("1b", {"g", "g"}))};
   
   cout << "  string theory=\"" << theory << "\"; " << endl;
+  cout << endl;
   
   for (auto& i : proj_list) cout << i->generate();
   for (auto& i : t_list)    cout << i->generate();
@@ -118,12 +119,13 @@ int main() {
   for (auto& i : hc)        cout << i->generate();
   for (auto& i : dum)       cout << i->generate();
   for (auto& i : t_dagger)  cout << i->generate();
+  for (auto& i : ex1b)      cout << i->generate();
   
   // residual equations
-  shared_ptr<Equation> eq0(new Equation("da", {dum, proj_list, f, t_list}));
-  shared_ptr<Equation> eq1(new Equation("db", {dum, proj_list, t_list}, "e0"));
-  shared_ptr<Equation> eq2(new Equation("dc", {dum, proj_list, H}));
-  shared_ptr<Equation> eq2a(new Equation("dd", {dum, proj_list, hc}));
+  shared_ptr<Equation> eq0(new Equation("ra", {dum, proj_list, f, t_list}));
+  shared_ptr<Equation> eq1(new Equation("rb", {dum, proj_list, t_list}, "e0"));
+  shared_ptr<Equation> eq2(new Equation("rc", {dum, proj_list, H}));
+  shared_ptr<Equation> eq2a(new Equation("rd", {dum, proj_list, hc}));
   eq0->merge(eq1);
   eq0->merge(eq2);
   eq0->merge(eq2a);
@@ -136,9 +138,20 @@ int main() {
   eq3->merge(eq3a);
   eq3->set_tree_type("energy");
   cout << eq3->generate({eq0});
- 
-  // done generate the footer
+
+#if 1
+  // density matrix equations 
+  shared_ptr<Equation> eq4(new Equation("da", {dum, t_dagger, ex1b, t_list}));
+  shared_ptr<Equation> eq4a(new Equation("db", {dum, ex1b, t_list}, "", 2.0));
+  eq4->merge(eq4a);
+  eq4->set_tree_type("density");
+  cout << eq4->generate({});
+  // done. generate the footer
+  cout << footer(eq0->tree_label(), eq3->tree_label(), eq4->tree_label()) << endl;
+#else
+  // done. generate the footer
   cout << footer(eq0->tree_label(), eq3->tree_label()) << endl;
+#endif
 
   return 0;
 }

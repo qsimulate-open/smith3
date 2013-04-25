@@ -717,7 +717,6 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
           tt << dtmp.second;
           ++icnt;
 
-
           // process the active space ie gamma..
           for (auto& g : t->gamma_) {
 #ifdef debug_gamma
@@ -760,9 +759,13 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
               }
               ss << t->generate_task(indent, t->num_, source_tensors, i0);
 
+              // these need to be reversed for this case
+              list<shared_ptr<const Index>> proj = j->ex_target_index();
+              proj.reverse();
+
               // write out headers
               {
-                list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : j->ex_target_index();
+                list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
                 // if outer loop is empty, send inner loop indices to header
                 if (ti.size() == 0) {
                   assert(depth() != 0); 
@@ -773,7 +776,6 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
                 }
               }
 
-              list<shared_ptr<const Index>> proj = j->ex_target_index();
               list<shared_ptr<const Index>> dm;
               assert(!(proj.size() & 1));
               for (auto ii = proj.begin(); ii != proj.end(); ++ii, ++ii) {
@@ -787,7 +789,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
 
               {
                 // send outer loop indices if outer loop indices exist, otherwise send inner indices
-                list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : j->ex_target_index();
+                list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
                 if (depth() == 0)
                   for (auto m = ti.begin(), n = ++ti.begin(); m != ti.end(); ++m, ++m, ++n, ++n)
                     swap(*m, *n);

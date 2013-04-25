@@ -235,46 +235,50 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
   if (!op) ss << generate_scratch_area(cindent, lab, tensor_lab, false);
 
   vector<int> map(index_.size());
-  ss << cindent << "sort_indices<";
   // determine mapping
   // first loop indices. order as in loop
   vector<int> done;
-  for (auto i = loop.rbegin(); i != loop.rend(); ++i) {
-    // count
-    int cnt = 0;
-    for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
-      if ((*i)->identical(*j)) break;
-    }
-    if (cnt == index_.size()) {
-      throw logic_error("should not happen.. Tensor::generate_sort_indices");
-    }
-    done.push_back(cnt);
-  }
-  // then fill out others
-  for (int i = 0; i != index_.size(); ++i) {
-    if (find(done.begin(), done.end(), i) == done.end())
-      done.push_back(i);
-  }
+
   // if trans, transpose here!
   size_t found = label_.find("dagger");
   const bool trans = found != string::npos;
   if (trans && index_.size() & 1) throw logic_error("transposition not possible with 3-index objects");
   if (trans) {
-    vector<int> tmp;
-#if 0
-    for (int i = 0; i != done.size(); i += 2) {
-      tmp.push_back(done[i+1]);
-      tmp.push_back(done[i]);
+    for (auto i = loop.rbegin(); i != loop.rend(); ++i) {
+      int cnt = 0;
+      for (auto j = index_.begin(); j != index_.end(); ++j, ++cnt) {
+        if ((*i)->identical(*j)) break;
+      }
+      if (cnt == index_.size()) {
+        throw logic_error("should not happen..trans Tensor::generate_sort_indices");
+      }
+      done.push_back(cnt);
     }
-#else
-    // transposition..
-    for (auto i = done.rbegin(); i != done.rend(); ++i)
-      tmp.push_back(*i);
-#endif
-    done = tmp;
+    // then fill out others
+    for (int i = 0; i != index_.size(); ++i) {
+      if (find(done.begin(), done.end(), i) == done.end())
+        done.push_back(i);
+    }
+  } else {
+    for (auto i = loop.rbegin(); i != loop.rend(); ++i) {
+      int cnt = 0;
+      for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
+        if ((*i)->identical(*j)) break;
+      }
+      if (cnt == index_.size()) {
+        throw logic_error("should not happen.. Tensor::generate_sort_indices");
+      }
+      done.push_back(cnt);
+    }
+    // then fill out others
+    for (int i = 0; i != index_.size(); ++i) {
+      if (find(done.begin(), done.end(), i) == done.end())
+        done.push_back(i);
+    }
   }
 
   // then write them out.
+  ss << cindent << "sort_indices<";
   for (auto i = done.begin(); i != done.end(); ++i)
     ss << *i << ",";
 

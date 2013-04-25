@@ -134,9 +134,9 @@ class Tensor {
     std::string generate_get_block(const std::string, const std::string, const std::string, const bool move = false, const bool noscale = false) const;
     /// Generate code for unique_ptr scratch arrays.
     std::string generate_scratch_area(const std::string, const std::string, const std::string tensor_lab, const bool zero = false) const;
-    /// Generate code for sort_indices.
+    /// Generate code for sort_indices. Based on operations needed to sort input tensor to output tensor. 
     std::string generate_sort_indices(const std::string, const std::string, const std::string, const std::list<std::shared_ptr<const Index>>&, const bool op = false) const;
-    /// Generate code for final sort_indices back to target (tensor specified with move block).
+    /// Generate code for final sort_indices back to target indices (those not summed over).
     std::string generate_sort_indices_target(const std::string, const std::string, const std::list<std::shared_ptr<const Index>>&,
                                              const std::shared_ptr<Tensor>, const std::shared_ptr<Tensor>) const;
     /// Obtain dimensions for code for tensor multiplication in dgemm.
