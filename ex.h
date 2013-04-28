@@ -1,9 +1,9 @@
 //
 // SMITH3 - generates spin-free multireference electron correlation programs.
 // Filename: ex.h
-// Copyright (C) 2012 Toru Shiozaki
+// Copyright (C) 2013 Matthew MacLeod
 //
-// Author: Toru Shiozaki <shiozaki@northwestern.edu>
+// Author: Matthew MacLeod <matthew.macleod@northwestern.edu>
 // Maintainer: Shiozaki group
 //
 // This file is part of the SMITH3 package.
