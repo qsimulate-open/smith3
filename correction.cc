@@ -93,6 +93,7 @@ string Correction::generate_compute_header(const int ic, const list<shared_ptr<c
   tt << "        const std::shared_ptr<const Tensor<T>>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
   tt << "        const std::shared_ptr<Tensor<T>>& out() const { return this->out_tensor(); }" << endl;
   tt << "        double correction_;" << endl;
+  if (need_e0) tt << "        double e0_;" << endl;
   tt << endl;
   tt << "      public:" << endl;
   // if index is empty use dummy index 1 to subtask
@@ -151,7 +152,7 @@ string Correction::generate_compute_footer(const int ic, const list<shared_ptr<c
   tt << "    }" << endl << endl; 
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t, std::array<std::shared_ptr<const IndexRange>,3> range) : CorrectionTask<T>() {" << endl;
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t, std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", const double e" : "") << ") : CorrectionTask<T>() {" << endl;
   tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
   for (auto i = 1; i < ninptensors + 1; ++i)
     tt << "t[" << i << "]" << (i < ninptensors ? ", " : "");

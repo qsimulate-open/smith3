@@ -60,6 +60,8 @@ class Diagram {
     Diagram(std::list<std::shared_ptr<Operator>> op, std::string s) : op_(op), fac_(1.0), scalar_(s), dagger_(false) { };
     /// Construct diagram from operator list and prefactor. Set dagger information.
     Diagram(std::list<std::shared_ptr<Operator>> op, double d) : op_(op), fac_(d), dagger_(false) { };
+    /// Construct diagram from operator list and prefactor and scalar. Set dagger information.
+    Diagram(std::list<std::shared_ptr<Operator>> op, double d, std::string s) : op_(op), fac_(d), scalar_(s), dagger_(false) { };
     /// Construct diagram with prefactor and dagger information.
     Diagram() : fac_(1.0), dagger_(false) { };
     // copy constructor is complicated but preserves the same topology as this.

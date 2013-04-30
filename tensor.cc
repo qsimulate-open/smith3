@@ -462,6 +462,7 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
   // TODO split generate_gamma function up to header/body/footer once working (too large now)
   assert(label_.find("Gamma") != string::npos);
   stringstream tt;
+
   
   // determine number of task loops to be separeted, if merged combine
   int nindex;

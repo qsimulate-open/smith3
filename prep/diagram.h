@@ -11,12 +11,12 @@ class Diagram {
   protected:
     std::list<std::shared_ptr<Tensor>> op_;
     std::string label_;
-    std::string scalar_;
     double fac_;
+    std::string scalar_;
 
   public:
-    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, std::string s) : op_(o), label_(la), scalar_(s), fac_(1.0) {}; 
-    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d) : op_(o), label_(la), fac_(d) {}; 
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, std::string s) : op_(o), label_(la), fac_(1.0), scalar_(s) {}; 
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d, std::string s) : op_(o), label_(la), fac_(d), scalar_(s) {}; 
 
     const std::list<std::shared_ptr<Tensor>>& op() const { return op_; }; 
     std::string label() const { return label_; };
@@ -45,8 +45,7 @@ class Diagram {
       if (fac_ == 1.0) {
         ss << "  shared_ptr<Diagram> " << diag_label() << "(new Diagram(" << label() << (scalar().empty() ? "" : ", \""+scalar()+"\"") << "));" << std::endl;
       } else {
-        assert(scalar().empty());
-        ss << "  shared_ptr<Diagram> " << diag_label() << "(new Diagram(" << label() << ", " << fac_ << "));" << std::endl;
+        ss << "  shared_ptr<Diagram> " << diag_label() << "(new Diagram(" << label() << ", " << fac_ << (scalar().empty() ? "" : ", \""+scalar()+"\"") << "));" << std::endl;
       }
       return ss.str();
     };

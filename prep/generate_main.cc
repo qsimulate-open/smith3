@@ -123,7 +123,7 @@ int main() {
   
   // residual equations
   shared_ptr<Equation> eq0(new Equation("ra", {dum, proj_list, f, t_list}));
-  shared_ptr<Equation> eq1(new Equation("rb", {dum, proj_list, t_list}, "e0"));
+  shared_ptr<Equation> eq1(new Equation("rb", {dum, proj_list, t_list}, 1.0, "e0"));
   shared_ptr<Equation> eq2(new Equation("rc", {dum, proj_list, H}));
   shared_ptr<Equation> eq2a(new Equation("rd", {dum, proj_list, hc}));
   eq0->merge(eq1);
@@ -139,25 +139,27 @@ int main() {
   eq3->set_tree_type("energy");
   cout << eq3->generate({eq0});
 
-#if 1
-  // generate density unlinked correction term for testing
-  shared_ptr<Equation> eq4(new Equation("ca", {dum, t_dagger, t_list}));
+#if 1  // density matrix testing ground
+
+  // generate unlinked correction term to density matrix for testing 
+  shared_ptr<Equation> eq4(new Equation("ca", {dum, t_dagger, t_list}, 1.0));
   eq4->set_tree_type("correction");
+
   cout << eq4->generate({eq0});
 
-  // density matrix equations 
-  shared_ptr<Equation> eq5(new Equation("da", {dum, t_dagger, ex1b, t_list}));
-  shared_ptr<Equation> eq5a(new Equation("db", {dum, ex1b, t_list}, "", 2.0));
+  // density matrix equations
+  shared_ptr<Equation> eq5(new Equation("da", {dum, t_dagger, ex1b, t_list}, 1.0));
+  shared_ptr<Equation> eq5a(new Equation("db", {dum, ex1b, t_list}, 2.0));
   eq5->merge(eq5a);
   eq5->set_tree_type("density");
   cout << eq5->generate({});
-
   // done. generate the footer
   cout << footer(eq0->tree_label(), eq3->tree_label(), eq4->tree_label(), eq5->tree_label()) << endl;
 
 #else
   // done. generate the footer
   cout << footer(eq0->tree_label(), eq3->tree_label()) << endl;
+
 #endif
 
   return 0;

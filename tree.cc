@@ -861,14 +861,9 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "    void solve() {" << endl;
     ss << "      this->print_iteration();" << endl;
     ss << "      int iter = 0;" << endl;
-    ss << "      std::shared_ptr<Queue<T>> dens;" << endl;
-    ss << "      std::shared_ptr<Queue<T>> correct;" << endl;
+    ss << "      std::shared_ptr<Queue<T>> queue, energ, dens, correct;" << endl;
     ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
-    ss << "        std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> q = make_queue_();" << endl;
-    ss << "        std::shared_ptr<Queue<T>> queue = std::get<0>(q);" << endl;
-    ss << "        std::shared_ptr<Queue<T>> energ = std::get<1>(q);" << endl;
-    ss << "        dens = std::get<2>(q);" << endl;
-    ss << "        correct = std::get<3>(q);" << endl;
+    ss << "        std::tie(queue, energ, dens, correct) = make_queue_();" << endl;
     ss << "        while (!queue->done())" << endl;
     ss << "          queue->next_compute();" << endl;
     ss << "        this->update_amplitude(t2, r);" << endl;
@@ -887,7 +882,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
       ss << "      d->print2(\"density matrix\", 1.0e-5);" << endl;
     } if (found_correction) {
       ss << "      const double n = correction(correct);" << endl;
-      ss << "      std::cout << \" correction: \" << n << std::endl;" << endl;
+      ss << "      std::cout << \" correction: \" << std::setprecision(10) << n << std::endl;" << endl;
       ss << "      this->rdm1_->print2(\"rdm1\", 1.0e-5);" << endl;
     }
     ss << "    };" << endl;

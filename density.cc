@@ -124,6 +124,7 @@ string Density::generate_compute_header(const int ic, const list<shared_ptr<cons
   tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
   tt << "        const std::shared_ptr<const Tensor<T>>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
   tt << "        const std::shared_ptr<Tensor<T>>& out() const { return this->out_tensor(); }" << endl;
+  if (need_e0) tt << endl << "        double e0_;" << endl;
   tt << endl;
   tt << "      public:" << endl;
   // if index is empty use dummy index 1 to subtask
@@ -178,7 +179,7 @@ string Density::generate_compute_footer(const int ic, const list<shared_ptr<cons
   tt << "    }" << endl << endl; 
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t, std::array<std::shared_ptr<const IndexRange>,3> range) : DensityTask<T>() {" << endl;
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t, std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", double e" : "" ) <<  ") : DensityTask<T>() {" << endl;
   tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
   for (auto i = 1; i < ninptensors + 1; ++i)
     tt << "t[" << i << "]" << (i < ninptensors ? ", " : "");
@@ -232,9 +233,6 @@ pair<string, string> Density::generate_bc(const string indent, const shared_ptr<
       // inner loop (where similar indices in dgemm tensors are summed over) will show up here
       // but only if outer loop is not empty
       list<shared_ptr<const Index>> di = (i)->loop_indices();
-#if 0 // mkm double check..seems this might not be needed?
-      di.reverse();
-#endif
   
       vector<string> close2;
       if (ti.size() != 0) {

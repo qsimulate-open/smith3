@@ -103,8 +103,6 @@ int main() {
   eda0->merge(edb0);
   eda0->duplicates();
   eda0->active();
-  list<string> terms = {"c", "x"};
-  eda0->term_select(terms);
   shared_ptr<Tree> tda(new Density(eda0, "density"));
   tda->sort_gamma();
 
