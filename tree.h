@@ -203,10 +203,10 @@ class Tree {
       for (auto i = bc_.begin(); i != bc_.end(); ++i) (*i)->set_target(o);
     };
 
-    /// Function runs gather_gamma and find_gamma, called from top level (main.cc).
-    void sort_gamma(std::list<std::shared_ptr<Tensor>> o = std::list<std::shared_ptr<Tensor>>());
+    /// Function runs gather_gamma and find_gamma, called from top level (main.cc). If reuse_gamma is set to false, unique gamma tasks will not be reused (may be useful for debugging).
+    void sort_gamma(std::list<std::shared_ptr<Tensor>> o = std::list<std::shared_ptr<Tensor>>(), bool reuse_gamma = true);
     /// Updates gamma_ with a list of unique Gamma tensors.
-    void find_gamma(std::shared_ptr<Tensor> o);
+    void find_gamma(std::shared_ptr<Tensor> o, bool reuse_gamma = true);
     /// Recursive function to collect all Gamma tensors in graph.
     std::list<std::shared_ptr<Tensor>> gather_gamma() const;
     /// Returns gamma_, list of unique Gamma tensors.
