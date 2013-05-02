@@ -227,25 +227,23 @@ shared_ptr<Tensor> BinaryContraction::next_target() {
 }
 
 
-void Tree::sort_gamma(std::list<std::shared_ptr<Tensor>> o, bool reuse_gamma) {
+void Tree::sort_gamma(std::list<std::shared_ptr<Tensor>> o) {
   gamma_ = o;
 
   list<shared_ptr<Tensor>> g = gather_gamma();
-  for (auto& i : g) find_gamma(i, reuse_gamma);
+  for (auto& i : g) find_gamma(i);
 }
 
 
-void Tree::find_gamma(shared_ptr<Tensor> o, bool reuse_gamma) {
+void Tree::find_gamma(shared_ptr<Tensor> o) {
   bool found = false;
-  if (reuse_gamma) {
-    for (auto& i : gamma_) {
-      if ((*i) == (*o)) {
-        found = true;
-        o->set_alias(i);
-        break;
-      }
+  for (auto& i : gamma_) {
+    if ((*i) == (*o)) {
+      found = true;
+      o->set_alias(i);
+      break;
     }
-  } 
+  }
   if (!found) gamma_.push_back(o);
 }
 
