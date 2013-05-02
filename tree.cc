@@ -527,7 +527,6 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "  protected:" << endl;
     ss << "    std::shared_ptr<Tensor<T>> t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> r;" << endl;
-    ss << "    std::shared_ptr<Tensor<T>> d;" << endl;
     ss << "    double e0_;" << endl;
     ss << "" << endl;
     ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
@@ -783,7 +782,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
                 dm.push_back(*k);
                 dm.push_back(*ii);
               }
-              shared_ptr<Tensor> density(new Tensor(1.0, "d", dm));
+              shared_ptr<Tensor> density(new Tensor(1.0, "den1_", dm));
               vector<shared_ptr<Tensor>> op2 = { j->next_target() };
               tt << generate_compute_operators(indent, density, op2, j->dagger());
 
@@ -833,19 +832,16 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
     ss << "      t2->scale(2.0);" << endl;
     ss << "      r = t2->clone();" << endl;
-    ss << "      d = this->h1_->clone();" << endl;
+    ss << "      this->den1_ = this->h1_->clone();" << endl;
     ss << "    };" << endl;
     ss << "    ~" << tree_name_ << "() {}; " << endl;
     ss << "" << endl;
     ss << "    void solve() {" << endl;
     ss << "      this->print_iteration();" << endl;
     ss << "      int iter = 0;" << endl;
-    ss << "      std::shared_ptr<Queue<T>> dens;" << endl;
+    ss << "      std::shared_ptr<Queue<T>> queue, energ, dens;" << endl;
     ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
-    ss << "        std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> q = make_queue_();" << endl;
-    ss << "        std::shared_ptr<Queue<T>> queue = std::get<0>(q);" << endl;
-    ss << "        std::shared_ptr<Queue<T>> energ = std::get<1>(q);" << endl;
-    ss << "        dens = std::get<2>(q);" << endl;
+    ss << "        std::tie(queue, energ, dens) = make_queue_();" << endl;
     ss << "        while (!queue->done())" << endl;
     ss << "          queue->next_compute();" << endl;
     ss << "        this->update_amplitude(t2, r);" << endl;
@@ -860,8 +856,8 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
       ss << "      std::cout << \" === Unrelaxed density matrix ===\" << std::endl; " << endl;
       ss << "      while (!dens->done())" << endl;
       ss << "        dens->next_compute();" << endl;
-      ss << "      d->scale(0.25);" << endl;
-      ss << "      d->print2(\"density matrix\", 1.0e-5);" << endl;
+      ss << "      this->den1_->scale(0.25);" << endl;
+      ss << "      this->den1_->print2(\"density matrix\", 1.0e-5);" << endl;
     }
     ss << "    };" << endl;
     ss << "" << endl;

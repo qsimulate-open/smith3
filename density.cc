@@ -46,7 +46,7 @@ static string merge__(vector<string> array) {
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
     if (label == "f1" || label == "v2" || label == "h1") label = "this->" + label + "_";
-    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? "d" : label);
+    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? "this->den1_" : label);
   }
   return ss.str();
 }
@@ -77,7 +77,7 @@ pair<string, string> Density::create_target(const string indent, const int i) co
   tt << "};" << endl << endl;
 
   ss << "      std::shared_ptr<Queue<T>> density_(new Queue<T>());" << endl;
-  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << i << " = {d};" << endl;
+  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << i << " = {this->den1_};" << endl;
   ss << indent << "std::shared_ptr<Task" << i << "<T>> task" << i << "(new Task" << i << "<T>(tensor" << i << "));" << endl;
   ss << indent << "density_->add_task(task" << i << ");" << endl << endl;
 

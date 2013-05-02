@@ -44,14 +44,14 @@ int main() {
 
   string theory="CAS_test"; 
 
-  shared_ptr<Operator> ex_0(new Ex("c", "c", "x", "x"));
-  shared_ptr<Operator> t20(new Op("t2", "x", "x", "c", "c"));
-  shared_ptr<Operator> r0(new Op("r", "x", "x", "c", "c"));
+  shared_ptr<Operator> ex_0(new Ex("c", "c", "a", "a"));
+  shared_ptr<Operator> t20(new Op("t2", "a", "a", "c", "c"));
+  shared_ptr<Operator> r0(new Op("r", "a", "a", "c", "c"));
   shared_ptr<Operator> f1(new Op("f1", "g", "g"));
   shared_ptr<Operator> v2(new Op("v2", "g", "g", "g", "g"));
   shared_ptr<Operator> h1(new Op("h1", "g", "g"));
   shared_ptr<Operator> proje(new Op("proj"));
-  shared_ptr<Operator> t2dagger0(new Op("t2dagger", "c", "c", "x", "x"));
+  shared_ptr<Operator> t2dagger0(new Op("t2dagger", "c", "c", "a", "a"));
   shared_ptr<Operator> ex_1b(new Ex("g", "g"));
   list<shared_ptr<Operator>> ra0 = {proje, ex_0, f1, t20};
   list<shared_ptr<Operator>> rb0 = {proje, ex_0, t20};
