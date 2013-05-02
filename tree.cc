@@ -28,6 +28,7 @@
 #include "energy.h"
 #include "residual.h"
 #include "density.h"
+#include "correction.h"
 #include "constants.h"
 #include <algorithm>
 #include <stdexcept>
@@ -57,6 +58,11 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
       bc_.push_back(b);
     } else if (label_ == "energy") {
       shared_ptr<Tree> tr(new Energy(rest, lab));
+      list<shared_ptr<Tree>> lt; lt.push_back(tr);
+      shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first, (*i)->ex_target_index()));
+      bc_.push_back(b);
+    } else if (label_ == "correction") {
+      shared_ptr<Tree> tr(new Correction(rest, lab));
       list<shared_ptr<Tree>> lt; lt.push_back(tr);
       shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first, (*i)->ex_target_index()));
       bc_.push_back(b);
@@ -104,6 +110,9 @@ BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor
     subtree_.push_back(tr);
   } else if (label_ == "energy") {
     shared_ptr<Tree> tr(new Energy(rest, lab));
+    subtree_.push_back(tr);
+  } else if (label_ == "correction") {
+    shared_ptr<Tree> tr(new Correction(rest, lab));
     subtree_.push_back(tr);
   } else if (label_ == "density") {
     shared_ptr<Tree> tr(new Density(rest, lab));
@@ -529,7 +538,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "    std::shared_ptr<Tensor<T>> r;" << endl;
     ss << "    double e0_;" << endl;
     ss << "" << endl;
-    ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
+    ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T>> queue_(new Queue<T>());" << endl;
     ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl << endl;
 
@@ -691,7 +700,8 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
 
   // go through additional tree graphs
   if (depth() == 0) {
-    bool found_density = false; // temporary for testing  
+    bool found_density = false;
+    bool found_correction = false; 
     for (auto& t : tree_list) {
         // energy queue here
         if (t->label()=="energy") {
@@ -702,7 +712,17 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
             ss << tmp.first;
             tt << tmp.second;
           }
-          // end the energy tree and start density matrix generation
+          // start correction tree 
+        } else if (t->label()=="correction") { 
+          found_correction = true;
+          ss << "      std::shared_ptr<Queue<T>> correction_(new Queue<T>());" << endl;
+          t->num_ = icnt;
+          for (auto& j : t->bc_) {
+            pair<string, string> tmp = j->generate_task_list(); 
+            ss << tmp.first;
+            tt << tmp.second;
+          }
+          // end the correction tree and start density matrix generation
         } else if (t->label()=="density") { 
           found_density = true; 
           t->num_ = icnt;
@@ -817,11 +837,11 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
       
     } // end tree_list loop
 
-
     // generate computational algorithm
     if (!found_density) ss << "      std::shared_ptr<Queue<T>> density_(new Queue<T>());" << endl; 
+    if (!found_correction) ss << "      std::shared_ptr<Queue<T>> correction_(new Queue<T>());" << endl; 
 
-    ss << "      return make_tuple(queue_, energy_, density_);" << endl;
+    ss << "      return make_tuple(queue_, energy_, density_, correction_);" << endl;
     ss << "    };" << endl;
     ss << endl;
     ss << "  public:" << endl;
@@ -839,9 +859,9 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "    void solve() {" << endl;
     ss << "      this->print_iteration();" << endl;
     ss << "      int iter = 0;" << endl;
-    ss << "      std::shared_ptr<Queue<T>> queue, energ, dens;" << endl;
+    ss << "      std::shared_ptr<Queue<T>> queue, energ, dens, correct;" << endl;
     ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
-    ss << "        std::tie(queue, energ, dens) = make_queue_();" << endl;
+    ss << "        std::tie(queue, energ, dens, correct) = make_queue_();" << endl;
     ss << "        while (!queue->done())" << endl;
     ss << "          queue->next_compute();" << endl;
     ss << "        this->update_amplitude(t2, r);" << endl;
@@ -858,6 +878,10 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
       ss << "        dens->next_compute();" << endl;
       ss << "      this->den1_->scale(0.25);" << endl;
       ss << "      this->den1_->print2(\"density matrix\", 1.0e-5);" << endl;
+    } if (found_correction) {
+      ss << "      const double n = correction(correct);" << endl;
+      ss << "      std::cout << \"Unlinked correction term: \" << std::setprecision(10) << n << std::endl;" << endl;
+      ss << "      this->rdm1_->print2(\"rdm1\", 1.0e-5);" << endl;
     }
     ss << "    };" << endl;
     ss << "" << endl;
@@ -870,6 +894,16 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "      return en; " << endl;
     ss << "    };  " << endl;
     ss << endl;
+    // compute density matrix correction term needed for comparison to MP2 density  
+    ss << "    double correction(std::shared_ptr<Queue<T>> correct) {" << endl;
+    ss << "      double n = 0.0;" << endl;
+    ss << "      while (!correct->done()) {" << endl;
+    ss << "        std::shared_ptr<Task<T>> c = correct->next_compute();" << endl;
+    ss << "        n += c->correction() * 0.25;" << endl;  // 0.25 due to 1/2 each to bra and ket
+    ss << "      }   " << endl;
+    ss << "      return n; " << endl;
+    ss << "    };  " << endl;
+    ss << endl;  // end comparison correction
     ss << "};" << endl;
     ss << endl;
     ss << "}" << endl;
@@ -921,5 +955,6 @@ vector<int> Tree::required_rdm(vector<int> orig) const {
   sort(out.begin(), out.end());
   return out;
 }
+
 
 

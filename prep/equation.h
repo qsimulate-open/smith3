@@ -19,7 +19,7 @@ class Equation {
     std::string tree_type_;
 
   public:
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::string scalar = "", const double d = 1.0) : label_(l), fac_(d), tree_type_("") {
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d = 1.0, const std::string scalar = "") : label_(l), fac_(d), tree_type_("") {
       std::list<int> max;
       for (auto& i : in) max.push_back(i.size());
 
@@ -51,7 +51,7 @@ class Equation {
         if (d == 1.0) {
           diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), scalar)));
         } else {
-          diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), d)));
+          diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), d, scalar)));
         }
         ++cnt;
       }
@@ -79,11 +79,13 @@ class Equation {
       ss << "  " << diagram_.front()->eqn_label() << "->duplicates();" << std::endl;
       ss << "  " << diagram_.front()->eqn_label() << "->active();" << std::endl;
 
-#if 1 // prune equations for testing
+#if 0 // prune density matrix equation to keep following terms, for testing 
       if (!tree_type_.empty() && tree_type_ == "density") {
+          ss << "  " << "list<string> terms = {\"x\"};" << std::endl;
         //ss << "  " << "list<string> terms = {\"c\"};" << std::endl;
+        //ss << "  " << "list<string> terms = {\"a\"};" << std::endl;
+        //ss << "  " << "list<string> terms = {\"c\", \"x\"};" << std::endl;
         //ss << "  " << "list<string> terms = {\"c\", \"a\"};" << std::endl;
-        ss << "  " << "list<string> terms = {\"c\", \"x\"};" << std::endl;
         ss << "  " <<  diagram_.front()->eqn_label() << "->term_select(terms);" << std::endl;
       }
 #endif
@@ -92,6 +94,8 @@ class Equation {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Residual(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else if (!tree_type_.empty() && tree_type_ == "energy") {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Energy(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
+      } else if (!tree_type_.empty() && tree_type_ == "correction") {
+          ss << "  shared_ptr<Tree> " << tree_label() << "(new Correction(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else if (!tree_type_.empty() && tree_type_ == "density") {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Density(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else {

@@ -36,6 +36,7 @@
 #include "residual.h"
 #include "energy.h"
 #include "density.h"
+#include "correction.h"
 
 using namespace std;
 using namespace smith;
@@ -85,6 +86,14 @@ int main() {
   shared_ptr<Tree> tea(new Energy(eea0, "energy"));
   tea->sort_gamma(tra->gamma());
 
+  list<shared_ptr<Operator>> ca0 = {proje, t2dagger0, t20};
+  shared_ptr<Diagram> dca0(new Diagram(ca0));
+  shared_ptr<Equation> eca0(new Equation(dca0, theory));
+  eca0->duplicates();
+  eca0->active();
+  shared_ptr<Tree> tca(new Correction(eca0, "correction"));
+  tca->sort_gamma(tra->gamma());
+
   list<shared_ptr<Operator>> da0 = {proje, t2dagger0, ex_1b, t20};
   list<shared_ptr<Operator>> db0 = {proje, ex_1b, t20};
   shared_ptr<Diagram> dda0(new Diagram(da0));
@@ -94,15 +103,13 @@ int main() {
   eda0->merge(edb0);
   eda0->duplicates();
   eda0->active();
-  list<string> terms = {"c", "x"};
-  eda0->term_select(terms);
   shared_ptr<Tree> tda(new Density(eda0, "density"));
   tda->sort_gamma();
 
 
   ofstream fs(tra->tree_name() + ".h");
   ofstream es(tra->tree_name() + "_tasks.h");
-  list<shared_ptr<Tree>> tda_list = {tea, tda};
+  list<shared_ptr<Tree>> tda_list = {tea, tca, tda};
   pair<string, string> tmp = tra->generate_task_list(tda_list);
   fs << tmp.first;
   es << tmp.second;
@@ -115,6 +122,8 @@ int main() {
   tra->print();
   cout << std::endl << "   ***  Energy  ***" << std::endl << std::endl;
   tea->print();
+  cout << std::endl << "   ***  Correction  ***" << std::endl << std::endl;
+  tca->print();
   cout << std::endl << "   ***  Density Matrix  ***" << std::endl << std::endl;
   tda->print();
   cout << std::endl << std::endl;
