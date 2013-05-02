@@ -221,8 +221,10 @@ pair<string, string> Residual::generate_bc(const string indent, const shared_ptr
   if (depth() != 0) {
     const string bindent = indent + "    ";
     string dindent = bindent; 
+
     tt << target_->generate_get_block(dindent, "o", "out()", true);
     tt << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
+
     list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
 
     // inner loop will show up here

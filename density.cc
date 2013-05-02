@@ -124,6 +124,7 @@ string Density::generate_compute_header(const int ic, const list<shared_ptr<cons
   tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
   tt << "        const std::shared_ptr<const Tensor<T>>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
   tt << "        const std::shared_ptr<Tensor<T>>& out() const { return this->out_tensor(); }" << endl;
+  if (need_e0) tt << endl << "        double e0_;" << endl;
   tt << endl;
   tt << "      public:" << endl;
   // if index is empty use dummy index 1 to subtask
@@ -178,7 +179,7 @@ string Density::generate_compute_footer(const int ic, const list<shared_ptr<cons
   tt << "    }" << endl << endl; 
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t, std::array<std::shared_ptr<const IndexRange>,3> range) : DensityTask<T>() {" << endl;
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t, std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", double e" : "" ) <<  ") : DensityTask<T>() {" << endl;
   tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
   for (auto i = 1; i < ninptensors + 1; ++i)
     tt << "t[" << i << "]" << (i < ninptensors ? ", " : "");
@@ -232,7 +233,6 @@ pair<string, string> Density::generate_bc(const string indent, const shared_ptr<
       // inner loop (where similar indices in dgemm tensors are summed over) will show up here
       // but only if outer loop is not empty
       list<shared_ptr<const Index>> di = (i)->loop_indices();
-      di.reverse();
   
       vector<string> close2;
       if (ti.size() != 0) {
@@ -271,10 +271,7 @@ pair<string, string> Density::generate_bc(const string indent, const shared_ptr<
         } else {
           // so far I am expecting the case of density matrix contribution
           if (depth() != 1) throw logic_error("expecting density matrix contribution");
-#if 0     // mkm probably get rid of this
-          string ss0 = t1.second== "" ? "1" : t1.second;
-          tt << dindent << "energy_ += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
-#endif
+          throw logic_error("should not have ddot in density matrix");
         }
       }
 
@@ -301,7 +298,7 @@ pair<string, string> Density::generate_bc(const string indent, const shared_ptr<
       }
 
     } else { // bc depth = 0
-      // depth should only be zero here in residual tree
+      // depth should only be zero and here in residual tree
       throw logic_error("shouldn't happen in Density::generate_bc");
     }
 
