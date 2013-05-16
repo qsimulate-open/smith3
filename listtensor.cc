@@ -35,7 +35,7 @@ ListTensor::ListTensor(shared_ptr<Diagram> d) {
   scalar_ = d->scalar();
   // vector of tensors
   for (auto& i : d->op()) {
-    // careful, add only labeled operators! eg not excitation operators
+    // careful, add only labeled operators! ie not excitation operators!
     if (!i->label().empty()) {
       shared_ptr<Tensor> t(new Tensor(i));
       list_.push_back(t);

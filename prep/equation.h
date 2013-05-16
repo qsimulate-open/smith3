@@ -81,11 +81,11 @@ class Equation {
 
 #if 0 // prune density matrix equation to keep following terms, for testing 
       if (!tree_type_.empty() && tree_type_ == "density") {
-          ss << "  " << "list<string> terms = {\"x\"};" << std::endl;
+          ss << "  " << "list<string> terms = {\"c\", \"a\"};" << std::endl;
+        //ss << "  " << "list<string> terms = {\"c\", \"x\"};" << std::endl;
+        //ss << "  " << "list<string> terms = {\"x\"};" << std::endl;
         //ss << "  " << "list<string> terms = {\"c\"};" << std::endl;
         //ss << "  " << "list<string> terms = {\"a\"};" << std::endl;
-        //ss << "  " << "list<string> terms = {\"c\", \"x\"};" << std::endl;
-        //ss << "  " << "list<string> terms = {\"c\", \"a\"};" << std::endl;
         ss << "  " <<  diagram_.front()->eqn_label() << "->term_select(terms);" << std::endl;
       }
 #endif

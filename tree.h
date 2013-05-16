@@ -220,7 +220,7 @@ class Tree {
     /// Generate task and task list files.
     std::pair<std::string,std::string> generate_task_list(const std::list<std::shared_ptr<Tree>> energy = std::list<std::shared_ptr<Tree>>()) const;
 
-    /// Generate task for operator task (ie not a binary contraction task).
+    /// Generate task for operator task (ie not a binary contraction task). Dagger arguement refers to front subtree used at top level.
     std::string generate_compute_operators(const std::string, const std::shared_ptr<Tensor>, const std::vector<std::shared_ptr<Tensor>>,
                                            const bool dagger = false) const;
     /// Generate task in dependency file with ic as task number

@@ -67,10 +67,12 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
               (l == "x" && k == "x" && j == "x" && i == "a") ||
               (l == "x" && k == "c" && j == "x" && i == "x")) {
 #else   // turn on one of the following lines
+          // test the mp2-like contributions:
+               if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") ||  (l == "x" && k == "x" && j == "a" && i == "a")) { 
 // *test single configuration cases*
-          if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
+//        if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
 //        if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
-          if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
+//        if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
 //        if (l == "c" && k == "c" && j == "x" && i == "a") { // ccxa
 //        if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) { // cxxa or xcxa
 //        if (l == "c" && k == "c" && j == "x" && i == "x") { // ccxx
@@ -139,18 +141,23 @@ int main() {
   eq3->set_tree_type("energy");
   cout << eq3->generate({eq0});
 
-#if 1  // density matrix testing ground
-
+  // density matrix test ground
+#if 1
   // generate unlinked correction term to density matrix for testing 
-  shared_ptr<Equation> eq4(new Equation("ca", {dum, t_dagger, t_list}, 1.0));
+  shared_ptr<Equation> eq4(new Equation("ca", {dum, t_dagger, t_list}, 0.25));
   eq4->set_tree_type("correction");
 
   cout << eq4->generate({eq0});
 
   // density matrix equations
-  shared_ptr<Equation> eq5(new Equation("da", {dum, t_dagger, ex1b, t_list}, 1.0));
-  shared_ptr<Equation> eq5a(new Equation("db", {dum, ex1b, t_list}, 2.0));
+#if 0 // test one particle contribution
+  shared_ptr<Equation> eq5(new Equation("da", {dum, t_dagger, ex1b, t_list}, 0.25));
+  shared_ptr<Equation> eq5a(new Equation("db", {dum, ex1b, t_list}, 1.0));
   eq5->merge(eq5a);
+#else // two particle contribution 
+  shared_ptr<Equation> eq5(new Equation("da", {dum, proj_list, t_list}, 0.5));
+#endif
+
   eq5->set_tree_type("density");
   cout << eq5->generate({});
   // done. generate the footer

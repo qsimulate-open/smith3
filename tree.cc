@@ -378,7 +378,6 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
     ++uniq_cnt;
   }
 
-
   // add the source data to the target
   int j = 0;
   for (auto s = op.begin(); s != op.end(); ++s, ++j) {
@@ -388,7 +387,7 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
     // uses map to give label number consistent with operator, needed in case label is repeated (eg ccaa)
     string label = label__((*s)->label());
     stringstream instr; instr << "in(" << op_tensor_lab[label] << ")";
-
+   
     tt << (*s)->generate_get_block(cindent+"  ", uu.str(), instr.str());
     list<shared_ptr<const Index>> di = target->index();
     tt << (*s)->generate_sort_indices(cindent+"  ", uu.str(), instr.str(), di, true);
@@ -701,7 +700,9 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
   // go through additional tree graphs
   if (depth() == 0) {
     bool found_density = false;
+    bool one_particle = true;
     bool found_correction = false; 
+
     for (auto& t : tree_list) {
         // energy queue here
         if (t->label()=="energy") {
@@ -778,9 +779,9 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
               }
               ss << t->generate_task(indent, t->num_, source_tensors, i0);
 
-              // these need to be reversed for this case
               list<shared_ptr<const Index>> proj = j->ex_target_index();
-              proj.reverse();
+              // this info is needed in algorithm generation
+              if (j->ex_target_index().size() == 4) one_particle = false;
 
               // write out headers
               {
@@ -804,7 +805,8 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
               }
               shared_ptr<Tensor> density(new Tensor(1.0, "den1_", dm));
               vector<shared_ptr<Tensor>> op2 = { j->next_target() };
-              tt << generate_compute_operators(indent, density, op2, j->dagger());
+              tt << t->generate_compute_operators(indent, density, op2, j->dagger());
+      
 
               {
                 // send outer loop indices if outer loop indices exist, otherwise send inner indices
@@ -852,7 +854,11 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
     ss << "      t2->scale(2.0);" << endl;
     ss << "      r = t2->clone();" << endl;
-    ss << "      this->den1_ = this->h1_->clone();" << endl;
+    if (found_density && one_particle) {
+      ss << "      this->den1_ = this->h1_->clone();" << endl;
+    } else if (found_density && !one_particle) {
+      ss << "      this->den1_ = this->v2_->clone();" << endl;
+    }
     ss << "    };" << endl;
     ss << "    ~" << tree_name_ << "() {}; " << endl;
     ss << "" << endl;
@@ -873,14 +879,20 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "      }" << endl;
     ss << "      this->print_iteration(iter == maxiter_);" << endl;
     if (found_density) {
-      ss << "      std::cout << \" === Unrelaxed density matrix ===\" << std::endl; " << endl;
-      ss << "      while (!dens->done())" << endl;
-      ss << "        dens->next_compute();" << endl;
-      ss << "      this->den1_->scale(0.25);" << endl;
-      ss << "      this->den1_->print2(\"density matrix\", 1.0e-5);" << endl;
+      if (one_particle) {
+        ss << "      std::cout << \" === Unrelaxed density matrix, <1|E_pq|1> + 2<0|E_pq|1> ===\" << std::endl; " << endl;
+        ss << "      while (!dens->done())" << endl;
+        ss << "        dens->next_compute();" << endl;
+        ss << "      this->den1_->print2(\"density matrix\", 1.0e-5);" << endl;
+      } else {
+        ss << "      std::cout << \" === Unrelaxed density matrix, <0|E_pqrs|1>  ===\" << std::endl; " << endl;
+        ss << "      while (!dens->done())" << endl;
+        ss << "        dens->next_compute();" << endl;
+        ss << "      this->den1_->print4(\"density matrix\", 1.0e-5);" << endl;
+      }
     } if (found_correction) {
       ss << "      const double n = correction(correct);" << endl;
-      ss << "      std::cout << \"Unlinked correction term: \" << std::setprecision(10) << n << std::endl;" << endl;
+      ss << "      std::cout << \"Unlinked correction term, <1|1>*rdm1 = \" << std::setprecision(10) << n << \"*rdm1\" << std::endl;" << endl;
       ss << "      this->rdm1_->print2(\"rdm1\", 1.0e-5);" << endl;
     }
     ss << "    };" << endl;
@@ -899,7 +911,7 @@ pair<string, string> Tree::generate_task_list(const list<shared_ptr<Tree>> tree_
     ss << "      double n = 0.0;" << endl;
     ss << "      while (!correct->done()) {" << endl;
     ss << "        std::shared_ptr<Task<T>> c = correct->next_compute();" << endl;
-    ss << "        n += c->correction() * 0.25;" << endl;  // 0.25 due to 1/2 each to bra and ket
+    ss << "        n += c->correction();" << endl;  
     ss << "      }   " << endl;
     ss << "      return n; " << endl;
     ss << "    };  " << endl;

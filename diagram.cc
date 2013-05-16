@@ -270,7 +270,6 @@ void Diagram::active() {
 
 bool Diagram::permute(const bool proj) {
   bool found = false;
- 
   // try the last one. If it returns zero, then go up.
   for (auto i = op_.rbegin(); i != op_.rend(); ++i) {
     pair<bool, double> a = (*i)->permute(proj);

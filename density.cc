@@ -233,6 +233,7 @@ pair<string, string> Density::generate_bc(const string indent, const shared_ptr<
       // inner loop (where similar indices in dgemm tensors are summed over) will show up here
       // but only if outer loop is not empty
       list<shared_ptr<const Index>> di = (i)->loop_indices();
+      di.reverse();
   
       vector<string> close2;
       if (ti.size() != 0) {

@@ -103,7 +103,7 @@ class Diagram {
 
     /// Permute indices in operators. return false when finished.
     bool permute(const bool proj); 
-    /// If diagrams are same, based on size, indices, and spin. 
+    /// If diagrams are same, based on size, indices, and spin.  
     bool identical(std::shared_ptr<Diagram> o) const;
 
     /// checks if diagram has target indices from exciation operators.

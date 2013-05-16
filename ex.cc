@@ -79,6 +79,7 @@ void Ex::print() const {
 
 // this function make a possible permutation of indices.
 pair<bool, double> Ex::permute(const bool proj) {
+
   // if there is active daggered and no-daggered operators, you cannot do this as it changes the expression
   if ((num_active_nodagger() && num_active_dagger()) || (!proj))
     return make_pair(false, 1.0);
