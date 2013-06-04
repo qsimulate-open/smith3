@@ -43,10 +43,12 @@ static std::string header() {
   mm << "#include <list>" << std::endl;
   mm << "#include <string>" << std::endl;
   mm << "#include \"equation.h\"" << std::endl;
+  mm << "#include \"forest.h\"" << std::endl;
   mm << "#include \"tree.h\"" << std::endl;
   mm << "#include \"residual.h\"" << std::endl;
   mm << "#include \"energy.h\"" << std::endl;
   mm << "#include \"density.h\"" << std::endl;
+  mm << "#include \"density2.h\"" << std::endl;
   mm << "#include \"correction.h\"" << std::endl;
   mm << "" << std::endl;
   mm << "using namespace std;" << std::endl;
@@ -57,69 +59,23 @@ static std::string header() {
 };
 
 
-static std::string footer(const std::string res, const std::string energy) {
+static std::string footer(const std::string res, const std::string energy, const std::string correction, const std::string density, const std::string density2) {
   std::stringstream mm;
-  mm << "" <<  std::endl; 
-  mm << "  ofstream fs(" << res << "->tree_name() + \".h\");" << std::endl;
-  mm << "  ofstream es(" << res << "->tree_name() + \"_tasks.h\");" << std::endl;
-  mm << "  list<shared_ptr<Tree>> " << energy << "_list = {" << energy << "};" << std::endl;
-  mm << "  pair<string, string> tmp = " << res << "->generate_task_list(" << energy << "_list" << ");" << std::endl;
-  mm << "  fs << tmp.first;" << std::endl;
-  mm << "  es << tmp.second;" << std::endl;
-  mm << "  fs.close();" << std::endl;
-  mm << "  es.close();" << std::endl;
-  mm << "  cout << std::endl;" << std::endl;
-  mm << "" <<  std::endl; 
-  mm << "  // output" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Residual  ***\" << std::endl << std::endl;" << std::endl;
-  mm << "  " << res << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Energy  ***\" << std::endl << std::endl;" << std::endl;
-  mm << "  " << energy << "->print();" << std::endl;
-  mm << "  cout << std::endl << std::endl;" << std::endl;
-  mm << "" <<  std::endl; 
-  mm << "  return 0;" << std::endl;
-  mm << "}" << std::endl;
-  return mm.str();
-};
 
-static std::string footer(const std::string res, const std::string energy, const std::string density) {
-  std::stringstream mm;
+  mm << "  list<shared_ptr<Tree>> trees = {" << res << ", " << energy << ", " << correction << ", " << density << ", " << density2 << "};" << std::endl;
+  mm << "  shared_ptr<Forest> fr(new Forest(trees));" << std::endl;
+
   mm << "" <<  std::endl; 
-  mm << "  ofstream fs(" << res << "->tree_name() + \".h\");" << std::endl;
-  mm << "  ofstream es(" << res << "->tree_name() + \"_tasks.h\");" << std::endl;
+  mm << "  fr->filter_gamma();" << std::endl;
+  mm << "  list<shared_ptr<Tensor>> gm = fr->gamma();" << std::endl;
+  mm << "  const list<shared_ptr<Tensor>> gamma = gm;" << std::endl;
 
-  mm << "  list<shared_ptr<Tree>> " << density << "_list = {" << energy << ", " << density << "};" << std::endl;
-  mm << "  pair<string, string> tmp = " << res << "->generate_task_list(" << density << "_list" << ");" << std::endl;
-
-  mm << "  fs << tmp.first;" << std::endl;
-  mm << "  es << tmp.second;" << std::endl;
-  mm << "  fs.close();" << std::endl;
-  mm << "  es.close();" << std::endl;
-  mm << "  cout << std::endl;" << std::endl;
   mm << "" <<  std::endl; 
-  mm << "  // output" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Residual  ***\" << std::endl << std::endl;" << std::endl;
-  mm << "  " << res << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Energy  ***\" << std::endl << std::endl;" << std::endl;
-  mm << "  " << energy << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Density Matrix  ***\" << std::endl << std::endl;" << std::endl;
-  mm << "  " << density << "->print();" << std::endl;
-  mm << "  cout << std::endl << std::endl;" << std::endl;
+  mm << "  pair<string, string> tmp = fr->generate_code();" << std::endl;
+
   mm << "" <<  std::endl; 
-  mm << "  return 0;" << std::endl;
-  mm << "}" << std::endl;
-  return mm.str();
-};
-
-static std::string footer(const std::string res, const std::string energy, const std::string correction, const std::string density) {
-  std::stringstream mm;
-  mm << "" <<  std::endl; 
-  mm << "  ofstream fs(" << res << "->tree_name() + \".h\");" << std::endl;
-  mm << "  ofstream es(" << res << "->tree_name() + \"_tasks.h\");" << std::endl;
-
-  mm << "  list<shared_ptr<Tree>> " << density << "_list = {" << energy << ", " << correction << ", " << density << "};" << std::endl;
-  mm << "  pair<string, string> tmp = " << res << "->generate_task_list(" << density << "_list" << ");" << std::endl;
-
+  mm << "  ofstream fs(fr->name() + \".h\");" << std::endl;
+  mm << "  ofstream es(fr->name() + \"_tasks.h\");" << std::endl;
   mm << "  fs << tmp.first;" << std::endl;
   mm << "  es << tmp.second;" << std::endl;
   mm << "  fs.close();" << std::endl;
@@ -133,8 +89,10 @@ static std::string footer(const std::string res, const std::string energy, const
   mm << "  " << energy << "->print();" << std::endl;
   mm << "  cout << std::endl << \"   ***  Correction  ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << correction << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Density Matrix  ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  cout << std::endl << \"   ***  One-body Density Matrix  ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << density << "->print();" << std::endl;
+  mm << "  cout << std::endl << \"   ***  Two-body Density Matrix  ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  " << density2 << "->print();" << std::endl;
   mm << "  cout << std::endl << std::endl;" << std::endl;
   mm << "" <<  std::endl; 
   mm << "  return 0;" << std::endl;

@@ -55,17 +55,17 @@ class Diagram {
 
   public:
     /// Construct diagram from operator list. Set prefactor and dagger information.
-    Diagram(std::list<std::shared_ptr<Operator>> op) : op_(op), fac_(1.0), dagger_(false) { };
+    Diagram(std::list<std::shared_ptr<Operator>> op) : op_(op), fac_(1.0), dagger_(false) { }
     /// Construct diagram from operator list and scalar.  Set prefactor to 1.0 and dagger information.
-    Diagram(std::list<std::shared_ptr<Operator>> op, std::string s) : op_(op), fac_(1.0), scalar_(s), dagger_(false) { };
+    Diagram(std::list<std::shared_ptr<Operator>> op, std::string s) : op_(op), fac_(1.0), scalar_(s), dagger_(false) { }
     /// Construct diagram from operator list and prefactor. Set dagger information.
-    Diagram(std::list<std::shared_ptr<Operator>> op, double d) : op_(op), fac_(d), dagger_(false) { };
+    Diagram(std::list<std::shared_ptr<Operator>> op, double d) : op_(op), fac_(d), dagger_(false) {}
     /// Construct diagram from operator list and prefactor and scalar. Set dagger information.
-    Diagram(std::list<std::shared_ptr<Operator>> op, double d, std::string s) : op_(op), fac_(d), scalar_(s), dagger_(false) { };
+    Diagram(std::list<std::shared_ptr<Operator>> op, double d, std::string s) : op_(op), fac_(d), scalar_(s), dagger_(false) { }
     /// Construct diagram with prefactor and dagger information.
-    Diagram() : fac_(1.0), dagger_(false) { };
+    Diagram() : fac_(1.0), dagger_(false) { }
     // copy constructor is complicated but preserves the same topology as this.
-    ~Diagram() {};
+    ~Diagram() { }
 
     /// Returns a shared_ptr of a diagram that has the same topology as this.
     std::shared_ptr<Diagram> copy() const;
@@ -75,22 +75,22 @@ class Diagram {
 
     // Get functions.
     /// Return the diagram (term) prefactor.
-    double& fac() { return fac_; };
+    double& fac() { return fac_; }
     /// Return the prefactor for const diagram.
-    const double fac() const { return fac_; };
+    const double fac() const { return fac_; }
     /// Return scalar name reference.
-    std::string& scalar() { return scalar_; }; 
+    std::string& scalar() { return scalar_; } 
     /// Returns rdm pointer.
-    std::shared_ptr<Active> rdm() { return rdm_; };
+    std::shared_ptr<Active> rdm() { return rdm_; }
     /// If diagram is transposed.
-    bool dagger() const { return dagger_; };
+    bool dagger() const { return dagger_; }
 
     /// Careful, returns a const reference of op_ operator.
-    const std::list<std::shared_ptr<Operator>>& op() const { return op_; };
+    const std::list<std::shared_ptr<Operator>>& op() const { return op_; }
     /// Set operator for private members.
-    void set_op(const std::list<std::shared_ptr<Operator>>& o) { op_ = o; };
+    void set_op(const std::list<std::shared_ptr<Operator>>& o) { op_ = o; }
     /// Set factor for private members.
-    void set_fac(const double a) { fac_ = a; };
+    void set_fac(const double a) { fac_ = a; }
 
     /// Refresh the indices for each operator in diagram (ie calls operators refresh_indices function).
     void refresh_indices();
@@ -99,14 +99,14 @@ class Diagram {
     void active();
 
     /// Daggered Diagram added to the sum.
-    void add_dagger() { dagger_ = true; };
+    void add_dagger() { dagger_ = true; }
 
     /// Permute indices in operators. return false when finished.
     bool permute(const bool proj); 
     /// If diagrams are same, based on size, indices, and spin.  
     bool identical(std::shared_ptr<Diagram> o) const;
 
-    /// checks if diagram has target indices from exciation operators.
+    /// checks if diagram has target indices from excitation operators.
     bool has_ex_target_index() const;
 
     /// Returns list of target indices from excitation operators in diagram.

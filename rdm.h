@@ -85,8 +85,8 @@ class RDM {
     RDM(const std::list<std::shared_ptr<const Index>>& in,
         const std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>>& in2,
         const double& f = 1.0)
-      : fac_(f), index_(in), delta_(in2) { };
-    ~RDM() {};
+      : fac_(f), index_(in), delta_(in2) { }
+    ~RDM() { }
 
 
     /// Prints RDM with indentation and prefactors, located in active.cc
@@ -98,19 +98,19 @@ class RDM {
     std::shared_ptr<RDM> copy() const;
 
     /// Returns the factor 
-    double factor() const { return fac_; };
+    double factor() const { return fac_; }
     /// Returns a reference to the factor 
-    double& fac() { return fac_; };
+    double& fac() { return fac_; }
 
     /// Returns a reference of index_.
-    std::list<std::shared_ptr<const Index>>& index() { return index_; };
+    std::list<std::shared_ptr<const Index>>& index() { return index_; }
     /// Returns a const reference of index_.
-    const std::list<std::shared_ptr<const Index>>& index() const { return index_; };
+    const std::list<std::shared_ptr<const Index>>& index() const { return index_; }
 
     /// Returns a const reference of delta_.
-    const std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>>& delta() const { return delta_; };
+    const std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>>& delta() const { return delta_; }
     /// Returns a reference of delta_.
-    std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>>& delta() { return delta_; };
+    std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>>& delta() { return delta_; }
 
     /// Returns if this is in the final form..ie aligned as a0+ a0 a1+ a1..Member function located in active.cc
     bool done() const;
@@ -127,7 +127,7 @@ class RDM {
     std::string generate(std::string indent, const std::string itag, const std::list<std::shared_ptr<const Index>>& index, const std::list<std::shared_ptr<const Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas);
 
     /// Returns an integer representing rdm rank value, ie (index size)/2
-    int rank() const { assert(index_.size()%2 == 0); return index_.size()/2; }; 
+    int rank() const { assert(index_.size()%2 == 0); return index_.size()/2; }
 };
 
 }

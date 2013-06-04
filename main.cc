@@ -32,10 +32,12 @@
 #include <list>
 #include <string>
 #include "equation.h"
+#include "forest.h"
 #include "tree.h"
 #include "residual.h"
 #include "energy.h"
 #include "density.h"
+#include "density2.h"
 #include "correction.h"
 
 using namespace std;
@@ -62,6 +64,7 @@ int main() {
   shared_ptr<Operator> t2dagger1(new Op("t2dagger", "x", "c", "a", "a"));
   shared_ptr<Operator> t2dagger2(new Op("t2dagger", "x", "x", "a", "a"));
   shared_ptr<Operator> ex_1b(new Ex("g", "g"));
+
   list<shared_ptr<Operator>> ra0 = {proje, ex_0, f1, t20};
   list<shared_ptr<Operator>> ra1 = {proje, ex_0, f1, t21};
   list<shared_ptr<Operator>> ra2 = {proje, ex_0, f1, t22};
@@ -160,7 +163,6 @@ int main() {
   era0->duplicates();
   era0->active();
   shared_ptr<Tree> tra(new Residual(era0, "residual"));
-  tra->sort_gamma();
 
   list<shared_ptr<Operator>> ea0 = {proje, t2dagger0, v2};
   list<shared_ptr<Operator>> ea1 = {proje, t2dagger1, v2};
@@ -188,7 +190,6 @@ int main() {
   eea0->duplicates();
   eea0->active();
   shared_ptr<Tree> tea(new Energy(eea0, "energy"));
-  tea->sort_gamma(tra->gamma());
 
   list<shared_ptr<Operator>> ca0 = {proje, t2dagger0, t20};
   list<shared_ptr<Operator>> ca1 = {proje, t2dagger0, t21};
@@ -228,26 +229,31 @@ int main() {
   eca0->duplicates();
   eca0->active();
   shared_ptr<Tree> tca(new Correction(eca0, "correction"));
-  tca->sort_gamma(tra->gamma());
 
-  list<shared_ptr<Operator>> da0 = {proje, ex_0, t20};
-  list<shared_ptr<Operator>> da1 = {proje, ex_0, t21};
-  list<shared_ptr<Operator>> da2 = {proje, ex_0, t22};
-  list<shared_ptr<Operator>> da3 = {proje, ex_1, t20};
-  list<shared_ptr<Operator>> da4 = {proje, ex_1, t21};
-  list<shared_ptr<Operator>> da5 = {proje, ex_1, t22};
-  list<shared_ptr<Operator>> da6 = {proje, ex_2, t20};
-  list<shared_ptr<Operator>> da7 = {proje, ex_2, t21};
-  list<shared_ptr<Operator>> da8 = {proje, ex_2, t22};
-  shared_ptr<Diagram> dda0(new Diagram(da0, 0.5));
-  shared_ptr<Diagram> dda1(new Diagram(da1, 0.5));
-  shared_ptr<Diagram> dda2(new Diagram(da2, 0.5));
-  shared_ptr<Diagram> dda3(new Diagram(da3, 0.5));
-  shared_ptr<Diagram> dda4(new Diagram(da4, 0.5));
-  shared_ptr<Diagram> dda5(new Diagram(da5, 0.5));
-  shared_ptr<Diagram> dda6(new Diagram(da6, 0.5));
-  shared_ptr<Diagram> dda7(new Diagram(da7, 0.5));
-  shared_ptr<Diagram> dda8(new Diagram(da8, 0.5));
+  list<shared_ptr<Operator>> da0 = {proje, t2dagger0, ex_1b, t20};
+  list<shared_ptr<Operator>> da1 = {proje, t2dagger0, ex_1b, t21};
+  list<shared_ptr<Operator>> da2 = {proje, t2dagger0, ex_1b, t22};
+  list<shared_ptr<Operator>> da3 = {proje, t2dagger1, ex_1b, t20};
+  list<shared_ptr<Operator>> da4 = {proje, t2dagger1, ex_1b, t21};
+  list<shared_ptr<Operator>> da5 = {proje, t2dagger1, ex_1b, t22};
+  list<shared_ptr<Operator>> da6 = {proje, t2dagger2, ex_1b, t20};
+  list<shared_ptr<Operator>> da7 = {proje, t2dagger2, ex_1b, t21};
+  list<shared_ptr<Operator>> da8 = {proje, t2dagger2, ex_1b, t22};
+  list<shared_ptr<Operator>> db0 = {proje, ex_1b, t20};
+  list<shared_ptr<Operator>> db1 = {proje, ex_1b, t21};
+  list<shared_ptr<Operator>> db2 = {proje, ex_1b, t22};
+  shared_ptr<Diagram> dda0(new Diagram(da0, 0.25));
+  shared_ptr<Diagram> dda1(new Diagram(da1, 0.25));
+  shared_ptr<Diagram> dda2(new Diagram(da2, 0.25));
+  shared_ptr<Diagram> dda3(new Diagram(da3, 0.25));
+  shared_ptr<Diagram> dda4(new Diagram(da4, 0.25));
+  shared_ptr<Diagram> dda5(new Diagram(da5, 0.25));
+  shared_ptr<Diagram> dda6(new Diagram(da6, 0.25));
+  shared_ptr<Diagram> dda7(new Diagram(da7, 0.25));
+  shared_ptr<Diagram> dda8(new Diagram(da8, 0.25));
+  shared_ptr<Diagram> ddb0(new Diagram(db0));
+  shared_ptr<Diagram> ddb1(new Diagram(db1));
+  shared_ptr<Diagram> ddb2(new Diagram(db2));
   shared_ptr<Equation> eda0(new Equation(dda0, theory));
   shared_ptr<Equation> eda1(new Equation(dda1, theory));
   shared_ptr<Equation> eda2(new Equation(dda2, theory));
@@ -257,6 +263,9 @@ int main() {
   shared_ptr<Equation> eda6(new Equation(dda6, theory));
   shared_ptr<Equation> eda7(new Equation(dda7, theory));
   shared_ptr<Equation> eda8(new Equation(dda8, theory));
+  shared_ptr<Equation> edb0(new Equation(ddb0, theory));
+  shared_ptr<Equation> edb1(new Equation(ddb1, theory));
+  shared_ptr<Equation> edb2(new Equation(ddb2, theory));
   eda0->merge(eda1);
   eda0->merge(eda2);
   eda0->merge(eda3);
@@ -265,16 +274,63 @@ int main() {
   eda0->merge(eda6);
   eda0->merge(eda7);
   eda0->merge(eda8);
+  eda0->merge(edb0);
+  eda0->merge(edb1);
+  eda0->merge(edb2);
   eda0->duplicates();
   eda0->active();
   shared_ptr<Tree> tda(new Density(eda0, "density"));
-  tda->sort_gamma();
 
+  list<shared_ptr<Operator>> d2a0 = {proje, ex_0, t20};
+  list<shared_ptr<Operator>> d2a1 = {proje, ex_0, t21};
+  list<shared_ptr<Operator>> d2a2 = {proje, ex_0, t22};
+  list<shared_ptr<Operator>> d2a3 = {proje, ex_1, t20};
+  list<shared_ptr<Operator>> d2a4 = {proje, ex_1, t21};
+  list<shared_ptr<Operator>> d2a5 = {proje, ex_1, t22};
+  list<shared_ptr<Operator>> d2a6 = {proje, ex_2, t20};
+  list<shared_ptr<Operator>> d2a7 = {proje, ex_2, t21};
+  list<shared_ptr<Operator>> d2a8 = {proje, ex_2, t22};
+  shared_ptr<Diagram> dd2a0(new Diagram(d2a0, 0.5));
+  shared_ptr<Diagram> dd2a1(new Diagram(d2a1, 0.5));
+  shared_ptr<Diagram> dd2a2(new Diagram(d2a2, 0.5));
+  shared_ptr<Diagram> dd2a3(new Diagram(d2a3, 0.5));
+  shared_ptr<Diagram> dd2a4(new Diagram(d2a4, 0.5));
+  shared_ptr<Diagram> dd2a5(new Diagram(d2a5, 0.5));
+  shared_ptr<Diagram> dd2a6(new Diagram(d2a6, 0.5));
+  shared_ptr<Diagram> dd2a7(new Diagram(d2a7, 0.5));
+  shared_ptr<Diagram> dd2a8(new Diagram(d2a8, 0.5));
+  shared_ptr<Equation> ed2a0(new Equation(dd2a0, theory));
+  shared_ptr<Equation> ed2a1(new Equation(dd2a1, theory));
+  shared_ptr<Equation> ed2a2(new Equation(dd2a2, theory));
+  shared_ptr<Equation> ed2a3(new Equation(dd2a3, theory));
+  shared_ptr<Equation> ed2a4(new Equation(dd2a4, theory));
+  shared_ptr<Equation> ed2a5(new Equation(dd2a5, theory));
+  shared_ptr<Equation> ed2a6(new Equation(dd2a6, theory));
+  shared_ptr<Equation> ed2a7(new Equation(dd2a7, theory));
+  shared_ptr<Equation> ed2a8(new Equation(dd2a8, theory));
+  ed2a0->merge(ed2a1);
+  ed2a0->merge(ed2a2);
+  ed2a0->merge(ed2a3);
+  ed2a0->merge(ed2a4);
+  ed2a0->merge(ed2a5);
+  ed2a0->merge(ed2a6);
+  ed2a0->merge(ed2a7);
+  ed2a0->merge(ed2a8);
+  ed2a0->duplicates();
+  ed2a0->active();
+  shared_ptr<Tree> td2a(new Density2(ed2a0, "density2"));
 
-  ofstream fs(tra->tree_name() + ".h");
-  ofstream es(tra->tree_name() + "_tasks.h");
-  list<shared_ptr<Tree>> tda_list = {tea, tca, tda};
-  pair<string, string> tmp = tra->generate_task_list(tda_list);
+  list<shared_ptr<Tree>> trees = {tra, tea, tca, tda, td2a};
+  shared_ptr<Forest> fr(new Forest(trees));
+
+  fr->filter_gamma();
+  list<shared_ptr<Tensor>> gm = fr->gamma();
+  const list<shared_ptr<Tensor>> gamma = gm;
+
+  pair<string, string> tmp = fr->generate_code();
+
+  ofstream fs(fr->name() + ".h");
+  ofstream es(fr->name() + "_tasks.h");
   fs << tmp.first;
   es << tmp.second;
   fs.close();
@@ -288,8 +344,10 @@ int main() {
   tea->print();
   cout << std::endl << "   ***  Correction  ***" << std::endl << std::endl;
   tca->print();
-  cout << std::endl << "   ***  Density Matrix  ***" << std::endl << std::endl;
+  cout << std::endl << "   ***  One-body Density Matrix  ***" << std::endl << std::endl;
   tda->print();
+  cout << std::endl << "   ***  Two-body Density Matrix  ***" << std::endl << std::endl;
+  td2a->print();
   cout << std::endl << std::endl;
 
   return 0;

@@ -56,7 +56,7 @@ class Active {
   public:
     /// Make active object from const list index.
     Active(const std::list<std::shared_ptr<const Index>>& in);
-    ~Active() {};
+    ~Active() { }
   
     /// Prints active tensor prefactor, indices and delta (equivalent indices).
     void print(const std::string& indent = "") const;

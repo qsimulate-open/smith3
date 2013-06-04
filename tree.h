@@ -28,6 +28,7 @@
 #define __TREE_H
 
 #include <string>
+#include <tuple>
 #include <memory>
 #include "equation.h"
 #include "listtensor.h"
@@ -60,17 +61,17 @@ class BinaryContraction {
  
   public:
     /// Construct binary contraction from subtree and tensor if diagram has excitation operator target indices, index list will not be empty.
-    BinaryContraction(std::list<std::shared_ptr<Tree>> o, std::shared_ptr<Tensor> t, std::list<std::shared_ptr<const Index>> ti) : tensor_(t), subtree_(o), ex_target_index_(ti) {};
+    BinaryContraction(std::list<std::shared_ptr<Tree>> o, std::shared_ptr<Tensor> t, std::list<std::shared_ptr<const Index>> ti) : tensor_(t), subtree_(o), ex_target_index_(ti) { }
     /// Construct binary contraction from tensor and listtensor pointers.
-    BinaryContraction(std::shared_ptr<Tensor> o, std::shared_ptr<ListTensor> l, std::string lab);
-    ~BinaryContraction() {};
+    BinaryContraction(std::shared_ptr<Tensor> o, std::shared_ptr<ListTensor> l, std::string lab, const bool rt);
+    ~BinaryContraction() { }
 
     /// Return list of trees below.
-    std::list<std::shared_ptr<Tree>>& subtree() { return subtree_; };
+    std::list<std::shared_ptr<Tree>>& subtree() { return subtree_; }
     /// Return current tensor. For example f1, h1, v2, t2, etc.
-    std::shared_ptr<Tensor> tensor() { return tensor_; };
+    std::shared_ptr<Tensor> tensor() { return tensor_; }
     /// Return target tensor. An intermediate tensor, for example I0.
-    std::shared_ptr<Tensor> target() { return target_; };
+    std::shared_ptr<Tensor> target() { return target_; }
     /// Retrieve next target--next intermediate below, for example I1. This is the front of subtree of target.
     std::shared_ptr<Tensor> next_target();
     /// Returns vector of tensor with target tensor. 
@@ -82,7 +83,7 @@ class BinaryContraction {
     /// Returns excitation target indices.
     std::string ex_target_index_str() const; 
     /// Returns bc label.
-    std::string label() { return label_; };
+    std::string label() { return label_; }
   
     /// Do factorization and then merge subtrees.
     void factorize();
@@ -100,17 +101,17 @@ class BinaryContraction {
     /// Returns a list of target indices..these are to be stored (via put_block).
     std::list<std::shared_ptr<const Index>> target_indices();
     /// Return excitation target indices.
-    std::list<std::shared_ptr<const Index>> ex_target_index() { return ex_target_index_; };
+    std::list<std::shared_ptr<const Index>> ex_target_index() { return ex_target_index_; }
     /// True if bc is associated with excitation target indices.
-    bool has_ex_target_index() { return !ex_target_index_.empty(); };
+    bool has_ex_target_index() { return !ex_target_index_.empty(); }
 
     /// If transpose.
     bool dagger() const;
 
     /// Returns node above.
-    Tree* parent() { return parent_; };
+    Tree* parent() { return parent_; }
     /// Returns const node above.
-    const Tree* parent() const { return parent_; };
+    const Tree* parent() const { return parent_; }
 
     /// Returns the ranks of RDMs in subtree_.
     std::vector<int> required_rdm(std::vector<int> input) const;
@@ -119,7 +120,7 @@ class BinaryContraction {
     int depth() const;
 
     /// Calls generate_task_list for subtree.
-    std::pair<std::string, std::string> generate_task_list() const;
+    std::tuple<std::string, std::string, int, int> generate_task_list(int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma) const;
 
 };
 
@@ -140,28 +141,31 @@ class Tree {
     /// Points above. TODO raw pointer should be replaced by some better mean
     BinaryContraction* parent_;
 
-    /// std::string tree name used in generated code.
-    std::string tree_name_;
-
-    /// This is only used in the top level for unique Gamma tensors.
+    /// This is only used for finding gamma with in the tree.
     std::list<std::shared_ptr<Tensor>> gamma_;
 
-    /// Add dependency tasks.
-    std::string add_depend(const std::shared_ptr<const Tensor> o) const;
+    /// For code generation.
+    std::string tree_name_;
 
-    /// When we generate, a counter is used to generate a list of tasks.
+    /// Add dependency tasks. 
+    std::string add_depend(const std::shared_ptr<const Tensor> o, const std::list<std::shared_ptr<Tensor>> gamma) const;
+
+    /// When we generate, a counter is used to generate a list of tasks. 
     mutable int num_;
-
+    
     /// Tree label, used for graph-specific code generation. 
     std::string label_;
+
+    /// If top of tree has target indices. 
+    const bool root_targets_;
 
 
   public:
     /// Construct tree from equation and set tree label. Tree construction starts here.
-    Tree(const std::shared_ptr<Equation> eq, std::string lab="");
+    Tree(const std::shared_ptr<Equation> eq, std::string lab = "");
     /// Construct tree of listtensors.
-    Tree(const std::shared_ptr<ListTensor> l, std::string lab);
-    virtual ~Tree() {};
+    Tree(const std::shared_ptr<ListTensor> l, std::string lab, const bool t);
+    virtual ~Tree() { }
 
 
     /// Return label of tree. 
@@ -173,25 +177,31 @@ class Tree {
     /// Prints tree which consists of tensor binary contrations between tensors and tensor additions. If excitation targets are present,  these printed without tensor label at top of tree.
     void print() const;
 
-    /// Returns num_. Should be greater than zero, otherwise throws an error.
+    /// Returns num_. Should be greater than zero, otherwise throws an error. 
     int num() const {
       if (num_ < 0) throw std::logic_error("it seems that the logic is broken - Tree::num_ is not initialized.");
       return num_;
-    };
+    }
 
     /// Return pointer to target tensor.
-    std::shared_ptr<Tensor> target() const { return target_; };
-    /// Returns tree name, for generated code..
-    std::string tree_name() const { return tree_name_; };
+    std::shared_ptr<Tensor> target() const { return target_; }
+    /// Returns true if top of tree has excitation targets.
+    const bool root_targets() const { return root_targets_; }
+    /// Return operator tensors.
+    std::vector<std::shared_ptr<Tensor>> op() const { return op_; }
+    /// Return bc.
+    std::list<std::shared_ptr<BinaryContraction>> bc() const { return bc_; }
+    /// Return tree name for code generation.
+    std::string tree_name() const { return tree_name_; }
     /// If transpose.
-    bool dagger() const { return dagger_; };
+    bool dagger() const { return dagger_; }
 
     /// Factorize (i.e., perform factorize in BinaryContraction).
     void factorize();
     /// Combine trees if tensors are equal, or if have operator tensors.
     bool merge(std::shared_ptr<Tree> o);
 
-    void set_parent(BinaryContraction* o) { parent_ = o; };
+    void set_parent(BinaryContraction* o) { parent_ = o; }
     /// Sets parent and does set_parent_subtree for bc_ (bc_ and tree alternate in graph).
     void set_parent_sub();
 
@@ -210,25 +220,30 @@ class Tree {
     /// Recursive function to collect all Gamma tensors in graph.
     std::list<std::shared_ptr<Tensor>> gather_gamma() const;
     /// Returns gamma_, list of unique Gamma tensors.
-    std::list<std::shared_ptr<Tensor>> gamma() const { return gamma_; };
+    std::list<std::shared_ptr<Tensor>> gamma() const { return gamma_; }
 
     /// This function returns the rank of required RDMs here + inp. Goes through bc_ and op_ tensor lists.
     std::vector<int> required_rdm(std::vector<int> inp) const;
 
 
     // code generators!
-    /// Generate task and task list files.
-    std::pair<std::string,std::string> generate_task_list(const std::list<std::shared_ptr<Tree>> energy = std::list<std::shared_ptr<Tree>>()) const;
+    /// Generate task and task list files. 
+    std::tuple<std::string,std::string, int, int> generate_task_list(int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma) const;
+    /// Generate code by stepping through op and bc.
+    std::tuple<std::string, std::string, int, int> generate_steps(const std::string indent, int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma) const;
+    /// Generate task in dependency file with ic as task number 
+    std::string generate_task(const std::string indent, const int ic, const std::vector<std::shared_ptr<Tensor>>, const std::list<std::shared_ptr<Tensor>> g, const int i0 = 0) const;
+
 
     /// Generate task for operator task (ie not a binary contraction task). Dagger arguement refers to front subtree used at top level.
     std::string generate_compute_operators(const std::string, const std::shared_ptr<Tensor>, const std::vector<std::shared_ptr<Tensor>>,
                                            const bool dagger = false) const;
-    /// Generate task in dependency file with ic as task number
-    std::string generate_task(const std::string indent, const int ic, const std::vector<std::shared_ptr<Tensor>>, const int i0 = 0) const;
 
     // Tree specific code generation moved to derived classes. 
     /// Needed for zero level target tensors. Generates a Task '0' ie task to initialize top (zero depth) target tensor also sets up dependency queue.
     virtual std::pair<std::string, std::string> create_target(const std::string, const int i) const = 0;
+    /// Create new tensor based on derived tree.
+    virtual std::shared_ptr<Tensor> create_tensor(std::list<std::shared_ptr<const Index>>) const = 0;
     /// Generate a task. Here ip is the tag of parent, ic is the tag of this.
     virtual std::string generate_task(const std::string, const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0) const = 0;
     /// Generate task header.

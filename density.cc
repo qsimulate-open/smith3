@@ -85,6 +85,12 @@ pair<string, string> Density::create_target(const string indent, const int i) co
 }
 
 
+shared_ptr<Tensor> Density::create_tensor(list<shared_ptr<const Index>> dm) const {
+ shared_ptr<Tensor> density(new Tensor(1.0, "den1_", dm));
+ return density;
+}
+
+
 string Density::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int iz) const {
   stringstream ss;
   ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << ic << " = {" << merge__(op) << "};" << endl;

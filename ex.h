@@ -50,7 +50,7 @@ class Ex : public Operator {
     Ex(const std::string& oa, const std::string& ob);
     /// Create two-body operator. Projection operator should be replaced via this.
     Ex(const std::string& oa, const std::string& ob, const std::string& oc, const std::string& od);
-    virtual ~Ex() {};
+    virtual ~Ex() { }
 
     /// Print out operator.
     void print() const override;
@@ -67,7 +67,7 @@ class Ex : public Operator {
     std::shared_ptr<Operator> copy() const override;
 
     /// Excitation operators have no label as not associated with tensor.
-    std::string label() const override { return ""; };
+    std::string label() const override { return ""; }
 
 };
 

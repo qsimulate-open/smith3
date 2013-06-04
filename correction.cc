@@ -287,8 +287,3 @@ pair<string, string> Correction::generate_bc(const string indent, const shared_p
 
 
 
-
-
-
-
-

@@ -66,9 +66,9 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
               (l == "x" && k == "c" && j == "x" && i == "a") ||
               (l == "x" && k == "x" && j == "x" && i == "a") ||
               (l == "x" && k == "c" && j == "x" && i == "x")) {
-#else   // turn on one of the following lines
-          // test the mp2-like contributions:
-               if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") ||  (l == "x" && k == "x" && j == "a" && i == "a")) { 
+#else  // turn on one of the following lines
+       // test the mp2-like contributions:
+          if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") ||  (l == "x" && k == "x" && j == "a" && i == "a")) { 
 // *test single configuration cases*
 //        if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
 //        if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
@@ -122,8 +122,9 @@ int main() {
   for (auto& i : dum)       cout << i->generate();
   for (auto& i : t_dagger)  cout << i->generate();
   for (auto& i : ex1b)      cout << i->generate();
+  cout << endl;
   
-  // residual equations
+  // residual equations // 
   shared_ptr<Equation> eq0(new Equation("ra", {dum, proj_list, f, t_list}));
   shared_ptr<Equation> eq1(new Equation("rb", {dum, proj_list, t_list}, 1.0, "e0"));
   shared_ptr<Equation> eq2(new Equation("rc", {dum, proj_list, H}));
@@ -132,42 +133,37 @@ int main() {
   eq0->merge(eq2);
   eq0->merge(eq2a);
   eq0->set_tree_type("residual");
-  cout << eq0->generate({});
+  cout << eq0->generate();
 
-  // energy equations
+  // energy equations //
   shared_ptr<Equation> eq3(new Equation("ea", {dum, t_dagger, H}));
   shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, hc}));
   eq3->merge(eq3a);
   eq3->set_tree_type("energy");
-  cout << eq3->generate({eq0});
+  cout << eq3->generate();
 
-  // density matrix test ground
-#if 1
-  // generate unlinked correction term to density matrix for testing 
+  // density matrix equations // 
+  // generate unlinked correction term for one-body density matrix 
   shared_ptr<Equation> eq4(new Equation("ca", {dum, t_dagger, t_list}, 0.25));
   eq4->set_tree_type("correction");
+  cout << eq4->generate();
 
-  cout << eq4->generate({eq0});
-
-  // density matrix equations
-#if 0 // test one particle contribution
+  // one-body contribution
   shared_ptr<Equation> eq5(new Equation("da", {dum, t_dagger, ex1b, t_list}, 0.25));
   shared_ptr<Equation> eq5a(new Equation("db", {dum, ex1b, t_list}, 1.0));
   eq5->merge(eq5a);
-#else // two particle contribution 
-  shared_ptr<Equation> eq5(new Equation("da", {dum, proj_list, t_list}, 0.5));
-#endif
 
   eq5->set_tree_type("density");
-  cout << eq5->generate({});
-  // done. generate the footer
-  cout << footer(eq0->tree_label(), eq3->tree_label(), eq4->tree_label(), eq5->tree_label()) << endl;
+  cout << eq5->generate();
 
-#else
-  // done. generate the footer
-  cout << footer(eq0->tree_label(), eq3->tree_label()) << endl;
+  // two-body contribution
+  shared_ptr<Equation> eq6(new Equation("d2a", {dum, proj_list, t_list}, 0.5));
+  eq6->set_tree_type("density2");
+  cout << eq6->generate();
 
-#endif
+  // done. generate the footer
+  cout << footer(eq0->tree_label(), eq3->tree_label(), eq4->tree_label(), eq5->tree_label(), eq6->tree_label()) << endl;
+
 
   return 0;
 }

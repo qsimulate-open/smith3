@@ -52,8 +52,8 @@ class ListTensor {
     ListTensor(std::shared_ptr<Diagram> d);
     /// Construct listtensor using prefactor, scalar, list of tensors and dagger information.
     ListTensor(double f, std::string sc, std::list<std::shared_ptr<Tensor>> ve, bool d)
-      : fac_(f), scalar_(sc), list_(ve), dagger_(d) {};
-    ~ListTensor() {};
+      : fac_(f), scalar_(sc), list_(ve), dagger_(d) { }
+    ~ListTensor() { }
     
     /// Prints prefactor, if available: scalar, dagger. Finally prints out each tensor in list.
     void print() const;
@@ -61,20 +61,20 @@ class ListTensor {
     void absorb_all_internal();
 
     /// Returns the size of the list of tensors.
-    int length() const { return list_.size(); };
+    int length() const { return list_.size(); }
     /// Returns first tensor in the list of tensors.
-    std::shared_ptr<Tensor> front() const { return list_.front(); };
+    std::shared_ptr<Tensor> front() const { return list_.front(); }
     /// Returns the list of tensors (listtensor) minus the front tensor.
     std::shared_ptr<ListTensor> rest() const ;
     /// Creates! and returns a target tensor from the list of tensors.
     std::shared_ptr<Tensor> target() const;
 
     /// Returns the prefactor for listtensor.
-    double fac() const { return fac_; };
+    double fac() const { return fac_; }
     /// Returns scalar for listtensor.
-    std::string scalar() const { return scalar_; };
+    std::string scalar() const { return scalar_; }
     /// Returns dagger (if transpose) for listtensor.
-    bool dagger() const { return dagger_; };
+    bool dagger() const { return dagger_; }
 };
 
 }

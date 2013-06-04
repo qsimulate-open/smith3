@@ -64,6 +64,7 @@ class Tensor {
 
     /// Alias tensor if any.
     std::shared_ptr<Tensor> alias_;
+
     /// For counting Gamma tensors, used when adding all active tensor, see merge().
     mutable int num_;
 
@@ -71,50 +72,51 @@ class Tensor {
   public:
     /// Constructor for tensor with scalar.
     Tensor(const double& d, const std::string s, const std::string& l, const std::list<std::shared_ptr<const Index>>& i)
-      : factor_(d), scalar_(s), label_(l), index_(i) { };
+      : factor_(d), scalar_(s), label_(l), index_(i) {}
     /// Constructor for tensor without scalar.
     Tensor(const double& d, const std::string& l, const std::list<std::shared_ptr<const Index>>& i)
-      : factor_(d), label_(l), index_(i) { };
+      : factor_(d), label_(l), index_(i) {}
     /// Constructor for const operator tensor, creates index list and checks for target indices. Called from listtensor after labels are checked in listtensor constructor. 
     Tensor(const std::shared_ptr<Operator> op);
     /// Constructor for const active tensor.
     Tensor(const std::shared_ptr<Active> active);
     /// Construct tensor with no arguements.
-    Tensor() {};
-    ~Tensor() {};
+    Tensor() { }
+    ~Tensor() { }
 
     /// Returns list of index pointers for tensor.
-    std::list<std::shared_ptr<const Index>>& index() { return index_; };
+    std::list<std::shared_ptr<const Index>>& index() { return index_; }
     /// Returns const list of index pointers for tensor.
-    const std::list<std::shared_ptr<const Index>>& index() const { return index_; };
+    const std::list<std::shared_ptr<const Index>>& index() const { return index_; }
 
 
     /// Returns const Tensor pointer.
-    const std::shared_ptr<const Tensor> merged() const { return merged_; };
+    const std::shared_ptr<const Tensor> merged() const { return merged_; }
+
     /// Returns tensor rank, cannot be called by DF tensors so far. 
     int rank() const {
       if (index_.size() & 1) throw std::logic_error("Tensor::rank() cannot be called by DF tensors so far.");
       return index_.size() >> 1;
-    };
+    }
     
     /// Returns string with tensor prefactors, label, indices and those of merged and alias tensors. 
     std::string str() const;
-    void print(std::string indent = "") const { std::cout << indent << str() << std::endl; };
+    void print(std::string indent = "") const { std::cout << indent << str() << std::endl; }
     /// Set prefactor for tensor.
-    void set_factor(const double a) { factor_ = a; };
+    void set_factor(const double a) { factor_ = a; }
     /// Set name of scalar. Actual value is defined later on BAGEL side, eg e0.
-    void set_scalar(const std::string s) { scalar_ = s; };
+    void set_scalar(const std::string s) { scalar_ = s; }
 
     /// Returns tensor prefactor.
-    double factor() const { return factor_; };
+    double factor() const { return factor_; }
     /// Returns scalar name.
-    std::string scalar() const { return scalar_; };
+    std::string scalar() const { return scalar_; }
     /// Returns tensor name.
-    std::string label() const { return alias_ ? alias_->label() : label_; };
+    std::string label() const { return alias_ ? alias_->label() : label_; }
     /// Returns active tensor pointer.
-    std::shared_ptr<Active> active() { return active_; };
+    std::shared_ptr<Active> active() { return active_; }
     /// Returns const active tensor pointer.
-    const std::shared_ptr<Active> active() const { return active_; };
+    const std::shared_ptr<Active> active() const { return active_; }
 
     /// Returns true if all the indices are of active orbitals.
     bool all_active() const;
@@ -125,7 +127,10 @@ class Tensor {
     /// Adds all-active tensor to Active_.
     void merge(std::shared_ptr<Tensor> o);
     /// Sets alias used for equivalent Gamma tensor. Used in Tree::find_gamma(). The alias is given to tensor o.
-    void set_alias(std::shared_ptr<Tensor> o) { alias_ = o; };
+    void set_alias(std::shared_ptr<Tensor> o) { alias_ = o; }
+    /// if tensor is a repeat.
+    bool has_alias() { bool has_ = false; 
+         if (alias_) has_ = true; return has_; }
 
 
     /// Generates string for constructor for tensors in Method.h file
@@ -148,9 +153,9 @@ class Tensor {
     /// Generate code for Gamma (overlap) task.
     std::string generate_gamma(const int, const bool) const;
     /// Returns Gamma (overlap) number.
-    int num() const { assert(label_.find("Gamma") != std::string::npos); return num_; }; 
+    int num() const { assert(label_.find("Gamma") != std::string::npos); return num_; }
     /// Set Gamma (overlap) number.
-    void set_num(const int n) const { assert(label_.find("Gamma") != std::string::npos); num_ = n; };
+    void set_num(const int n) const { assert(label_.find("Gamma") != std::string::npos); num_ = n; }
 
 };
 

@@ -40,14 +40,15 @@ class Density : public Tree {
 
   public:
     /// Construct tree of equation pointers and set tree label.
-    Density(const std::shared_ptr<Equation> eq, std::string lab="") : Tree(eq, lab) {};
-    Density(const std::shared_ptr<ListTensor> l, std::string lab) : Tree(l, lab) {};
-    virtual ~Density() {};
+    Density(const std::shared_ptr<Equation> eq, std::string lab = "") : Tree(eq, lab) { }
+    Density(const std::shared_ptr<ListTensor> l, std::string lab, const bool t) : Tree(l, lab, t) { }
+    virtual ~Density() { }
     
     /// Return label of tree.
-    std::string label() const override { return label_; };
-  
+    std::string label() const override { return label_; }
+
     std::pair<std::string, std::string> create_target(const std::string, const int i) const override;
+    std::shared_ptr<Tensor> create_tensor(std::list<std::shared_ptr<const Index>>) const override;
 
     std::string generate_task(const std::string, const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0) const override;
     std::string generate_compute_header(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool = false) const override;

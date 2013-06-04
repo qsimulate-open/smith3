@@ -1,6 +1,6 @@
 //
 // SMITH3 - generates spin-free multireference electron correlation programs.
-// Filename: energy.h
+// Filename: density2.h
 // Copyright (C) 2013 Matthew MacLeod
 //
 // Author: Matthew MacLeod <matthew.macleod@northwestern.edu>
@@ -24,8 +24,8 @@
 //
 
 
-#ifndef __ENERGY_H
-#define __ENERGY_H
+#ifndef __DENSITY2_H
+#define __DENSITY2_H
 
 #include <string>
 #include <memory>
@@ -35,26 +35,25 @@
 
 namespace smith {
 
-class Energy : public Tree {
+class Density2 : public Tree {
   protected:
-
 
   public:
     /// Construct tree of equation pointers and set tree label.
-    Energy(const std::shared_ptr<Equation> eq, std::string lab = "") : Tree(eq, lab) { }
-    Energy(const std::shared_ptr<ListTensor> l, std::string lab, const bool t) : Tree(l, lab, t) { }
-    virtual ~Energy() { }
-
+    Density2(const std::shared_ptr<Equation> eq, std::string lab = "") : Tree(eq, lab) { }
+    Density2(const std::shared_ptr<ListTensor> l, std::string lab, const bool t) : Tree(l, lab, t) { }
+    virtual ~Density2() { }
+    
     /// Return label of tree.
     std::string label() const override { return label_; }
-
-    std::pair<std::string, std::string> create_target(const std::string, const int) const override { return std::make_pair("Should not be needed in energy tree",  ""); }
-    std::shared_ptr<Tensor> create_tensor(std::list<std::shared_ptr<const Index>>) const override { return  std::shared_ptr<Tensor>(); } 
+  
+    std::pair<std::string, std::string> create_target(const std::string, const int i) const override;
+    std::shared_ptr<Tensor> create_tensor(std::list<std::shared_ptr<const Index>>) const override;
 
     std::string generate_task(const std::string, const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0) const override;
     std::string generate_compute_header(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool = false) const override;
     std::string generate_compute_footer(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>) const override;
-    std::pair<std::string, std::string> generate_bc(const std::string, std::shared_ptr<BinaryContraction>) const override;
+    std::pair<std::string, std::string> generate_bc(std::string indent, std::shared_ptr<BinaryContraction>) const override;
 
 };
 

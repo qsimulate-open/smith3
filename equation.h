@@ -47,7 +47,7 @@ class Equation {
   public:
     /// Construct equation from diagram and name. Contract operators in diagram.
     Equation(std::shared_ptr<Diagram>, std::string nam);
-    ~Equation() {};
+    ~Equation() { }
 
     /// Merging two sets of Equation.  Done by adding the diagrams of new equation (in merge arguement) to the original equation.
     void merge(const std::shared_ptr<Equation> o) {
@@ -56,6 +56,9 @@ class Equation {
 
     /// Prunes equation to those terms containing target indices.
     void term_select(std::list<std::string> t);
+
+    /// Check for targets.
+    bool ex_targets() const;
 
     /// Print function. This triggers Diagram::refresh_indices().
     void print();

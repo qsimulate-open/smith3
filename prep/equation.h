@@ -67,7 +67,8 @@ class Equation {
       diagram_.insert(diagram_.end(), o->diagram_.begin(), o->diagram_.end());
     }
 
-    std::string generate(std::initializer_list<std::shared_ptr<Equation>> o) const {
+    // mkm std::string generate(std::initializer_list<std::shared_ptr<Equation>> o) const {
+    std::string generate() const {
       std::stringstream ss;
       for (auto& i : diagram_) ss << i->construct_str();
       for (auto& i : diagram_) ss << i->diagram_str();
@@ -81,8 +82,8 @@ class Equation {
 
 #if 0 // prune density matrix equation to keep following terms, for testing 
       if (!tree_type_.empty() && tree_type_ == "density") {
-          ss << "  " << "list<string> terms = {\"c\", \"a\"};" << std::endl;
-        //ss << "  " << "list<string> terms = {\"c\", \"x\"};" << std::endl;
+        //ss << "  " << "list<string> terms = {\"c\", \"a\"};" << std::endl;
+          ss << "  " << "list<string> terms = {\"c\", \"x\"};" << std::endl;
         //ss << "  " << "list<string> terms = {\"x\"};" << std::endl;
         //ss << "  " << "list<string> terms = {\"c\"};" << std::endl;
         //ss << "  " << "list<string> terms = {\"a\"};" << std::endl;
@@ -98,17 +99,13 @@ class Equation {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Correction(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else if (!tree_type_.empty() && tree_type_ == "density") {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Density(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
+      } else if (!tree_type_.empty() && tree_type_ == "density2") {
+          ss << "  shared_ptr<Tree> " << tree_label() << "(new Density2(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else {
           throw std::logic_error("prep/equation.cc error, tree must be of derived type");
           // ss << "  shared_ptr<Tree> " << tree_label() << "(new Tree(e" << diagram_.front()->label() << "));" << std::endl;
       }
 
-      if (o.size() == 0) {
-        ss << "  " << tree_label() << "->sort_gamma();" << std::endl;
-      } else {
-        for (auto i = o.begin(); i != o.end(); ++i)
-          ss << "  " << tree_label() << "->sort_gamma(" << (*i)->tree_label() << "->gamma());" << std::endl;
-      }
       ss << std::endl;
       return ss.str();
     };

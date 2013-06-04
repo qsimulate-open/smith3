@@ -56,13 +56,13 @@ class Op : public Operator {
     /// Create one-body tensor with spin information. No operator is created.
     Op(const std::string lab, std::shared_ptr<Index> ta, std::shared_ptr<Index> tb, std::shared_ptr<Spin> ts = std::make_shared<Spin>());
     /// Create operator with label.
-    Op(const std::string lab = "") : label_(lab) { };
-    virtual ~Op() {};
+    Op(const std::string lab = "") : label_(lab) { }
+    virtual ~Op() { }
 
     bool is_ex() const { return false; }
 
     /// Returns operator name.
-    std::string label() const override { return label_; };
+    std::string label() const override { return label_; }
 
     /// Print out operator.
     void print() const override;

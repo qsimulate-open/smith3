@@ -289,5 +289,3 @@ pair<string, string> Energy::generate_bc(const string indent, const shared_ptr<B
 
 
 
-
-

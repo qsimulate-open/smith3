@@ -40,20 +40,20 @@ class Spin {
     int num_;
   public:
     /// Construct spin, initialize number information.
-    Spin() : num_(0) {};
-    ~Spin() {};
+    Spin() : num_(0) { }
+    ~Spin() { }
 
     /// Returns spin.
-    int num() const { return num_; };
+    int num() const { return num_; }
     /// Sets spin.
-    void set_num(const int i) { num_ = i; };
+    void set_num(const int i) { num_ = i; }
    
     /// Returns spin in parenthesis (number).
     std::string str() const {
       std::stringstream ss;
       ss << "(" << num_ << ")";
       return ss.str();
-    };
+    }
 };
 
 /// A class for orbital attributes. Index defined by label (space), spin, electron number and if is transposed (daggered).
@@ -71,37 +71,37 @@ class Index {
 
   public:
     /// Make index object from label and dagger info. Initialize label, number(0), dagger, and target(false).
-    Index(std::string lab, bool dag) : label_(lab), num_(0), dagger_(dag) {};
+    Index(std::string lab, bool dag) : label_(lab), num_(0), dagger_(dag) {}
     Index(const Index& o) : label_(o.label_), num_(o.num_), dagger_(o.dagger_), spin_(o.spin_) { }
-    ~Index() {};
+    ~Index() { }
 
     /// Return index number. 
-    int num() const { return num_; };
+    int num() const { return num_; }
     /// Return if should be transposed.
-    bool dagger() const { return dagger_; };
+    bool dagger() const { return dagger_; }
     /// Set index number.
-    void set_num(const int i) { num_ = i; };
+    void set_num(const int i) { num_ = i; }
     /// Return index label (orbital type).
-    const std::string label() const { return label_; };
+    const std::string label() const { return label_; }
     /// Set index type, default is a (virtual).
-    void set_label(const std::string& a) { label_ = a; };
+    void set_label(const std::string& a) { label_ = a; }
 
     /// If active.  Checks label if active (x).
-    bool active() const { return label_ == "x"; };
+    bool active() const { return label_ == "x"; }
   
 
     /// Sets spin.
     void set_spin(const std::shared_ptr<Spin> s) const { spin_ = s; }
 //  std::shared_ptr<Index> set_spin(const std::shared_ptr<Spin> s) const { std::shared_ptr<Index> out(new Index(*this)); out->spin_ = s; return out; }
     /// Returns spin.
-    std::shared_ptr<Spin> spin() { assert(spin_); return spin_; };
+    std::shared_ptr<Spin> spin() { assert(spin_); return spin_; }
     /// Returns const spin.
-    const std::shared_ptr<Spin> spin() const { assert(spin_); return spin_; };
+    const std::shared_ptr<Spin> spin() const { assert(spin_); return spin_; }
 
     /// Returns true if spin is same for both indices.
-    bool same_spin(const std::shared_ptr<const Index>& o) const { return o->spin() == spin(); };
+    bool same_spin(const std::shared_ptr<const Index>& o) const { return o->spin() == spin(); }
     /// Returns true if index number is same for both indices.
-    bool same_num(const std::shared_ptr<const Index>& o) const { return o->num() == num(); };
+    bool same_num(const std::shared_ptr<const Index>& o) const { return o->num() == num(); }
 
     /// Returns string with index label_, and if argument is true: dagger info (nothing or if daggered, +) and spin info.
     std::string str(const bool opr = true) const {
@@ -114,13 +114,13 @@ class Index {
         ss << spin_->str();
       }
       return ss.str();
-    };
+    }
     /// Returns string with index label_ and num_. 
     std::string str_gen() const {
       std::stringstream ss;
       ss << label_ << abs(num_);
       return ss.str();
-    };
+    }
     /// Prints index using str().
     void print() const { std::cout << str() << std::endl; };
 
@@ -130,12 +130,12 @@ class Index {
       std::shared_ptr<Index> out(new Index(label_, dagger_));
       out->set_num(num_);
       return out;
-    };
+    }
 
     /// Check if indices are equal by comparing num() and label(). Be careful that this does not check dagger! Should not check, actually. 
     bool identical(std::shared_ptr<const Index> o) const {
       return num() == o->num() && label() == o->label();
-    };
+    }
 
     /// Gives orbital space name (closed_, virt_, active_) based on index label_.
     std::string generate() const {
@@ -150,7 +150,7 @@ class Index {
         throw std::runtime_error("unkonwn index type in Index::generate()");
       }
       return out;
-    };
+    }
 
     /// Gives orbital space range name ([0], [1], [2] for closed, active, and virtual spaces, respectively) based on index label.
     std::string generate_range(const std::string postfix = "") const {
@@ -165,7 +165,7 @@ class Index {
         throw std::runtime_error("unkonwn index type in Index::generate_range()");
       }
       return out;
-    };
+    }
 
 };
 

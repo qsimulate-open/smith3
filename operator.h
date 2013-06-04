@@ -77,8 +77,8 @@ class Operator {
     Operator(const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td);
     /// Create one-body base with spin information. No operator is created.
     Operator(std::shared_ptr<Index> ta, std::shared_ptr<Index> tb, std::shared_ptr<Spin> ts = std::make_shared<Spin>());
-    Operator(){};
-    virtual ~Operator() {};
+    Operator() { }
+    virtual ~Operator() { }
 
     /// pure virtual print out operator.
     virtual void print() const = 0; // pure virtual function to force derived classes to define these members.
@@ -114,20 +114,20 @@ class Operator {
 
 
     /// Set spin.
-    void set_rho(const int i, std::shared_ptr<Spin> a) { rho_[i] = a; };
+    void set_rho(const int i, std::shared_ptr<Spin> a) { rho_[i] = a; }
     /// Returns spin.
-    std::vector<std::shared_ptr<Spin>>& rho() { return rho_; };
+    std::vector<std::shared_ptr<Spin>>& rho() { return rho_; }
     /// Returns const spin.
-    std::shared_ptr<Spin> rho(const int i) const { return rho_.at(i); };
+    std::shared_ptr<Spin> rho(const int i) const { return rho_.at(i); }
     /// Returns a const pointer to spin.
-    const std::shared_ptr<Spin>* rho_ptr(const int i) const { return &rho_.at(i); };
+    const std::shared_ptr<Spin>* rho_ptr(const int i) const { return &rho_.at(i); }
     /// Returns a pointer to spin.
     std::shared_ptr<Spin>* rho_ptr(const int i) { return &rho_.at(i); };
 
     /// Return const operator reference.
-    const std::list<std::tuple<std::shared_ptr<Index>*, int, int>>& op() const { return op_; };
+    const std::list<std::tuple<std::shared_ptr<Index>*, int, int>>& op() const { return op_; }
     /// Return operator reference.
-    std::list<std::tuple<std::shared_ptr<Index>*, int, int>>& op() { return op_; };
+    std::list<std::tuple<std::shared_ptr<Index>*, int, int>>& op() { return op_; }
 
 
     /// CAUTION:: this function returns the first daggered operator (not an active operator, nor already contracted) **AND** deletes the corresponding entry from this->op_, by marking as contracted.
