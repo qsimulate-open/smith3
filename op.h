@@ -42,10 +42,10 @@
 
 namespace smith {
 
-/// Derived class for spin-summed operators which produce tensors. 
+/// Derived class for spin-summed operators which produce tensors.
 class Op : public Operator {
   protected:
-    /// Related to tensor info. 
+    /// Related to tensor info.
     std::string label_;
 
   public:
@@ -75,7 +75,7 @@ class Op : public Operator {
 
     /// Creates a new Operator pointer.
     std::shared_ptr<Operator> copy() const override;
-   
+
 
 };
 

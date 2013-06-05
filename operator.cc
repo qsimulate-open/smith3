@@ -110,7 +110,7 @@ bool Operator::general() const {
 int Operator::num_general() const {
   int out = 0;
   for (auto& i : op_)
-    if((*get<0>(i))->label() ==  "g") ++out; 
+    if((*get<0>(i))->label() ==  "g") ++out;
   return out;
 }
 
@@ -124,7 +124,7 @@ void Operator::mutate_general(int& in) {
       }
       in >>= 1;  // decrease in by one bit
     }
-  } 
+  }
 }
 
 
@@ -222,7 +222,7 @@ tuple<double, shared_ptr<Spin>, shared_ptr<Spin>>
         *dat.first = *get<0>(*i);
         fac *= (*dat.second == rho(get<2>(*i))) ? 2.0 : 1.0;
         a = *dat.second;
-        b = rho(get<2>(*i)); 
+        b = rho(get<2>(*i));
         set_rho(get<2>(*i), *dat.second);
 
         break;

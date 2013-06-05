@@ -43,22 +43,22 @@ void Forest::filter_gamma() {
     if (i->label() == "residual") {
       i->sort_gamma();
       res = i;
-    } else {  
+    } else {
       i->sort_gamma(res->gamma());
     }
 
     g = i->gamma();
 
-    for (auto& j : g) { 
+    for (auto& j : g) {
       bool found = false;
       for (auto& k : gamma_) {
         if ((*j) == (*k)) {
           found = true;
           break;
         }
-      }   
+      }
       if (!found) gamma_.push_back(j);
-    } 
+    }
   }
 
 }
@@ -76,7 +76,7 @@ pair<string, string> Forest::generate_code() const {
   out = generate_headers();
   ss << out.first;
   tt << out.second;
- 
+
   out = generate_gammas();
   ss << out.first;
   tt << out.second;
@@ -84,9 +84,9 @@ pair<string, string> Forest::generate_code() const {
 
   for (auto& i : trees_) {
     // or go into tree and generate w/ and new cleaned up generate_tasks_list for one tree only
-    tuple<string, string, int, int> tmp = i->generate_task_list(icnt, i0, gamma_); 
+    tuple<string, string, int, int> tmp = i->generate_task_list(icnt, i0, gamma_);
     tie(depends, tasks, icnt, i0) = tmp;
-    ss << depends; 
+    ss << depends;
     tt << tasks;
   }
 
@@ -170,16 +170,16 @@ pair<string, string> Forest::generate_gammas() const {
 
     i->set_num(icnt);
     assert(i->label().find("Gamma") != string::npos);
-    ss << i->constructor_str(indent) << endl; 
+    ss << i->constructor_str(indent) << endl;
 
-    // switch for blas, if true merged rdm*f1 tensor multiplication will use blas 
+    // switch for blas, if true merged rdm*f1 tensor multiplication will use blas
     bool use_blas = false;
     tt << i->generate_gamma(icnt, use_blas);
 
     vector<string> tmp = {i->label()};
-    vector<int> rdms = i->active()->required_rdm(); 
+    vector<int> rdms = i->active()->required_rdm();
     for (auto& j : rdms) {
-      stringstream zz; 
+      stringstream zz;
       zz << "this->rdm" << j << "_";
       tmp.push_back(zz.str());
     }
@@ -188,7 +188,7 @@ pair<string, string> Forest::generate_gammas() const {
       mm << "this->" << i->merged()->label() << "_";
       tmp.push_back(mm.str());
     }
-    // virtual generate_task  
+    // virtual generate_task
     ss << trees_.front()->generate_task(indent, 0, icnt, tmp);
     ++icnt;
   }
@@ -214,7 +214,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      t2->scale(2.0);" << endl;
   ss << "      r = t2->clone();" << endl;
   ss << "      this->den1_ = this->h1_->clone();" << endl;
-  ss << "      this->den2_ = this->v2_->clone();" << endl;  
+  ss << "      this->den2_ = this->v2_->clone();" << endl;
   ss << "    };" << endl;
   ss << "    ~" << forest_name_ << "() {}; " << endl;
   ss << "" << endl;
@@ -260,7 +260,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      double n = 0.0;" << endl;
   ss << "      while (!correct->done()) {" << endl;
   ss << "        std::shared_ptr<Task<T>> c = correct->next_compute();" << endl;
-  ss << "        n += c->correction();" << endl;  
+  ss << "        n += c->correction();" << endl;
   ss << "      }   " << endl;
   ss << "      return n; " << endl;
   ss << "    };  " << endl;
@@ -277,7 +277,7 @@ pair<string, string> Forest::generate_algorithm() const {
   tt << "}" << endl;
   tt << "}" << endl;
   tt << "}" << endl;
-  tt << "#endif" << endl << endl; 
+  tt << "#endif" << endl << endl;
 
   return make_pair(ss.str(), tt.str());
 }

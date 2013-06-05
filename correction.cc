@@ -88,7 +88,7 @@ string Correction::generate_compute_header(const int ic, const list<shared_ptr<c
   tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << ",T> {" << endl;
   tt << "      protected:" << endl;
   tt << "        const std::array<std::shared_ptr<const IndexRange>,3> range_;" << endl << endl;
- 
+
   tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
   tt << "        const std::shared_ptr<const Tensor<T>>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
   tt << "        const std::shared_ptr<Tensor<T>>& out() const { return this->out_tensor(); }" << endl;
@@ -110,7 +110,7 @@ string Correction::generate_compute_header(const int ic, const list<shared_ptr<c
   tt << "        double correction() const { return correction_; }" << endl;
   tt << endl;
   tt << "        void compute() override {" << endl;
-  tt << "          correction_ = 0.0;" << endl; 
+  tt << "          correction_ = 0.0;" << endl;
 
   if (!no_outside) {
     list<shared_ptr<const Index>> ti_copy = ti;
@@ -120,7 +120,7 @@ string Correction::generate_compute_header(const int ic, const list<shared_ptr<c
     }
 
     int cnt = 0;
-    for (auto i = ti_copy.rbegin(); i != ti_copy.rend(); ++i) 
+    for (auto i = ti_copy.rbegin(); i != ti_copy.rend(); ++i)
       tt << "          const Index " << (*i)->str_gen() << " = b(" << cnt++ << ");" << endl;
     tt << endl;
   }
@@ -149,7 +149,7 @@ string Correction::generate_compute_footer(const int ic, const list<shared_ptr<c
   tt << "        i->compute();" << endl;
   tt << "        this->correction_ += i->correction();" << endl;
   tt << "      }" << endl;
-  tt << "    }" << endl << endl; 
+  tt << "    }" << endl << endl;
 
   tt << "  public:" << endl;
   tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t, std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", const double e" : "") << ") : CorrectionTask<T>() {" << endl;
@@ -160,16 +160,16 @@ string Correction::generate_compute_footer(const int ic, const list<shared_ptr<c
 
   // over original outermost indices
   if (!ti.empty()) {
-    tt << "      subtasks_.reserve("; 
+    tt << "      subtasks_.reserve(";
     for (auto i = ti.begin(); i != ti.end(); ++i) {
       if (i != ti.begin()) tt << "*";
       tt << (*i)->generate_range() << "->nblock()";
     }
     tt << ");" << endl;
   }
-  // loops 
+  // loops
   string indent = "      ";
-  for (auto i = ti.begin(); i != ti.end(); ++i, indent += "  ") 
+  for (auto i = ti.begin(); i != ti.end(); ++i, indent += "  ")
     tt << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   // add subtasks
   if (!ti.empty()) {
@@ -179,7 +179,7 @@ string Correction::generate_compute_footer(const int ic, const list<shared_ptr<c
       tt << (*i)->str_gen();
     }
     tt << "}}, in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
-  } else { 
+  } else {
     tt << indent  << "subtasks_.push_back(std::shared_ptr<Task_local>(new Task_local(in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
   }
 
@@ -193,11 +193,11 @@ string Correction::generate_compute_footer(const int ic, const list<shared_ptr<c
 pair<string, string> Correction::generate_bc(const string indent, const shared_ptr<BinaryContraction> i) const {
   stringstream ss;
   stringstream tt;
-  
+
 
   if (depth() != 0) {
     const string bindent = indent + "    ";
-    string dindent = bindent; 
+    string dindent = bindent;
     // skip if correction tree depth is 1
     if (depth() != 1) {
       tt << target_->generate_get_block(dindent, "o", "out()", true);
@@ -269,7 +269,7 @@ pair<string, string> Correction::generate_bc(const string indent, const shared_p
         // new interface requires indices for put_block
         tt << bindent << "out()->put_block(odata";
         list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
-        for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
+        for (auto i = ti.rbegin(); i != ti.rend(); ++i)
           tt << ", " << (*i)->str_gen();
         tt << ");" << endl;
       }

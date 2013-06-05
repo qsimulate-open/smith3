@@ -98,8 +98,8 @@ shared_ptr<Tensor> ListTensor::target() const {
 
 
 shared_ptr<ListTensor> ListTensor::rest() const {
-  list<shared_ptr<Tensor>> r = list_; 
-  r.pop_front();     
+  list<shared_ptr<Tensor>> r = list_;
+  r.pop_front();
   shared_ptr<ListTensor> out(new ListTensor(fac_, scalar_, r, dagger_));
   return out;
 }

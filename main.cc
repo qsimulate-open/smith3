@@ -45,7 +45,7 @@ using namespace smith;
 
 int main() {
 
-  string theory="CAS_test"; 
+  string theory="CAS_test";
 
   shared_ptr<Operator> ex_0(new Ex("c", "c", "a", "a"));
   shared_ptr<Operator> ex_1(new Ex("x", "c", "a", "a"));

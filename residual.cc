@@ -74,7 +74,7 @@ pair<string, string> Residual::create_target(const string indent, const int i) c
   tt << "    };  " << endl;
   tt << "    ~Task0() {}; " << endl;
   tt << "};" << endl << endl;
-  
+
   ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor0 = {r};" << endl;
   ss << indent << "std::shared_ptr<Task0<T>> task0(new Task0<T>(tensor0));" << endl;
   ss << indent << "queue_->add_task(task0);" << endl << endl;
@@ -119,7 +119,7 @@ string Residual::generate_compute_header(const int ic, const list<shared_ptr<con
   tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << ",T> {" << endl;
   tt << "      protected:" << endl;
   tt << "        const std::array<std::shared_ptr<const IndexRange>,3> range_;" << endl << endl;
- 
+
   tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
   tt << "        const std::shared_ptr<const Tensor<T>>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
   tt << "        const std::shared_ptr<Tensor<T>>& out() const { return this->out_tensor(); }" << endl;
@@ -149,7 +149,7 @@ string Residual::generate_compute_header(const int ic, const list<shared_ptr<con
     }
 
     int cnt = 0;
-    for (auto i = ti_copy.rbegin(); i != ti_copy.rend(); ++i) 
+    for (auto i = ti_copy.rbegin(); i != ti_copy.rend(); ++i)
       tt << "          const Index " << (*i)->str_gen() << " = b(" << cnt++ << ");" << endl;
     tt << endl;
   }
@@ -174,7 +174,7 @@ string Residual::generate_compute_footer(const int ic, const list<shared_ptr<con
 
   tt << "    void compute_() override {" << endl;
   tt << "      for (auto& i : subtasks_) i->compute();" << endl;
-  tt << "    }" << endl << endl; 
+  tt << "    }" << endl << endl;
 
   tt << "  public:" << endl;
   tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t,  std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", const double e" : "") << ") : Task<T>() {" << endl;
@@ -185,16 +185,16 @@ string Residual::generate_compute_footer(const int ic, const list<shared_ptr<con
 
   // over original outermost indices
   if (!ti.empty()) {
-    tt << "      subtasks_.reserve("; 
+    tt << "      subtasks_.reserve(";
     for (auto i = ti.begin(); i != ti.end(); ++i) {
       if (i != ti.begin()) tt << "*";
       tt << (*i)->generate_range() << "->nblock()";
     }
     tt << ");" << endl;
   }
-  // loops 
+  // loops
   string indent = "      ";
-  for (auto i = ti.begin(); i != ti.end(); ++i, indent += "  ") 
+  for (auto i = ti.begin(); i != ti.end(); ++i, indent += "  ")
     tt << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   // add subtasks
   if (!ti.empty()) {
@@ -204,7 +204,7 @@ string Residual::generate_compute_footer(const int ic, const list<shared_ptr<con
       tt << (*i)->str_gen();
     }
     tt << "}}, in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
-  } else { 
+  } else {
     tt << indent  << "subtasks_.push_back(std::shared_ptr<Task_local>(new Task_local(in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
   }
 
@@ -220,7 +220,7 @@ pair<string, string> Residual::generate_bc(const string indent, const shared_ptr
   stringstream tt;
   if (depth() != 0) {
     const string bindent = indent + "    ";
-    string dindent = bindent; 
+    string dindent = bindent;
 
     tt << target_->generate_get_block(dindent, "o", "out()", true);
     tt << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
@@ -286,11 +286,11 @@ pair<string, string> Residual::generate_bc(const string indent, const shared_ptr
       // new interface requires indices for put_block
       tt << bindent << "out()->put_block(odata";
       list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
-      for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
+      for (auto i = ti.rbegin(); i != ti.rend(); ++i)
         tt << ", " << (*i)->str_gen();
       tt << ");" << endl;
     }
-  } else {  // now at bc depth 0 
+  } else {  // now at bc depth 0
       // making residual vector...
       list<shared_ptr<const Index>> proj = (i)->ex_target_index();
       list<shared_ptr<const Index>> res;

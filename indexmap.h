@@ -47,7 +47,7 @@ class IndexMap {
     std::list<std::pair<std::string, std::pair<int,int>> > map_;
   public:
     /// Construct index classes.
-    IndexMap() { 
+    IndexMap() {
       map_.push_back(std::make_pair("c", std::make_pair(0, 28)));
       map_.push_back(std::make_pair("x", std::make_pair(1, 6)));
       map_.push_back(std::make_pair("a", std::make_pair(2, 232)));
@@ -62,7 +62,7 @@ class IndexMap {
     const int type(const std::string& type_) const {
       auto iter = map_.begin();
       for (; iter != map_.end(); ++iter) if (iter->first == type_) break;
-      if (iter == map_.end()) throw std::runtime_error("key is no valid in Index::type()"); 
+      if (iter == map_.end()) throw std::runtime_error("key is no valid in Index::type()");
       return iter->second.first;
     }
     /// Returns index class beginning iterator.

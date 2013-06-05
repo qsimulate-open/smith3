@@ -61,7 +61,7 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
 bool Equation::ex_targets() const {
   bool out = false;
   for (auto& i : diagram_) {
-    if (i->has_ex_target_index()) out = true; 
+    if (i->has_ex_target_index()) out = true;
   }
   return out;
 }
@@ -84,12 +84,12 @@ void Equation::term_select(list<string> t) {
             if ((*get<0>(k))->label() == term) found = true;
           if (!found) {
             rm.push_back(i);
-            break;   
+            break;
           }
-        }   
-      } 
+        }
+      }
     }
-  } 
+  }
   for (auto& it : rm) diagram_.erase(it);
 }
 

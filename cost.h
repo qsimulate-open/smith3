@@ -77,10 +77,10 @@ class PCost {
 
     /// add a vector.
     void add(std::vector<int>& o) {
-      for (auto i = pcost_.begin(), j = o.begin(); i != pcost_.end(); ++i, ++j) *i += *j; 
+      for (auto i = pcost_.begin(), j = o.begin(); i != pcost_.end(); ++i, ++j) *i += *j;
     };
 
-    /// Return pcost integer. 
+    /// Return pcost integer.
     int pcost(const int i) const { return pcost_[i]; }
 
     /// Show mapping.

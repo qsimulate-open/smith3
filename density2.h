@@ -43,10 +43,10 @@ class Density2 : public Tree {
     Density2(const std::shared_ptr<Equation> eq, std::string lab = "") : Tree(eq, lab) { }
     Density2(const std::shared_ptr<ListTensor> l, std::string lab, const bool t) : Tree(l, lab, t) { }
     virtual ~Density2() { }
-    
+
     /// Return label of tree.
     std::string label() const override { return label_; }
-  
+
     std::pair<std::string, std::string> create_target(const std::string, const int i) const override;
     std::shared_ptr<Tensor> create_tensor(std::list<std::shared_ptr<const Index>>) const override;
 

@@ -33,7 +33,7 @@
 
 namespace smith {
 
-/// Used to describe spin orbital attribute. Index uses this. 
+/// Used to describe spin orbital attribute. Index uses this.
 class Spin {
   protected:
     /// Spin number.
@@ -47,7 +47,7 @@ class Spin {
     int num() const { return num_; }
     /// Sets spin.
     void set_num(const int i) { num_ = i; }
-   
+
     /// Returns spin in parenthesis (number).
     std::string str() const {
       std::stringstream ss;
@@ -67,7 +67,7 @@ class Index {
     bool dagger_;
     /// Spin of index.
     mutable std::shared_ptr<Spin> spin_; // TODO mutable should be removed
-  
+
 
   public:
     /// Make index object from label and dagger info. Initialize label, number(0), dagger, and target(false).
@@ -75,7 +75,7 @@ class Index {
     Index(const Index& o) : label_(o.label_), num_(o.num_), dagger_(o.dagger_), spin_(o.spin_) { }
     ~Index() { }
 
-    /// Return index number. 
+    /// Return index number.
     int num() const { return num_; }
     /// Return if should be transposed.
     bool dagger() const { return dagger_; }
@@ -88,7 +88,7 @@ class Index {
 
     /// If active.  Checks label if active (x).
     bool active() const { return label_ == "x"; }
-  
+
 
     /// Sets spin.
     void set_spin(const std::shared_ptr<Spin> s) const { spin_ = s; }
@@ -115,7 +115,7 @@ class Index {
       }
       return ss.str();
     }
-    /// Returns string with index label_ and num_. 
+    /// Returns string with index label_ and num_.
     std::string str_gen() const {
       std::stringstream ss;
       ss << label_ << abs(num_);
@@ -126,13 +126,13 @@ class Index {
 
 
     /// Clone Index with label_, num_ and dagger_ info. Note that this does not set spin.
-    std::shared_ptr<Index> clone() const { 
+    std::shared_ptr<Index> clone() const {
       std::shared_ptr<Index> out(new Index(label_, dagger_));
       out->set_num(num_);
       return out;
     }
 
-    /// Check if indices are equal by comparing num() and label(). Be careful that this does not check dagger! Should not check, actually. 
+    /// Check if indices are equal by comparing num() and label(). Be careful that this does not check dagger! Should not check, actually.
     bool identical(std::shared_ptr<const Index> o) const {
       return num() == o->num() && label() == o->label();
     }
@@ -171,7 +171,7 @@ class Index {
 
 /// Global function to list indices in reverse order.
 static std::string list_keys(const std::list<std::shared_ptr<Index>>& index) {
-  std::stringstream tt; 
+  std::stringstream tt;
   for (auto iter = index.rbegin(); iter != index.rend(); ++iter) {
     if (iter != index.rbegin()) tt << ", ";
     tt << (*iter)->str_gen() << ".key()";

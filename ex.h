@@ -42,7 +42,7 @@
 
 namespace smith {
 
-/// Derived class for excitation operators.  The Ex operators are not directly associated with a tensor. 
+/// Derived class for excitation operators.  The Ex operators are not directly associated with a tensor.
 class Ex : public Operator {
 
   public:

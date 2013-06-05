@@ -35,7 +35,7 @@ const string PCost::show() const {
   stringstream out;
   auto j = pcost_.begin();
   for (auto i = indmap_.begin(); i != indmap_.end(); ++i, ++j)
-    out << i->first <<  *j; 
+    out << i->first <<  *j;
   return out.str();
 }
 

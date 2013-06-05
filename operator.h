@@ -50,7 +50,7 @@ class Operator {
     // get<1>  :  Operator info.
     //              -1: no operator (i.e., already contracted)
     //               0: operator
-    //               2: active operator 
+    //               2: active operator
     /// Tuple with index object pointer, operator info, and spin info (0 or 1). Operator info is defined as -1: no operator (i.e., already contracted), 0: operator, 2: active operator.
     std::list<std::tuple<std::shared_ptr<Index>*, int, int>> op_;
 
@@ -67,7 +67,7 @@ class Operator {
     /// First excitation index partner.
     std::shared_ptr<Index> d_;
 
-    /// This is permutation count. 
+    /// This is permutation count.
     std::vector<int> perm_;
 
   public:
@@ -86,7 +86,7 @@ class Operator {
     virtual std::pair<bool, double> permute(const bool proj) = 0;
     /// pure virtual comparison.
     virtual bool identical(std::shared_ptr<Operator> o) const = 0;
-    /// pure virtual copy operatory pointer. 
+    /// pure virtual copy operatory pointer.
     virtual std::shared_ptr<Operator> copy() const = 0;
     /// not all derived classes have this, but needed for cast-to-base class pointers.
     virtual std::string label() const = 0;
@@ -96,7 +96,7 @@ class Operator {
     /// Returns if this operator is completely contracted.
     bool contracted() const;
     /// Returns if this operator is a general operator (i.e., Hamiltonian), checks for non-zero count of general operators.
-    bool general() const; 
+    bool general() const;
     /// Counts number of general operators.
     int num_general() const;
 

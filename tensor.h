@@ -45,7 +45,7 @@
 
 namespace smith {
 
-/// A class for Tensors. May be active_ (contain all active indices), or be merged (contain additional tensor), or have have alias (equivalent tensor). 
+/// A class for Tensors. May be active_ (contain all active indices), or be merged (contain additional tensor), or have have alias (equivalent tensor).
 class Tensor {
   protected:
     /// Tensor prefactor.
@@ -76,7 +76,7 @@ class Tensor {
     /// Constructor for tensor without scalar.
     Tensor(const double& d, const std::string& l, const std::list<std::shared_ptr<const Index>>& i)
       : factor_(d), label_(l), index_(i) {}
-    /// Constructor for const operator tensor, creates index list and checks for target indices. Called from listtensor after labels are checked in listtensor constructor. 
+    /// Constructor for const operator tensor, creates index list and checks for target indices. Called from listtensor after labels are checked in listtensor constructor.
     Tensor(const std::shared_ptr<Operator> op);
     /// Constructor for const active tensor.
     Tensor(const std::shared_ptr<Active> active);
@@ -93,13 +93,13 @@ class Tensor {
     /// Returns const Tensor pointer.
     const std::shared_ptr<const Tensor> merged() const { return merged_; }
 
-    /// Returns tensor rank, cannot be called by DF tensors so far. 
+    /// Returns tensor rank, cannot be called by DF tensors so far.
     int rank() const {
       if (index_.size() & 1) throw std::logic_error("Tensor::rank() cannot be called by DF tensors so far.");
       return index_.size() >> 1;
     }
-    
-    /// Returns string with tensor prefactors, label, indices and those of merged and alias tensors. 
+
+    /// Returns string with tensor prefactors, label, indices and those of merged and alias tensors.
     std::string str() const;
     void print(std::string indent = "") const { std::cout << indent << str() << std::endl; }
     /// Set prefactor for tensor.
@@ -129,7 +129,7 @@ class Tensor {
     /// Sets alias used for equivalent Gamma tensor. Used in Tree::find_gamma(). The alias is given to tensor o.
     void set_alias(std::shared_ptr<Tensor> o) { alias_ = o; }
     /// if tensor is a repeat.
-    bool has_alias() { bool has_ = false; 
+    bool has_alias() { bool has_ = false;
          if (alias_) has_ = true; return has_; }
 
 
@@ -139,14 +139,14 @@ class Tensor {
     std::string generate_get_block(const std::string, const std::string, const std::string, const bool move = false, const bool noscale = false) const;
     /// Generate code for unique_ptr scratch arrays.
     std::string generate_scratch_area(const std::string, const std::string, const std::string tensor_lab, const bool zero = false) const;
-    /// Generate code for sort_indices. Based on operations needed to sort input tensor to output tensor. 
+    /// Generate code for sort_indices. Based on operations needed to sort input tensor to output tensor.
     std::string generate_sort_indices(const std::string, const std::string, const std::string, const std::list<std::shared_ptr<const Index>>&, const bool op = false) const;
     /// Generate code for final sort_indices back to target indices (those not summed over).
     std::string generate_sort_indices_target(const std::string, const std::string, const std::list<std::shared_ptr<const Index>>&,
                                              const std::shared_ptr<Tensor>, const std::shared_ptr<Tensor>) const;
     /// Obtain dimensions for code for tensor multiplication in dgemm.
     std::pair<std::string, std::string> generate_dim(const std::list<std::shared_ptr<const Index>>&) const;
-    /// Generates code for RDMs. 
+    /// Generates code for RDMs.
     std::string generate_active(const std::string indent, const std::string tag, const int ninptensors, const bool) const;
     /// Generate for loops.
     std::string generate_loop(std::string&, std::vector<std::string>&) const;

@@ -44,7 +44,7 @@ class RDM {
     std::list<std::shared_ptr<const Index>> index_;
     /// Kronecker's delta, map with two index pointers.
     std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>> delta_;
-   
+
     /// Generate entire task code for Gamma RDM summation.
     std::string generate_not_merged(std::string indent, const std::string tlab, const std::list<std::shared_ptr<const Index>>& loop, std::vector<std::string> in_tensors);
     /// Generates entire task code for Gamma RDM summation with merged object (additional tensor, here fock tensor) multiplication.
@@ -66,14 +66,14 @@ class RDM {
     /// Loops over delta indices in Gamma summation.
     std::string make_sort_loops(const std::string itag, std::string& indent, const std::list<std::shared_ptr<const Index>>& index, std::vector<std::string>& close);
 
-    // for task summation line 
+    // for task summation line
     /// Generates odata (Gamma) part of for summation ie LHS in equations gamma += rdm or gamma += rdm * f1
     std::string make_odata(const std::string itag, std::string& indent, const std::list<std::shared_ptr<const Index>>& index);
     /// Generates RDM and merged (fock) tensor multipication.
     std::string multiply_merge(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<const Index>>& merged);
     /// Adds merged (fock) tensor with indices, used by muliply_merge member.
     std::string fdata_mult(const std::string itag, const std::list<std::shared_ptr<const Index>>& merged);
-  
+
     /// Do blas multiplication of Gamma and fock tensors...not implemented yet for subtask code!
     std::string make_blas_multiply(std::string indent, const std::list<std::shared_ptr<const Index>>& loop, const std::list<std::shared_ptr<const Index>>& index);
     /// Used for blas multiplication of RDM and merged (fock) tensors. NB not implemented yet for subtask code!
@@ -97,9 +97,9 @@ class RDM {
     /// Copies this rdm, function located in active.cc
     std::shared_ptr<RDM> copy() const;
 
-    /// Returns the factor 
+    /// Returns the factor
     double factor() const { return fac_; }
-    /// Returns a reference to the factor 
+    /// Returns a reference to the factor
     double& fac() { return fac_; }
 
     /// Returns a reference of index_.

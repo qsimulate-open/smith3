@@ -78,7 +78,7 @@ shared_ptr<Operator> Op::copy() const {
 }
 
 
-// Note that spin info is not checked. 
+// Note that spin info is not checked.
 bool Op::identical(shared_ptr<Operator> o) const {
   bool out = true;
   out &= label_ == o->label();
@@ -120,15 +120,15 @@ pair<bool, double> Op::permute(const bool proj) {
   vector<tuple<shared_ptr<Index>*, int, int>> tmp(size*2);
   auto oiter = op_.begin();
   for (int i = 0; i != size; ++i, ++oiter) {
-    tmp[map[i]*2  ] = *oiter; ++oiter; 
-    tmp[map[i]*2+1] = *oiter; 
+    tmp[map[i]*2  ] = *oiter; ++oiter;
+    tmp[map[i]*2+1] = *oiter;
   }
 
   // find sign.
   vector<int> act(size);
   oiter = op_.begin();
   for (int i = 0; i != size; ++i, ++oiter) {
-    if ((*get<0>(*oiter))->active()) act[i] += 1; ++oiter; 
+    if ((*get<0>(*oiter))->active()) act[i] += 1; ++oiter;
     if ((*get<0>(*oiter))->active()) act[i] += 1;
   }
   int f = 0;
@@ -144,7 +144,7 @@ pair<bool, double> Op::permute(const bool proj) {
   const double out = (f&1) ? -1.0 : 1.0;
 
   oiter = op_.begin();
-  for (auto t = tmp.begin(); t != tmp.end(); ++t, ++oiter) *oiter = *t; 
+  for (auto t = tmp.begin(); t != tmp.end(); ++t, ++oiter) *oiter = *t;
 
   return make_pair(next, out);
 }

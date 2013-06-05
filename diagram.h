@@ -79,7 +79,7 @@ class Diagram {
     /// Return the prefactor for const diagram.
     const double fac() const { return fac_; }
     /// Return scalar name reference.
-    std::string& scalar() { return scalar_; } 
+    std::string& scalar() { return scalar_; }
     /// Returns rdm pointer.
     std::shared_ptr<Active> rdm() { return rdm_; }
     /// If diagram is transposed.
@@ -102,8 +102,8 @@ class Diagram {
     void add_dagger() { dagger_ = true; }
 
     /// Permute indices in operators. return false when finished.
-    bool permute(const bool proj); 
-    /// If diagrams are same, based on size, indices, and spin.  
+    bool permute(const bool proj);
+    /// If diagrams are same, based on size, indices, and spin.
     bool identical(std::shared_ptr<Diagram> o) const;
 
     /// checks if diagram has target indices from excitation operators.
@@ -111,7 +111,7 @@ class Diagram {
 
     /// Returns list of target indices from excitation operators in diagram.
     std::list<std::shared_ptr<const Index>> ex_target_index() const;
-    
+
     /// Print function for diagram, CAUTION: it also refreshes the indices.
     void print();
     /// This print version does not refresh indices. Prints factor, scalar and operators.
@@ -135,7 +135,7 @@ class Diagram {
     bool done_noactive() const;
 
     /// Gathers active indices.
-    std::list<std::shared_ptr<const Index>> active_indices() const; 
+    std::list<std::shared_ptr<const Index>> active_indices() const;
 };
 
 }

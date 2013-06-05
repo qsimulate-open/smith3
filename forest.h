@@ -37,14 +37,14 @@
 namespace smith {
 
 
-/// This class contains a collection of trees. 
+/// This class contains a collection of trees.
 class Forest {
   protected:
-    std::list<std::shared_ptr<Tree>> trees_;   
+    std::list<std::shared_ptr<Tree>> trees_;
 
     /// This list contains the unique gamma tensors in all trees.
     std::list<std::shared_ptr<Tensor>> gamma_;
-    
+
     /// Name for generated code.
     std::string forest_name_;
 
@@ -54,7 +54,7 @@ class Forest {
     /// When we generate, a counter is used to generate a list of tasks.
     mutable int num_;
 
-  
+
   public:
     Forest(std::list<std::shared_ptr<Tree>> o) : trees_(o), forest_name_(trees_.front()->tree_name()) { }
     ~Forest() { }

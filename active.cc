@@ -335,9 +335,9 @@ string Active::generate(const string indent, const string tag, const list<shared
     in_tensors.push_back(ss.str());
   }
   if (!merged.empty()) {
-    in_tensors.push_back(mlab); 
+    in_tensors.push_back(mlab);
   }
-  
+
   for (auto& i : rdm_)
     tt << i->generate(indent, tag, index, merged, mlab, in_tensors, use_blas);
   return tt.str();

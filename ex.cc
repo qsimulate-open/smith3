@@ -33,7 +33,7 @@ using namespace smith;
 Ex::Ex(const std::string& oa, const std::string& ob)
   : Operator(oa, ob) {};
 
-Ex::Ex(const std::string& oa, const std::string& ob, const std::string& oc, const std::string& od) 
+Ex::Ex(const std::string& oa, const std::string& ob, const std::string& oc, const std::string& od)
   : Operator(oa, ob, oc, od) {};
 
 
@@ -41,7 +41,7 @@ shared_ptr<Operator> Ex::copy() const {
   if (c_) {
     shared_ptr<Operator> tmp(new Ex(a_->label(), b_->label(), c_->label(), d_->label()));
     return tmp;
-  } else { 
+  } else {
     shared_ptr<Operator> tmp(new Ex(a_->label(), b_->label()));
     return tmp;
   }
@@ -105,15 +105,15 @@ pair<bool, double> Ex::permute(const bool proj) {
   vector<tuple<shared_ptr<Index>*, int, int>> tmp(size*2);
   auto oiter = op_.begin();
   for (int i = 0; i != size; ++i, ++oiter) {
-    tmp[map[i]*2  ] = *oiter; ++oiter; 
-    tmp[map[i]*2+1] = *oiter; 
+    tmp[map[i]*2  ] = *oiter; ++oiter;
+    tmp[map[i]*2+1] = *oiter;
   }
 
   // find sign.
   vector<int> act(size);
   oiter = op_.begin();
   for (int i = 0; i != size; ++i, ++oiter) {
-    if ((*get<0>(*oiter))->active()) act[i] += 1; ++oiter; 
+    if ((*get<0>(*oiter))->active()) act[i] += 1; ++oiter;
     if ((*get<0>(*oiter))->active()) act[i] += 1;
   }
   int f = 0;
@@ -129,7 +129,7 @@ pair<bool, double> Ex::permute(const bool proj) {
   const double out = (f&1) ? -1.0 : 1.0;
 
   oiter = op_.begin();
-  for (auto t = tmp.begin(); t != tmp.end(); ++t, ++oiter) *oiter = *t; 
+  for (auto t = tmp.begin(); t != tmp.end(); ++t, ++oiter) *oiter = *t;
 
   return make_pair(next, out);
 }

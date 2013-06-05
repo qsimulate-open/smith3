@@ -57,7 +57,7 @@ class Active {
     /// Make active object from const list index.
     Active(const std::list<std::shared_ptr<const Index>>& in);
     ~Active() { }
-  
+
     /// Prints active tensor prefactor, indices and delta (equivalent indices).
     void print(const std::string& indent = "") const;
     /// Return const index list.
@@ -70,7 +70,7 @@ class Active {
     std::string generate(const std::string indent, const std::string tag, const std::list<std::shared_ptr<const Index>> index, const std::list<std::shared_ptr<const Index>> merged = std::list<std::shared_ptr<const Index>>(), const std::string mlab = "", const bool use_blas = false) const;
     /// Returns vector of int cooresponding to RDM numbers in Gamma. RDM0 is not included.
     std::vector<int> required_rdm() const;
-    
+
 };
 
 }

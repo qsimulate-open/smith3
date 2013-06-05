@@ -48,13 +48,13 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
   for (auto i = d.begin(); i != d.end(); ++i) {
     shared_ptr<ListTensor> tmp(new ListTensor(*i));
     // All internal tensor should be included in the active part
-    tmp->absorb_all_internal();   
+    tmp->absorb_all_internal();
 
     shared_ptr<Tensor> first = tmp->front();
     shared_ptr<ListTensor> rest = tmp->rest();
 
     // convert to tree and then bc
-    if (label_ == "residual") { 
+    if (label_ == "residual") {
       shared_ptr<Tree> tr(new Residual(rest, lab, rt_targets));
       list<shared_ptr<Tree>> lt; lt.push_back(tr);
       shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first, (*i)->ex_target_index()));
@@ -82,7 +82,7 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
     } else {
       throw logic_error("Error Tree::Tree, code generation for this tree type not implemented");
     }
-  
+
   }
 
   factorize();
@@ -111,9 +111,9 @@ BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor
   target_ = o;
   tensor_ = l->front();
   shared_ptr<ListTensor> rest = l->rest();
-  
+
   // convert to correct  ** subtree **
-  if (label_ == "residual") { 
+  if (label_ == "residual") {
     shared_ptr<Tree> tr(new Residual(rest, lab, rt));
     subtree_.push_back(tr);
   } else if (label_ == "energy") {
@@ -167,7 +167,7 @@ void BinaryContraction::factorize() {
   for (auto i = done.begin(); i != done.end(); ++i) subtree_.erase(*i);
   for (auto i = subtree_.begin(); i != subtree_.end(); ++i) (*i)->factorize();
 }
-  
+
 
 bool Tree::merge(shared_ptr<Tree> o) {
   bool out = false;
@@ -263,18 +263,18 @@ list<shared_ptr<Tensor>> Tree::gather_gamma() const {
   list<shared_ptr<Tensor>> out;
   for (auto& i : bc_) {
     for (auto& j : i->subtree()) {
-      // recursive call 
+      // recursive call
       list<shared_ptr<Tensor>> tmp = j->gather_gamma();
       out.insert(out.end(), tmp.begin(), tmp.end());
     }
   }
-  for (auto& i : op_) 
-    if (i->label().find("Gamma") != string::npos) out.push_back(i); 
+  for (auto& i : op_)
+    if (i->label().find("Gamma") != string::npos) out.push_back(i);
   return out;
 }
 
 
-string BinaryContraction::ex_target_index_str() const { 
+string BinaryContraction::ex_target_index_str() const {
   stringstream zz;
   if (!ex_target_index_.empty()) {
     zz << "(";
@@ -283,8 +283,8 @@ string BinaryContraction::ex_target_index_str() const {
       zz << (*i)->str(false);
     }
     zz << ")";
-  } 
-  return zz.str(); 
+  }
+  return zz.str();
 }
 
 
@@ -307,7 +307,7 @@ void Tree::print() const {
     (*i)->print();
 }
 
-// not a good implementation... 
+// not a good implementation...
 vector<shared_ptr<Tensor>> ii;
 
 // local functions... (not a good practice...) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -361,7 +361,7 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
   //tt << target->generate_loop(cindent, close);
   // get data
   tt << target->generate_get_block(cindent, "o", "out()", true);
-  
+
   // needed in case the tensor labels are repeated..
   vector<shared_ptr<Tensor>> uniq_tensors;
   vector<string> tensor_labels;
@@ -394,7 +394,7 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
     // uses map to give label number consistent with operator, needed in case label is repeated (eg ccaa)
     string label = label__((*s)->label());
     stringstream instr; instr << "in(" << op_tensor_lab[label] << ")";
-   
+
     tt << (*s)->generate_get_block(cindent+"  ", uu.str(), instr.str());
     list<shared_ptr<const Index>> di = target->index();
     tt << (*s)->generate_sort_indices(cindent+"  ", uu.str(), instr.str(), di, true);
@@ -439,7 +439,7 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
     string label = target->label();
     list<shared_ptr<const Index>> ti = target->index();
     tt << cindent << "out()->put_block(odata";
-    for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
+    for (auto i = ti.rbegin(); i != ti.rend(); ++i)
       tt << ", " << (*i)->str_gen();
     tt << ");" << endl;
   }
@@ -462,11 +462,11 @@ string Tree::generate_task(const string indent, const int ic, const vector<share
     if (!i->scalar().empty()) {
       if (i->scalar() != "e0") throw logic_error("unknown scalar. Tree::generate_task");
       if (!scalar.empty() && i->scalar() != scalar) throw logic_error("multiple scalars. Tree::generate_task");
-      scalar = i->scalar(); 
+      scalar = i->scalar();
     }
   }
 
-  // if gamma, we need to add dependency. 
+  // if gamma, we need to add dependency.
   // this one is virtual, ie tree specific
   ss << generate_task(indent, ip, ic, ops, scalar, iz);
   for (auto& i : op) {
@@ -482,9 +482,9 @@ string Tree::generate_task(const string indent, const int ic, const vector<share
 string Tree::add_depend(const shared_ptr<const Tensor> o, const list<shared_ptr<Tensor>> gamma) const {
   stringstream out;
   if (!parent_) {
-    assert(!gamma.empty()); 
-    for (auto& i : gamma) {    
-      if (o->label() == i->label()) out << "add_dep(task" << i->num() << ");"; 
+    assert(!gamma.empty());
+    for (auto& i : gamma) {
+      if (o->label() == i->label()) out << "add_dep(task" << i->num() << ");";
     }
   } else {
     out << parent_->parent()->add_depend(o, gamma);
@@ -510,17 +510,17 @@ tuple<string, string, int, int> BinaryContraction::generate_task_list(int tcnt, 
 
 
 tuple<string, string, int, int> Tree::generate_task_list(int tcnt, int t0, const list<shared_ptr<Tensor>> gamma) const {
-  // here ss is dependencies, tt is tasks 
+  // here ss is dependencies, tt is tasks
   stringstream ss, tt;
   string depends, tasks;
   string indent = "      ";
 
   if (depth() == 0) { //////////////////// zero depth /////////////////////////////
     if (root_targets()) {
-      // process tree with target indices eg, density matrix (residual zero level task is created above (forest::generate_header)) 
+      // process tree with target indices eg, density matrix (residual zero level task is created above (forest::generate_header))
       if (label() != "residual") {
         num_ = tcnt;
-        // save density task zero 
+        // save density task zero
         t0 = tcnt;
 
         // virtual
@@ -531,7 +531,7 @@ tuple<string, string, int, int> Tree::generate_task_list(int tcnt, int t0, const
 
         for (auto& j : bc_) {
           // if at top bc, add a task to for top level contraction (proj)
-          if (depth() == 0 ) { 
+          if (depth() == 0 ) {
             vector<shared_ptr<Tensor>> source_tensors = j->tensors_vec();
             num_ = tcnt;
             for (auto& s : source_tensors) {
@@ -551,10 +551,10 @@ tuple<string, string, int, int> Tree::generate_task_list(int tcnt, int t0, const
               list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
               // if outer loop is empty, send inner loop indices to header
               if (ti.size() == 0) {
-                assert(depth() != 0); 
+                assert(depth() != 0);
                 list<shared_ptr<const Index>> di = j->loop_indices();
                 tt << generate_compute_header(num_, di, source_tensors, true);
-              } else { 
+              } else {
                 tt << generate_compute_header(num_, ti, source_tensors);
               }
             }
@@ -566,13 +566,13 @@ tuple<string, string, int, int> Tree::generate_task_list(int tcnt, int t0, const
               dm.push_back(*k);
               dm.push_back(*ii);
             }
-        
+
             // virtual
             shared_ptr<Tensor> proj_tensor = create_tensor(dm);
 
             vector<shared_ptr<Tensor>> op2 = { j->next_target() };
             tt << generate_compute_operators(indent, proj_tensor, op2, j->dagger());
-    
+
 
             {
               // send outer loop indices if outer loop indices exist, otherwise send inner indices
@@ -580,7 +580,7 @@ tuple<string, string, int, int> Tree::generate_task_list(int tcnt, int t0, const
               if (depth() == 0)
                 for (auto m = ti.begin(), n = ++ti.begin(); m != ti.end(); ++m, ++m, ++n, ++n)
                   swap(*m, *n);
-              if (ti.size() == 0) { 
+              if (ti.size() == 0) {
                 assert(depth() != 0);
                 // sending inner indices
                 list<shared_ptr<const Index>> di = j->loop_indices();
@@ -601,9 +601,9 @@ tuple<string, string, int, int> Tree::generate_task_list(int tcnt, int t0, const
           tt << tasks;
 
         }
-      } else { // residual 
+      } else { // residual
 
-      // step through op and bc, caution triggers recursive call 
+      // step through op and bc, caution triggers recursive call
       tuple<string, string, int, int> tmp = generate_steps(indent, tcnt, t0, gamma);
       tie(depends, tasks, tcnt, t0) = tmp;
       ss << depends;
@@ -638,7 +638,7 @@ tuple<string, string, int, int> Tree::generate_steps(string indent, int tcnt, in
   // if op_ is not empty, we add a task that adds up op_.
   /////////////////////////////////////////////////////////////////
   if (!op_.empty()) {
-    
+
     // step through operators and if they are new, construct them.
     if (find(ii.begin(), ii.end(), target_) == ii.end()) {
       ii.push_back(target_);
@@ -691,14 +691,14 @@ tuple<string, string, int, int> Tree::generate_steps(string indent, int tcnt, in
       list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->ex_target_index();
       // if outer loop is empty, send inner loop indices to header
       if (ti.size() == 0) {
-        assert(depth() != 0); 
+        assert(depth() != 0);
         list<shared_ptr<const Index>> di = (*i)->loop_indices();
         tt << generate_compute_header(num_, di, source_tensors, true);
-      } else { 
+      } else {
         tt << generate_compute_header(num_, ti, source_tensors);
       }
     }
-    
+
     // use virtual function to generate a task for this binary contraction
     pair<string, string> btmp = generate_bc(indent, (*i));
     ss << btmp.first;
@@ -710,7 +710,7 @@ tuple<string, string, int, int> Tree::generate_steps(string indent, int tcnt, in
       if (depth() == 0)
         for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
           swap(*i, *j);
-      if (ti.size() == 0) { 
+      if (ti.size() == 0) {
         assert(depth() != 0);
         // sending inner indices
         list<shared_ptr<const Index>> di = (*i)->loop_indices();
@@ -731,7 +731,7 @@ tuple<string, string, int, int> Tree::generate_steps(string indent, int tcnt, in
     tie(depends, tasks, tcnt, t0) = tmp;
     ss << depends;
     tt << tasks;
-  } // end bc 
+  } // end bc
 
   return make_tuple(ss.str(), tt.str(), tcnt, t0);
 }

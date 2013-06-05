@@ -126,7 +126,7 @@ string Density::generate_compute_header(const int ic, const list<shared_ptr<cons
   tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << ",T> {" << endl;
   tt << "      protected:" << endl;
   tt << "        const std::array<std::shared_ptr<const IndexRange>,3> range_;" << endl << endl;
- 
+
   tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
   tt << "        const std::shared_ptr<const Tensor<T>>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
   tt << "        const std::shared_ptr<Tensor<T>>& out() const { return this->out_tensor(); }" << endl;
@@ -155,7 +155,7 @@ string Density::generate_compute_header(const int ic, const list<shared_ptr<cons
     }
 
     int cnt = 0;
-    for (auto i = ti_copy.rbegin(); i != ti_copy.rend(); ++i) 
+    for (auto i = ti_copy.rbegin(); i != ti_copy.rend(); ++i)
       tt << "          const Index " << (*i)->str_gen() << " = b(" << cnt++ << ");" << endl;
     tt << endl;
   }
@@ -182,7 +182,7 @@ string Density::generate_compute_footer(const int ic, const list<shared_ptr<cons
   tt << "      for (auto& i : subtasks_) {" << endl;
   tt << "        i->compute();" << endl;
   tt << "      }" << endl;
-  tt << "    }" << endl << endl; 
+  tt << "    }" << endl << endl;
 
   tt << "  public:" << endl;
   tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t, std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", double e" : "" ) <<  ") : DensityTask<T>() {" << endl;
@@ -193,16 +193,16 @@ string Density::generate_compute_footer(const int ic, const list<shared_ptr<cons
 
   // over original outermost indices
   if (!ti.empty()) {
-    tt << "      subtasks_.reserve("; 
+    tt << "      subtasks_.reserve(";
     for (auto i = ti.begin(); i != ti.end(); ++i) {
       if (i != ti.begin()) tt << "*";
       tt << (*i)->generate_range() << "->nblock()";
     }
     tt << ");" << endl;
   }
-  // loops 
+  // loops
   string indent = "      ";
-  for (auto i = ti.begin(); i != ti.end(); ++i, indent += "  ") 
+  for (auto i = ti.begin(); i != ti.end(); ++i, indent += "  ")
     tt << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   // add subtasks
   if (!ti.empty()) {
@@ -212,7 +212,7 @@ string Density::generate_compute_footer(const int ic, const list<shared_ptr<cons
       tt << (*i)->str_gen();
     }
     tt << "}}, in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
-  } else { 
+  } else {
     tt << indent  << "subtasks_.push_back(std::shared_ptr<Task_local>(new Task_local(in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
   }
 
@@ -226,21 +226,21 @@ string Density::generate_compute_footer(const int ic, const list<shared_ptr<cons
 pair<string, string> Density::generate_bc(const string indent, const shared_ptr<BinaryContraction> i) const {
   stringstream ss;
   stringstream tt;
-  
+
     if (depth() != 0) {
       const string bindent = indent + "    ";
-      string dindent = bindent; 
+      string dindent = bindent;
 
       tt << target_->generate_get_block(dindent, "o", "out()", true);
       tt << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
 
       list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
-  
+
       // inner loop (where similar indices in dgemm tensors are summed over) will show up here
       // but only if outer loop is not empty
       list<shared_ptr<const Index>> di = (i)->loop_indices();
       di.reverse();
-  
+
       vector<string> close2;
       if (ti.size() != 0) {
         tt << endl;
@@ -299,7 +299,7 @@ pair<string, string> Density::generate_bc(const string indent, const shared_ptr<
         // new interface requires indices for put_block
         tt << bindent << "out()->put_block(odata";
         list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
-        for (auto i = ti.rbegin(); i != ti.rend(); ++i) 
+        for (auto i = ti.rbegin(); i != ti.rend(); ++i)
           tt << ", " << (*i)->str_gen();
         tt << ");" << endl;
       }

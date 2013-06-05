@@ -94,13 +94,13 @@ list<shared_ptr<const Index>> Diagram::ex_target_index() const {
       found = true;
       list<tuple<shared_ptr<Index>*, int, int>> ops = i->op();
       for (auto& j : ops) out.push_back(*get<0>(j));
-    } 
+    }
   }
   return out;
 }
 
 
-bool Diagram::has_ex_target_index() const { 
+bool Diagram::has_ex_target_index() const {
   bool found = false;
   for (auto & i : op_) {
      if (i->is_ex()) {
@@ -200,7 +200,7 @@ bool Diagram::reduce_one_noactive(const int skip) {
   for (auto& j : op_) {
     for (auto& k : j->rho()) {
       if (k == oldspin) k = newspin;
-    } 
+    }
   }
   return found;
 }
@@ -220,7 +220,7 @@ bool Diagram::done() const {
   for (auto& i : op_) {
     if (!i->contracted()) ++out;
   }
-  return out == 0; 
+  return out == 0;
 }
 
 
@@ -229,7 +229,7 @@ bool Diagram::done_noactive() const {
   for (auto& i : op_) {
     out += i->num_nodagger() + i->num_dagger();
   }
-  return out == 0; 
+  return out == 0;
 }
 
 
@@ -242,7 +242,7 @@ int Diagram::num_dagger() const {
 
 int Diagram::num_general() const {
   int cnt = 0;
-  for (auto& i : op_) cnt += i->num_general(); 
+  for (auto& i : op_) cnt += i->num_general();
   return cnt;
 }
 
@@ -251,8 +251,8 @@ bool Diagram::consistent_indices() const {
   int cnt1 = 0;
   int cnt2 = 0;
   for (auto& i : op_) {
-    cnt1 += i->num_active_dagger(); 
-    cnt2 += i->num_active_nodagger(); 
+    cnt1 += i->num_active_dagger();
+    cnt2 += i->num_active_nodagger();
   }
   return cnt1 == cnt2;
 }
@@ -273,7 +273,7 @@ bool Diagram::permute(const bool proj) {
   // try the last one. If it returns zero, then go up.
   for (auto i = op_.rbegin(); i != op_.rend(); ++i) {
     pair<bool, double> a = (*i)->permute(proj);
-    fac_ *= a.second; 
+    fac_ *= a.second;
     if (!a.first) {
       continue;
     } else {
@@ -308,7 +308,7 @@ bool Diagram::identical(shared_ptr<Diagram> o) const {
       out = false;
     } else {
       for (auto i = act.begin(), j = oact.begin(); i != act.end(); ++i, ++j) {
-        assert((*i)->identical(*j)); 
+        assert((*i)->identical(*j));
         shared_ptr<Spin> s = (*i)->spin();
         shared_ptr<Spin> os = (*j)->spin();
         auto iter = myo.find(s);
@@ -323,7 +323,7 @@ bool Diagram::identical(shared_ptr<Diagram> o) const {
         }
       }
     }
-  } 
+  }
 
   return out;
 }

@@ -37,12 +37,12 @@ class Equation {
   protected:
     /// List of diagrams.
     std::list<std::shared_ptr<Diagram>> diagram_;
-    /// Internal function used by to find double permutations. Also if bool is true, equations can become daggered, and where permuations cause an additional get_block to be added to the generated code. 
+    /// Internal function used by to find double permutations. Also if bool is true, equations can become daggered, and where permuations cause an additional get_block to be added to the generated code.
     void duplicates_(const bool);
 
     /// Name of theory. Generated code for BAGEL will have this name, set in main.cc.
     std::string name_;
-  
+
 
   public:
     /// Construct equation from diagram and name. Contract operators in diagram.
@@ -62,7 +62,7 @@ class Equation {
 
     /// Print function. This triggers Diagram::refresh_indices().
     void print();
-    /// The active parts are processed. 
+    /// The active parts are processed.
     void active();
     /// Identifies terms which are the same (via permuations) and updating term prefactor. Also can add a dagger to diagram.
     void duplicates();

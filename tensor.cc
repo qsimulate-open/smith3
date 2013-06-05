@@ -121,7 +121,7 @@ bool Tensor::operator==(const Tensor& o) const {
   // both objects should be active for tensors to be equal
   if (active() && o.active()) {
      // should return true or false
-     out &= (*active() == *o.active());        
+     out &= (*active() == *o.active());
   }
   // index
   out &= index_.size() == o.index().size();
@@ -160,14 +160,14 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
   }
 
   stringstream tt;
-  // for scalar. 
+  // for scalar.
   if (index_.empty() && merged_) {
 #ifdef debug_tasks
    tt << cindent << "// scalar" << endl;
 #endif
   }
 
-  { 
+  {
 
 #ifdef debug_tasks // if needed, eg debug
     tt  << cindent << "// tensor label: " << lbl << endl;
@@ -180,7 +180,7 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
         tt << (*i)->str_gen();
       }
       tt << ");" << endl;
-    } else { 
+    } else {
       for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
         if (i != index_.rbegin()) tt << ", ";
         tt << (*i)->str_gen();
@@ -189,11 +189,11 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
     }
   }
   if (!scalar_.empty() && !noscale) {
-    tt << cindent << "dscal_("; 
+    tt << cindent << "dscal_(";
     for (auto i = index_.rbegin(); i != index_.rend(); ++i)
       tt << (i != index_.rbegin() ? "*" : "") << (*i)->str_gen() << ".size()";
     // update scalar_ name directly
-    tt << ", -" << scalar_ << "_, " << lab << "data.get(), 1);" << endl; 
+    tt << ", -" << scalar_ << "_, " << lab << "data.get(), 1);" << endl;
   }
   return tt.str();
 }
@@ -389,12 +389,12 @@ string Tensor::generate_active(string indent, const string tag, const int ninpte
   if (!merged_) {
     tt << active()->generate(indent, tag, index());
   } else {
-    
+
 #ifdef debug_tasks
     tt << indent <<"// associated with merged" << endl;
 #endif
 
-    // add fdata 
+    // add fdata
     list<shared_ptr<const Index>>& merged = merged_->index();
     // fdata tensor should be last to mirror gamma footer
     tt << indent << "std::unique_ptr<double[]> fdata = in("<< ninptensors-1 << ")->get_block(";
@@ -403,7 +403,7 @@ string Tensor::generate_active(string indent, const string tag, const int ninpte
       tt << (*j)->str_gen();
     }
     tt << ");" << endl;
-   
+
     if (use_blas) {
       tt << indent << "std::unique_ptr<double[]> fdata_sorted(new double["<< merged_->label() << "->get_size(fhash)]);" << endl;
 
@@ -424,11 +424,11 @@ string Tensor::generate_active(string indent, const string tag, const int ninpte
           done.push_back(i);
       }
       // write out
-      for (auto& i : done) 
+      for (auto& i : done)
         tt << i << ",";
 
       tt << "0,1,1,1";
-   
+
       // add source data dimensions
       tt << ">(fdata, fdata_sorted, " ;
       for (auto iter = merged.rbegin(); iter != merged.rend(); ++iter) {
@@ -436,9 +436,9 @@ string Tensor::generate_active(string indent, const string tag, const int ninpte
           tt << (*iter)->str_gen() << ".size()";
       }
       tt << ");" << endl;
-    } 
-    
-    // generate merged and/or rdm 
+    }
+
+    // generate merged and/or rdm
     tt << active()->generate(indent, tag, index(), merged_->index(), merged_->label(), use_blas);
 
 
@@ -463,22 +463,22 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
   assert(label_.find("Gamma") != string::npos);
   stringstream tt;
 
-  
+
   // determine number of task loops to be separeted, if merged combine
   int nindex;
-  list<shared_ptr<const Index>> merged; 
-  
+  list<shared_ptr<const Index>> merged;
+
   if (merged_) {
     merged = merged_->index();
     nindex = index_.size() + merged.size();
   } else {
     nindex = index_.size();
-  }   
+  }
 
   // determine number of tensors
   vector<int> rdmn = active()->required_rdm();
   int ninptensors;
-  if (merged_) 
+  if (merged_)
     ninptensors = rdmn.size()+1;
   else
     ninptensors = rdmn.size();
@@ -513,13 +513,13 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
   string indent ="          ";
   // map indices
   int bcnt = 0;
-  for (auto i = index_.begin(); i != index_.end(); ++i, bcnt++) 
+  for (auto i = index_.begin(); i != index_.end(); ++i, bcnt++)
     tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
   if (merged_) {
-    for (auto i = merged.begin(); i != merged.end(); ++i, bcnt++) 
+    for (auto i = merged.begin(); i != merged.end(); ++i, bcnt++)
       tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
-  }    
-  
+  }
+
 #ifdef debug_tasks // debug purposes
    tt << indent <<  "// std::shared_ptr<Tensor<T> > " << label() << ";" << endl;
    for (auto& i: rdmn)
@@ -528,7 +528,7 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
      tt << indent <<  "// std::shared_ptr<Tensor<T> > " << merged_->label() << ";" << endl;
    tt << endl;
 #endif
-  
+
   // generate gamma get block, true does a move_block
   tt << generate_get_block(indent, "o", "out()", true, true); // first true means move, second true means we don't scale
   if (merged_) {
@@ -539,7 +539,7 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
 
   // generate gamma put block
   tt << indent << "out()->put_block(odata";
-  for (auto i = index_.rbegin(); i != index_.rend(); ++i) 
+  for (auto i = index_.rbegin(); i != index_.rend(); ++i)
     tt << ", " << (*i)->str_gen();
   tt << ");" << endl;
 
@@ -552,37 +552,37 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
 
   tt << "    void compute_() override {" << endl;
   tt << "      for (auto& i : subtasks_) i->compute();" << endl;
-  tt << "    }" << endl << endl; 
+  tt << "    }" << endl << endl;
 
   tt << "  public:" << endl;
   tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t,  std::array<std::shared_ptr<const IndexRange>,3> range) : Task<T>() {" << endl;
   tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
 
   // write out tensors in increasing order
-  for (auto i = 1;  i < ninptensors + 1; ++i) 
+  for (auto i = 1;  i < ninptensors + 1; ++i)
     tt << "t[" << i << "]" << (i == ninptensors ? "" : ", ");
   tt << "}};" << endl << endl;
 
-  
+
   // over original outermost indices
   if (!index_.empty()) {
-    tt << "      subtasks_.reserve("; 
+    tt << "      subtasks_.reserve(";
     for (auto i =index_.begin(); i != index_.end(); ++i) {
       if (i != index_.begin()) tt << "*";
       tt << (*i)->generate_range() << "->nblock()";
-    } 
+    }
     if (merged_){
       for (auto i = merged.begin(); i != merged.end(); ++i) {
         tt << "*" << (*i)->generate_range() << "->nblock()";
-      } 
+      }
     }
     tt << ");" << endl;
   }
-  // loops 
-  for (auto i = index_.begin(); i != index_.end(); ++i, indent += "  ") 
+  // loops
+  for (auto i = index_.begin(); i != index_.end(); ++i, indent += "  ")
     tt << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   if (merged_) {
-    for (auto i = merged.begin(); i != merged.end(); ++i, indent += "  ") 
+    for (auto i = merged.begin(); i != merged.end(); ++i, indent += "  ")
       tt << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   }
   // add subtasks
