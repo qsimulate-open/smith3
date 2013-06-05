@@ -78,8 +78,8 @@ pair<string, string> Forest::generate_code() const {
   tt << out.second;
 
   for (auto& i : trees_) {
-    tuple<string, string, int, int> tmp = i->generate_task_list(icnt, i0, gamma_);
-    tie(depends, tasks, icnt, i0) = tmp;
+    tuple<string, string, int, int, vector<shared_ptr<Tensor>>> tmp = i->generate_task_list(icnt, i0, gamma_, itensors_);
+    tie(depends, tasks, icnt, i0, itensors_) = tmp;
     ss << depends;
     tt << tasks;
   }

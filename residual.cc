@@ -295,10 +295,10 @@ pair<string, string> Residual::generate_bc(const string indent, const shared_ptr
       list<shared_ptr<const Index>> proj = (i)->ex_target_index();
       list<shared_ptr<const Index>> res;
       assert(!(proj.size() & 1));
-      for (auto ii = proj.begin(); ii != proj.end(); ++ii, ++ii) {
-        auto j = ii; ++j;
+      for (auto i = proj.begin(); i != proj.end(); ++i, ++i) {
+        auto j = i; ++j;
         res.push_back(*j);
-        res.push_back(*ii);
+        res.push_back(*i);
       }
       shared_ptr<Tensor> residual(new Tensor(1.0, "r", res));
       vector<shared_ptr<Tensor>> op2 = { (i)->next_target() };
