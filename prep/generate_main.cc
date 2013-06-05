@@ -68,7 +68,7 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
               (l == "x" && k == "c" && j == "x" && i == "x")) {
 #else  // turn on one of the following lines
        // test the mp2-like contributions:
-          if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") ||  (l == "x" && k == "x" && j == "a" && i == "a")) { 
+          if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") ||  (l == "x" && k == "x" && j == "a" && i == "a")) {
 // *test single configuration cases*
 //        if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
 //        if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
@@ -82,9 +82,9 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
 #endif
             stringstream ss; ss << cnt;
             lp.push_back(shared_ptr<Tensor>(new Tensor(ss.str(), {l, k, j, i})));
-            td.push_back(shared_ptr<Tensor>(new Tensor("t2dagger", ss.str(), {l, k, j, i}))); 
-            lt.push_back(shared_ptr<Tensor>(new Tensor("t2", ss.str(), {j, i, l, k}))); 
-            ls.push_back(shared_ptr<Tensor>(new Tensor("r", ss.str(), {j, i, l, k}))); 
+            td.push_back(shared_ptr<Tensor>(new Tensor("t2dagger", ss.str(), {l, k, j, i})));
+            lt.push_back(shared_ptr<Tensor>(new Tensor("t2", ss.str(), {j, i, l, k})));
+            ls.push_back(shared_ptr<Tensor>(new Tensor("r", ss.str(), {j, i, l, k})));
             ++cnt;
           }
         }
@@ -109,10 +109,10 @@ int main() {
   vector<shared_ptr<Tensor>> H   = {shared_ptr<Tensor>(new Tensor("v2", "", {"g", "g", "g", "g"}))};
   vector<shared_ptr<Tensor>> dum = {shared_ptr<Tensor>(new Tensor("proj", "e", {}))};
   vector<shared_ptr<Tensor>> ex1b = {shared_ptr<Tensor>(new Tensor("1b", {"g", "g"}))};
-  
-  cout << "  string theory=\"" << theory << "\"; " << endl;
+
+  cout << "  string theory=\"" << theory << "\";" << endl;
   cout << endl;
-  
+
   for (auto& i : proj_list) cout << i->generate();
   for (auto& i : t_list)    cout << i->generate();
   for (auto& i : r_list)    cout << i->generate();
@@ -123,8 +123,8 @@ int main() {
   for (auto& i : t_dagger)  cout << i->generate();
   for (auto& i : ex1b)      cout << i->generate();
   cout << endl;
-  
-  // residual equations // 
+
+  // residual equations //
   shared_ptr<Equation> eq0(new Equation("ra", {dum, proj_list, f, t_list}));
   shared_ptr<Equation> eq1(new Equation("rb", {dum, proj_list, t_list}, 1.0, "e0"));
   shared_ptr<Equation> eq2(new Equation("rc", {dum, proj_list, H}));
@@ -142,8 +142,8 @@ int main() {
   eq3->set_tree_type("energy");
   cout << eq3->generate();
 
-  // density matrix equations // 
-  // generate unlinked correction term for one-body density matrix 
+  // density matrix equations //
+  // generate unlinked correction term for one-body density matrix
   shared_ptr<Equation> eq4(new Equation("ca", {dum, t_dagger, t_list}, 0.25));
   eq4->set_tree_type("correction");
   cout << eq4->generate();

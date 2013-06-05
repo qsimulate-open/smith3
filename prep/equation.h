@@ -27,7 +27,7 @@ class Equation {
       std::list<int> current(in.size(), 0);
       std::list<int> start = current;
       do {
-        // set the current vector 
+        // set the current vector
         std::list<std::shared_ptr<Tensor>> cc;
         auto inp = in.begin();
         for (auto i = current.begin(); i != current.end(); ++i, ++inp) cc.push_back((*inp)[*i]);
@@ -37,17 +37,17 @@ class Equation {
         auto m = max.rbegin();
         for (auto i = current.rbegin(); i != current.rend(); ++i, ++m) {
           if (++*i == *m) {
-            *i = 0; 
+            *i = 0;
           } else {
             break;
-          } 
+          }
         }
       } while (current != start);
 
       // construct Diagrams
       int cnt = 0;
       for (auto& i : out) {
-        std::stringstream ss; ss << label_ << cnt; 
+        std::stringstream ss; ss << label_ << cnt;
         if (d == 1.0) {
           diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), scalar)));
         } else {
@@ -80,7 +80,7 @@ class Equation {
       ss << "  " << diagram_.front()->eqn_label() << "->duplicates();" << std::endl;
       ss << "  " << diagram_.front()->eqn_label() << "->active();" << std::endl;
 
-#if 0 // prune density matrix equation to keep following terms, for testing 
+#if 0 // prune density matrix equation to keep following terms, for testing
       if (!tree_type_.empty() && tree_type_ == "density") {
         //ss << "  " << "list<string> terms = {\"c\", \"a\"};" << std::endl;
           ss << "  " << "list<string> terms = {\"c\", \"x\"};" << std::endl;

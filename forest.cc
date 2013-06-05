@@ -64,10 +64,6 @@ void Forest::filter_gamma() {
 }
 
 
-// code generation upper level count necessary with multiple trees
-static int icnt;
-static int i0;
-
 pair<string, string> Forest::generate_code() const {
   stringstream ss, tt;
   string depends, tasks;
@@ -81,9 +77,7 @@ pair<string, string> Forest::generate_code() const {
   ss << out.first;
   tt << out.second;
 
-
   for (auto& i : trees_) {
-    // or go into tree and generate w/ and new cleaned up generate_tasks_list for one tree only
     tuple<string, string, int, int> tmp = i->generate_task_list(icnt, i0, gamma_);
     tie(depends, tasks, icnt, i0) = tmp;
     ss << depends;
@@ -102,6 +96,7 @@ pair<string, string> Forest::generate_headers() const {
   stringstream ss, tt;
   string indent = "      ";
     // save task zero
+    icnt = 0;
     i0 = icnt;
 
     ss << header(forest_name_);
@@ -156,6 +151,7 @@ pair<string, string> Forest::generate_headers() const {
     ss << rtmp.first;
     tt << rtmp.second;
     ++icnt;
+
 
   return make_pair(ss.str(), tt.str());
 }

@@ -15,10 +15,10 @@ class Diagram {
     std::string scalar_;
 
   public:
-    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, std::string s) : op_(o), label_(la), fac_(1.0), scalar_(s) {}; 
-    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d, std::string s) : op_(o), label_(la), fac_(d), scalar_(s) {}; 
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, std::string s) : op_(o), label_(la), fac_(1.0), scalar_(s) {};
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d, std::string s) : op_(o), label_(la), fac_(d), scalar_(s) {};
 
-    const std::list<std::shared_ptr<Tensor>>& op() const { return op_; }; 
+    const std::list<std::shared_ptr<Tensor>>& op() const { return op_; };
     std::string label() const { return label_; };
     std::string diag_label() const { return "d" + label_; };
     std::string eqn_label() const { return "e" + label_; };

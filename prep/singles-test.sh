@@ -8,7 +8,7 @@
 #  are correctly set.
 #
 #  to run, for example
-# 
+#
 #  ./test-singles.sh y.in > singles.log
 #
 ##############################################
@@ -46,8 +46,8 @@ for i in `echo "$cases"`
    sed -i "/[/][/] *[*]test single configuration cases[*]/,/[/][/] *[*]end test single configuration cases[*]/s/\(^  \)\( *if.*\)/\/\/\2/;/[/][/] *${i} */s/^ *[/][/]/  /" $smithdir/prep/generate_main.cc
    cd $smithdir/obj
    make -j
-   ./prep/Prep > ../main.cc 
-   make -j 
+   ./prep/Prep > ../main.cc
+   make -j
    ./MulWick
 
    # copy output to bagel, compile and run

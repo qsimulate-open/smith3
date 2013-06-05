@@ -30,6 +30,7 @@
 #include <string>
 #include <memory>
 #include <list>
+#include <vector>
 #include "tree.h"
 #include "equation.h"
 #include "listtensor.h"
@@ -53,6 +54,13 @@ class Forest {
 
     /// When we generate, a counter is used to generate a list of tasks.
     mutable int num_;
+    /// This is a zero level task for a tree.
+    mutable int i0;
+    /// Task counter.
+    mutable int icnt;
+
+    /// Intermediate tensors
+    mutable std::vector<std::shared_ptr<Tensor>> itensors_;
 
 
   public:
@@ -66,7 +74,8 @@ class Forest {
 
     /// Returns name of generated code.
     std::string name() const { return forest_name_; }
-
+    /// Returns intermediate tensors.
+    std::vector<std::shared_ptr<Tensor>> itensors() const { return itensors_; }
 
     // code generation //
     /// Driver for code generation goes through trees and generates task and task list files.
