@@ -68,7 +68,7 @@ bool Equation::ex_targets() const {
 
 
 void Equation::term_select(list<string> t) {
-  // go through diagrams and if do not contain correct target indices, remove.
+  // go through diagrams and if do not contain desired target indices (t), remove.
   list<list<shared_ptr<Diagram>>::iterator> rm;
   bool keep = true;
   for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
@@ -104,7 +104,6 @@ void Equation::active() {
   for (auto& i : diagram_) i->active();
 }
 
-
 void Equation::refresh_indices() {
   for (auto& i : diagram_) i->refresh_indices();
 }
@@ -117,6 +116,7 @@ void Equation::duplicates() {
   // For any-order algorithm, we need to use a generic algorithm.
   duplicates_(true);
 }
+
 
 void Equation::duplicates_(const bool proj) {
   list<list<shared_ptr<Diagram>>::iterator> rm;

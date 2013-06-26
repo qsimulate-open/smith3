@@ -31,16 +31,16 @@ using namespace std;
 using namespace smith;
 
 Op::Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td)
-  : Operator(ta, tb, tc, td), label_(lab) {};
+  : Operator(ta, tb, tc, td), label_(lab) { }
 
 
 Op::Op(const std::string lab, const std::string& ta, const std::string& tb)
-  : Operator(ta, tb), label_(lab) {};
+  : Operator(ta, tb), label_(lab) { }
 
 
 // Constructing one-body tensor. No operator is created. Careful...
 Op::Op(const string lab, shared_ptr<Index> ta, shared_ptr<Index> tb, shared_ptr<Spin> ts)
-  : Operator(ta, tb, ts), label_(lab) {};
+  : Operator(ta, tb, ts), label_(lab) { }
 
 
 

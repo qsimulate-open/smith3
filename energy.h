@@ -45,6 +45,7 @@ class Energy : public Tree {
     Energy(const std::shared_ptr<ListTensor> l, std::string lab, const bool t) : Tree(l, lab, t) { }
     virtual ~Energy() { }
 
+
     /// Return label of tree.
     std::string label() const override { return label_; }
 

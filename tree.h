@@ -66,6 +66,7 @@ class BinaryContraction {
     BinaryContraction(std::shared_ptr<Tensor> o, std::shared_ptr<ListTensor> l, std::string lab, const bool rt);
     ~BinaryContraction() { }
 
+
     /// Return list of trees below.
     std::list<std::shared_ptr<Tree>>& subtree() { return subtree_; }
     /// Return current tensor. For example f1, h1, v2, t2, etc.
@@ -76,7 +77,6 @@ class BinaryContraction {
     std::shared_ptr<Tensor> next_target();
     /// Returns vector of tensor with target tensor.
     std::vector<std::shared_ptr<Tensor>> tensors_vec();
-
 
     /// Print binary contraction.
     void print() const;

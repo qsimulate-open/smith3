@@ -13,10 +13,17 @@ class Diagram {
     std::string label_;
     double fac_;
     std::string scalar_;
+    std::pair<bool,bool> braket_;
+    bool ci_derivative_; 
 
   public:
-    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, std::string s) : op_(o), label_(la), fac_(1.0), scalar_(s) {};
-    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d, std::string s) : op_(o), label_(la), fac_(d), scalar_(s) {};
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d) : op_(o), label_(la), fac_(d), scalar_(""), braket_(std::make_pair(false,false)), ci_derivative_(false) { }
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, std::string s) : op_(o), label_(la), fac_(1.0), scalar_(s), braket_(std::make_pair(false,false)), ci_derivative_(false) { }
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d, std::string s) : op_(o), label_(la), fac_(d), scalar_(s), braket_(std::make_pair(false,false)), ci_derivative_(false) { }
+
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d, std::pair<bool,bool> der) : op_(o), label_(la), fac_(d), scalar_(""), braket_(der), ci_derivative_(true) { }
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, std::string s, std::pair<bool,bool> der) : op_(o), label_(la), fac_(1.0), scalar_(s), braket_(der), ci_derivative_(true) { }
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d, std::string s, std::pair<bool,bool> der) : op_(o), label_(la), fac_(d), scalar_(s), braket_(der), ci_derivative_(true) { }
 
     const std::list<std::shared_ptr<Tensor>>& op() const { return op_; };
     std::string label() const { return label_; };
@@ -42,10 +49,18 @@ class Diagram {
 
     std::string diagram_str() const {
       std::stringstream ss;
-      if (fac_ == 1.0) {
-        ss << "  shared_ptr<Diagram> " << diag_label() << "(new Diagram(" << label() << (scalar().empty() ? "" : ", \""+scalar()+"\"") << "));" << std::endl;
+      if (!ci_derivative_) {
+        if (fac_ == 1.0) {
+          ss << "  shared_ptr<Diagram> " << diag_label() << "(new Diagram(" << label() << (scalar().empty() ? "" : ", \""+scalar()+"\"") << "));" << std::endl;
+        } else {
+          ss << "  shared_ptr<Diagram> " << diag_label() << "(new Diagram(" << label() << ", " << fac_ << (scalar().empty() ? "" : ", \""+scalar()+"\"") << "));" << std::endl;
+        }
       } else {
-        ss << "  shared_ptr<Diagram> " << diag_label() << "(new Diagram(" << label() << ", " << fac_ << (scalar().empty() ? "" : ", \""+scalar()+"\"") << "));" << std::endl;
+        if (fac_ == 1.0) {
+          ss << "  shared_ptr<Diagram> " << diag_label() << "(new Diagram(" << label() << (scalar().empty() ? "" : ", \""+scalar()+"\"") << (braket_.first == true ? ", std::make_pair(true, false)));" : ", std::make_pair(false, true)));") << std::endl;
+        } else {
+          ss << "  shared_ptr<Diagram> " << diag_label() << "(new Diagram(" << label() << ", " << fac_ << (scalar().empty() ? "" : ", \""+scalar()+"\"") << (braket_.first == true ? ", std::make_pair(true, false)));" : ", std::make_pair(false, true)));") << std::endl;
+        }
       }
       return ss.str();
     };

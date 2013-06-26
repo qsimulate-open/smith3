@@ -45,7 +45,7 @@
 
 namespace smith {
 
-/// A class for Tensors. May be active_ (contain all active indices), or be merged (contain additional tensor), or have have alias (equivalent tensor).
+/// A class for Tensors. May be active_ (contain all active indices), or be merged (contain additional tensor), or have alias (equivalent tensor).
 class Tensor {
   protected:
     /// Tensor prefactor.
@@ -84,11 +84,11 @@ class Tensor {
     Tensor() { }
     ~Tensor() { }
 
+
     /// Returns list of index pointers for tensor.
     std::list<std::shared_ptr<const Index>>& index() { return index_; }
     /// Returns const list of index pointers for tensor.
     const std::list<std::shared_ptr<const Index>>& index() const { return index_; }
-
 
     /// Returns const Tensor pointer.
     const std::shared_ptr<const Tensor> merged() const { return merged_; }

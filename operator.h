@@ -80,6 +80,7 @@ class Operator {
     Operator() { }
     virtual ~Operator() { }
 
+
     /// pure virtual print out operator.
     virtual void print() const = 0; // pure virtual function to force derived classes to define these members.
     /// pure virtual permute.
@@ -110,7 +111,6 @@ class Operator {
     int num_nodagger() const;
     /// Counts number of daggered operators.
     int num_dagger() const;
-
 
 
     /// Set spin.

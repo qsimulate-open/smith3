@@ -17,9 +17,29 @@ class Equation {
     std::string label_;
     double fac_;
     std::string tree_type_;
+    std::pair<bool, bool> braket_;
+    bool ci_derivative_;
 
   public:
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d = 1.0, const std::string scalar = "") : label_(l), fac_(d), tree_type_("") {
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in) : Equation(l, in, 1.0, "", std::make_pair(false,false)) { } 
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d) : Equation(l, in, d, "", std::make_pair(false,false)) { } 
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::string scalar) : Equation(l, in, 1.0, scalar, std::make_pair(false,false)) { } 
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d, const std::string scalar) : Equation(l, in, d, scalar, std::make_pair(false,false)) { } 
+    // with ci derivative
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::pair<bool,bool> brkt) : Equation(l, in, 1.0, "", brkt) { } 
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d, const std::pair<bool,bool> brkt) : Equation(l, in, d, "", brkt) { }
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::string scalar, const std::pair<bool,bool> brkt) : Equation(l, in, 1.0, scalar, brkt) { }
+    // end ctor 
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d, const std::string scalar, const std::pair<bool,bool> bk) : label_(l), fac_(d), tree_type_(""), braket_(bk) {
+
+      // mkm assert(bk.first && bk.second);
+      if (bk.first == false && bk.second == false) {
+        ci_derivative_ = false;
+      } else {
+        ci_derivative_ = true;
+      }
+  
+
       std::list<int> max;
       for (auto& i : in) max.push_back(i.size());
 
@@ -48,11 +68,19 @@ class Equation {
       int cnt = 0;
       for (auto& i : out) {
         std::stringstream ss; ss << label_ << cnt;
-        if (d == 1.0) {
-          diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), scalar)));
+        if (!ci_derivative_) {
+          if (d == 1.0) {
+            diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), scalar)));
+          } else {
+            diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), d, scalar)));
+          }
         } else {
-          diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), d, scalar)));
-        }
+          if (d == 1.0) {
+            diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), scalar, bk)));
+          } else {
+            diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), d, scalar, bk)));
+          }
+        }        
         ++cnt;
       }
 

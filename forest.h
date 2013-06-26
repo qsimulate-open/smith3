@@ -67,6 +67,7 @@ class Forest {
     Forest(std::list<std::shared_ptr<Tree>> o) : trees_(o), forest_name_(trees_.front()->tree_name()) { }
     ~Forest() { }
 
+
     /// Function runs from top level (main.cc) adds unique gamma to gamma_ list.
     void filter_gamma();
     /// Returns the unique Gamma tensors.

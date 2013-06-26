@@ -37,7 +37,7 @@ class Equation {
   protected:
     /// List of diagrams.
     std::list<std::shared_ptr<Diagram>> diagram_;
-    /// Internal function used by to find double permutations. Also if bool is true, equations can become daggered, and where permuations cause an additional get_block to be added to the generated code.
+    /// Internal function used by to find double permutations. Also if bool is true, equations can become daggered, and where permutations cause an additional get_block to be added to the generated code.
     void duplicates_(const bool);
 
     /// Name of theory. Generated code for BAGEL will have this name, set in main.cc.
@@ -48,6 +48,7 @@ class Equation {
     /// Construct equation from diagram and name. Contract operators in diagram.
     Equation(std::shared_ptr<Diagram>, std::string nam);
     ~Equation() { }
+
 
     /// Merging two sets of Equation.  Done by adding the diagrams of new equation (in merge arguement) to the original equation.
     void merge(const std::shared_ptr<Equation> o) {
@@ -70,10 +71,10 @@ class Equation {
     void refresh_indices();
 
     /// Returns the name of this equation.
-    std::string name() const { return name_; };
+    std::string name() const { return name_; }
 
     /// Returns list of diagram pointers.
-    std::list<std::shared_ptr<Diagram>> diagram() { return diagram_; };
+    std::list<std::shared_ptr<Diagram>> diagram() { return diagram_; }
 
 };
 

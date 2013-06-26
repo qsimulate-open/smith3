@@ -52,9 +52,11 @@ class Ex : public Operator {
     Ex(const std::string& oa, const std::string& ob, const std::string& oc, const std::string& od);
     virtual ~Ex() { }
 
+
     /// Print out operator.
     void print() const override;
 
+    /// Return true if operator has target indices.
     bool is_ex() const { return true; }
 
     /// Makes a possible permutation of indices. Cannot permute if there are active daggered and no-daggered operators.

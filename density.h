@@ -44,6 +44,7 @@ class Density : public Tree {
     Density(const std::shared_ptr<ListTensor> l, std::string lab, const bool t) : Tree(l, lab, t) { }
     virtual ~Density() { }
 
+
     /// Return label of tree.
     std::string label() const override { return label_; }
 

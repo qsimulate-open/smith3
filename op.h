@@ -59,6 +59,7 @@ class Op : public Operator {
     Op(const std::string lab = "") : label_(lab) { }
     virtual ~Op() { }
 
+
     bool is_ex() const { return false; }
 
     /// Returns operator name.

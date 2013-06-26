@@ -81,6 +81,8 @@ shared_ptr<Diagram> Diagram::copy() const {
   out->set_fac(fac_);
   out->scalar_ = scalar_;
   if (dagger_) out->add_dagger();
+  if (bra_) out->add_bra();
+  if (ket_) out->add_ket();
   return out;
 }
 
@@ -125,9 +127,11 @@ void Diagram::refresh_indices() {
 void Diagram::print() {
   refresh_indices();
   cout << setw(4) << setprecision(1) << fixed <<  fac_ << " " << scalar_ << " ";
+
   for (auto& i : op_) i->print();
 
   // active operators
+  cout << " <" << (bra_ ? "I" : "0") << "|";
   cout << "[";
   for (auto& i : op_) {
     if (i->num_active_nodagger() + i->num_active_dagger() != 0) {
@@ -138,8 +142,9 @@ void Diagram::print() {
     }
   }
   cout << "]";
-  if (dagger_) cout << " ** Daggered object added **";
+  cout << "|" << (ket_ ? "I" : "0") << ">";
 
+  if (dagger_) cout << " ** Daggered object added **";
   cout << endl;
   if (rdm_) rdm_->print("   ");
   cout << endl;
@@ -160,7 +165,9 @@ list<shared_ptr<const Index>> Diagram::active_indices() const {
 
 void Diagram::print() const {
   cout << setw(4) << setprecision(1) << fixed <<  fac_ << " " << scalar_ << " ";
+  cout << " <" << (bra_ ? "I" : "0") << "|";
   for (auto& i : op_) i->print();
+  cout << (ket_ ? "I" : "0") << ">";
   cout << endl;
 }
 
@@ -262,8 +269,19 @@ void Diagram::active() {
   refresh_indices();
   list<shared_ptr<const Index>>  ac = active_indices();
   if (ac.size()) {
+#if 1 // todo replace this
     // Performs Wick in constructor of an Active object
     rdm_ = shared_ptr<Active>(new Active(ac));
+#else
+    if (!bra_ && !ket_) {
+      // Performs Wick in constructor of an Active object
+      rdm_ = shared_ptr<Active>(new Active(ac));
+    } else if (bra_ && !ket_) {
+      rdmI0_ = shared_ptr<Active>(new Active(ac));
+    } else if (ket_ && !bra_) {
+      rdm0I_ = shared_ptr<Active>(new Active(ac));
+    }
+#endif
   }
 }
 
@@ -324,6 +342,8 @@ bool Diagram::identical(shared_ptr<Diagram> o) const {
       }
     }
   }
+  // check bra and ket for diagrams
+  if (braket() != o->braket()) out = false;
 
   return out;
 }

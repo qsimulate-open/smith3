@@ -75,6 +75,7 @@ class Index {
     Index(const Index& o) : label_(o.label_), num_(o.num_), dagger_(o.dagger_), spin_(o.spin_) { }
     ~Index() { }
 
+
     /// Return index number.
     int num() const { return num_; }
     /// Return if should be transposed.
@@ -88,7 +89,6 @@ class Index {
 
     /// If active.  Checks label if active (x).
     bool active() const { return label_ == "x"; }
-
 
     /// Sets spin.
     void set_spin(const std::shared_ptr<Spin> s) const { spin_ = s; }

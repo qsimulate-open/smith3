@@ -233,21 +233,27 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      std::cout << \" === Unrelaxed density matrix, <1|E_pq|1> + 2<0|E_pq|1> ===\" << std::endl; " << endl;
   ss << "      while (!dens->done())" << endl;
   ss << "        dens->next_compute();" << endl;
+  ss << "#if 0" << endl;
   ss << "      this->den1_->print2(\"density matrix\", 1.0e-5);" << endl;
+  ss << "#endif" << endl;
   ss << "      this->correct_den1_ = correction(correct);" << endl;
   ss << "      std::cout << \"Unlinked correction term, <1|1>*rdm1 = \" << std::setprecision(10) << this->correct_den1_ << \"*rdm1\" << std::endl;" << endl;
+  ss << "#if 0" << endl;
   ss << "      this->rdm1_->print2(\"rdm1\", 1.0e-5);" << endl;
+  ss << "#endif" << endl;
   ss << "      std::cout << \" === Unrelaxed density matrix, <0|E_pqrs|1>  ===\" << std::endl; " << endl;
   ss << "      while (!dens2->done())" << endl;
   ss << "        dens2->next_compute();" << endl;
+  ss << "#if 0" << endl;
   ss << "      this->den2_->print4(\"density matrix\", 1.0e-5);" << endl;
+  ss << "#endif" << endl;
   ss << "    };" << endl;
   ss << "" << endl;
   ss << "    double energy(std::shared_ptr<Queue<T>> energ) {" << endl;
   ss << "      double en = 0.0;" << endl;
   ss << "      while (!energ->done()) {" << endl;
   ss << "        std::shared_ptr<Task<T>> c = energ->next_compute();" << endl;
-  ss << "        en += c->energy() * 0.25;" << endl;  // 0.25 due to 1/2 each to bra and ket
+  ss << "        en += c->energy();" << endl;  // prefactors included in main.cc
   ss << "      }   " << endl;
   ss << "      return en; " << endl;
   ss << "    };  " << endl;

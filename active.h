@@ -39,6 +39,7 @@
 #include "op.h"
 #include "ex.h"
 #include "rdm.h"
+#include "rdm00.h"
 
 namespace smith {
 

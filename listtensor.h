@@ -55,6 +55,7 @@ class ListTensor {
       : fac_(f), scalar_(sc), list_(ve), dagger_(d) { }
     ~ListTensor() { }
 
+
     /// Prints prefactor, if available: scalar, dagger. Finally prints out each tensor in list.
     void print() const;
     /// Combines tensors and removes one from list. To do this, finds active tensor then merges other tensor if other tensor is all_active (has all active indices) but not if active and if not proj.
