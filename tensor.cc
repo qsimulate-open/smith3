@@ -108,7 +108,7 @@ void Tensor::merge(shared_ptr<Tensor> a) {
   for (auto& i : a->index()) {
     const int n = i->num();
     for (auto j = index_.begin(); j != index_.end(); ++j) {
-      // careful, this code is driven by numbers
+      // Careful, this code is driven by numbers
       if ((*j)->num() == n) {
         remove.push_back(j);
         break;

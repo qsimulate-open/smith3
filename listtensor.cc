@@ -36,7 +36,7 @@ ListTensor::ListTensor(shared_ptr<Diagram> d) {
   braket_ = d->braket();
   // vector of tensors
   for (auto& i : d->op()) {
-    // careful, add only labeled operators! ie not excitation operators!
+    // Careful, add only labeled operators! ie not excitation operators!
     if (!i->label().empty()) {
       shared_ptr<Tensor> t = make_shared<Tensor>(i);
       list_.push_back(t);
@@ -71,7 +71,7 @@ void ListTensor::absorb_all_internal() {
 void ListTensor::absorb_ket() {
   if (braket_.second) {
     assert(!braket_.first);
-    // get rdm indices. these will be reversed in associated tensors
+    // get modified rdm indices. these will be reversed in associated tensors
     list<shared_ptr<const Index>> ind;
     for (auto i = list_.begin(); i != list_.end(); ++i) {
       if ((*i)->is_gamma()) {
@@ -99,6 +99,20 @@ void ListTensor::absorb_ket() {
     }
     // now braket can be reversed for this listtensor
     set_braket(make_pair(true,false));
+
+    // reverse braket for modified rdm
+    for (auto& i : list_) {
+      if (i->active()) {
+        list<shared_ptr<RDM>> rdms = i->active()->rdm(); 
+        for (auto& j : rdms) {
+          if (j->ket()) {
+            j->set_bra(true); 
+            j->set_ket(false); 
+          } 
+        } 
+      }
+    }
+     
   }
 }
 

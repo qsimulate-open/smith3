@@ -65,6 +65,9 @@ class Active {
     /// Return const index list.
     const std::list<std::shared_ptr<const Index>> index() const;
 
+    /// Used in listtensor absorb_ket.
+    std::list<std::shared_ptr<RDM>> rdm() { return rdm_; }
+
     /// Compares active tensors. Comparison is rdm order specific now. TODO could be made more general.
     bool operator==(const Active& o) const;
 

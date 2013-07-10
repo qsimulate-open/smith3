@@ -64,7 +64,7 @@ class ListTensor {
 
     /// Combines tensors and removes one from list. To do this, finds active tensor then merges other tensor if other tensor is all_active (has all active indices) but not if active and if not proj.
     void absorb_all_internal();
-    /// Careful, only valid if wave function is not complex. This will reindex tensors in case of ket, allowing gamma tensors from bra case to be reused.
+    /// Careful, only valid if wave function is not complex. This will reverse braket for gamma and reindex tensors in case of ket, allowing gamma tensors from bra case to be reused.
     void absorb_ket();
 
     /// check if listtensor has rdm(s).

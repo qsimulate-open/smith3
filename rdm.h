@@ -111,6 +111,11 @@ class RDM {
     /// Returns ket, false for zero order reference.
     bool ket() const { return ket_; }
 
+    /// Set bra, needed if ket is absorbed for diagram to reuse modified rdms.
+    void set_bra(bool b) { bra_ = b; }
+    /// Set ket, needed if ket is absorbed for diagram to reuse modified rdms.
+    void set_ket(bool b) { ket_ = b; }
+
     /// Returns a reference of index_.
     std::list<std::shared_ptr<const Index>>& index() { return index_; }
     /// Returns a const reference of index_.

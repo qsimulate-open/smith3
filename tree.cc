@@ -51,7 +51,7 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
     // All internal tensor should be included in the active part
     tmp->absorb_all_internal();
 
-    // rearrange kets and reindex associated tensors, ok if not complex
+    // rearrange brakets and reindex associated tensors, ok if not complex
     tmp->absorb_ket();
 
     shared_ptr<Tensor> first = tmp->front();
@@ -604,7 +604,7 @@ tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_task_
         }
       } else { // residual
 
-      // step through op and bc. Caution, triggers recursive call
+      // step through op and bc. Careful, triggers recursive call
       tuple<string, string, int, int, vector<shared_ptr<Tensor>>> tmp = generate_steps(indent, tcnt, t0, gamma, itensors);
       tie(depends, tasks, tcnt, t0, itensors) = tmp;
       ss << depends;
