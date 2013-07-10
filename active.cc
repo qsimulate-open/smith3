@@ -35,10 +35,16 @@ using namespace smith;
 
 
 
-Active::Active(const list<shared_ptr<const Index>>& in) {
-
-  shared_ptr<RDM> tmp(new RDM00(in, map<shared_ptr<const Index>, shared_ptr<const Index>>(), 1.0));
-
+Active::Active(const list<shared_ptr<const Index>>& in, pair<bool,bool> braket) {
+  shared_ptr<RDM> tmp;
+  if (!braket.first && !braket.second) {
+    tmp = make_shared<RDM00>(in, map<shared_ptr<const Index>, shared_ptr<const Index>>(), braket, 1.0);
+  } else if (!braket.first || !braket.second) {
+    // Caution, this line assumes listtensor will use absorb_ket, ie that non-gamma tensors with ket will be reindexed in order to reuse gamma...ie only making RDMI0. ok if not complex.
+    tmp = make_shared<RDMI0>(in, map<shared_ptr<const Index>, shared_ptr<const Index>>(), make_pair(true, false), 1.0);
+  } else if (braket.first && braket.second) {
+    throw logic_error("Active::ctor not implemented");
+  }
   // this sets list<RDM>
   reduce(tmp);
 
@@ -95,6 +101,7 @@ const list<shared_ptr<const Index>> Active::index() const {
   }
   return (*j)->index();
 }
+
 
 bool Active::operator==(const Active& o) const {
   bool out = true;

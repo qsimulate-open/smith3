@@ -67,8 +67,8 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
               (l == "x" && k == "x" && j == "x" && i == "a") ||
               (l == "x" && k == "c" && j == "x" && i == "x")) {
 #else  // turn on one of the following lines
-       // test the mp2-like contributions:
-          if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") ||  (l == "x" && k == "x" && j == "a" && i == "a")) {
+          if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") ||  (l == "x" && k == "x" && j == "a" && i == "a")) {  // mp2 test ansatz
+       // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") ||  (l == "x" && k == "x" && j == "a" && i == "a") || (l == "c" && k == "c" && j == "x" && i == "a")) {
 // *test single configuration cases*
 //        if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
 //        if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
@@ -136,33 +136,55 @@ int main() {
   cout << eq0->generate();
 
   // energy equations //
-  shared_ptr<Equation> eq3(new Equation("ea", {dum, t_dagger, H}));
-  shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, hc}));
+  shared_ptr<Equation> eq3(new Equation("ea", {dum, t_dagger, H}, 0.25));
+  shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, hc}, 0.25));
   eq3->merge(eq3a);
   eq3->set_tree_type("energy");
   cout << eq3->generate();
 
-  // density matrix equations //
-  // generate unlinked correction term for one-body density matrix
-  shared_ptr<Equation> eq4(new Equation("ca", {dum, t_dagger, t_list}, 0.25));
-  eq4->set_tree_type("correction");
+
+  // CI derivative equations, dedci = dE/dCI  //
+#if 1 // test energy, prefactor should equate
+  shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, H}, 0.125, make_pair(true, false)));
+  shared_ptr<Equation> eq4a(new Equation("dedcib", {dum, t_dagger, H}, 0.125, make_pair(false, true)));
+  shared_ptr<Equation> eq4b(new Equation("dedcic", {dum, t_dagger, hc}, 0.125, make_pair(true, false)));
+  shared_ptr<Equation> eq4c(new Equation("dedcid", {dum, t_dagger, hc}, 0.125, make_pair(false, true)));
+  eq4->merge(eq4a);
+  eq4->merge(eq4b);
+  eq4->merge(eq4c);
+#else // test hylleraas equation
+  shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, f, t_list}, 0.25));
+  shared_ptr<Equation> eq4a(new Equation("dedcib", {dum, t_dagger, t_list}, 0.25, "e0"));
+  shared_ptr<Equation> eq4b(new Equation("dedcic", {dum, t_dagger, H}, 0.50));
+  shared_ptr<Equation> eq4c(new Equation("dedcid", {dum, t_dagger, hc}, 0.50));
+  eq4->merge(eq4a);
+  eq4->merge(eq4b);
+  eq4->merge(eq4c);
+#endif
+  eq4->set_tree_type("dedci");
   cout << eq4->generate();
 
-  // one-body contribution
-  shared_ptr<Equation> eq5(new Equation("da", {dum, t_dagger, ex1b, t_list}, 0.25));
-  shared_ptr<Equation> eq5a(new Equation("db", {dum, ex1b, t_list}, 1.0));
-  eq5->merge(eq5a);
 
-  eq5->set_tree_type("density");
+  // density matrix equations //
+  // generate unlinked correction term for one-body density matrix
+  shared_ptr<Equation> eq5(new Equation("ca", {dum, t_dagger, t_list}, 0.25));
+  eq5->set_tree_type("correction");
   cout << eq5->generate();
 
-  // two-body contribution
-  shared_ptr<Equation> eq6(new Equation("d2a", {dum, proj_list, t_list}, 0.5));
-  eq6->set_tree_type("density2");
+  // one-body contribution
+  shared_ptr<Equation> eq6(new Equation("da", {dum, t_dagger, ex1b, t_list}, 0.25));
+  shared_ptr<Equation> eq6a(new Equation("db", {dum, ex1b, t_list}, 1.0));
+  eq6->merge(eq6a);
+  eq6->set_tree_type("density");
   cout << eq6->generate();
 
+  // two-body contribution
+  shared_ptr<Equation> eq7(new Equation("d2a", {dum, proj_list, t_list}, 0.5));
+  eq7->set_tree_type("density2");
+  cout << eq7->generate();
+
   // done. generate the footer
-  cout << footer(eq0->tree_label(), eq3->tree_label(), eq4->tree_label(), eq5->tree_label(), eq6->tree_label()) << endl;
+  cout << footer(eq0->tree_label(), eq3->tree_label(), eq4->tree_label(), eq5->tree_label(), eq6->tree_label(), eq7->tree_label()) << endl;
 
 
   return 0;

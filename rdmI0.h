@@ -1,6 +1,6 @@
 //
 // SMITH3 - generates spin-free multireference electron correlation programs.
-// Filename: rdm00.h
+// Filename: rdmI0.h
 // Copyright (C) 2013 Matthew MacLeod
 //
 // Author: Matthew MacLeod <matthew.macleod@northwestern.edu>
@@ -23,8 +23,8 @@
 // the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
-#ifndef __SRC_RDM00_H
-#define __SRC_RDM00_H
+#ifndef __SRC_RDMI0_H
+#define __SRC_RDMI0_H
 
 #include <list>
 #include <memory>
@@ -35,10 +35,9 @@
 
 namespace smith {
 
-/// A derived class for reduced density matrices with reference wave function bras and kets (<0|E|0>). Used to generate RDM summation tasks for Method_tasks.h file.
-class RDM00 : public RDM {
+/// A derived class for modified reduced density matrices which have partial reference wave function bras and kets (<I|E|0>). Used to generate RDM summation tasks for Method_tasks.h file.
+class RDMI0 : public RDM {
   protected:
-
 
     /// Generate entire task code for Gamma RDM summation.
     std::string generate_not_merged(std::string indent, const std::string tlab, const std::list<std::shared_ptr<const Index>>& loop, std::vector<std::string> in_tensors) override;
@@ -77,18 +76,18 @@ class RDM00 : public RDM {
 
   public:
     /// Make RDM object from list of indices, delta indices and factor.
-    RDM00(const std::list<std::shared_ptr<const Index>>& in,
+    RDMI0(const std::list<std::shared_ptr<const Index>>& in,
         const std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>>& in2, std::pair<bool, bool> braket,
         const double& f = 1.0)
       : RDM(in, in2, braket, f) { }
-    virtual ~RDM00() { }
+    virtual ~RDMI0() { }
 
+
+    /// Copies this rdm.
+    std::shared_ptr<RDM> copy() const override;
 
     /// Application of Wick's theorem and is controlled by const Index::num_. See active.cc. One index is going to be annihilated. done is updated inside the function.
     std::list<std::shared_ptr<RDM>> reduce_one(std::list<int>& done) const override;
-
-    /// Copies this rdm, function located in active.cc
-    std::shared_ptr<RDM> copy() const override;
 
     /// Generate Gamma summation task, for both non-merged and merged case (RDM * f1 tensor multiplication).
     std::string generate(std::string indent, const std::string itag, const std::list<std::shared_ptr<const Index>>& index, const std::list<std::shared_ptr<const Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas) override;

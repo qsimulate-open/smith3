@@ -47,6 +47,7 @@ static std::string header() {
   mm << "#include \"tree.h\"" << std::endl;
   mm << "#include \"residual.h\"" << std::endl;
   mm << "#include \"energy.h\"" << std::endl;
+  mm << "#include \"dedci.h\"" << std::endl;
   mm << "#include \"density.h\"" << std::endl;
   mm << "#include \"density2.h\"" << std::endl;
   mm << "#include \"correction.h\"" << std::endl;
@@ -59,10 +60,10 @@ static std::string header() {
 };
 
 
-static std::string footer(const std::string res, const std::string energy, const std::string correction, const std::string density, const std::string density2) {
+static std::string footer(const std::string res, const std::string energy, const std::string dedci, const std::string correction, const std::string density, const std::string density2) {
   std::stringstream mm;
 
-  mm << "  list<shared_ptr<Tree>> trees = {" << res << ", " << energy << ", " << correction << ", " << density << ", " << density2 << "};" << std::endl;
+  mm << "  list<shared_ptr<Tree>> trees = {" << res << ", " << energy << ", " << dedci << ", " << correction << ", " << density << ", " << density2 << "};" << std::endl;
   mm << "  shared_ptr<Forest> fr(new Forest(trees));" << std::endl;
 
   mm << "" <<  std::endl;
@@ -87,6 +88,8 @@ static std::string footer(const std::string res, const std::string energy, const
   mm << "  " << res << "->print();" << std::endl;
   mm << "  cout << std::endl << \"   ***  Energy  ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << energy << "->print();" << std::endl;
+  mm << "  cout << std::endl << \"   ***  CI derivative  ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  " << dedci << "->print();" << std::endl;
   mm << "  cout << std::endl << \"   ***  Correction  ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << correction << "->print();" << std::endl;
   mm << "  cout << std::endl << \"   ***  One-body Density Matrix  ***\" << std::endl << std::endl;" << std::endl;

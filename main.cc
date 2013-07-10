@@ -36,6 +36,7 @@
 #include "tree.h"
 #include "residual.h"
 #include "energy.h"
+#include "dedci.h"
 #include "density.h"
 #include "density2.h"
 #include "correction.h"
@@ -170,12 +171,12 @@ int main() {
   list<shared_ptr<Operator>> eb0 = {proje, t2dagger0, h1};
   list<shared_ptr<Operator>> eb1 = {proje, t2dagger1, h1};
   list<shared_ptr<Operator>> eb2 = {proje, t2dagger2, h1};
-  shared_ptr<Diagram> dea0(new Diagram(ea0));
-  shared_ptr<Diagram> dea1(new Diagram(ea1));
-  shared_ptr<Diagram> dea2(new Diagram(ea2));
-  shared_ptr<Diagram> deb0(new Diagram(eb0));
-  shared_ptr<Diagram> deb1(new Diagram(eb1));
-  shared_ptr<Diagram> deb2(new Diagram(eb2));
+  shared_ptr<Diagram> dea0(new Diagram(ea0, 0.25));
+  shared_ptr<Diagram> dea1(new Diagram(ea1, 0.25));
+  shared_ptr<Diagram> dea2(new Diagram(ea2, 0.25));
+  shared_ptr<Diagram> deb0(new Diagram(eb0, 0.25));
+  shared_ptr<Diagram> deb1(new Diagram(eb1, 0.25));
+  shared_ptr<Diagram> deb2(new Diagram(eb2, 0.25));
   shared_ptr<Equation> eea0(new Equation(dea0, theory));
   shared_ptr<Equation> eea1(new Equation(dea1, theory));
   shared_ptr<Equation> eea2(new Equation(dea2, theory));
@@ -190,6 +191,57 @@ int main() {
   eea0->duplicates();
   eea0->active();
   shared_ptr<Tree> tea(new Energy(eea0, "energy"));
+
+  list<shared_ptr<Operator>> dedcia0 = {proje, t2dagger0, v2};
+  list<shared_ptr<Operator>> dedcia1 = {proje, t2dagger1, v2};
+  list<shared_ptr<Operator>> dedcia2 = {proje, t2dagger2, v2};
+  list<shared_ptr<Operator>> dedcib0 = {proje, t2dagger0, v2};
+  list<shared_ptr<Operator>> dedcib1 = {proje, t2dagger1, v2};
+  list<shared_ptr<Operator>> dedcib2 = {proje, t2dagger2, v2};
+  list<shared_ptr<Operator>> dedcic0 = {proje, t2dagger0, h1};
+  list<shared_ptr<Operator>> dedcic1 = {proje, t2dagger1, h1};
+  list<shared_ptr<Operator>> dedcic2 = {proje, t2dagger2, h1};
+  list<shared_ptr<Operator>> dedcid0 = {proje, t2dagger0, h1};
+  list<shared_ptr<Operator>> dedcid1 = {proje, t2dagger1, h1};
+  list<shared_ptr<Operator>> dedcid2 = {proje, t2dagger2, h1};
+  shared_ptr<Diagram> ddedcia0(new Diagram(dedcia0, 0.125, std::make_pair(true, false)));
+  shared_ptr<Diagram> ddedcia1(new Diagram(dedcia1, 0.125, std::make_pair(true, false)));
+  shared_ptr<Diagram> ddedcia2(new Diagram(dedcia2, 0.125, std::make_pair(true, false)));
+  shared_ptr<Diagram> ddedcib0(new Diagram(dedcib0, 0.125, std::make_pair(false, true)));
+  shared_ptr<Diagram> ddedcib1(new Diagram(dedcib1, 0.125, std::make_pair(false, true)));
+  shared_ptr<Diagram> ddedcib2(new Diagram(dedcib2, 0.125, std::make_pair(false, true)));
+  shared_ptr<Diagram> ddedcic0(new Diagram(dedcic0, 0.125, std::make_pair(true, false)));
+  shared_ptr<Diagram> ddedcic1(new Diagram(dedcic1, 0.125, std::make_pair(true, false)));
+  shared_ptr<Diagram> ddedcic2(new Diagram(dedcic2, 0.125, std::make_pair(true, false)));
+  shared_ptr<Diagram> ddedcid0(new Diagram(dedcid0, 0.125, std::make_pair(false, true)));
+  shared_ptr<Diagram> ddedcid1(new Diagram(dedcid1, 0.125, std::make_pair(false, true)));
+  shared_ptr<Diagram> ddedcid2(new Diagram(dedcid2, 0.125, std::make_pair(false, true)));
+  shared_ptr<Equation> ededcia0(new Equation(ddedcia0, theory));
+  shared_ptr<Equation> ededcia1(new Equation(ddedcia1, theory));
+  shared_ptr<Equation> ededcia2(new Equation(ddedcia2, theory));
+  shared_ptr<Equation> ededcib0(new Equation(ddedcib0, theory));
+  shared_ptr<Equation> ededcib1(new Equation(ddedcib1, theory));
+  shared_ptr<Equation> ededcib2(new Equation(ddedcib2, theory));
+  shared_ptr<Equation> ededcic0(new Equation(ddedcic0, theory));
+  shared_ptr<Equation> ededcic1(new Equation(ddedcic1, theory));
+  shared_ptr<Equation> ededcic2(new Equation(ddedcic2, theory));
+  shared_ptr<Equation> ededcid0(new Equation(ddedcid0, theory));
+  shared_ptr<Equation> ededcid1(new Equation(ddedcid1, theory));
+  shared_ptr<Equation> ededcid2(new Equation(ddedcid2, theory));
+  ededcia0->merge(ededcia1);
+  ededcia0->merge(ededcia2);
+  ededcia0->merge(ededcib0);
+  ededcia0->merge(ededcib1);
+  ededcia0->merge(ededcib2);
+  ededcia0->merge(ededcic0);
+  ededcia0->merge(ededcic1);
+  ededcia0->merge(ededcic2);
+  ededcia0->merge(ededcid0);
+  ededcia0->merge(ededcid1);
+  ededcia0->merge(ededcid2);
+  ededcia0->duplicates();
+  ededcia0->active();
+  shared_ptr<Tree> tdedcia(new Dedci(ededcia0, "dedci"));
 
   list<shared_ptr<Operator>> ca0 = {proje, t2dagger0, t20};
   list<shared_ptr<Operator>> ca1 = {proje, t2dagger0, t21};
@@ -320,7 +372,7 @@ int main() {
   ed2a0->active();
   shared_ptr<Tree> td2a(new Density2(ed2a0, "density2"));
 
-  list<shared_ptr<Tree>> trees = {tra, tea, tca, tda, td2a};
+  list<shared_ptr<Tree>> trees = {tra, tea, tdedcia, tca, tda, td2a};
   shared_ptr<Forest> fr(new Forest(trees));
 
   fr->filter_gamma();
@@ -342,6 +394,8 @@ int main() {
   tra->print();
   cout << std::endl << "   ***  Energy  ***" << std::endl << std::endl;
   tea->print();
+  cout << std::endl << "   ***  CI derivative  ***" << std::endl << std::endl;
+  tdedcia->print();
   cout << std::endl << "   ***  Correction  ***" << std::endl << std::endl;
   tca->print();
   cout << std::endl << "   ***  One-body Density Matrix  ***" << std::endl << std::endl;

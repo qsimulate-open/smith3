@@ -51,9 +51,6 @@ class Diagram {
     /// The active part.
     std::shared_ptr<Active> rdm_;
 
-    /// todo Populate when there have bra ket other than <0|0>.
-    std::shared_ptr<Active> rdm0I_;
-
     /// Bra to be filled in according to specific tree type later in the code.
     bool bra_;
     /// Ket to be filled in according to specific tree type later in the code.
@@ -76,8 +73,10 @@ class Diagram {
     Diagram(std::list<std::shared_ptr<Operator>> op, std::pair<bool, bool> braket) : op_(op), fac_(1.0), bra_(braket.first), ket_(braket.second), dagger_(false) { }
     Diagram(std::list<std::shared_ptr<Operator>> op, std::string s, std::pair<bool, bool> braket) : op_(op), fac_(1.0), scalar_(s), bra_(braket.first), ket_(braket.second), dagger_(false) { }
     Diagram(std::list<std::shared_ptr<Operator>> op, double d, std::pair<bool, bool> braket) : op_(op), fac_(d), bra_(braket.first), ket_(braket.second), dagger_(false) { }
+
+    // full diagram
     Diagram(std::list<std::shared_ptr<Operator>> op, double d, std::string s, std::pair<bool, bool> braket) : op_(op), fac_(d), scalar_(s), bra_(braket.first), ket_(braket.second), dagger_(false) { }
-    /// Construct diagram with prefactor and dagger information. Needed in equation ctor copy(). 
+    /// Construct diagram with prefactor and dagger information. Needed in equation ctor copy().
     Diagram() : fac_(1.0), bra_(false), ket_(false), dagger_(false) { }
     // copy constructor is complicated but preserves the same topology as this.
     ~Diagram() { }
@@ -98,13 +97,11 @@ class Diagram {
     std::string& scalar() { return scalar_; }
     /// Returns rdm pointer.
     std::shared_ptr<Active> rdm() { return rdm_; }
-    ///  Returns rdmI0 pointer.
-    std::shared_ptr<Active> rdm0I() { return rdm0I_; }
     /// If diagram is transposed.
     bool dagger() const { return dagger_; }
 
     /// returns the bra_ and ket_ for the diagram.
-    std::pair<bool, bool> braket() const { return std::make_pair(bra_,ket_); }
+    std::pair<bool, bool> braket() const { return std::make_pair(bra_, ket_); }
 
     /// Careful, returns a const reference of op_ operator.
     const std::list<std::shared_ptr<Operator>>& op() const { return op_; }
@@ -112,6 +109,11 @@ class Diagram {
     void set_op(const std::list<std::shared_ptr<Operator>>& o) { op_ = o; }
     /// Set factor for private members.
     void set_fac(const double a) { fac_ = a; }
+    /// Set the bra information for diagram. Needed when diagrams are processed in equation ctor, see diagram::copy().
+    void set_bra(bool b) { bra_ = b; }
+    /// Add ket to diagram. Needed when diagrams are processed in equation ctor, see diagram::copy().
+    void set_ket(bool b) { ket_ = b; }
+
 
     /// Refresh the indices for each operator in diagram (ie calls operators refresh_indices function).
     void refresh_indices();
@@ -121,15 +123,10 @@ class Diagram {
 
     /// Daggered Diagram added to the sum.
     void add_dagger() { dagger_ = true; }
-    
-    /// Add bra to diagram. Needed when diagrams are processed in equation ctor, see diagram::copy().
-    void add_bra() { bra_ = true; }
-    /// Add ket to diagram. Needed when diagrams are processed in equation ctor, see diagram::copy().
-    void add_ket() { ket_ = true; }
 
     /// Permute indices in operators. return false when finished.
     bool permute(const bool proj);
-    /// If diagrams are same, based on size, indices, and spin.
+    /// If diagrams are same, based on size, indices, spin, bra and ket.
     bool identical(std::shared_ptr<Diagram> o) const;
 
     /// checks if diagram has target indices from excitation operators.
@@ -140,7 +137,7 @@ class Diagram {
 
     /// Print function for diagram, CAUTION: it also refreshes the indices.
     void print();
-    /// This print version does not refresh indices. Prints factor, scalar and operators. Also prints bra and ket together for term as easier to read, careful not an overlap.
+    /// This print version does not refresh indices. Prints factor, scalar, operators, bra and ket.
     void print() const;
 
     /// The number of daggered indices.

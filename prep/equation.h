@@ -21,15 +21,15 @@ class Equation {
     bool ci_derivative_;
 
   public:
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in) : Equation(l, in, 1.0, "", std::make_pair(false,false)) { } 
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d) : Equation(l, in, d, "", std::make_pair(false,false)) { } 
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::string scalar) : Equation(l, in, 1.0, scalar, std::make_pair(false,false)) { } 
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d, const std::string scalar) : Equation(l, in, d, scalar, std::make_pair(false,false)) { } 
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in) : Equation(l, in, 1.0, "", std::make_pair(false,false)) { }
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d) : Equation(l, in, d, "", std::make_pair(false,false)) { }
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::string scalar) : Equation(l, in, 1.0, scalar, std::make_pair(false,false)) { }
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d, const std::string scalar) : Equation(l, in, d, scalar, std::make_pair(false,false)) { }
     // with ci derivative
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::pair<bool,bool> brkt) : Equation(l, in, 1.0, "", brkt) { } 
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::pair<bool,bool> brkt) : Equation(l, in, 1.0, "", brkt) { }
     Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d, const std::pair<bool,bool> brkt) : Equation(l, in, d, "", brkt) { }
     Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::string scalar, const std::pair<bool,bool> brkt) : Equation(l, in, 1.0, scalar, brkt) { }
-    // end ctor 
+    // end ctor
     Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d, const std::string scalar, const std::pair<bool,bool> bk) : label_(l), fac_(d), tree_type_(""), braket_(bk) {
 
       // mkm assert(bk.first && bk.second);
@@ -38,7 +38,7 @@ class Equation {
       } else {
         ci_derivative_ = true;
       }
-  
+
 
       std::list<int> max;
       for (auto& i : in) max.push_back(i.size());
@@ -80,7 +80,7 @@ class Equation {
           } else {
             diagram_.push_back(std::shared_ptr<Diagram>(new Diagram(i, ss.str(), d, scalar, bk)));
           }
-        }        
+        }
         ++cnt;
       }
 
@@ -123,6 +123,8 @@ class Equation {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Residual(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else if (!tree_type_.empty() && tree_type_ == "energy") {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Energy(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
+      } else if (!tree_type_.empty() && tree_type_ == "dedci") {
+          ss << "  shared_ptr<Tree> " << tree_label() << "(new Dedci(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else if (!tree_type_.empty() && tree_type_ == "correction") {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Correction(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else if (!tree_type_.empty() && tree_type_ == "density") {

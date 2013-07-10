@@ -40,6 +40,7 @@
 #include "ex.h"
 #include "rdm.h"
 #include "rdm00.h"
+#include "rdmI0.h"
 
 namespace smith {
 
@@ -48,15 +49,15 @@ class Active {
   protected:
     /// List of RDMs.
     std::list<std::shared_ptr<RDM>> rdm_;
-    /// This function calls RDM::reduce_one and RDM::reduce_done functions and does sort to apply Wick's theorem to this RDM.
+    /// This function calls RDM::reduce_one and RDM::reduce_done functions and does sort to apply Wick's theorem to this RDM. Use anticommutator property to rearrange indices
     void reduce(std::shared_ptr<RDM> in);
 
     /// TODO double check if needed.
     mutable int count__;
 
   public:
-    /// Make active object from const list index.
-    Active(const std::list<std::shared_ptr<const Index>>& in);
+    /// Make active object from const list index and braket.
+    Active(const std::list<std::shared_ptr<const Index>>& in, std::pair<bool, bool> braket);
     ~Active() { }
 
     /// Prints active tensor prefactor, indices and delta (equivalent indices).

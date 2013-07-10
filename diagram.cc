@@ -51,7 +51,7 @@ shared_ptr<Diagram> Diagram::copy() const {
   map<shared_ptr<Spin>, shared_ptr<Spin>> spinmap;
 
   // creates Diagram without any info
-  shared_ptr<Diagram> out(new Diagram());
+  shared_ptr<Diagram> out = make_shared<Diagram>();
   list<shared_ptr<Operator>> outop;
 
   // loop over operators
@@ -81,8 +81,8 @@ shared_ptr<Diagram> Diagram::copy() const {
   out->set_fac(fac_);
   out->scalar_ = scalar_;
   if (dagger_) out->add_dagger();
-  if (bra_) out->add_bra();
-  if (ket_) out->add_ket();
+  if (bra_) out->set_bra(true);
+  if (ket_) out->set_ket(true);
   return out;
 }
 
@@ -126,7 +126,7 @@ void Diagram::refresh_indices() {
 // this is not a const function because it refreshes the indices
 void Diagram::print() {
   refresh_indices();
-  cout << setw(4) << setprecision(1) << fixed <<  fac_ << " " << scalar_ << " ";
+  cout << setw(4) << setprecision(2) << fixed <<  fac_ << " " << scalar_ << " ";
 
   for (auto& i : op_) i->print();
 
@@ -269,19 +269,8 @@ void Diagram::active() {
   refresh_indices();
   list<shared_ptr<const Index>>  ac = active_indices();
   if (ac.size()) {
-#if 1 // todo replace this
     // Performs Wick in constructor of an Active object
-    rdm_ = shared_ptr<Active>(new Active(ac));
-#else
-    if (!bra_ && !ket_) {
-      // Performs Wick in constructor of an Active object
-      rdm_ = shared_ptr<Active>(new Active(ac));
-    } else if (bra_ && !ket_) {
-      rdmI0_ = shared_ptr<Active>(new Active(ac));
-    } else if (ket_ && !bra_) {
-      rdm0I_ = shared_ptr<Active>(new Active(ac));
-    }
-#endif
+    rdm_ = make_shared<Active>(ac, make_pair(bra_, ket_));
   }
 }
 
@@ -302,8 +291,6 @@ bool Diagram::permute(const bool proj) {
   }
   return found;
 }
-
-
 
 
 bool Diagram::identical(shared_ptr<Diagram> o) const {

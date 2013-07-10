@@ -75,6 +75,9 @@ string Tensor::str() const {
 
   if (merged_) ss << " << " << merged_->str();
   if (alias_) ss << " (" << label_ << ")";
+  if (overlap_.first || overlap_.second) {
+    ss << " <" <<  (overlap_.first ? "I" : "0") << "|" << (overlap_.second ? "I" : "0") << ">";
+  }
   return ss.str();
 }
 
@@ -86,6 +89,13 @@ bool Tensor::all_active() const {
     out &= (*i)->active();
   }
   return out;
+}
+
+
+bool Tensor::is_gamma() const {
+  bool found;
+  if (label_.find("Gamma") != std::string::npos) found = true;
+  return found;
 }
 
 
@@ -108,7 +118,7 @@ void Tensor::merge(shared_ptr<Tensor> a) {
   for (auto& i : remove) index_.erase(i);
 }
 
-
+// todo edit to check bra ket ? maybe not
 bool Tensor::operator==(const Tensor& o) const {
   bool out = true;
   // if comparing Gammas we don't need to have similar labels or factors

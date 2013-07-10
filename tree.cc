@@ -30,6 +30,7 @@
 #include "density.h"
 #include "density2.h"
 #include "correction.h"
+#include "dedci.h"
 #include "constants.h"
 #include <algorithm>
 #include <stdexcept>
@@ -46,43 +47,36 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
   const bool rt_targets = eq->ex_targets();
 
   for (auto i = d.begin(); i != d.end(); ++i) {
-    shared_ptr<ListTensor> tmp(new ListTensor(*i));
+    shared_ptr<ListTensor> tmp = make_shared<ListTensor>(*i);
     // All internal tensor should be included in the active part
     tmp->absorb_all_internal();
+
+    // rearrange kets and reindex associated tensors, ok if not complex
+    tmp->absorb_ket();
 
     shared_ptr<Tensor> first = tmp->front();
     shared_ptr<ListTensor> rest = tmp->rest();
 
     // convert to tree and then bc
+    shared_ptr<Tree> tr;
     if (label_ == "residual") {
-      shared_ptr<Tree> tr(new Residual(rest, lab, rt_targets));
-      list<shared_ptr<Tree>> lt; lt.push_back(tr);
-      shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first, (*i)->ex_target_index()));
-      bc_.push_back(b);
+      tr = make_shared<Residual>(rest, lab, rt_targets);
     } else if (label_ == "energy") {
-      shared_ptr<Tree> tr(new Energy(rest, lab, rt_targets));
-      list<shared_ptr<Tree>> lt; lt.push_back(tr);
-      shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first, (*i)->ex_target_index()));
-      bc_.push_back(b);
+      tr = make_shared<Energy>(rest, lab, rt_targets);
+    } else if (label_ == "dedci") {
+      tr = make_shared<Dedci>(rest, lab, rt_targets);
     } else if (label_ == "correction") {
-      shared_ptr<Tree> tr(new Correction(rest, lab, rt_targets));
-      list<shared_ptr<Tree>> lt; lt.push_back(tr);
-      shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first, (*i)->ex_target_index()));
-      bc_.push_back(b);
+      tr = make_shared<Correction>(rest, lab, rt_targets);
     } else if (label_ == "density") {
-      shared_ptr<Tree> tr(new Density(rest, lab, rt_targets));
-      list<shared_ptr<Tree>> lt; lt.push_back(tr);
-      shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first, (*i)->ex_target_index()));
-      bc_.push_back(b);
+      tr = make_shared<Density>(rest, lab, rt_targets);
     } else if (label_ == "density2") {
-      shared_ptr<Tree> tr(new Density2(rest, lab, rt_targets));
-      list<shared_ptr<Tree>> lt; lt.push_back(tr);
-      shared_ptr<BinaryContraction> b(new BinaryContraction(lt, first, (*i)->ex_target_index()));
-      bc_.push_back(b);
+      tr = make_shared<Density2>(rest, lab, rt_targets);
     } else {
       throw logic_error("Error Tree::Tree, code generation for this tree type not implemented");
     }
-
+    list<shared_ptr<Tree>> lt; lt.push_back(tr);
+    shared_ptr<BinaryContraction> b = make_shared<BinaryContraction>(lt, first, (*i)->ex_target_index());
+    bc_.push_back(b);
   }
 
   factorize();
@@ -95,12 +89,25 @@ Tree::Tree(const shared_ptr<ListTensor> l, string lab, const bool t) : num_(-1),
   target_ = l->target();
   dagger_ = l->dagger();
   if (l->length() > 1) {
-    shared_ptr<BinaryContraction> bc(new BinaryContraction(target_, l, lab, root_targets_));
+    shared_ptr<BinaryContraction> bc = make_shared<BinaryContraction>(target_, l, lab, root_targets_);
     bc_.push_back(bc);
   } else {
     shared_ptr<Tensor> t = l->front();
     t->set_factor(l->fac());
     t->set_scalar(l->scalar());
+
+    // Careful, in case of gamma only push the braket for non-rdm cases
+    if (l->has_gamma()) { // rdms will absorb braket for this diagram so set them to false
+      t->set_overlap(make_pair(false, false));
+    } else if (l->braket().first) {
+      // Careful, only ok if not complex as converts <0|I> to <I|0>. This assumes rdm0I has been converted to rdmI0 by reindexing its associated tensors
+      t->set_overlap(make_pair(true, false));
+    } else if (!l->braket().first && !l->braket().second) {
+      t->set_overlap(make_pair(false, false));
+    } else if (l->braket().second) {
+      throw logic_error("Tree::Tree, should not happen as ket should be absorbed.");
+    }
+
     op_.push_back(t);
   }
 }
@@ -112,25 +119,23 @@ BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor
   tensor_ = l->front();
   shared_ptr<ListTensor> rest = l->rest();
 
-  // convert to correct  ** subtree **
+  shared_ptr<Tree> tr;
   if (label_ == "residual") {
-    shared_ptr<Tree> tr(new Residual(rest, lab, rt));
-    subtree_.push_back(tr);
+    tr = make_shared<Residual>(rest, lab, rt);
   } else if (label_ == "energy") {
-    shared_ptr<Tree> tr(new Energy(rest, lab, rt));
-    subtree_.push_back(tr);
+    tr = make_shared<Energy>(rest, lab, rt);
+  } else if (label_ == "dedci") {
+    tr = make_shared<Dedci>(rest, lab, rt);
   } else if (label_ == "correction") {
-    shared_ptr<Tree> tr(new Correction(rest, lab, rt));
-    subtree_.push_back(tr);
+    tr = make_shared<Correction>(rest, lab, rt);
   } else if (label_ == "density") {
-    shared_ptr<Tree> tr(new Density(rest, lab, rt));
-    subtree_.push_back(tr);
+    tr = make_shared<Density>(rest, lab, rt);
   } else if (label_ == "density2") {
-    shared_ptr<Tree> tr(new Density2(rest, lab, rt));
-    subtree_.push_back(tr);
+    tr = make_shared<Density2>(rest, lab, rt);
   } else {
     throw logic_error("Error BinaryContraction::BinaryContraction, code generation for this tree type not implemented");
   }
+  subtree_.push_back(tr);
 
 }
 
@@ -400,7 +405,7 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
 
     // if this is at the top-level and needs to be daggered:
     if (depth() == 0 && dagger) {
-      shared_ptr<Tensor> top(new Tensor(**s));
+      shared_ptr<Tensor> top = make_shared<Tensor>(**s);
       // swap operators so that tensor is daggered
       if (top->index().size() != 4) {
          throw logic_error("Daggered object is only supported for 4-index tensors");
@@ -599,7 +604,7 @@ tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_task_
         }
       } else { // residual
 
-      // step through op and bc, caution triggers recursive call
+      // step through op and bc. Caution, triggers recursive call
       tuple<string, string, int, int, vector<shared_ptr<Tensor>>> tmp = generate_steps(indent, tcnt, t0, gamma, itensors);
       tie(depends, tasks, tcnt, t0, itensors) = tmp;
       ss << depends;

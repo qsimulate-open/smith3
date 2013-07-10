@@ -126,7 +126,7 @@ pair<string, string> Forest::generate_headers() const {
     ss << "    std::shared_ptr<Tensor<T>> r;" << endl;
     ss << "    double e0_;" << endl;
     ss << "" << endl;
-    ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
+    ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T>> queue_(new Queue<T>());" << endl;
     ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl << endl;
 
@@ -198,7 +198,7 @@ pair<string, string> Forest::generate_algorithm() const {
   string indent = "      ";
 
   // generate computational algorithm
-  ss << "      return make_tuple(queue_, energy_, density_, correction_, density2_);" << endl;
+  ss << "      return make_tuple(queue_, energy_, dedci_, density_, correction_, density2_);" << endl;
   ss << "    };" << endl;
   ss << endl;
   ss << "  public:" << endl;
@@ -217,9 +217,9 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "    void solve() {" << endl;
   ss << "      this->print_iteration();" << endl;
   ss << "      int iter = 0;" << endl;
-  ss << "      std::shared_ptr<Queue<T>> queue, energ, dens, correct, dens2;" << endl;
+  ss << "      std::shared_ptr<Queue<T>> queue, energ, dec, dens, correct, dens2;" << endl;
   ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
-  ss << "        std::tie(queue, energ, dens, correct, dens2) = make_queue_();" << endl;
+  ss << "        std::tie(queue, energ, dec, dens, correct, dens2) = make_queue_();" << endl;
   ss << "        while (!queue->done())" << endl;
   ss << "          queue->next_compute();" << endl;
   ss << "        this->update_amplitude(t2, r);" << endl;
@@ -230,6 +230,10 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "        if (err < thresh_residual()) break;" << endl;
   ss << "      }" << endl;
   ss << "      this->print_iteration(iter == maxiter_);" << endl;
+  ss << "      const double de = dedci(dec);" << endl;
+  ss << "      std::cout << \"CI derivative energy (testing) = \" << std::setprecision(10) << de  << std::endl;" << endl;
+  ss << "      std::cout << std::endl;" << endl;
+  ss << "" << endl;
   ss << "      std::cout << \" === Unrelaxed density matrix, <1|E_pq|1> + 2<0|E_pq|1> ===\" << std::endl; " << endl;
   ss << "      while (!dens->done())" << endl;
   ss << "        dens->next_compute();" << endl;
@@ -256,6 +260,15 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "        en += c->energy();" << endl;  // prefactors included in main.cc
   ss << "      }   " << endl;
   ss << "      return en; " << endl;
+  ss << "    };  " << endl;
+  ss << endl;
+  ss << "    double dedci(std::shared_ptr<Queue<T>> dec) {" << endl;
+  ss << "      double de = 0.0;" << endl;
+  ss << "      while (!dec->done()) {" << endl;
+  ss << "        std::shared_ptr<Task<T>> d = dec->next_compute();" << endl;
+  ss << "        de += d->dedci();" << endl;  // prefactors included in main.cc
+  ss << "      }   " << endl;
+  ss << "      return de; " << endl;
   ss << "    };  " << endl;
   ss << endl;
   ss << "    double correction(std::shared_ptr<Queue<T>> correct) {" << endl;

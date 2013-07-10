@@ -1,6 +1,6 @@
 //
 // SMITH3 - generates spin-free multireference electron correlation programs.
-// Filename: rdm00.cc
+// Filename: rdmI0.cc
 // Copyright (C) 2013 Matthew MacLeod
 //
 // Author: Matthew MacLeod <matthew.macleod@northwestern.edu>
@@ -34,7 +34,7 @@
 using namespace std;
 using namespace smith;
 
-shared_ptr<RDM> RDM00::copy() const {
+shared_ptr<RDM> RDMI0::copy() const {
   // first clone all the indices
   list<shared_ptr<Index>> in;
   for (auto& i : index_) in.push_back(i->clone());
@@ -61,7 +61,7 @@ shared_ptr<RDM> RDM00::copy() const {
   list<shared_ptr<const Index>> inc;
   for (auto& i : in) inc.push_back(i);
 
-  shared_ptr<RDM> out(new RDM00(inc, d, make_pair(bra_, ket_)));
+  shared_ptr<RDM> out(new RDMI0(inc, d, make_pair(bra_, ket_)));
   out->fac() = fac_;
   return out;
 }
@@ -70,7 +70,7 @@ shared_ptr<RDM> RDM00::copy() const {
 // An application of "Wick's theorem"
 // This function is controlled by const Index::num_. Not a great code, it could have been driven by pointers... lazy me.
 //
-list<shared_ptr<RDM>> RDM00::reduce_one(list<int>& done) const {
+list<shared_ptr<RDM>> RDMI0::reduce_one(list<int>& done) const {
   // first find non-daggered operator which is not aligned
   list<shared_ptr<RDM>> out;
 
@@ -128,12 +128,12 @@ list<shared_ptr<RDM>> RDM00::reduce_one(list<int>& done) const {
 }
 
 
-string RDM00::generate(string indent, const string tag, const list<shared_ptr<const Index>>& index, const list<shared_ptr<const Index>>& merged, const string mlab, vector<string> in_tensors, const bool use_blas) {
+string RDMI0::generate(string indent, const string tag, const list<shared_ptr<const Index>>& index, const list<shared_ptr<const Index>>& merged, const string mlab, vector<string> in_tensors, const bool use_blas) {
   return merged.empty() ? generate_not_merged(indent, tag, index, in_tensors) : generate_merged(indent, tag, index, merged, mlab, in_tensors, use_blas);
 }
 
 
-string RDM00::generate_not_merged(string indent, const string tag, const list<shared_ptr<const Index>>& index, vector<string> in_tensors) {
+string RDMI0::generate_not_merged(string indent, const string tag, const list<shared_ptr<const Index>>& index, vector<string> in_tensors) {
   stringstream tt;
   tt << indent << "{" << endl;
   const string lindent = indent;
@@ -244,7 +244,7 @@ string RDM00::generate_not_merged(string indent, const string tag, const list<sh
 }
 
 
-string RDM00::generate_merged(string indent, const string tag, const list<shared_ptr<const Index>>& index, const list<shared_ptr<const Index>>& merged, const string mlab, vector<string> in_tensors, const bool use_blas) {
+string RDMI0::generate_merged(string indent, const string tag, const list<shared_ptr<const Index>>& index, const list<shared_ptr<const Index>>& merged, const string mlab, vector<string> in_tensors, const bool use_blas) {
   stringstream tt;
   //indent += "  ";
   const string itag = "i";
@@ -455,7 +455,7 @@ string RDM00::generate_merged(string indent, const string tag, const list<shared
 
 
 ////// previously protected functions start //////
-void RDM00::map_in_tensors(std::vector<string> in_tensors, map<string,string>& inlab) {
+void RDMI0::map_in_tensors(std::vector<string> in_tensors, map<string,string>& inlab) {
   // make map of in_tensors
   int icnt = 0;
   for (auto& i : in_tensors) {
@@ -465,7 +465,7 @@ void RDM00::map_in_tensors(std::vector<string> in_tensors, map<string,string>& i
   }
 }
 
-string RDM00::make_get_block(string indent, string tag, string lbl) {
+string RDMI0::make_get_block(string indent, string tag, string lbl) {
   stringstream tt;
   tt << indent << "std::unique_ptr<double[]> " << tag << "data = " << lbl << "->get_block(";
   for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
@@ -477,7 +477,7 @@ string RDM00::make_get_block(string indent, string tag, string lbl) {
 }
 
 
-string RDM00::make_blas_multiply(string dindent, const list<shared_ptr<const Index>>& loop, const list<shared_ptr<const Index>>& index) {
+string RDMI0::make_blas_multiply(string dindent, const list<shared_ptr<const Index>>& loop, const list<shared_ptr<const Index>>& index) {
   stringstream tt;
 
   pair<string,string> t1 = get_dim(loop, index);
@@ -501,7 +501,7 @@ string RDM00::make_blas_multiply(string dindent, const list<shared_ptr<const Ind
   return tt.str();
 }
 
-pair<string, string> RDM00::get_dim(const list<shared_ptr<const Index>>& di, const list<shared_ptr<const Index>>& index) const {
+pair<string, string> RDMI0::get_dim(const list<shared_ptr<const Index>>& di, const list<shared_ptr<const Index>>& index) const {
   vector<string> s, t;
 
   // get shared (f1) indices, equal to number of rows in matrix
@@ -535,7 +535,7 @@ pair<string, string> RDM00::get_dim(const list<shared_ptr<const Index>>& di, con
 }
 
 
-string RDM00::make_sort_indices(string indent, string tag, const list<shared_ptr<const Index>>& loop) {
+string RDMI0::make_sort_indices(string indent, string tag, const list<shared_ptr<const Index>>& loop) {
   stringstream tt;
     vector<int> done;
     // then fill out others
@@ -562,7 +562,7 @@ string RDM00::make_sort_indices(string indent, string tag, const list<shared_ptr
 }
 
 
-string RDM00::make_merged_loops(string& indent, const string itag, vector<string>& close) {
+string RDMI0::make_merged_loops(string& indent, const string itag, vector<string>& close) {
   stringstream tt;
 
   // gather all the loop indices
@@ -593,7 +593,7 @@ string RDM00::make_merged_loops(string& indent, const string itag, vector<string
 }
 
 
-string RDM00::multiply_merge(const string itag, string& indent, const list<shared_ptr<const Index>>& merged) {
+string RDMI0::multiply_merge(const string itag, string& indent, const list<shared_ptr<const Index>>& merged) {
   stringstream tt;
   if (rank() == 0) {
     tt << "  += " << setprecision(1) << fixed << factor();
@@ -615,7 +615,7 @@ string RDM00::multiply_merge(const string itag, string& indent, const list<share
 }
 
 
-string RDM00::fdata_mult(const string itag, const list<shared_ptr<const Index>>& merged) {
+string RDMI0::fdata_mult(const string itag, const list<shared_ptr<const Index>>& merged) {
   stringstream tt;
   tt << " * " << "fdata" << "[";
   for (auto mi = merged.rbegin(); mi != merged.rend()  ; ++mi) {
@@ -633,7 +633,7 @@ string RDM00::fdata_mult(const string itag, const list<shared_ptr<const Index>>&
 }
 
 
-string RDM00::make_odata(const string itag, string& indent, const list<shared_ptr<const Index>>& index) {
+string RDMI0::make_odata(const string itag, string& indent, const list<shared_ptr<const Index>>& index) {
   stringstream tt;
 
   tt  << indent << "odata[";
@@ -657,7 +657,7 @@ string RDM00::make_odata(const string itag, string& indent, const list<shared_pt
 }
 
 
-string RDM00::make_sort_loops(const string itag, string& indent, const list<shared_ptr<const Index>>& loop, vector<string>&  close) {
+string RDMI0::make_sort_loops(const string itag, string& indent, const list<shared_ptr<const Index>>& loop, vector<string>&  close) {
   stringstream tt;
   // start sort loops
   for (auto& i : loop) {
@@ -675,7 +675,7 @@ string RDM00::make_sort_loops(const string itag, string& indent, const list<shar
 }
 
 
-string RDM00::make_delta_if(string& indent, vector<string>& close) {
+string RDMI0::make_delta_if(string& indent, vector<string>& close) {
   stringstream tt;
 
   tt << indent << "if (";

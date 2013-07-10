@@ -14,7 +14,7 @@ class Diagram {
     double fac_;
     std::string scalar_;
     std::pair<bool,bool> braket_;
-    bool ci_derivative_; 
+    bool ci_derivative_;
 
   public:
     Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d) : op_(o), label_(la), fac_(d), scalar_(""), braket_(std::make_pair(false,false)), ci_derivative_(false) { }

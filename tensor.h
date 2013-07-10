@@ -65,17 +65,17 @@ class Tensor {
     /// Alias tensor if any.
     std::shared_ptr<Tensor> alias_;
 
+    /// Braket is now overlap. Useful for tensors in diagrams which do not have rdms. Set in tree ctor, cf set_overlap().
+    std::pair<bool, bool> overlap_;
+
     /// For counting Gamma tensors, used when adding all active tensor, see merge().
     mutable int num_;
 
 
   public:
-    /// Constructor for tensor with scalar.
-    Tensor(const double& d, const std::string s, const std::string& l, const std::list<std::shared_ptr<const Index>>& i)
-      : factor_(d), scalar_(s), label_(l), index_(i) {}
-    /// Constructor for tensor without scalar.
+    /// Constructor for intermediate tensors.
     Tensor(const double& d, const std::string& l, const std::list<std::shared_ptr<const Index>>& i)
-      : factor_(d), label_(l), index_(i) {}
+      : factor_(d), label_(l), index_(i) { }
     /// Constructor for const operator tensor, creates index list and checks for target indices. Called from listtensor after labels are checked in listtensor constructor.
     Tensor(const std::shared_ptr<Operator> op);
     /// Constructor for const active tensor.
@@ -99,13 +99,18 @@ class Tensor {
       return index_.size() >> 1;
     }
 
-    /// Returns string with tensor prefactors, label, indices and those of merged and alias tensors.
+    /// prints string with tensor prefactors, label, indices and those of merged and alias tensors.
     std::string str() const;
     void print(std::string indent = "") const { std::cout << indent << str() << std::endl; }
     /// Set prefactor for tensor.
     void set_factor(const double a) { factor_ = a; }
     /// Set name of scalar. Actual value is defined later on BAGEL side, eg e0.
     void set_scalar(const std::string s) { scalar_ = s; }
+    /// Set overlap, used for trees without rdms.
+    void set_overlap(const std::pair<bool,bool> o) { overlap_ = o; }
+    /// Used to reindex tensor in absorb_ket().
+    void set_index(std::list<std::shared_ptr<const Index>> i) { index_ = i; }
+
 
     /// Returns tensor prefactor.
     double factor() const { return factor_; }
@@ -131,7 +136,8 @@ class Tensor {
     /// if tensor is a repeat.
     bool has_alias() { bool has_ = false;
          if (alias_) has_ = true; return has_; }
-
+    /// Checks if tensor is gamma.
+    bool is_gamma() const;
 
     /// Generates string for constructor for tensors in Method.h file
     std::string constructor_str(std::string indent) const;
@@ -150,12 +156,12 @@ class Tensor {
     std::string generate_active(const std::string indent, const std::string tag, const int ninptensors, const bool) const;
     /// Generate for loops.
     std::string generate_loop(std::string&, std::vector<std::string>&) const;
-    /// Generate code for Gamma (overlap) task.
+    /// Generate code for Gamma task.
     std::string generate_gamma(const int, const bool) const;
-    /// Returns Gamma (overlap) number.
-    int num() const { assert(label_.find("Gamma") != std::string::npos); return num_; }
-    /// Set Gamma (overlap) number.
-    void set_num(const int n) const { assert(label_.find("Gamma") != std::string::npos); num_ = n; }
+    /// Returns Gamma number.
+    int num() const { assert(is_gamma()); return num_; }
+    /// Set Gamma number.
+    void set_num(const int n) const { assert(is_gamma()); num_ = n; }
 
 };
 

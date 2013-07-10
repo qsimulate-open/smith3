@@ -45,6 +45,10 @@ class RDM {
     /// Kronecker's delta, map with two index pointers.
     std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>> delta_;
 
+    /// Inherits bra from diagram, done in active ctor.
+    bool bra_;
+    /// Inherits ket from diagram, done in active ctor.
+    bool ket_;
 
 
     /// Generate entire task code for Gamma RDM summation.
@@ -80,16 +84,19 @@ class RDM {
     virtual std::string make_blas_multiply(std::string indent, const std::list<std::shared_ptr<const Index>>& loop, const std::list<std::shared_ptr<const Index>>& index) = 0;
     /// Used for blas multiplication of RDM and merged (fock) tensors. NB not implemented yet for subtask code!
     virtual std::pair<std::string, std::string> get_dim(const std::list<std::shared_ptr<const Index>>& di, const std::list<std::shared_ptr<const Index>>& index) const = 0;
- 
+
 
   public:
     /// Make RDM object from list of indices, delta indices and factor.
     RDM(const std::list<std::shared_ptr<const Index>>& in,
-        const std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>>& in2,
+        const std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>>& in2, std::pair<bool, bool> braket,
         const double& f = 1.0)
-      : fac_(f), index_(in), delta_(in2) { }
+      : fac_(f), index_(in), delta_(in2), bra_(braket.first), ket_(braket.second) { }
     virtual ~RDM() { }
 
+
+    /// Prints RDM with prefactors and braket.
+    void print(const std::string& indent = "") const;
 
     /// Sort indices so that it will be 0+0 1+1 ... (spin ordering is arbitrary).
     void sort();
@@ -98,6 +105,11 @@ class RDM {
     double factor() const { return fac_; }
     /// Returns a reference to the factor
     double& fac() { return fac_; }
+
+    /// Returns bra, false for zero order reference.
+    bool bra() const { return bra_; }
+    /// Returns ket, false for zero order reference.
+    bool ket() const { return ket_; }
 
     /// Returns a reference of index_.
     std::list<std::shared_ptr<const Index>>& index() { return index_; }
@@ -117,21 +129,17 @@ class RDM {
     /// Returns an integer representing rdm rank value, ie (index size)/2
     int rank() const { assert(index_.size()%2 == 0); return index_.size()/2; }
 
-    /// Compares for equivalency based on prefactor, indices and delta.
+    /// Compares for equivalency based on prefactor, indices, delta, and braket.
     bool operator==(const RDM& o) const;
 
-
     // virtual public functions
-    /// Prints RDM with indentation and prefactors, located in active.cc
-    virtual void print(const std::string& indent = "") const = 0;
-
     /// Application of Wick's theorem and is controlled by const Index::num_. See active.cc. One index is going to be annihilated. done is updated inside the function.
     virtual std::list<std::shared_ptr<RDM>> reduce_one(std::list<int>& done) const = 0;
 
     /// Generate Gamma summation task, for both non-merged and merged case (RDM * f1 tensor multiplication).
     virtual std::string generate(std::string indent, const std::string itag, const std::list<std::shared_ptr<const Index>>& index, const std::list<std::shared_ptr<const Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas) = 0;
 
-    /// Copies this rdm, function located in active.cc
+    /// Copies this rdm, needs to be virtual as creates derived rdms.
     virtual std::shared_ptr<RDM> copy() const = 0;
 
 };

@@ -34,6 +34,22 @@
 using namespace std;
 using namespace smith;
 
+void RDM::print(const string& indent) const {
+
+  cout << indent << fixed << setw(5) << setprecision(1) << fac_;
+  cout << " <" << (bra_ ? "I" : "0") << "|[";
+  for (auto i = index_.begin(); i != index_.end(); ++i)
+    cout << (*i)->str();
+  for (auto i = delta_.begin(); i != delta_.end(); ++i)
+    cout << " d(" << i->first->str(false) << i->second->str(false) << ")";
+  cout << "]|" << (ket_ ? "I" : "0") << ">";
+
+  if (done()) cout << "*";
+
+  cout << endl;
+}
+
+
 
 
 bool RDM::reduce_done(const list<int>& done) const {
@@ -145,11 +161,12 @@ bool RDM::done() const {
 }
 
 
-// todo add bra ket comparison
 bool RDM::operator==(const RDM& o) const {
   bool out = true;
   // compare all rdms of active objects
   out &= fac_ == o.factor();
+  out &= bra_ == o.bra();
+  out &= ket_ == o.ket();
   out &= index_.size() == o.index().size();
   out &= delta_.size() == o.delta().size();
   if (index_.size() == o.index().size()) {

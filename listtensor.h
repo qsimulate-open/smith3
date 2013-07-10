@@ -31,6 +31,7 @@
 #include "diagram.h"
 #include <memory>
 #include <list>
+#include <map>
 
 namespace smith {
 
@@ -45,21 +46,29 @@ class ListTensor {
     std::list<std::shared_ptr<Tensor>> list_;
     /// If dagger (transpose).
     bool dagger_;
+    /// Braket information.
+    std::pair<bool, bool> braket_;
 
 
   public:
     /// Constructs a list of tensors in a diagram by constructing tensors from the operators in diagram, IF they have labels.
     ListTensor(std::shared_ptr<Diagram> d);
     /// Construct listtensor using prefactor, scalar, list of tensors and dagger information.
-    ListTensor(double f, std::string sc, std::list<std::shared_ptr<Tensor>> ve, bool d)
-      : fac_(f), scalar_(sc), list_(ve), dagger_(d) { }
+    ListTensor(double f, std::string sc, std::list<std::shared_ptr<Tensor>> ve, bool d, std::pair<bool, bool> bk)
+      : fac_(f), scalar_(sc), list_(ve), dagger_(d), braket_(bk) { }
     ~ListTensor() { }
 
 
     /// Prints prefactor, if available: scalar, dagger. Finally prints out each tensor in list.
     void print() const;
+
     /// Combines tensors and removes one from list. To do this, finds active tensor then merges other tensor if other tensor is all_active (has all active indices) but not if active and if not proj.
     void absorb_all_internal();
+    /// Careful, only valid if wave function is not complex. This will reindex tensors in case of ket, allowing gamma tensors from bra case to be reused.
+    void absorb_ket();
+
+    /// check if listtensor has rdm(s).
+    bool has_gamma() const;
 
     /// Returns the size of the list of tensors.
     int length() const { return list_.size(); }
@@ -67,13 +76,17 @@ class ListTensor {
     std::shared_ptr<Tensor> front() const { return list_.front(); }
     /// Returns the list of tensors (listtensor) minus the front tensor.
     std::shared_ptr<ListTensor> rest() const ;
-    /// Creates! and returns a target tensor from the list of tensors.
+    /// Creates! and returns a target tensor from the list of tensors. The intermediate tensors are made here.
     std::shared_ptr<Tensor> target() const;
 
     /// Returns the prefactor for listtensor.
     double fac() const { return fac_; }
     /// Returns scalar for listtensor.
     std::string scalar() const { return scalar_; }
+    /// Returns braket for listtensor.
+    std::pair<bool,bool> braket() const { return braket_; }
+    /// set braket information for listtensor, used in absorb_ket.
+    void set_braket(std::pair<bool,bool> bk) { braket_ = bk; }
     /// Returns dagger (if transpose) for listtensor.
     bool dagger() const { return dagger_; }
 };

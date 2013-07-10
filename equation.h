@@ -37,6 +37,7 @@ class Equation {
   protected:
     /// List of diagrams.
     std::list<std::shared_ptr<Diagram>> diagram_;
+
     /// Internal function used by to find double permutations. Also if bool is true, equations can become daggered, and where permutations cause an additional get_block to be added to the generated code.
     void duplicates_(const bool);
 
