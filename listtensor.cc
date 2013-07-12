@@ -103,16 +103,16 @@ void ListTensor::absorb_ket() {
     // reverse braket for modified rdm
     for (auto& i : list_) {
       if (i->active()) {
-        list<shared_ptr<RDM>> rdms = i->active()->rdm(); 
+        list<shared_ptr<RDM>> rdms = i->active()->rdm();
         for (auto& j : rdms) {
           if (j->ket()) {
-            j->set_bra(true); 
-            j->set_ket(false); 
-          } 
-        } 
+            j->set_bra(true);
+            j->set_ket(false);
+          }
+        }
       }
     }
-     
+
   }
 }
 
@@ -178,7 +178,8 @@ void ListTensor::print() const {
   } else {
     for (auto& i : list_) {
       if (i->str().find("Gamma") != string::npos) {
-        cout << "CI_" << i->str();
+        if (braket().first || braket().second) cout << "CI_" << i->str();
+        else cout << i->str();
       } else {
         cout << i->str();
       }

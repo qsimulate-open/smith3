@@ -58,7 +58,7 @@ string Dedci::generate_task(const string indent, const int ip, const int ic, con
   stringstream ss;
   ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
   ss << indent << "std::shared_ptr<Task" << ic << "<T>> task"
-               << ic << "(new Task" << ic << "<T>(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
+               << ic << "(new Task" << ic << "<T>(tensor" << ic << ", cindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
 
   if (parent_) {
     if (ip != ic)
@@ -87,7 +87,7 @@ string Dedci::generate_compute_header(const int ic, const list<shared_ptr<const 
   // if index is empty give dummy arg
   tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << ",T> {" << endl;
   tt << "      protected:" << endl;
-  tt << "        const std::array<std::shared_ptr<const IndexRange>,3> range_;" << endl << endl;
+  tt << "        const std::array<std::shared_ptr<const IndexRange>,4> range_;" << endl << endl;
 
   tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
   tt << "        const std::shared_ptr<const Tensor<T>>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
@@ -99,11 +99,11 @@ string Dedci::generate_compute_header(const int ic, const list<shared_ptr<const 
   // if index is empty use dummy index 1 to subtask
   if (ti.empty()) {
     tt << "        Task_local(const std::array<std::shared_ptr<const Tensor<T>>," << ninptensors <<  ">& in, std::shared_ptr<Tensor<T>>& out," << endl;
-    tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
+    tt << "                   std::array<std::shared_ptr<const IndexRange>,4>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
     tt << "          : SubTask<1," << ninptensors << ",T>(std::array<const Index, 1>(), in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
   } else {
     tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor<T>>," << ninptensors <<  ">& in, std::shared_ptr<Tensor<T>>& out," << endl;
-    tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
+    tt << "                   std::array<std::shared_ptr<const IndexRange>,4>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
     tt << "          : SubTask<" << nindex << "," << ninptensors << ",T>(block, in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
   }
   tt << endl;
@@ -152,7 +152,7 @@ string Dedci::generate_compute_footer(const int ic, const list<shared_ptr<const 
   tt << "    }" << endl << endl;
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t,  std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", const double e" : "") << ") : DedciTask<T>() {" << endl;
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t,  std::array<std::shared_ptr<const IndexRange>,4> range" << (need_e0 ? ", const double e" : "") << ") : DedciTask<T>() {" << endl;
   tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
   for (auto i = 1; i < ninptensors + 1; ++i)
     tt << "t[" << i << "]" << (i < ninptensors ? ", " : "");

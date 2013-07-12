@@ -128,7 +128,8 @@ pair<string, string> Forest::generate_headers() const {
     ss << "" << endl;
     ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T>> queue_(new Queue<T>());" << endl;
-    ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl << endl;
+    ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl;
+    ss << indent << "std::array<std::shared_ptr<const IndexRange>,4> cindex = {{this->rclosed_, this->ractive_, this->rvirt_, this->rci_}};" << endl << endl;
 
     tt << "#ifndef __SRC_SMITH_" << forest_name_ << "_TASKS_H " << endl;
     tt << "#define __SRC_SMITH_" << forest_name_ << "_TASKS_H " << endl;
@@ -234,7 +235,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      std::cout << \"CI derivative energy (testing) = \" << std::setprecision(10) << de  << std::endl;" << endl;
   ss << "      std::cout << std::endl;" << endl;
   ss << "" << endl;
-  ss << "      std::cout << \" === Unrelaxed density matrix, <1|E_pq|1> + 2<0|E_pq|1> ===\" << std::endl; " << endl;
+  ss << "      std::cout << \" === Unrelaxed density matrix, dm1, <1|E_pq|1> + 2<0|E_pq|1> ===\" << std::endl; " << endl;
   ss << "      while (!dens->done())" << endl;
   ss << "        dens->next_compute();" << endl;
   ss << "#if 0" << endl;
@@ -245,7 +246,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "#if 0" << endl;
   ss << "      this->rdm1_->print2(\"rdm1\", 1.0e-5);" << endl;
   ss << "#endif" << endl;
-  ss << "      std::cout << \" === Unrelaxed density matrix, <0|E_pqrs|1>  ===\" << std::endl; " << endl;
+  ss << "      std::cout << \" === Unrelaxed density matrix, dm2, <0|E_pqrs|1>  ===\" << std::endl; " << endl;
   ss << "      while (!dens2->done())" << endl;
   ss << "        dens2->next_compute();" << endl;
   ss << "#if 0" << endl;

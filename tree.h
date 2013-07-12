@@ -138,7 +138,7 @@ class Tree {
     /// If transpose.
     bool dagger_;
 
-    /// Points above. TODO raw pointer should be replaced by some better mean
+    /// Points above. TODO raw pointer should be replaced by some better means.
     BinaryContraction* parent_;
 
     /// This is only used for finding gamma with in the tree.
