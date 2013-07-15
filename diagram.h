@@ -56,28 +56,31 @@ class Diagram {
     /// Ket to be filled in according to specific tree type later in the code.
     bool ket_;
 
+    /// todo add. If this diagram has absorbed a ket. If true, rdm indices associated with this diagram will need to be reversed.
+    bool absorbed_;
+
     /// If this Diagram has a daggered counterpart (often the case for residual equations).
     bool dagger_;
 
 
   public:
     /// Construct diagram from operator list. Set prefactor and dagger information.
-    Diagram(std::list<std::shared_ptr<Operator>> op) : op_(op), fac_(1.0), bra_(false), ket_(false), dagger_(false) { }
+    Diagram(std::list<std::shared_ptr<Operator>> op) : Diagram(op, 1.0, "", std::make_pair(false,false)) { }
     /// Construct diagram from operator list and scalar.  Set prefactor to 1.0 and dagger information.
-    Diagram(std::list<std::shared_ptr<Operator>> op, std::string s) : op_(op), fac_(1.0), scalar_(s), bra_(false), ket_(false), dagger_(false) { }
+    Diagram(std::list<std::shared_ptr<Operator>> op, std::string s) : Diagram(op, 1.0, s, std::make_pair(false,false)) { }
     /// Construct diagram from operator list and prefactor. Set dagger information.
-    Diagram(std::list<std::shared_ptr<Operator>> op, double d) : op_(op), fac_(d), bra_(false), ket_(false), dagger_(false) { }
+    Diagram(std::list<std::shared_ptr<Operator>> op, double d) : Diagram(op, d, "", std::make_pair(false,false)) { }
     /// Construct diagram from operator list and prefactor and scalar. Set dagger information.
-    Diagram(std::list<std::shared_ptr<Operator>> op, double d, std::string s) : op_(op), fac_(d), scalar_(s), bra_(false), ket_(false), dagger_(false) { }
+    Diagram(std::list<std::shared_ptr<Operator>> op, double d, std::string s) : Diagram(op, d, s, std::make_pair(false,false)) { }
     // similar to previous, but adds bra and ket.
-    Diagram(std::list<std::shared_ptr<Operator>> op, std::pair<bool, bool> braket) : op_(op), fac_(1.0), bra_(braket.first), ket_(braket.second), dagger_(false) { }
-    Diagram(std::list<std::shared_ptr<Operator>> op, std::string s, std::pair<bool, bool> braket) : op_(op), fac_(1.0), scalar_(s), bra_(braket.first), ket_(braket.second), dagger_(false) { }
-    Diagram(std::list<std::shared_ptr<Operator>> op, double d, std::pair<bool, bool> braket) : op_(op), fac_(d), bra_(braket.first), ket_(braket.second), dagger_(false) { }
+    Diagram(std::list<std::shared_ptr<Operator>> op, std::pair<bool, bool> braket) : Diagram(op, 1.0, "", braket) { }
+    Diagram(std::list<std::shared_ptr<Operator>> op, std::string s, std::pair<bool, bool> braket) : Diagram(op, 1.0, s, braket) { }
+    Diagram(std::list<std::shared_ptr<Operator>> op, double d, std::pair<bool, bool> braket) : Diagram(op, d, "", braket) { }
 
     // full diagram
-    Diagram(std::list<std::shared_ptr<Operator>> op, double d, std::string s, std::pair<bool, bool> braket) : op_(op), fac_(d), scalar_(s), bra_(braket.first), ket_(braket.second), dagger_(false) { }
+    Diagram(std::list<std::shared_ptr<Operator>> op, double d, std::string s, std::pair<bool, bool> braket) : op_(op), fac_(d), scalar_(s), bra_(braket.first), ket_(braket.second), absorbed_(false), dagger_(false) { }
     /// Construct diagram with prefactor and dagger information. Needed in equation ctor copy().
-    Diagram() : fac_(1.0), bra_(false), ket_(false), dagger_(false) { }
+    Diagram() : fac_(1.0), bra_(false), ket_(false), absorbed_(false), dagger_(false) { }
     // copy constructor is complicated but preserves the same topology as this.
     ~Diagram() { }
 
@@ -93,26 +96,32 @@ class Diagram {
     double& fac() { return fac_; }
     /// Return the prefactor for const diagram.
     const double fac() const { return fac_; }
+    /// Careful! Returns a const reference of op_ operator.
+    const std::list<std::shared_ptr<Operator>>& op() const { return op_; }
     /// Return scalar name reference.
     std::string& scalar() { return scalar_; }
     /// Returns rdm pointer.
     std::shared_ptr<Active> rdm() { return rdm_; }
     /// If diagram is transposed.
     bool dagger() const { return dagger_; }
-
-    /// returns the bra_ and ket_ for the diagram.
+    /// Returns the bra_ and ket_ for the diagram.
     std::pair<bool, bool> braket() const { return std::make_pair(bra_, ket_); }
+    /// Returns absorbed_, true if ket has been absorbed and indices need to be reversed in rdms.
+    bool absorbed() const { return absorbed_; }
 
-    /// Careful, returns a const reference of op_ operator.
-    const std::list<std::shared_ptr<Operator>>& op() const { return op_; }
+
     /// Set operator for private members.
     void set_op(const std::list<std::shared_ptr<Operator>>& o) { op_ = o; }
     /// Set factor for private members.
     void set_fac(const double a) { fac_ = a; }
+    /// Set scalar.
+    void set_scalar(std::string s) { scalar_ = s; }
     /// Set the bra information for diagram. Needed when diagrams are processed in equation ctor, see diagram::copy().
     void set_bra(bool b) { bra_ = b; }
     /// Add ket to diagram. Needed when diagrams are processed in equation ctor, see diagram::copy().
     void set_ket(bool b) { ket_ = b; }
+    /// Set absorbed for ket case.
+    void set_absorbed(bool b) { absorbed_ = b; }
 
 
     /// Refresh the indices for each operator in diagram (ie calls operators refresh_indices function).

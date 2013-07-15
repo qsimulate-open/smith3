@@ -83,6 +83,7 @@ shared_ptr<Diagram> Diagram::copy() const {
   if (dagger_) out->add_dagger();
   if (bra_) out->set_bra(true);
   if (ket_) out->set_ket(true);
+  if (absorbed_) out->set_absorbed(true);
   return out;
 }
 
@@ -137,12 +138,13 @@ void Diagram::print() {
     if (i->num_active_nodagger() + i->num_active_dagger() != 0) {
       for (auto& j : i->op()) {
         if (get<1>(j) == -1 || get<1>(j) == 0) continue;
-        cout << (*get<0>(j))->str();
+        cout << (*get<0>(j))->str();                      // print indices for active, ie get<1>(j) == 2
       }
     }
   }
   cout << "]";
   cout << "|" << (ket_ ? "I" : "0") << ">";
+  if (absorbed_) cout << "^";
 
   if (dagger_) cout << " ** Daggered object added **";
   cout << endl;
@@ -269,6 +271,8 @@ void Diagram::active() {
   refresh_indices();
   list<shared_ptr<const Index>>  ac = active_indices();
   if (ac.size()) {
+    // if ket has been absorbed the indices need to be reversed
+    if (absorbed_) ac.reverse();
     // Performs Wick in constructor of an Active object
     rdm_ = make_shared<Active>(ac, make_pair(bra_, ket_));
   }
@@ -298,39 +302,46 @@ bool Diagram::identical(shared_ptr<Diagram> o) const {
   bool out = true;
   // first, they should be same size
   if (op_.size() != o->op().size()) out = false;
-  // second, each indices should be the same (spin is not checked here)
-  if (out) {
-    for (auto i = op_.begin(), j = o->op().begin(); i != op_.end(); ++i, ++j) {
-      out &= (*i)->identical(*j);
+
+  if (!o->absorbed()) {
+    // second, each indices should be the same (spin is not checked here)
+    if (out) {
+      for (auto i = op_.begin(), j = o->op().begin(); i != op_.end(); ++i, ++j) {
+        out &= (*i)->identical(*j);
+      }
     }
-  }
-  // then, we check spins.
-  if (out) {
-    list<shared_ptr<const Index>> act = active_indices();
-    list<shared_ptr<const Index>> oact = o->active_indices();
-    map<shared_ptr<Spin>, shared_ptr<Spin>> myo;
-    if (act.size() != oact.size()) {
-      out = false;
-    } else {
-      for (auto i = act.begin(), j = oact.begin(); i != act.end(); ++i, ++j) {
-        assert((*i)->identical(*j));
-        shared_ptr<Spin> s = (*i)->spin();
-        shared_ptr<Spin> os = (*j)->spin();
-        auto iter = myo.find(s);
-        if (myo.end() == iter) {
-          // if s appears for the first time, register it
-          myo.insert(make_pair(s,os));
-        } else {
-          if (os != iter->second) {
-            out =false;
-            break;
+    // then, we check spins.
+    if (out) {
+      list<shared_ptr<const Index>> act = active_indices();
+      list<shared_ptr<const Index>> oact = o->active_indices();
+      map<shared_ptr<Spin>, shared_ptr<Spin>> myo;
+      if (act.size() != oact.size()) {
+        out = false;
+      } else {
+        for (auto i = act.begin(), j = oact.begin(); i != act.end(); ++i, ++j) {
+          assert((*i)->identical(*j));
+          shared_ptr<Spin> s = (*i)->spin();
+          shared_ptr<Spin> os = (*j)->spin();
+          auto iter = myo.find(s);
+          if (myo.end() == iter) {
+            // if s appears for the first time, register it
+            myo.insert(make_pair(s,os));
+          } else {
+            if (os != iter->second) {
+              out =false;
+              break;
+            }
           }
         }
       }
     }
+  } else {
+    throw logic_error("Diagram::identical shouldn't happen");
   }
+
   // check bra and ket for diagrams
   if (braket() != o->braket()) out = false;
+
 
   return out;
 }

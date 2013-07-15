@@ -44,13 +44,16 @@ namespace smith {
 /// Abstract base class for spin-summed operators.
 class Operator {
   protected:
-    // this op_ is very important (and does not seem clear...).
-    // Here is the convention
+    // This op_ is very important (and does not seem clear...),
+    // Here is the convention:
+    //
     // get<0>  :  Index object
     // get<1>  :  Operator info.
     //              -1: no operator (i.e., already contracted)
     //               0: operator
     //               2: active operator
+    // get<2>  :  Spin info (0 or 1).
+    //
     /// Tuple with index object pointer, operator info, and spin info (0 or 1). Operator info is defined as -1: no operator (i.e., already contracted), 0: operator, 2: active operator.
     std::list<std::tuple<std::shared_ptr<Index>*, int, int>> op_;
 

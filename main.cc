@@ -239,6 +239,7 @@ int main() {
   ededcia0->merge(ededcid0);
   ededcia0->merge(ededcid1);
   ededcia0->merge(ededcid2);
+  ededcia0->absorb_ket();
   ededcia0->duplicates();
   ededcia0->active();
   shared_ptr<Tree> tdedcia(new Dedci(ededcia0, "dedci"));

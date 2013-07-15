@@ -118,6 +118,23 @@ void Equation::duplicates() {
 }
 
 
+void Equation::absorb_ket() {
+  for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
+    // function designed to be used after contractions
+    assert((*i)->done());
+    if ((*i)->braket().second) {
+      // if diagram does not have rdms
+      if ((*i)->active_indices().empty()) {
+          (*i)->set_ket(false);
+          (*i)->set_bra(true);
+      } else {
+        // todo redo indices for diagrams with rdms
+      }
+    }
+  }
+}
+
+
 void Equation::duplicates_(const bool proj) {
   list<list<shared_ptr<Diagram>>::iterator> rm;
   for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {

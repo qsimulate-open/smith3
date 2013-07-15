@@ -68,6 +68,10 @@ class Equation {
     void active();
     /// Identifies terms which are the same (via permuations) and updating term prefactor. Also can add a dagger to diagram.
     void duplicates();
+
+    /// Absorbs ket for non-active cases. This function should be applied before duplicates in main.cc. Caution, this assumes not complex.
+    void absorb_ket();
+
     /// Refresh indices in each diagram.
     void refresh_indices();
 

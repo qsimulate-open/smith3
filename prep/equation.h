@@ -105,6 +105,7 @@ class Equation {
       for (auto i = diagram_.begin(); i != diagram_.end(); ++i)
         if (i != diagram_.begin())
           ss << "  " << diagram_.front()->eqn_label() << "->merge(" << (*i)->eqn_label() << ");" << std::endl;
+      if (ci_derivative_) ss << "  " << diagram_.front()->eqn_label() << "->absorb_ket();" << std::endl;
       ss << "  " << diagram_.front()->eqn_label() << "->duplicates();" << std::endl;
       ss << "  " << diagram_.front()->eqn_label() << "->active();" << std::endl;
 
