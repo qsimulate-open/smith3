@@ -47,6 +47,7 @@ class CAS_test : public SpinFreeMethod<T>, SMITH_info {
     std::shared_ptr<Tensor<T>> t2;
     std::shared_ptr<Tensor<T>> r;
     double e0_;
+    std::shared_ptr<Tensor<T>> ci_coeff_;
 
     std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> make_queue_() {
       std::shared_ptr<Queue<T>> queue_(new Queue<T>());
@@ -175,22 +176,33 @@ class CAS_test : public SpinFreeMethod<T>, SMITH_info {
       task14->add_dep(task15);
       energy_->add_task(task15);
 
-
+      // TODO new
       std::shared_ptr<Queue<T>> dedci_(new Queue<T>());
-      std::vector<IndexRange> I20_index;
-      std::shared_ptr<Tensor<T>> I20(new Tensor<T>(I20_index, false));
-      std::vector<IndexRange> I21_index = {this->closed_, this->virt_, this->closed_, this->virt_};
+      std::vector<std::shared_ptr<Tensor<T>>> tensor016 = {this->deci_}; 
+      std::shared_ptr<Task016<T>> task016(new Task016<T>(tensor016));
+      dedci_->add_task(task016);
+
+      std::vector<IndexRange> I21_index = {this->closed_, this->virt_, this->closed_, this->virt_, this->ci_};
       std::shared_ptr<Tensor<T>> I21(new Tensor<T>(I21_index, false));
-      std::vector<std::shared_ptr<Tensor<T>>> tensor16 = {I20, t2, I21};
+      std::vector<std::shared_ptr<Tensor<T>>> tensor16 = {this->deci_, t2, I21};
       std::shared_ptr<Task16<T>> task16(new Task16<T>(tensor16, cindex));
+      task16->add_dep(task016);
       dedci_->add_task(task16);
 
+      std::vector<IndexRange> I21b_index = {this->closed_, this->virt_, this->closed_, this->virt_}; 
+      std::shared_ptr<Tensor<T>> I21b(new Tensor<T>(I21b_index, false));
+      std::vector<std::shared_ptr<Tensor<T>>> tensor017 = {I21, I21b, this->ci_coeff_};
+      std::shared_ptr<Task017<T>> task017(new Task017<T>(tensor017, cindex));
+      task16->add_dep(task017);
+      task017->add_dep(task016);
+      dedci_->add_task(task017);
 
-      std::vector<std::shared_ptr<Tensor<T>>> tensor17 = {I21, this->v2_};
+      std::vector<std::shared_ptr<Tensor<T>>> tensor17 = {I21b, this->v2_};
       std::shared_ptr<Task17<T>> task17(new Task17<T>(tensor17, cindex));
-      task16->add_dep(task17);
+      task017->add_dep(task17);
+      task17->add_dep(task016);
       dedci_->add_task(task17);
-
+      // end new
 
       std::shared_ptr<Queue<T>> correction_(new Queue<T>());
       std::vector<IndexRange> I24_index;
@@ -206,7 +218,6 @@ class CAS_test : public SpinFreeMethod<T>, SMITH_info {
       std::shared_ptr<Task19<T>> task19(new Task19<T>(tensor19, pindex));
       task18->add_dep(task19);
       correction_->add_task(task19);
-
 
       std::shared_ptr<Queue<T>> density_(new Queue<T>());
       std::vector<std::shared_ptr<Tensor<T>>> tensor20 = {this->den1_};
@@ -312,6 +323,8 @@ class CAS_test : public SpinFreeMethod<T>, SMITH_info {
       density_->add_task(task32);
 
 
+// dens2 start
+      // task 0
       std::shared_ptr<Queue<T>> density2_(new Queue<T>());
       std::vector<std::shared_ptr<Tensor<T>>> tensor33 = {this->den2_};
       std::shared_ptr<Task33<T>> task33(new Task33<T>(tensor33));
@@ -330,7 +343,7 @@ class CAS_test : public SpinFreeMethod<T>, SMITH_info {
       task34->add_dep(task35);
       task35->add_dep(task33);
       density2_->add_task(task35);
-
+// dens2 end
 
       return make_tuple(queue_, energy_, dedci_, density_, correction_, density2_);
     };
@@ -340,11 +353,13 @@ class CAS_test : public SpinFreeMethod<T>, SMITH_info {
       this->eig_ = this->f1_->diag();
       t2 = this->v2_->clone();
       e0_ = this->e0();
+      ci_coeff_ = this->ci_coeff();
       this->update_amplitude(t2, this->v2_, true);
       t2->scale(2.0);
       r = t2->clone();
       this->den1_ = this->h1_->clone();
       this->den2_ = this->v2_->clone();
+      this->deci_ = this->dci_->clone();
     };
     ~CAS_test() {}; 
 
@@ -364,8 +379,11 @@ class CAS_test : public SpinFreeMethod<T>, SMITH_info {
         if (err < thresh_residual()) break;
       }
       this->print_iteration(iter == maxiter_);
-      const double de = dedci(dec);
-      std::cout << "CI derivative energy (testing) = " << std::setprecision(10) << de  << std::endl;
+      std::cout << " === Calculating CI derivative dE/dcI ===" << std::endl; 
+      while (!dec->done())
+        dec->next_compute();
+      this->deci_->print1("CI derivative tensor: ", 1.0e-15);
+      std::cout << "CI derivative norm: " << std::setprecision(10) <<  this->deci_->norm() << std::endl;
       std::cout << std::endl;
 
       std::cout << " === Unrelaxed density matrix, dm1, <1|E_pq|1> + 2<0|E_pq|1> ===" << std::endl; 
@@ -396,14 +414,6 @@ class CAS_test : public SpinFreeMethod<T>, SMITH_info {
       return en; 
     };  
 
-    double dedci(std::shared_ptr<Queue<T>> dec) {
-      double de = 0.0;
-      while (!dec->done()) {
-        std::shared_ptr<Task<T>> d = dec->next_compute();
-        de += d->dedci();
-      }   
-      return de; 
-    };  
 
     double correction(std::shared_ptr<Queue<T>> correct) {
       double n = 0.0;
