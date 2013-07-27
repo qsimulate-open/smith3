@@ -125,6 +125,7 @@ pair<string, string> Forest::generate_headers() const {
     ss << "    std::shared_ptr<Tensor<T>> t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> r;" << endl;
     ss << "    double e0_;" << endl;
+    ss << "    std::shared_ptr<Tensor<T>> cI;" << endl;
     ss << "" << endl;
     ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T>> queue_(new Queue<T>());" << endl;
@@ -207,11 +208,13 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      this->eig_ = this->f1_->diag();" << endl;
   ss << "      t2 = this->v2_->clone();" << endl;
   ss << "      e0_ = this->e0();" << endl;
+  ss << "      cI = this->ci_coeff();" << endl;
   ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
   ss << "      t2->scale(2.0);" << endl;
   ss << "      r = t2->clone();" << endl;
   ss << "      this->den1_ = this->h1_->clone();" << endl;
   ss << "      this->den2_ = this->v2_->clone();" << endl;
+  ss << "      this->deci_ = this->dci_->clone();" << endl;
   ss << "    };" << endl;
   ss << "    ~" << forest_name_ << "() {}; " << endl;
   ss << "" << endl;
@@ -231,8 +234,11 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "        if (err < thresh_residual()) break;" << endl;
   ss << "      }" << endl;
   ss << "      this->print_iteration(iter == maxiter_);" << endl;
-  ss << "      const double de = dedci(dec);" << endl;
-  ss << "      std::cout << \"CI derivative energy (testing) = \" << std::setprecision(10) << de  << std::endl;" << endl;
+  ss << "      std::cout << \" === Calculating CI derivative dE/dcI ===\" << std::endl; " << endl;
+  ss << "      while (!dec->done()) " << endl;
+  ss << "        dec->next_compute();" << endl;
+  ss << "      this->deci_->print1(\"CI derivative tensor: \", 1.0e-15); " << endl;
+  ss << "      std::cout << \"CI derivative norm: \" << std::setprecision(10) <<  this->deci_->norm() << std::endl; " << endl;
   ss << "      std::cout << std::endl;" << endl;
   ss << "" << endl;
   ss << "      std::cout << \" === Unrelaxed density matrix, dm1, <1|E_pq|1> + 2<0|E_pq|1> ===\" << std::endl; " << endl;
@@ -261,15 +267,6 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "        en += c->energy();" << endl;  // prefactors included in main.cc
   ss << "      }   " << endl;
   ss << "      return en; " << endl;
-  ss << "    };  " << endl;
-  ss << endl;
-  ss << "    double dedci(std::shared_ptr<Queue<T>> dec) {" << endl;
-  ss << "      double de = 0.0;" << endl;
-  ss << "      while (!dec->done()) {" << endl;
-  ss << "        std::shared_ptr<Task<T>> d = dec->next_compute();" << endl;
-  ss << "        de += d->dedci();" << endl;  // prefactors included in main.cc
-  ss << "      }   " << endl;
-  ss << "      return de; " << endl;
   ss << "    };  " << endl;
   ss << endl;
   ss << "    double correction(std::shared_ptr<Queue<T>> correct) {" << endl;

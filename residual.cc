@@ -292,7 +292,7 @@ pair<string, string> Residual::generate_bc(const string indent, const shared_ptr
     }
   } else {  // now at bc depth 0
       // making residual vector...
-      list<shared_ptr<const Index>> proj = (i)->ex_target_index();
+      list<shared_ptr<const Index>> proj = (i)->target_index();
       list<shared_ptr<const Index>> res;
       assert(!(proj.size() & 1));
       for (auto i = proj.begin(); i != proj.end(); ++i, ++i) {

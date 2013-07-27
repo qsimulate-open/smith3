@@ -60,7 +60,7 @@ class Equation {
     void term_select(std::list<std::string> t);
 
     /// Check for targets.
-    bool ex_targets() const;
+    bool targets() const;
 
     /// Print function. This triggers Diagram::refresh_indices().
     void print();

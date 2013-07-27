@@ -40,11 +40,11 @@ using namespace std;
 using namespace smith;
 
 
-Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->name()), num_(-1), label_(lab), root_targets_(eq->ex_targets()) {
+Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->name()), num_(-1), label_(lab), root_targets_(eq->targets()) {
   // First make ListTensor for all the diagrams
   list<shared_ptr<Diagram>> d = eq->diagram();
 
-  const bool rt_targets = eq->ex_targets();
+  const bool rt_targets = eq->targets();
 
   for (auto i = d.begin(); i != d.end(); ++i) {
     shared_ptr<ListTensor> tmp = make_shared<ListTensor>(*i);
@@ -75,7 +75,7 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
       throw logic_error("Error Tree::Tree, code generation for this tree type not implemented");
     }
     list<shared_ptr<Tree>> lt; lt.push_back(tr);
-    shared_ptr<BinaryContraction> b = make_shared<BinaryContraction>(lt, first, (*i)->ex_target_index());
+    shared_ptr<BinaryContraction> b = make_shared<BinaryContraction>(lt, first, (*i)->target_index());
     bc_.push_back(b);
   }
 
@@ -95,19 +95,6 @@ Tree::Tree(const shared_ptr<ListTensor> l, string lab, const bool t) : num_(-1),
     shared_ptr<Tensor> t = l->front();
     t->set_factor(l->fac());
     t->set_scalar(l->scalar());
-
-    // Careful, in case of gamma only push the braket for non-rdm cases
-    if (l->has_gamma()) { // rdms will absorb braket for this diagram so set them to false
-      t->set_overlap(make_pair(false, false));
-    } else if (l->braket().first) {
-      // Careful, only ok if not complex as converts <0|I> to <I|0>. This assumes rdm0I has been converted to rdmI0 by reindexing its associated tensors
-      t->set_overlap(make_pair(true, false));
-    } else if (!l->braket().first && !l->braket().second) {
-      t->set_overlap(make_pair(false, false));
-    } else if (l->braket().second) {
-      throw logic_error("Tree::Tree, should not happen as ket should be absorbed.");
-    }
-
     op_.push_back(t);
   }
 }
@@ -147,7 +134,7 @@ void Tree::factorize() {
     auto j = i; ++j;
     for ( ; j != bc_.end(); ++j) {
       // bc is factorized according to excitation target indices
-      if (*(*i)->tensor() == *(*j)->tensor() && (*i)->dagger() == (*j)->dagger() && (*i)->ex_target_index_str() == (*j)->ex_target_index_str()) {
+      if (*(*i)->tensor() == *(*j)->tensor() && (*i)->dagger() == (*j)->dagger() && (*i)->target_index_str() == (*j)->target_index_str()) {
         done.push_back(j);
         (*i)->subtree().insert((*i)->subtree().end(), (*j)->subtree().begin(), (*j)->subtree().end());
       }
@@ -279,12 +266,12 @@ list<shared_ptr<Tensor>> Tree::gather_gamma() const {
 }
 
 
-string BinaryContraction::ex_target_index_str() const {
+string BinaryContraction::target_index_str() const {
   stringstream zz;
-  if (!ex_target_index_.empty()) {
+  if (!target_index_.empty()) {
     zz << "(";
-    for (auto i = ex_target_index_.begin(); i != ex_target_index_.end(); ++i) {
-      if (i != ex_target_index_.begin()) zz << ", ";
+    for (auto i = target_index_.begin(); i != target_index_.end(); ++i) {
+      if (i != target_index_.begin()) zz << ", ";
       zz << (*i)->str(false);
     }
     zz << ")";
@@ -296,7 +283,7 @@ string BinaryContraction::ex_target_index_str() const {
 void BinaryContraction::print() const {
   string indent = "";
   for (int i = 0; i != depth(); ++i) indent += "  ";
-  cout << indent << (target_ ? (target_->str() + " = ") : "") << tensor_->str() << (depth() == 0 ? ex_target_index_str() : "") << " * " << subtree_.front()->target()->str() << endl;
+  cout << indent << (target_ ? (target_->str() + " = ") : "") << tensor_->str() << (depth() == 0 ? target_index_str() : "") << " * " << subtree_.front()->target()->str() << endl;
   for (auto& i : subtree_) i->print();
 }
 
@@ -518,7 +505,7 @@ tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_task_
 
   if (depth() == 0) { //////////////////// zero depth /////////////////////////////
     if (root_targets()) {
-      // process tree with target indices eg, density matrix (residual zero level task is created above (forest::generate_header))
+      // process tree with target indices eg, ci derivative, density matrix (residual zero level task is created above (forest::generate_header))
       if (label() != "residual") {
         num_ = tcnt;
         // save density task zero
@@ -544,7 +531,7 @@ tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_task_
             }
             ss << generate_task(indent, num_, source_tensors, gamma, t0);
 
-            list<shared_ptr<const Index>> proj = j->ex_target_index();
+            list<shared_ptr<const Index>> proj = j->target_index();
             // write out headers
             {
               list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
@@ -554,18 +541,21 @@ tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_task_
                 list<shared_ptr<const Index>> di = j->loop_indices();
                 tt << generate_compute_header(num_, di, source_tensors, true);
               } else {
-                tt << generate_compute_header(num_, ti, source_tensors);
+                tt << generate_compute_header(num_, ti, source_tensors);  
               }
             }
 
             list<shared_ptr<const Index>> dm;
-            assert(!(proj.size() & 1));
-            {
+            if (proj.size() > 1) {
               for (auto i = proj.begin(); i != proj.end(); ++i, ++i) {
                 auto k = i; ++k;
                 dm.push_back(*k);
                 dm.push_back(*i);
               }
+            } else if (proj.size() == 1) {
+              for (auto& i : proj) dm.push_back(i);
+            } else {
+              throw logic_error("Tree::generate_task_list, should not have empty target index here.");
             }
 
             // virtual
@@ -579,8 +569,10 @@ tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_task_
               // send outer loop indices if outer loop indices exist, otherwise send inner indices
               list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
               if (depth() == 0)
-                for (auto m = ti.begin(), n = ++ti.begin(); m != ti.end(); ++m, ++m, ++n, ++n)
-                  swap(*m, *n);
+                if (ti.size() > 1) {
+                  for (auto m = ti.begin(), n = ++ti.begin(); m != ti.end(); ++m, ++m, ++n, ++n)
+                    swap(*m, *n);
+                }
               if (ti.size() == 0) {
                 assert(depth() != 0);
                 // sending inner indices
@@ -688,7 +680,7 @@ tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_steps
 
     // write out headers
     {
-      list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->ex_target_index();
+      list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->target_index();
       // if outer loop is empty, send inner loop indices to header
       if (ti.size() == 0) {
         assert(depth() != 0);
@@ -706,7 +698,7 @@ tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_steps
 
     {
       // send outer loop indices if outer loop indices exist, otherwise send inner indices
-      list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->ex_target_index();
+      list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->target_index();
       if (depth() == 0)
         for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
           swap(*i, *j);

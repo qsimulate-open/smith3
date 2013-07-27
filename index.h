@@ -56,12 +56,12 @@ class Spin {
     }
 };
 
-/// A class for orbital attributes. Index defined by label (space), spin, electron number and if is transposed (daggered).
+/// A class for tensor indices. Can refer to orbital attributes: Index defined by label (space), spin, electron number and if is transposed (daggered). Also can refer to cI index.
 class Index {
   protected:
     /// Index label, related to closed, active, or virtual (c, x, and a, respectively).
     std::string label_;
-    /// Index number (electron).
+    /// Index number (if orbital index, electron).
     int num_;
     /// If transposed, ie daggered. Important in Wick's theorem and equations.
     bool dagger_;
@@ -70,7 +70,7 @@ class Index {
 
 
   public:
-    /// Make index object from label and dagger info. Initialize label, number(0), dagger, and target(false).
+    /// Make index object from label and dagger info. Initialize label, number(0), dagger.
     Index(std::string lab, bool dag) : label_(lab), num_(0), dagger_(dag) {}
     Index(const Index& o) : label_(o.label_), num_(o.num_), dagger_(o.dagger_), spin_(o.spin_) { }
     ~Index() { }
@@ -146,13 +146,15 @@ class Index {
         out = "virt_";
       } else if (label_ == "x") {
         out = "active_";
+      } else if (label_ == "ci") {
+        out = "ci_";
       } else {
         throw std::runtime_error("unkonwn index type in Index::generate()");
       }
       return out;
     }
 
-    /// Gives orbital space range name ([0], [1], [2] for closed, active, and virtual spaces, respectively) based on index label.
+    /// Gives index range name ([0], [1], [2] for closed, active, virtual orbital spaces, respectively and [3] for ci range) based on index label.
     std::string generate_range(const std::string postfix = "") const {
       std::string out = "range" + postfix;
       if (label_ == "c") {
@@ -161,6 +163,8 @@ class Index {
         out += "[1]";
       } else if (label_ == "a") {
         out += "[2]";
+      } else if (label_ == "ci") {
+        out += "[3]";
       } else {
         throw std::runtime_error("unkonwn index type in Index::generate_range()");
       }

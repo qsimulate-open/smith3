@@ -46,7 +46,7 @@ static string merge__(vector<string> array) {
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
     if (label == "f1" || label == "v2" || label == "h1") label = "this->" + label + "_";
-    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? "r" : label);
+    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? "this->deci_" : label);
   }
   return ss.str();
 }
@@ -54,17 +54,56 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 // local functions... (not a good practice...) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
-string Dedci::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int i0) const {
+pair<string, string> Dedci::create_target(const string indent, const int i) const {
+  stringstream ss;
+  stringstream tt;
+  tt << "template <typename T>" << endl;
+  tt << "class Task" << i << " : public DedciTask<T> {" << endl;
+  tt << "  protected:" << endl;
+  tt << "    std::shared_ptr<Tensor<T>> dec_;" << endl;
+  tt << "    IndexRange closed_;" << endl;
+  tt << "    IndexRange active_;" << endl;
+  tt << "    IndexRange virt_;" << endl;
+  tt << "    IndexRange ci_;" << endl;
+  tt << "" << endl;
+  tt << "    void compute_() {" << endl;
+  tt << "      dec_->zero();" << endl;
+  tt << "    };  " << endl;
+  tt << "" << endl;
+  tt << "  public:" << endl;
+  tt << "    Task" << i << "(std::vector<std::shared_ptr<Tensor<T>>> t) : DedciTask<T>() {" << endl;
+  tt << "      dec_ =  t[0];" << endl;
+  tt << "    };  " << endl;
+  tt << "    ~Task" << i << "() {}; " << endl;
+  tt << "};" << endl << endl;
+
+  ss << "      std::shared_ptr<Queue<T>> dedci_(new Queue<T>());" << endl;
+  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << i << " = {this->deci_};" << endl;
+  ss << indent << "std::shared_ptr<Task" << i << "<T>> task" << i << "(new Task" << i << "<T>(tensor" << i << "));" << endl;
+  ss << indent << "dedci_->add_task(task" << i << ");" << endl << endl;
+
+  return make_pair(ss.str(), tt.str());
+}
+
+
+shared_ptr<Tensor> Dedci::create_tensor(list<shared_ptr<const Index>> dm) const {
+ shared_ptr<Tensor> dedci(new Tensor(1.0, "deci_", dm));
+ return dedci;
+}
+
+
+string Dedci::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int iz) const {
   stringstream ss;
   ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
   ss << indent << "std::shared_ptr<Task" << ic << "<T>> task"
                << ic << "(new Task" << ic << "<T>(tensor" << ic << ", cindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
-
   if (parent_) {
-    if (ip != ic)
-      ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
+    assert(parent_->parent());
+    ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
+    ss << indent << "task" << ic << "->add_dep(task" << iz << ");" << endl;
   } else {
     assert(depth() == 0);
+    ss << indent << "task" << ic << "->add_dep(task" << iz << ");" << endl;
   }
   ss << indent << "dedci_->add_task(task" << ic << ");" << endl;
   ss << endl;
@@ -92,8 +131,7 @@ string Dedci::generate_compute_header(const int ic, const list<shared_ptr<const 
   tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
   tt << "        const std::shared_ptr<const Tensor<T>>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
   tt << "        const std::shared_ptr<Tensor<T>>& out() const { return this->out_tensor(); }" << endl;
-  tt << "        double dedci_;" << endl;
-  if (need_e0)  tt << "        double e0_;" << endl;
+  if (need_e0) tt << endl << "        double e0_;" << endl;
   tt << endl;
   tt << "      public:" << endl;
   // if index is empty use dummy index 1 to subtask
@@ -107,16 +145,16 @@ string Dedci::generate_compute_header(const int ic, const list<shared_ptr<const 
     tt << "          : SubTask<" << nindex << "," << ninptensors << ",T>(block, in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
   }
   tt << endl;
-  tt << "        double dedci() const { return dedci_; }" << endl;
   tt << endl;
   tt << "        void compute() override {" << endl;
-  tt << "          dedci_ = 0.0;" << endl;
 
   if (!no_outside) {
     list<shared_ptr<const Index>> ti_copy = ti;
     if (depth() == 0) {
-      for (auto i = ti_copy.begin(), j = ++ti_copy.begin(); i != ti_copy.end(); ++i, ++i, ++j, ++j)
-        swap(*i, *j);
+      if (ti.size() > 1) {
+        for (auto i = ti_copy.begin(), j = ++ti_copy.begin(); i != ti_copy.end(); ++i, ++i, ++j, ++j)
+          swap(*i, *j);
+      }
     }
 
     int cnt = 0;
@@ -144,15 +182,13 @@ string Dedci::generate_compute_footer(const int ic, const list<shared_ptr<const 
   tt << "" << endl;
 
   tt << "    void compute_() override {" << endl;
-  tt << "      this->dedci_ = 0.0;" << endl;
   tt << "      for (auto& i : subtasks_) {" << endl;
   tt << "        i->compute();" << endl;
-  tt << "        this->dedci_ += i->dedci();" << endl;
   tt << "      }" << endl;
   tt << "    }" << endl << endl;
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t,  std::array<std::shared_ptr<const IndexRange>,4> range" << (need_e0 ? ", const double e" : "") << ") : DedciTask<T>() {" << endl;
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t, std::array<std::shared_ptr<const IndexRange>,4> range" << (need_e0 ? ", double e" : "" ) <<  ") : DedciTask<T>() {" << endl;
   tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
   for (auto i = 1; i < ninptensors + 1; ++i)
     tt << "t[" << i << "]" << (i < ninptensors ? ", " : "");
@@ -194,71 +230,68 @@ pair<string, string> Dedci::generate_bc(const string indent, const shared_ptr<Bi
   stringstream ss;
   stringstream tt;
 
+    if (depth() != 0) {
+      const string bindent = indent + "    ";
+      string dindent = bindent;
 
-  if (depth() != 0) {
-    const string bindent = indent + "    ";
-    string dindent = bindent;
-    // skip if dedci tree depth is 1
-    if (depth() != 1) {
       tt << target_->generate_get_block(dindent, "o", "out()", true);
       tt << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
-    }
 
-    list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
+      list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
 
-    // inner loop will show up here
-    // but only if outer loop is not empty
-    list<shared_ptr<const Index>> di = (i)->loop_indices();
-    vector<string> close2;
-    if (ti.size() != 0) {
-      tt << endl;
-      for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent += "  ") {
-        string index = (*iter)->str_gen();
-        tt << dindent << "for (auto& " << index << " : *" << (*iter)->generate_range("_") << ") {" << endl;
-        close2.push_back(dindent + "}");
-      }
-    } else {
-      int cnt = 0;
-      for (auto k = di.begin(); k != di.end(); ++k, cnt++) tt << dindent << "const Index " <<  (*k)->str_gen() << " = b(" << cnt << ");" << endl;
-      tt << endl;
-    }
+      // inner loop (where similar indices in dgemm tensors are summed over) will show up here
+      // but only if outer loop is not empty
+      list<shared_ptr<const Index>> di = (i)->loop_indices();
+      di.reverse();
 
-    // retrieving tensor_
-    tt << (i)->tensor()->generate_get_block(dindent, "i0", "in(0)");
-    tt << (i)->tensor()->generate_sort_indices(dindent, "i0", "in(0)", di) << endl;
-    // retrieving subtree_
-    tt << (i)->next_target()->generate_get_block(dindent, "i1", "in(1)");
-    tt << (i)->next_target()->generate_sort_indices(dindent, "i1", "in(1)", di) << endl;
-
-    // call dgemm
-    {
-      pair<string, string> t0 = (i)->tensor()->generate_dim(di);
-      pair<string, string> t1 = (i)->next_target()->generate_dim(di);
-      if (t0.first != "" || t1.first != "") {
-        tt << dindent << "dgemm_(\"T\", \"N\", ";
-        string tt0 = t0.first == "" ? "1" : t0.first;
-        string tt1 = t1.first == "" ? "1" : t1.first;
-        string ss0 = t1.second== "" ? "1" : t1.second;
-        tt << tt0 << ", " << tt1 << ", " << ss0 << "," << endl;
-        tt << dindent << "       1.0, i0data_sorted, " << ss0 << ", i1data_sorted, " << ss0 << "," << endl
-           << dindent << "       1.0, odata_sorted, " << tt0;
-        tt << ");" << endl;
+      vector<string> close2;
+      if (ti.size() != 0) {
+        tt << endl;
+        for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent += "  ") {
+          string index = (*iter)->str_gen();
+          tt << dindent << "for (auto& " << index << " : *" << (*iter)->generate_range("_") << ") {" << endl;
+          close2.push_back(dindent + "}");
+        }
       } else {
-        if (depth() != 1) throw logic_error("Not expecting this in depth() != 1 see Dedci::generate_bc");
-        string ss0 = t1.second== "" ? "1" : t1.second;
-        tt << dindent << "dedci_ += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
+        int cnt = 0;
+        for (auto k = di.begin(); k != di.end(); ++k, cnt++) tt << dindent << "const Index " <<  (*k)->str_gen() << " = b(" << cnt << ");" << endl;
+        tt << endl;
       }
-    }
 
-    if (ti.size() != 0) {
-      for (auto iter = close2.rbegin(); iter != close2.rend(); ++iter)
-        tt << *iter << endl;
-      tt << endl;
-    }
-    // Inner loop ends here
+      // retrieving tensor_
+      tt << (i)->tensor()->generate_get_block(dindent, "i0", "in(0)");
+      tt << (i)->tensor()->generate_sort_indices(dindent, "i0", "in(0)", di) << endl;
+      // retrieving subtree_
+      tt << (i)->next_target()->generate_get_block(dindent, "i1", "in(1)");
+      tt << (i)->next_target()->generate_sort_indices(dindent, "i1", "in(1)", di) << endl;
 
-    // skip if dedci tree depth is 1
-    if (depth() != 1) {
+      // call dgemm
+      {
+        pair<string, string> t0 = (i)->tensor()->generate_dim(di);
+        pair<string, string> t1 = (i)->next_target()->generate_dim(di);
+        if (t0.first != "" || t1.first != "") {
+          tt << dindent << "dgemm_(\"T\", \"N\", ";
+          string tt0 = t0.first == "" ? "1" : t0.first;
+          string tt1 = t1.first == "" ? "1" : t1.first;
+          string ss0 = t1.second== "" ? "1" : t1.second;
+          tt << tt0 << ", " << tt1 << ", " << ss0 << "," << endl;
+          tt << dindent << "       1.0, i0data_sorted, " << ss0 << ", i1data_sorted, " << ss0 << "," << endl
+             << dindent << "       1.0, odata_sorted, " << tt0;
+          tt << ");" << endl;
+        } else {
+          // so far I am expecting the case of dedci vector contribution
+          if (depth() != 1) throw logic_error("expecting dedci matrix contribution");
+          throw logic_error("should not have ddot in dedci tensor");
+        }
+      }
+
+      if (ti.size() != 0) {
+        for (auto iter = close2.rbegin(); iter != close2.rend(); ++iter)
+          tt << *iter << endl;
+        tt << endl;
+      }
+      // Inner loop ends here
+
       // sort buffer
       {
         tt << (i)->target()->generate_sort_indices_target(bindent, "o", di, (i)->tensor(), (i)->next_target());
@@ -273,15 +306,15 @@ pair<string, string> Dedci::generate_bc(const string indent, const shared_ptr<Bi
           tt << ", " << (*i)->str_gen();
         tt << ");" << endl;
       }
-    }
-  } else {
-    // depth should not equal 0 in dedci tree
-    throw logic_error("shouldn't happen in Dedci::generate_bc");
-  }
 
+    } else { // bc depth = 0
+      // depth should only be zero and here in residual tree
+      throw logic_error("shouldn't happen in Dedci::generate_bc");
+    }
 
   return make_pair(ss.str(), tt.str());
 }
+
 
 
 

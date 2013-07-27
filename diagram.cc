@@ -88,7 +88,7 @@ shared_ptr<Diagram> Diagram::copy() const {
 }
 
 
-list<shared_ptr<const Index>> Diagram::ex_target_index() const {
+list<shared_ptr<const Index>> Diagram::target_index() const {
   bool found = false;
   list<shared_ptr<const Index>> out;
   for (auto& i : op_) {
@@ -99,11 +99,16 @@ list<shared_ptr<const Index>> Diagram::ex_target_index() const {
       for (auto& j : ops) out.push_back(*get<0>(j));
     }
   }
+  // ci derivative tensors also have target indices.
+  if (bra_ || ket_) {
+    shared_ptr<const Index> ci = make_shared<Index>("ci",false);
+    out.push_back(ci);
+  }
   return out;
 }
 
 
-bool Diagram::has_ex_target_index() const {
+bool Diagram::has_target_index() const {
   bool found = false;
   for (auto & i : op_) {
      if (i->is_ex()) {
@@ -111,6 +116,8 @@ bool Diagram::has_ex_target_index() const {
        break;
      }
   }
+  // ci derivative tensors also have target indices.
+  if (bra_ || ket_) found = true;
   return found;
 }
 

@@ -56,12 +56,12 @@ class BinaryContraction {
     /// Points up in graph.
     Tree* parent_;
 
-    /// Excitation operator target indices
-    std::list<std::shared_ptr<const Index>> ex_target_index_;
+    /// Target indices, could be from excitation operator target indices, or ci derivative target index.
+    std::list<std::shared_ptr<const Index>> target_index_;
 
   public:
     /// Construct binary contraction from subtree and tensor if diagram has excitation operator target indices, index list will not be empty.
-    BinaryContraction(std::list<std::shared_ptr<Tree>> o, std::shared_ptr<Tensor> t, std::list<std::shared_ptr<const Index>> ti) : tensor_(t), subtree_(o), ex_target_index_(ti) { }
+    BinaryContraction(std::list<std::shared_ptr<Tree>> o, std::shared_ptr<Tensor> t, std::list<std::shared_ptr<const Index>> ti) : tensor_(t), subtree_(o), target_index_(ti) { }
     /// Construct binary contraction from tensor and listtensor pointers.
     BinaryContraction(std::shared_ptr<Tensor> o, std::shared_ptr<ListTensor> l, std::string lab, const bool rt);
     ~BinaryContraction() { }
@@ -80,8 +80,8 @@ class BinaryContraction {
 
     /// Print binary contraction.
     void print() const;
-    /// Returns excitation target indices.
-    std::string ex_target_index_str() const;
+    /// Returns the target indices.
+    std::string target_index_str() const;
     /// Returns bc label.
     std::string label() { return label_; }
 
@@ -101,9 +101,9 @@ class BinaryContraction {
     /// Returns a list of target indices..these are to be stored (via put_block).
     std::list<std::shared_ptr<const Index>> target_indices();
     /// Return excitation target indices.
-    std::list<std::shared_ptr<const Index>> ex_target_index() { return ex_target_index_; }
+    std::list<std::shared_ptr<const Index>> target_index() { return target_index_; }
     /// True if bc is associated with excitation target indices.
-    bool has_ex_target_index() { return !ex_target_index_.empty(); }
+    bool has_target_index() { return !target_index_.empty(); }
 
     /// If transpose.
     bool dagger() const;

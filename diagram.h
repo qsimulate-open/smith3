@@ -138,11 +138,11 @@ class Diagram {
     /// If diagrams are same, based on size, indices, spin, bra and ket.
     bool identical(std::shared_ptr<Diagram> o) const;
 
-    /// checks if diagram has target indices from excitation operators.
-    bool has_ex_target_index() const;
+    /// checks if diagram has target indices from excitation operators, or if ci derivative. 
+    bool has_target_index() const;
 
-    /// Returns list of target indices from excitation operators in diagram.
-    std::list<std::shared_ptr<const Index>> ex_target_index() const;
+    /// Returns list of target indices from excitation operators in diagram, or those from ci derivative.
+    std::list<std::shared_ptr<const Index>> target_index() const;
 
     /// Print function for diagram, CAUTION: it also refreshes the indices.
     void print();

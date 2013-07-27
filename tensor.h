@@ -65,15 +65,12 @@ class Tensor {
     /// Alias tensor if any.
     std::shared_ptr<Tensor> alias_;
 
-    /// Braket is now overlap. Useful for tensors in diagrams which do not have rdms. Set in tree ctor, cf set_overlap().
-    std::pair<bool, bool> overlap_;
-
     /// For counting Gamma tensors, used when adding all active tensor, see merge().
     mutable int num_;
 
 
   public:
-    /// Constructor for intermediate tensors.
+    /// Constructor for intermediate tensors, and also ci tensor. todo what about scalar--needed for intermediates or ci tensor? check!
     Tensor(const double& d, const std::string& l, const std::list<std::shared_ptr<const Index>>& i)
       : factor_(d), label_(l), index_(i) { }
     /// Constructor for const operator tensor, creates index list and checks for target indices. Called from listtensor after labels are checked in listtensor constructor.
@@ -106,8 +103,6 @@ class Tensor {
     void set_factor(const double a) { factor_ = a; }
     /// Set name of scalar. Actual value is defined later on BAGEL side, eg e0.
     void set_scalar(const std::string s) { scalar_ = s; }
-    /// Set overlap, used for trees without rdms.
-    void set_overlap(const std::pair<bool,bool> o) { overlap_ = o; }
     /// Used to reindex tensor in absorb_ket().
     void set_index(std::list<std::shared_ptr<const Index>> i) { index_ = i; }
 
