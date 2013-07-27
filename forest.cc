@@ -238,7 +238,9 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      while (!dec->done()) " << endl;
   ss << "        dec->next_compute();" << endl;
   ss << "      this->deci_->print1(\"CI derivative tensor: \", 1.0e-15); " << endl;
-  ss << "      std::cout << \"CI derivative norm: \" << std::setprecision(10) <<  this->deci_->norm() << std::endl; " << endl;
+  ss << "      std::cout << \"CI derivative norm  =  \" << std::setprecision(10) <<  this->deci_->norm() << std::endl; " << endl;
+  ss << "      std::cout << std::endl;" << endl;
+  ss << "      std::cout << \"CI derivative * cI  = \" << std::setprecision(10) <<  this->deci_->ddot(cI) << std::endl; " << endl;
   ss << "      std::cout << std::endl;" << endl;
   ss << "" << endl;
   ss << "      std::cout << \" === Unrelaxed density matrix, dm1, <1|E_pq|1> + 2<0|E_pq|1> ===\" << std::endl; " << endl;
