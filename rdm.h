@@ -62,8 +62,6 @@ class RDM {
     /// Replaces tensor labels to more general labels in(x), where x is a counter for in tensors. RDM tensors numbered before merged (fock) tensor. Eg, rdm1 is mapped to in(0), rdm2 -> in(1), and in merged case with max rdm2, f1 -> in(2).
     virtual void map_in_tensors(std::vector<std::string> in_tensors, std::map<std::string,std::string>& inlab) = 0;
 
-    /// Generate get block - source data to be added to target (move block).
-    virtual std::string make_get_block(std::string indent, std::string tag, std::string lbl) = 0;
     /// Generate sort_indices which makes array. This version has no addition (or factor multiplication-0111).
     virtual std::string make_sort_indices(std::string indent, std::string tag, const std::list<std::shared_ptr<const Index>>& loop) = 0;
 

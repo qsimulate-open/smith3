@@ -39,6 +39,9 @@ namespace smith {
 class RDMI0 : public RDM {
   protected:
 
+    /// Generate get block - source data to be added to target (move block).
+    std::string make_get_block(std::string indent, std::string tag, std::string lbl, const std::list<std::shared_ptr<const Index>>& index);
+
     /// Generate entire task code for Gamma RDM summation.
     std::string generate_not_merged(std::string indent, const std::string tlab, const std::list<std::shared_ptr<const Index>>& loop, std::vector<std::string> in_tensors) override;
     /// Generates entire task code for Gamma RDM summation with merged object (additional tensor, here fock tensor) multiplication.
@@ -50,8 +53,6 @@ class RDMI0 : public RDM {
     /// Replaces tensor labels to more general labels in(x), where x is a counter for in tensors. RDM tensors numbered before merged (fock) tensor. Eg, rdm1 is mapped to in(0), rdm2 -> in(1), and in merged case with max rdm2, f1 -> in(2).
     void map_in_tensors(std::vector<std::string> in_tensors, std::map<std::string,std::string>& inlab) override;
 
-    /// Generate get block - source data to be added to target (move block).
-    std::string make_get_block(std::string indent, std::string tag, std::string lbl) override;
     /// Generate sort_indices which makes array. This version has no addition (or factor multiplication-0111).
     std::string make_sort_indices(std::string indent, std::string tag, const std::list<std::shared_ptr<const Index>>& loop) override;
 

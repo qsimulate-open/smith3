@@ -60,6 +60,27 @@ Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0), scalar_("") {
   active_ = activ;
 }
 
+
+Tensor::Tensor(const shared_ptr<Active> activ, const list<shared_ptr<const Index>>& in) : factor_(1.0), scalar_(""), der_(in) {
+  // scalar quantity..defined on bagel side
+  // label
+  stringstream ss; ss << "Gamma" << ig; ++ig;
+  label_ = ss.str();
+  // op
+#if 1 
+  index_ = activ->index();
+  // add extra index, eg ci0
+  for (auto& i : in) index_.push_back(i);
+#else // reverse indices 
+  list<shared_ptr<const Index>> ind = activ->index();
+  ind.reverse();
+  for (auto& i : in) ind.push_back(i);
+  ind.reverse();
+  index_ = ind; 
+#endif
+  active_ = activ;
+}
+
 // print
 string Tensor::str() const {
   stringstream ss;
@@ -465,7 +486,7 @@ string Tensor::generate_loop(string& indent, vector<string>& close) const {
 }
 
 
-string Tensor::generate_gamma(const int ic, const bool use_blas) const {
+string Tensor::generate_gamma(const int ic, const bool use_blas, const bool der) const {
   // TODO split generate_gamma function up to header/body/footer once working (too large now)
   assert(label_.find("Gamma") != string::npos);
   stringstream tt;
@@ -485,10 +506,11 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
   // determine number of tensors
   vector<int> rdmn = active()->required_rdm();
   int ninptensors;
-  if (merged_)
+  if (merged_) { 
     ninptensors = rdmn.size()+1;
-  else
+  } else {
     ninptensors = rdmn.size();
+  }
 
 
   //////////// gamma header ////////////
@@ -501,7 +523,7 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
   tt << "  protected:" << endl;
   tt << "    class Task_local : public SubTask<" << nindex << "," << ninptensors << ",T> {" << endl;
   tt << "      protected:" << endl;
-  tt << "        const std::array<std::shared_ptr<const IndexRange>,3> range_;" << endl;
+  tt << "        const std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range_;" << endl;
   tt << endl;
 
   tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
@@ -510,7 +532,7 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
   tt << endl;
   tt << "      public:" << endl;
   tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor<T>>," << ninptensors <<  ">& in, std::shared_ptr<Tensor<T>>& out," << endl;
-  tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran)" << endl;
+  tt << "                   std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << ">& ran)" << endl;
   tt << "          : SubTask<" << nindex << "," << ninptensors << ",T>(block, in, out), range_(ran) { }" << endl;
   tt << endl;
   tt << endl;
@@ -520,19 +542,28 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
   string indent ="          ";
   // map indices
   int bcnt = 0;
-  for (auto i = index_.begin(); i != index_.end(); ++i, bcnt++)
-    tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
-  if (merged_) {
-    for (auto i = merged.begin(); i != merged.end(); ++i, bcnt++)
+  if (der) {
+    for (auto i = index_.rbegin(); i != index_.rend(); ++i, bcnt++)
       tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
+    if (merged_) {
+      for (auto i = merged.rbegin(); i != merged.rend(); ++i, bcnt++)
+        tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
+    }
+  } else {
+    for (auto i = index_.begin(); i != index_.end(); ++i, bcnt++)
+      tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
+    if (merged_) {
+      for (auto i = merged.begin(); i != merged.end(); ++i, bcnt++)
+        tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
+    }
   }
 
 #ifdef debug_tasks // debug purposes
    tt << indent <<  "// std::shared_ptr<Tensor<T> > " << label() << ";" << endl;
    for (auto& i: rdmn)
-     tt << indent << "// std::shared_ptr<Tensor<T> > rdm" << i << ";" << endl;
+     tt << indent << "// std::shared_ptr<Tensor<T> > rdm" << i << (der ? "I0" : "") << ";" << endl;
    if (merged_)
-     tt << indent <<  "// std::shared_ptr<Tensor<T> > " << merged_->label() << ";" << endl;
+     tt << indent << "// std::shared_ptr<Tensor<T> > " << merged_->label() << ";" << endl;
    tt << endl;
 #endif
 
@@ -562,7 +593,7 @@ string Tensor::generate_gamma(const int ic, const bool use_blas) const {
   tt << "    }" << endl << endl;
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t,  std::array<std::shared_ptr<const IndexRange>,3> range) : Task<T>() {" << endl;
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t,  std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range) : Task<T>() {" << endl;
   tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
 
   // write out tensors in increasing order

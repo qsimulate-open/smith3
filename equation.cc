@@ -128,7 +128,7 @@ void Equation::absorb_ket() {
           (*i)->set_ket(false);
           (*i)->set_bra(true);
       } else {
-        // todo redo indices for diagrams with rdms
+        // todo redo indices for diagrams with rdms (now this is done later in listtensor::absorb_ket)
       }
     }
   }

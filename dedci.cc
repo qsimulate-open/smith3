@@ -92,7 +92,7 @@ shared_ptr<Tensor> Dedci::create_tensor(list<shared_ptr<const Index>> dm) const 
 }
 
 
-string Dedci::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int iz) const {
+string Dedci::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int iz, bool der) const {
   stringstream ss;
   ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
   ss << indent << "std::shared_ptr<Task" << ic << "<T>> task"

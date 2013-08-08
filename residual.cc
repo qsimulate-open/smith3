@@ -83,11 +83,11 @@ pair<string, string> Residual::create_target(const string indent, const int i) c
 }
 
 
-string Residual::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int i0) const {
+string Residual::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der) const {
   stringstream ss;
   ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
   ss << indent << "std::shared_ptr<Task" << ic << "<T>> task"
-               << ic << "(new Task" << ic << "<T>(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
+               << ic << "(new Task" << ic << "<T>(tensor" << ic << (der ? ", cindex" : ", pindex") << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
 
   if (parent_) {
     assert(parent_->parent());

@@ -125,7 +125,7 @@ pair<string, string> Forest::generate_headers() const {
     ss << "    std::shared_ptr<Tensor<T>> t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> r;" << endl;
     ss << "    double e0_;" << endl;
-    ss << "    std::shared_ptr<Tensor<T>> cI;" << endl;
+    ss << "    std::shared_ptr<Tensor<T>> dci;" << endl;
     ss << "" << endl;
     ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T>> queue_(new Queue<T>());" << endl;
@@ -168,18 +168,27 @@ pair<string, string> Forest::generate_gammas() const {
 
     i->set_num(icnt);
     assert(i->label().find("Gamma") != string::npos);
+
     ss << i->constructor_str(indent) << endl;
 
     // switch for blas, if true merged rdm*f1 tensor multiplication will use blas
     bool use_blas = false;
-    tt << i->generate_gamma(icnt, use_blas);
+    tt << i->generate_gamma(icnt, use_blas, i->der());
 
     vector<string> tmp = {i->label()};
     vector<int> rdms = i->active()->required_rdm();
-    for (auto& j : rdms) {
-      stringstream zz;
-      zz << "this->rdm" << j << "_";
-      tmp.push_back(zz.str());
+    if (i->der()) { // derivative rdm
+      for (auto& j : rdms) {
+        stringstream zz;
+        zz << "this->rdm" << j << "deriv_";
+        tmp.push_back(zz.str());
+      }
+    } else {  // normal rdms
+      for (auto& j : rdms) {
+        stringstream zz;
+        zz << "this->rdm" << j << "_";
+        tmp.push_back(zz.str());
+      }
     }
     if (i->merged()) {
       stringstream mm;
@@ -187,7 +196,11 @@ pair<string, string> Forest::generate_gammas() const {
       tmp.push_back(mm.str());
     }
     // virtual generate_task
-    ss << trees_.front()->generate_task(indent, 0, icnt, tmp);
+    if (i->der()) {
+      ss << trees_.front()->generate_task(indent, 0, icnt, tmp, "", 0, true);
+    } else {
+      ss << trees_.front()->generate_task(indent, 0, icnt, tmp);
+    }
     ++icnt;
   }
 
@@ -208,13 +221,13 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      this->eig_ = this->f1_->diag();" << endl;
   ss << "      t2 = this->v2_->clone();" << endl;
   ss << "      e0_ = this->e0();" << endl;
-  ss << "      cI = this->ci_coeff();" << endl;
   ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
   ss << "      t2->scale(2.0);" << endl;
   ss << "      r = t2->clone();" << endl;
   ss << "      this->den1_ = this->h1_->clone();" << endl;
   ss << "      this->den2_ = this->v2_->clone();" << endl;
-  ss << "      this->deci_ = this->dci_->clone();" << endl;
+  ss << "      dci = this->civec_;" << endl;
+  ss << "      this->deci_ = dci->clone();" << endl;
   ss << "    };" << endl;
   ss << "    ~" << forest_name_ << "() {}; " << endl;
   ss << "" << endl;
@@ -238,9 +251,8 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      while (!dec->done()) " << endl;
   ss << "        dec->next_compute();" << endl;
   ss << "      this->deci_->print1(\"CI derivative tensor: \", 1.0e-15); " << endl;
-  ss << "      std::cout << \"CI derivative norm  =  \" << std::setprecision(10) <<  this->deci_->norm() << std::endl; " << endl;
   ss << "      std::cout << std::endl;" << endl;
-  ss << "      std::cout << \"CI derivative * cI  = \" << std::setprecision(10) <<  this->deci_->ddot(cI) << std::endl; " << endl;
+  ss << "      std::cout << \"CI derivative * cI  = \" << std::setprecision(10) <<  this->deci_->ddot(dci) << std::endl; " << endl;
   ss << "      std::cout << std::endl;" << endl;
   ss << "" << endl;
   ss << "      std::cout << \" === Unrelaxed density matrix, dm1, <1|E_pq|1> + 2<0|E_pq|1> ===\" << std::endl; " << endl;

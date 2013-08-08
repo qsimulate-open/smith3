@@ -42,16 +42,24 @@ ListTensor::ListTensor(shared_ptr<Diagram> d) {
       list_.push_back(t);
     }
   }
-  // if braket and if no rdm derivatives, add a ci tensor. This tensor is the overlap, cI coefficients.
+
+  // add a ci tensor if braket and if no rdm derivatives. This tensor is the overlap, cI coefficients.
   if ((d->braket().first || d->braket().second) && !d->rdm()) {
     list<shared_ptr<const Index>> in = d->target_index();
-    shared_ptr<Tensor> t = make_shared<Tensor>(fac_,"cI",in); 
+    shared_ptr<Tensor> t = make_shared<Tensor>(fac_,"dci",in); 
     list_.push_back(t);
   }
-  if (d->rdm()) {
+
+  // add rdm tensors.
+  if (d->rdm() && (d->braket().first || d->braket().second)) { // the rdm ci derivatives have an extra index 
+    list<shared_ptr<const Index>> in = d->target_index();
+    shared_ptr<Tensor> t = make_shared<Tensor>(d->rdm(), in);
+    list_.push_back(t);
+  } else if (d->rdm() && (!d->braket().first && !d->braket().second)) { // add normal rdm tensor
     shared_ptr<Tensor> t = make_shared<Tensor>(d->rdm());
     list_.push_back(t);
   }
+  
   // dagger
   dagger_ = d->dagger();
 }
@@ -81,7 +89,13 @@ void ListTensor::absorb_ket() {
     list<shared_ptr<const Index>> ind;
     for (auto i = list_.begin(); i != list_.end(); ++i) {
       if ((*i)->is_gamma()) {
-        ind = (*i)->index();
+        list<shared_ptr<const Index>> tmp;
+        tmp = (*i)->index();
+        for (auto& j : tmp) {  // check to make sure not ci target index
+          if (j->label() != "ci"){
+            ind.push_back(j);
+          }
+        }
       }
     }
 
@@ -141,7 +155,8 @@ shared_ptr<Tensor> ListTensor::target() const {
       bool found = false;
       list<shared_ptr<const Index>>::iterator remove;
       for (auto i = ind.begin(); i != ind.end(); ++i) {
-        if ((*i)->num() == (*j)->num()) {
+        if ((*i)->num() == (*j)->num()) {                 
+          if ((*j)->label() == "ci") break;   // todo is there a better way?
           found = true;
           remove = i;
           break;
@@ -155,6 +170,7 @@ shared_ptr<Tensor> ListTensor::target() const {
     }
   }
   stringstream ss;
+  // make intermediate tensor
   ss << "I" << target_num__;
   ++target_num__;
   shared_ptr<Tensor> t = make_shared<Tensor>(1.0, ss.str(), ind);

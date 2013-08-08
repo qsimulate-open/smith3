@@ -91,7 +91,7 @@ shared_ptr<Tensor> Density::create_tensor(list<shared_ptr<const Index>> dm) cons
 }
 
 
-string Density::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int iz) const {
+string Density::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int iz, bool der) const {
   stringstream ss;
   ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
   ss << indent << "std::shared_ptr<Task" << ic << "<T>> task"

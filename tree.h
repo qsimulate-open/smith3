@@ -231,9 +231,8 @@ class Tree {
     std::tuple<std::string,std::string, int, int, std::vector<std::shared_ptr<Tensor>>> generate_task_list(int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
     /// Generate code by stepping through op and bc.
     std::tuple<std::string, std::string, int, int, std::vector<std::shared_ptr<Tensor>>> generate_steps(const std::string indent, int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
-    /// Generate task in dependency file with ic as task number
+    /// Generate task in dependency file with ic as task number. Caution also have a virtual generate_task.
     std::string generate_task(const std::string indent, const int ic, const std::vector<std::shared_ptr<Tensor>>, const std::list<std::shared_ptr<Tensor>> g, const int i0 = 0) const;
-
 
     /// Generate task for operator task (ie not a binary contraction task). Dagger arguement refers to front subtree used at top level.
     std::string generate_compute_operators(const std::string, const std::shared_ptr<Tensor>, const std::vector<std::shared_ptr<Tensor>>,
@@ -245,7 +244,7 @@ class Tree {
     /// Create new tensor based on derived tree.
     virtual std::shared_ptr<Tensor> create_tensor(std::list<std::shared_ptr<const Index>>) const = 0;
     /// Generate a task. Here ip is the tag of parent, ic is the tag of this.
-    virtual std::string generate_task(const std::string, const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0) const = 0;
+    virtual std::string generate_task(const std::string, const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0, bool der = false) const = 0;
     /// Generate task header.
     virtual std::string generate_compute_header(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool = false) const = 0;
     /// Generate task footer.

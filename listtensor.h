@@ -62,7 +62,7 @@ class ListTensor {
     /// Prints prefactor, if available: scalar, dagger. Finally prints out each tensor in list.
     void print() const;
 
-    /// Combines tensors and removes one from list. To do this, finds active tensor then merges other tensor if other tensor is all_active (has all active indices) but not if active and if not proj.
+    /// Combines tensors and removes one from list. To do this, finds active tensor then merges other tensor if other tensor is all_active (has all active indices) but not if active and if not proj. Eg f1 tensor can be absorbed if all active.
     void absorb_all_internal();
     /// Careful, only valid if wave function is not complex. This will reverse braket for gamma and reindex tensors in case of ket, allowing gamma tensors from bra case to be reused.
     void absorb_ket();
@@ -76,7 +76,7 @@ class ListTensor {
     std::shared_ptr<Tensor> front() const { return list_.front(); }
     /// Returns the list of tensors (listtensor) minus the front tensor.
     std::shared_ptr<ListTensor> rest() const ;
-    /// Creates! and returns a target tensor from the list of tensors. The intermediate tensors are made here.
+    /// Creates! and returns a target tensor from the list of tensors. The intermediate tensors are made here. Called from tree ctor.
     std::shared_ptr<Tensor> target() const;
 
     /// Returns the prefactor for listtensor.

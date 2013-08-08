@@ -141,6 +141,8 @@ string RDMI0::generate_not_merged(string indent, const string tag, const list<sh
   indent += "  ";
   const string itag = "i";
 
+  list<shared_ptr<const Index>> dindex = index;
+  // todo replace all index_
 
   // now do the sort
   vector<string> close;
@@ -164,7 +166,7 @@ string RDMI0::generate_not_merged(string indent, const string tag, const list<sh
       map<string, string> inlab;
       map_in_tensors(in_tensors, inlab);
 
-      tt << make_get_block(indent, "i0", inlab[rlab]);
+      tt << make_get_block(indent, "i0", inlab[rlab], index);
     }
 
     // loops over delta indices
@@ -203,7 +205,7 @@ string RDMI0::generate_not_merged(string indent, const string tag, const list<sh
       stringstream zz;
       zz << "rdm" << rank();
       string rlab = zz.str();
-      tt << make_get_block(indent, "i0", inlab[rlab]);
+      tt << make_get_block(indent, "i0", inlab[rlab], index);
     }
 
     // do sort_indices here
@@ -211,14 +213,14 @@ string RDMI0::generate_not_merged(string indent, const string tag, const list<sh
     tt << indent << "sort_indices<";
     for (auto i = index.rbegin(); i != index.rend(); ++i) {
       int cnt = 0;
-      for (auto j = index_.rbegin(); j != index_.rend(); ++j, ++cnt) {
+      for (auto j = dindex.rbegin(); j != dindex.rend(); ++j, ++cnt) {
         if ((*i)->identical(*j)) break;
       }
-      if (cnt == index_.size()) throw logic_error("should not happen.. RDM::generate");
+      if (cnt == index.size()) throw logic_error("should not happen in sort RDMI0::generate");
       done.push_back(cnt);
     }
     // then fill out others
-    for (int i = 0; i != index_.size(); ++i) {
+    for (int i = 0; i != index.size(); ++i) {
       if (find(done.begin(), done.end(), i) == done.end())
         done.push_back(i);
     }
@@ -231,8 +233,8 @@ string RDMI0::generate_not_merged(string indent, const string tag, const list<sh
 
     // add source data dimensions
     tt << ">(i0data, " << tag << "data, " ;
-    for (auto iter = index_.rbegin(); iter != index_.rend(); ++iter) {
-      if (iter != index_.rbegin()) tt << ", ";
+    for (auto iter = index.rbegin(); iter != index.rend(); ++iter) {
+      if (iter != index.rbegin()) tt << ", ";
         tt << (*iter)->str_gen() << ".size()";
     }
     tt << ");" << endl;
@@ -279,7 +281,7 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
 
   if (!use_blas) {
     if (rank() != 0) {
-      tt <<  make_get_block(indent, "i0", inlab[rlab]);
+      tt <<  make_get_block(indent, "i0", inlab[rlab], index);
     }
     // loops for index and merged
     tt << make_merged_loops(indent, itag, close);
@@ -289,7 +291,7 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
     tt << multiply_merge(itag, indent, merged);
   } else {
     if (rank() != 0) {
-      tt << make_get_block(indent, "i0", inlab[rlab]);
+      tt << make_get_block(indent, "i0", inlab[rlab], index);
       tt << make_sort_indices(indent, "i0", merged);
       tt << endl;
 
@@ -346,14 +348,14 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
               for (auto i = index.rbegin(); i != index.rend(); ++i, ++cnt)
                 if ((*i)->identical(*j) || second_partner->identical(*j)) break;
             }
-            if (cnt == index.size()) throw logic_error("should not happen.. RDM odata target, delta case");
+            if (cnt == index.size()) throw logic_error("should not happen.. RDMI0 odata target, delta case");
             done.push_back(cnt);
           } else {
             int cnt = 0;
             for (auto i = index.rbegin(); i != index.rend(); ++i, ++cnt) {
               if ((*i)->identical(*j)) break;
             }
-            if (cnt == index.size()) throw logic_error("should not happen.. RDM odata target, non-delta case");
+            if (cnt == index.size()) throw logic_error("should not happen.. RDMI0 odata target, non-delta case");
             done.push_back(cnt);
           }
         }
@@ -421,7 +423,7 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
             if ((*i)->identical(*j) || second_partner->identical(*j)) break;
         }
         if (cnt == index.size())
-          throw logic_error("should not happen.. RDM::generate");
+          throw logic_error("should not happen for merged.. RDMI0::generate");
         done.push_back(cnt);
       }
       // then fill out others
@@ -465,11 +467,12 @@ void RDMI0::map_in_tensors(std::vector<string> in_tensors, map<string,string>& i
   }
 }
 
-string RDMI0::make_get_block(string indent, string tag, string lbl) {
+
+string RDMI0::make_get_block(string indent, string tag, string lbl, const list<shared_ptr<const Index>>& index) {
   stringstream tt;
   tt << indent << "std::unique_ptr<double[]> " << tag << "data = " << lbl << "->get_block(";
-  for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
-    if (i != index_.rbegin()) tt << ", ";
+  for (auto i = index.rbegin(); i != index.rend(); ++i) {
+    if (i != index.rbegin()) tt << ", ";
     tt << (*i)->str_gen();
   }
   tt << ");" << endl;

@@ -52,7 +52,8 @@ class RDM00 : public RDM {
     void map_in_tensors(std::vector<std::string> in_tensors, std::map<std::string,std::string>& inlab) override;
 
     /// Generate get block - source data to be added to target (move block).
-    std::string make_get_block(std::string indent, std::string tag, std::string lbl) override;
+    std::string make_get_block(std::string indent, std::string tag, std::string lbl);
+
     /// Generate sort_indices which makes array. This version has no addition (or factor multiplication-0111).
     std::string make_sort_indices(std::string indent, std::string tag, const std::list<std::shared_ptr<const Index>>& loop) override;
 

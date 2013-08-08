@@ -65,6 +65,9 @@ class Tensor {
     /// Alias tensor if any.
     std::shared_ptr<Tensor> alias_;
 
+    /// If deriviative tensor has additional index
+    std::list<std::shared_ptr<const Index>> der_;
+
     /// For counting Gamma tensors, used when adding all active tensor, see merge().
     mutable int num_;
 
@@ -77,6 +80,8 @@ class Tensor {
     Tensor(const std::shared_ptr<Operator> op);
     /// Constructor for const active tensor.
     Tensor(const std::shared_ptr<Active> active);
+    /// Constructor for const active tensor and index list. For rdm ci derivatives have target index.
+    Tensor(const std::shared_ptr<Active> active, const std::list<std::shared_ptr<const Index>>& i);
     /// Construct tensor with no arguements.
     Tensor() { }
     ~Tensor() { }
@@ -133,6 +138,8 @@ class Tensor {
          if (alias_) has_ = true; return has_; }
     /// Checks if tensor is gamma.
     bool is_gamma() const;
+    /// if deriviative tensor
+    bool der() { return !der_.empty(); }
 
     /// Generates string for constructor for tensors in Method.h file
     std::string constructor_str(std::string indent) const;
@@ -152,7 +159,7 @@ class Tensor {
     /// Generate for loops.
     std::string generate_loop(std::string&, std::vector<std::string>&) const;
     /// Generate code for Gamma task.
-    std::string generate_gamma(const int, const bool) const;
+    std::string generate_gamma(const int, const bool use_blas, const bool der) const;
     /// Returns Gamma number.
     int num() const { assert(is_gamma()); return num_; }
     /// Set Gamma number.

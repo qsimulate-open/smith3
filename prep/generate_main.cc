@@ -70,8 +70,8 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
        // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") ||  (l == "x" && k == "x" && j == "a" && i == "a")) {  // mp2 test ansatz
        // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") ||  (l == "x" && k == "x" && j == "a" && i == "a") || (l == "c" && k == "c" && j == "x" && i == "a")) {
 // *test single configuration cases*
-          if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
-//        if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
+//        if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
+          if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
 //        if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
 //        if (l == "c" && k == "c" && j == "x" && i == "a") { // ccxa
 //        if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) { // cxxa or xcxa
@@ -143,8 +143,9 @@ int main() {
   cout << eq3->generate();
 
 
-  // CI derivative equations, dedci = dE/dCI  //
-#if 1 // test energy, NB: 1/2 prefactor should equate dedci with energy
+  // cI derivative equations, dedci = dE/dcI  //
+#if 1 // test energy, NB: 1/2 normal prefactor (0.125) should equate dedci with energy, otherwise expect 2E
+#if 1 // test full test E ci derivative = <I|..|0> + <0|..|I>
   shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, H}, 0.125, make_pair(true, false)));
   shared_ptr<Equation> eq4a(new Equation("dedcib", {dum, t_dagger, H}, 0.125, make_pair(false, true)));
   shared_ptr<Equation> eq4b(new Equation("dedcic", {dum, t_dagger, hc}, 0.125, make_pair(true, false)));
@@ -152,6 +153,17 @@ int main() {
   eq4->merge(eq4a);
   eq4->merge(eq4b);
   eq4->merge(eq4c);
+#endif
+#if 0 // test half = <I|..|0>
+  shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, H}, 0.25, make_pair(true, false)));
+  shared_ptr<Equation> eq4b(new Equation("dedcic", {dum, t_dagger, hc}, 0.25, make_pair(true, false)));
+  eq4->merge(eq4b);
+#endif
+#if 0 // test half = <0|..|I> 
+  shared_ptr<Equation> eq4(new Equation("dedcib", {dum, t_dagger, H}, 0.25, make_pair(false, true)));
+  shared_ptr<Equation> eq4c(new Equation("dedcid", {dum, t_dagger, hc}, 0.25, make_pair(false, true)));
+  eq4->merge(eq4c);
+#endif
 #else // test hylleraas equation
   shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, f, t_list}, 0.25));
   shared_ptr<Equation> eq4a(new Equation("dedcib", {dum, t_dagger, t_list}, 0.25, "e0"));
