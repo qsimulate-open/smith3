@@ -46,7 +46,7 @@ static string merge__(vector<string> array) {
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
     if (label == "f1" || label == "v2" || label == "h1") label = "this->" + label + "_";
-    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? "this->deci_" : label);
+    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? "deci" : label);
   }
   return ss.str();
 }
@@ -78,7 +78,7 @@ pair<string, string> Dedci::create_target(const string indent, const int i) cons
   tt << "};" << endl << endl;
 
   ss << "      std::shared_ptr<Queue<T>> dedci_(new Queue<T>());" << endl;
-  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << i << " = {this->deci_};" << endl;
+  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << i << " = {deci};" << endl;
   ss << indent << "std::shared_ptr<Task" << i << "<T>> task" << i << "(new Task" << i << "<T>(tensor" << i << "));" << endl;
   ss << indent << "dedci_->add_task(task" << i << ");" << endl << endl;
 
@@ -87,7 +87,7 @@ pair<string, string> Dedci::create_target(const string indent, const int i) cons
 
 
 shared_ptr<Tensor> Dedci::create_tensor(list<shared_ptr<const Index>> dm) const {
- shared_ptr<Tensor> dedci(new Tensor(1.0, "deci_", dm));
+ shared_ptr<Tensor> dedci(new Tensor(1.0, "deci", dm));
  return dedci;
 }
 

@@ -126,6 +126,7 @@ pair<string, string> Forest::generate_headers() const {
     ss << "    std::shared_ptr<Tensor<T>> r;" << endl;
     ss << "    double e0_;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> dci;" << endl;
+    ss << "    std::shared_ptr<Tensor<T>> deci;" << endl;
     ss << "" << endl;
     ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T>> queue_(new Queue<T>());" << endl;
@@ -227,7 +228,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      this->den1_ = this->h1_->clone();" << endl;
   ss << "      this->den2_ = this->v2_->clone();" << endl;
   ss << "      dci = this->civec_;" << endl;
-  ss << "      this->deci_ = dci->clone();" << endl;
+  ss << "      deci = dci->clone();" << endl;
   ss << "    };" << endl;
   ss << "    ~" << forest_name_ << "() {}; " << endl;
   ss << "" << endl;
@@ -250,9 +251,9 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      std::cout << \" === Calculating CI derivative dE/dcI ===\" << std::endl; " << endl;
   ss << "      while (!dec->done()) " << endl;
   ss << "        dec->next_compute();" << endl;
-  ss << "      this->deci_->print1(\"CI derivative tensor: \", 1.0e-15); " << endl;
+  ss << "      deci->print1(\"CI derivative tensor: \", 1.0e-15); " << endl;
   ss << "      std::cout << std::endl;" << endl;
-  ss << "      std::cout << \"CI derivative * cI  = \" << std::setprecision(10) <<  this->deci_->ddot(dci) << std::endl; " << endl;
+  ss << "      std::cout << \"CI derivative * cI  = \" << std::setprecision(10) <<  deci->ddot(dci) << std::endl; " << endl;
   ss << "      std::cout << std::endl;" << endl;
   ss << "" << endl;
   ss << "      std::cout << \" === Unrelaxed density matrix, dm1, <1|E_pq|1> + 2<0|E_pq|1> ===\" << std::endl; " << endl;
@@ -292,6 +293,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      return n; " << endl;
   ss << "    };  " << endl;
   ss << endl;  // end comparison correction
+  ss << "    std::shared_ptr<const Civec> ci_deriv() const { return deci->civec(this->det_); };" << endl;
   ss << "};" << endl;
   ss << endl;
   ss << "}" << endl;
