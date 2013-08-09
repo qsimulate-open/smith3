@@ -125,6 +125,9 @@ pair<string, string> Forest::generate_headers() const {
     ss << "    std::shared_ptr<Tensor<T>> t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> r;" << endl;
     ss << "    double e0_;" << endl;
+    ss << "    std::shared_ptr<Tensor<T>> den1;" << endl;
+    ss << "    std::shared_ptr<Tensor<T>> den2;" << endl;
+    ss << "    double correct_den1;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> dci;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> deci;" << endl;
     ss << "" << endl;
@@ -225,9 +228,9 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
   ss << "      t2->scale(2.0);" << endl;
   ss << "      r = t2->clone();" << endl;
-  ss << "      this->den1_ = this->h1_->clone();" << endl;
-  ss << "      this->den2_ = this->v2_->clone();" << endl;
-  ss << "      dci = this->civec_;" << endl;
+  ss << "      den1 = this->h1_->clone();" << endl;
+  ss << "      den2 = this->v2_->clone();" << endl;
+  ss << "      dci  = this->civec_;" << endl;
   ss << "      deci = dci->clone();" << endl;
   ss << "    };" << endl;
   ss << "    ~" << forest_name_ << "() {}; " << endl;
@@ -260,18 +263,15 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      while (!dens->done())" << endl;
   ss << "        dens->next_compute();" << endl;
   ss << "#if 0" << endl;
-  ss << "      this->den1_->print2(\"density matrix\", 1.0e-5);" << endl;
+  ss << "      den1->print2(\"density matrix\", 1.0e-5);" << endl;
   ss << "#endif" << endl;
-  ss << "      this->correct_den1_ = correction(correct);" << endl;
-  ss << "      std::cout << \"Unlinked correction term, <1|1>*rdm1 = \" << std::setprecision(10) << this->correct_den1_ << \"*rdm1\" << std::endl;" << endl;
-  ss << "#if 0" << endl;
-  ss << "      this->rdm1_->print2(\"rdm1\", 1.0e-5);" << endl;
-  ss << "#endif" << endl;
+  ss << "      correct_den1 = correction(correct);" << endl;
+  ss << "      std::cout << \"Unlinked correction term, <1|1>*rdm1 = \" << std::setprecision(10) << correct_den1 << \"*rdm1\" << std::endl;" << endl;
   ss << "      std::cout << \" === Unrelaxed density matrix, dm2, <0|E_pqrs|1>  ===\" << std::endl; " << endl;
   ss << "      while (!dens2->done())" << endl;
   ss << "        dens2->next_compute();" << endl;
   ss << "#if 0" << endl;
-  ss << "      this->den2_->print4(\"density matrix\", 1.0e-5);" << endl;
+  ss << "      den2->print4(\"density matrix\", 1.0e-5);" << endl;
   ss << "#endif" << endl;
   ss << "    };" << endl;
   ss << "" << endl;
@@ -282,7 +282,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "        en += c->energy();" << endl;  // prefactors included in main.cc
   ss << "      }   " << endl;
   ss << "      return en; " << endl;
-  ss << "    };  " << endl;
+  ss << "    }  " << endl;
   ss << endl;
   ss << "    double correction(std::shared_ptr<Queue<T>> correct) {" << endl;
   ss << "      double n = 0.0;" << endl;
@@ -291,9 +291,14 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "        n += c->correction();" << endl;
   ss << "      }   " << endl;
   ss << "      return n; " << endl;
-  ss << "    };  " << endl;
+  ss << "    }  " << endl;
   ss << endl;  // end comparison correction
-  ss << "    std::shared_ptr<const Civec> ci_deriv() const { return deci->civec(this->det_); };" << endl;
+  ss << "    std::shared_ptr<const Matrix> rdm1() const { return den1->matrix(); }" << endl;
+  ss << endl;
+  ss << "    double rdm1_correction() const { return correct_den1; }" << endl;
+  ss << endl;
+  ss << "    std::shared_ptr<const Civec> ci_deriv() const { return deci->civec(this->det_); }" << endl;
+  ss << endl;
   ss << "};" << endl;
   ss << endl;
   ss << "}" << endl;
