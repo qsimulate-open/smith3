@@ -279,7 +279,7 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
   // make map of in_tensors
   map<string, string> inlab;
   map_in_tensors(in_tensors, inlab);
-  
+
   list<shared_ptr<const Index>>  tindex;
   for (auto& i : merged) tindex.push_back(i);
   for (auto& i : index ) tindex.push_back(i);
@@ -597,7 +597,7 @@ string RDMI0::make_merged_loops(string& indent, const string itag, vector<string
     for (auto& j : index_) {
       if (i == j) found = true;
     }
-    if (!found) loop.push_back(i); 
+    if (!found) loop.push_back(i);
   }
 
   // generate loops
@@ -618,7 +618,7 @@ string RDMI0::multiply_merge(const string itag, string& indent, const list<share
     tt << "  += " << setprecision(1) << fixed << factor();
     tt << fdata_mult(itag, merged);
   } else {
-    
+
     list<shared_ptr<const Index>>  tindex;
     for (auto& i : merged) tindex.push_back(i);
     for (auto& i : index ) tindex.push_back(i);
@@ -666,7 +666,7 @@ string RDMI0::make_odata(const string itag, string& indent, const list<shared_pt
     for (auto ri = index.rbegin(); ri != index.rend(); ++ri) {
       int inum = (*ri)->num();
       for (auto& d : delta_)
-        if (d.first->num() == inum) inum = d.second->num();    // todo check delta cases, could be dangerous if comparing to ci number 
+        if (d.first->num() == inum) inum = d.second->num();    // todo check delta cases, could be dangerous if comparing to ci number
       const string tmp = "+" + (*ri)->str_gen() + ".size()*(";
       tt << itag <<  (*ri)->str_gen() << (ri != --index.rend() ? tmp : "");
     }

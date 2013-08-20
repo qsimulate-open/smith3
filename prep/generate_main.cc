@@ -136,7 +136,7 @@ int main() {
   cout << eq0->generate();
 
   // energy equations //
-#if 1 // second order energy correction 
+#if 1 // second order energy correction
   shared_ptr<Equation> eq3(new Equation("ea", {dum, t_dagger, H}, 0.25));
   shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, hc}, 0.25));
   eq3->merge(eq3a);
@@ -150,7 +150,7 @@ int main() {
   eq3->merge(eq3b);
   eq3->merge(eq3c);
 #endif
-#if 0 // test eqn <0|T^+fT|0> -e0<0|T^+T|0> + 2*1/4<0|T^+V2|0> 
+#if 0 // test eqn <0|T^+fT|0> -e0<0|T^+T|0> + 2*1/4<0|T^+V2|0>
   shared_ptr<Equation> eq3(new Equation("ea", {dum, t_dagger, f, t_list}, 0.25));
   shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, H}, 0.50));
   shared_ptr<Equation> eq3b(new Equation("ec", {dum, t_dagger, t_list}, 0.25, "e0"));
@@ -165,7 +165,7 @@ int main() {
   // test energy, NB: for testing use 1/2 correct prefactor (scale). This should equate dedci with energy, otherwise expect 2E.
   double scale = 0.5;
 #if 0 // test hylleraas eqn:   d/dc( <0|T^+fT|0> -e0<0|T^+T|0> +2<0|T^+V2|0> + 2<0|T^+V2|0>) =>
-      //  =   1/2(1/4<I|T^+fT|0> + 1/4<0|T^+fT|I>) - 1/2*(e0/4<0|T^+T|0> + e0/4<0|T^+T|0>) + 2*1/2 (1/4<I|T^+V|0> + 1/4<0|T^+V|I>) + 2*1/2 (1/4<I|T^+h1|0> + 1/4<0|T^+h1|I>) 
+      //  =   1/2(1/4<I|T^+fT|0> + 1/4<0|T^+fT|I>) - 1/2*(e0/4<0|T^+T|0> + e0/4<0|T^+T|0>) + 2*1/2 (1/4<I|T^+V|0> + 1/4<0|T^+V|I>) + 2*1/2 (1/4<I|T^+h1|0> + 1/4<0|T^+h1|I>)
   shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, f, t_list}, scale*0.25, make_pair(true, false)));
   shared_ptr<Equation> eq4a(new Equation("dedcib", {dum, t_dagger, f, t_list}, scale*0.25, make_pair(false, true)));
   shared_ptr<Equation> eq4b(new Equation("dedcic", {dum, t_dagger, t_list}, scale*0.25, "e0", make_pair(true, false)));
@@ -183,7 +183,7 @@ int main() {
   eq4->merge(eq4g);
 #endif
 #if 1 // test eqn:   d/dc( <0|T^+fT|0> -e0<0|T^+T|0> +2<0|T^+V2|0>) =>
-      //  =  1/2(1/4<I|T^+fT|0> + 1/4<0|T^+fT|I>) - 1/2*(e0/4<0|T^+T|0> + e0/4<0|T^+T|0>) + 2*1/2 (1/4<I|T^+V2|0> + 1/4<0|T^+V2|I>) 
+      //  =  1/2(1/4<I|T^+fT|0> + 1/4<0|T^+fT|I>) - 1/2*(e0/4<0|T^+T|0> + e0/4<0|T^+T|0>) + 2*1/2 (1/4<I|T^+V2|0> + 1/4<0|T^+V2|I>)
   shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, f, t_list}, scale*0.25, make_pair(true, false)));
   shared_ptr<Equation> eq4a(new Equation("dedcib", {dum, t_dagger, f, t_list}, scale*0.25, make_pair(false, true)));
   shared_ptr<Equation> eq4b(new Equation("dedcic", {dum, t_dagger, t_list}, scale*0.25, "e0", make_pair(true, false)));
@@ -210,7 +210,7 @@ int main() {
   shared_ptr<Equation> eq4b(new Equation("dedcic", {dum, t_dagger, hc}, 0.25, make_pair(true, false)));
   eq4->merge(eq4b);
 #endif
-#if 0 // test half = <0|T^+(V2+h1)|I> 
+#if 0 // test half = <0|T^+(V2+h1)|I>
   shared_ptr<Equation> eq4(new Equation("dedcib", {dum, t_dagger, H}, 0.25, make_pair(false, true)));
   shared_ptr<Equation> eq4c(new Equation("dedcid", {dum, t_dagger, hc}, 0.25, make_pair(false, true)));
   eq4->merge(eq4c);

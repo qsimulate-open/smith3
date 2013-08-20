@@ -538,7 +538,7 @@ tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_task_
                 list<shared_ptr<const Index>> di = j->loop_indices();
                 tt << generate_compute_header(num_, di, source_tensors, true);
               } else {
-                tt << generate_compute_header(num_, ti, source_tensors);  
+                tt << generate_compute_header(num_, ti, source_tensors);
               }
             }
 

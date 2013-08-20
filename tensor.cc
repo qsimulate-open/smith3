@@ -67,16 +67,16 @@ Tensor::Tensor(const shared_ptr<Active> activ, const list<shared_ptr<const Index
   stringstream ss; ss << "Gamma" << ig; ++ig;
   label_ = ss.str();
   // op
-#if 1 
+#if 1
   index_ = activ->index();
   // add extra index, eg ci0
   for (auto& i : in) index_.push_back(i);
-#else // reverse indices 
+#else // reverse indices
   list<shared_ptr<const Index>> ind = activ->index();
   ind.reverse();
   for (auto& i : in) ind.push_back(i);
   ind.reverse();
-  index_ = ind; 
+  index_ = ind;
 #endif
   active_ = activ;
 }
@@ -506,7 +506,7 @@ string Tensor::generate_gamma(const int ic, const bool use_blas, const bool der)
   // determine number of tensors
   vector<int> rdmn = active()->required_rdm();
   int ninptensors;
-  if (merged_) { 
+  if (merged_) {
     ninptensors = rdmn.size()+1;
   } else {
     ninptensors = rdmn.size();
