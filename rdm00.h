@@ -39,7 +39,17 @@ namespace smith {
 class RDM00 : public RDM {
   protected:
 
+    /// Generate get block - source data to be added to target (move block).
+    std::string make_get_block(std::string indent, std::string tag, std::string lbl);
+    /// Generates RDM and merged (fock) tensor multipication.
+    std::string multiply_merge(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<const Index>>& merged);
+    /// Generate sort_indices which makes array. This version has no addition (or factor multiplication-0111).
+    std::string make_sort_indices(std::string indent, std::string tag, const std::list<std::shared_ptr<const Index>>& loop);
+    /// If delta case, also makes index loops then checks to see if merged-or-delta indices are in loops..
+    std::string make_merged_loops(std::string& indent, const std::string tag, std::vector<std::string>& close);
 
+
+    //  virtual
     /// Generate entire task code for Gamma RDM summation.
     std::string generate_not_merged(std::string indent, const std::string tlab, const std::list<std::shared_ptr<const Index>>& loop, std::vector<std::string> in_tensors) override;
     /// Generates entire task code for Gamma RDM summation with merged object (additional tensor, here fock tensor) multiplication.
@@ -47,26 +57,14 @@ class RDM00 : public RDM {
 
     /// Makes if statement in delta cases ie index equivalency check line.
     std::string make_delta_if(std::string& indent, std::vector<std::string>& close) override;
-
     /// Replaces tensor labels to more general labels in(x), where x is a counter for in tensors. RDM tensors numbered before merged (fock) tensor. Eg, rdm1 is mapped to in(0), rdm2 -> in(1), and in merged case with max rdm2, f1 -> in(2).
     void map_in_tensors(std::vector<std::string> in_tensors, std::map<std::string,std::string>& inlab) override;
-
-    /// Generate get block - source data to be added to target (move block).
-    std::string make_get_block(std::string indent, std::string tag, std::string lbl);
-
-    /// Generate sort_indices which makes array. This version has no addition (or factor multiplication-0111).
-    std::string make_sort_indices(std::string indent, std::string tag, const std::list<std::shared_ptr<const Index>>& loop) override;
-
-    /// If delta case, also makes index loops then checks to see if merged-or-delta indices are in loops..
-    std::string make_merged_loops(std::string& indent, const std::string tag, std::vector<std::string>& close) override;
     /// Loops over delta indices in Gamma summation.
     std::string make_sort_loops(const std::string itag, std::string& indent, const std::list<std::shared_ptr<const Index>>& index, std::vector<std::string>& close) override;
 
     // for task summation line
     /// Generates odata (Gamma) part of for summation ie LHS in equations gamma += rdm or gamma += rdm * f1
     std::string make_odata(const std::string itag, std::string& indent, const std::list<std::shared_ptr<const Index>>& index) override;
-    /// Generates RDM and merged (fock) tensor multipication.
-    std::string multiply_merge(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<const Index>>& merged) override;
     /// Adds merged (fock) tensor with indices, used by muliply_merge member.
     std::string fdata_mult(const std::string itag, const std::list<std::shared_ptr<const Index>>& merged) override;
 

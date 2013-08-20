@@ -50,7 +50,6 @@ class RDM {
     /// Inherits ket from diagram, done in active ctor.
     bool ket_;
 
-
     /// Generate entire task code for Gamma RDM summation.
     virtual std::string generate_not_merged(std::string indent, const std::string tlab, const std::list<std::shared_ptr<const Index>>& loop, std::vector<std::string> in_tensors) = 0;
     /// Generates entire task code for Gamma RDM summation with merged object (additional tensor, here fock tensor) multiplication.
@@ -62,19 +61,12 @@ class RDM {
     /// Replaces tensor labels to more general labels in(x), where x is a counter for in tensors. RDM tensors numbered before merged (fock) tensor. Eg, rdm1 is mapped to in(0), rdm2 -> in(1), and in merged case with max rdm2, f1 -> in(2).
     virtual void map_in_tensors(std::vector<std::string> in_tensors, std::map<std::string,std::string>& inlab) = 0;
 
-    /// Generate sort_indices which makes array. This version has no addition (or factor multiplication-0111).
-    virtual std::string make_sort_indices(std::string indent, std::string tag, const std::list<std::shared_ptr<const Index>>& loop) = 0;
-
-    /// If delta case, also makes index loops then checks to see if merged-or-delta indices are in loops..
-    virtual std::string make_merged_loops(std::string& indent, const std::string tag, std::vector<std::string>& close) = 0;
     /// Loops over delta indices in Gamma summation.
     virtual std::string make_sort_loops(const std::string itag, std::string& indent, const std::list<std::shared_ptr<const Index>>& index, std::vector<std::string>& close) = 0;
 
     // for task summation line
     /// Generates odata (Gamma) part of for summation ie LHS in equations gamma += rdm or gamma += rdm * f1
     virtual std::string make_odata(const std::string itag, std::string& indent, const std::list<std::shared_ptr<const Index>>& index) = 0;
-    /// Generates RDM and merged (fock) tensor multipication.
-    virtual std::string multiply_merge(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<const Index>>& merged) = 0;
     /// Adds merged (fock) tensor with indices, used by muliply_merge member.
     virtual std::string fdata_mult(const std::string itag, const std::list<std::shared_ptr<const Index>>& merged) = 0;
 

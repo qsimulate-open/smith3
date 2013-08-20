@@ -361,9 +361,6 @@ string Tree::generate_compute_operators(const string indent, const shared_ptr<Te
   int uniq_cnt = 0;
   for (auto& i : op) {
     string label = label__(i->label());
-    // ignore gamma or intermediate tensors TODO find better alternative to this code
-    if (label.find("Gamma") != string::npos) continue;
-    if (label.find("I") != string::npos) continue;
     // if we already have the label in the list
     if (find(tensor_labels.begin(), tensor_labels.end(), label) != tensor_labels.end()) {
       continue;
