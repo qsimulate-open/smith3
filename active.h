@@ -52,8 +52,14 @@ class Active {
     /// This function calls RDM::reduce_one and RDM::reduce_done functions and does sort to apply Wick's theorem to this RDM. Use anticommutator property to rearrange indices
     void reduce(std::shared_ptr<RDM> in);
 
+    /// if have bra
+    bool bra_;
+    /// if have ket
+    bool ket_;
+
     /// TODO double check if needed.
     mutable int count__;
+
 
   public:
     /// Make active object from const list index and braket.
@@ -73,7 +79,7 @@ class Active {
 
     /// This generate does get_block, sort_indices, and the merged (fock) multiplication for Gamma summation.
     std::string generate(const std::string indent, const std::string tag, const std::list<std::shared_ptr<const Index>> index, const std::list<std::shared_ptr<const Index>> merged = std::list<std::shared_ptr<const Index>>(), const std::string mlab = "", const bool use_blas = false) const;
-    /// Returns vector of int cooresponding to RDM numbers in Gamma. RDM0 is not included.
+    /// Returns vector of int cooresponding to RDM numbers in Gamma. RDM0 is not included for non derivative trees.
     std::vector<int> required_rdm() const;
 
 };

@@ -142,6 +142,26 @@ string RDMI0::generate_not_merged(string indent, const string tag, const list<sh
   const string itag = "i";
 
   list<shared_ptr<const Index>> dindex = index;
+  list<shared_ptr<const Index>> ci_index;
+  for (auto& i : index) if (i->label() == "ci") ci_index.push_back(i);
+
+  list<shared_ptr<const Index>> delta_index ;
+  // first delta loops for blocks
+  for (auto d = delta_.begin(); d != delta_.end(); ++d) {
+    delta_index.push_back(d->first);
+    delta_index.push_back(d->second);
+  }
+
+  // get rdm indices
+  list<shared_ptr<const Index>>  rindex;
+  for (auto& i : index_) {
+    bool found = false;
+    for (auto& j: delta_index) {
+      if ((i)->identical(j)) found = true;
+    }
+    if (!found) rindex.push_back(i);
+  }
+  for (auto& i : index) if (i->label() == "ci") rindex.push_back(i);
 
   // now do the sort
   vector<string> close;
@@ -150,13 +170,14 @@ string RDMI0::generate_not_merged(string indent, const string tag, const list<sh
   if (!delta_.empty()) {
 #define debug_rdm_tasks
 #ifdef debug_rdm_tasks
-    if (rank() == 0) tt << indent <<  "// rdm0 non-merged case" << endl;
+    if (rank() == 0) tt << indent <<  "// rdm0 non-merged ci derivative case" << endl;
 #endif
 
     // first delta if statement
     tt << make_delta_if(indent, close);
 
-    if (!dindex.empty() && rank() != 0) {
+    // rdm0 contributes for derivative so can have rank 0
+    if (!dindex.empty()) {
       stringstream zz;
       zz << "rdm" << rank();
       string rlab = zz.str();
@@ -164,8 +185,8 @@ string RDMI0::generate_not_merged(string indent, const string tag, const list<sh
       // make map of in_tensors
       map<string, string> inlab;
       map_in_tensors(in_tensors, inlab);
-
-      tt << make_get_block(indent, "i0", inlab[rlab], index);
+      // only use ci index for rdm0
+      tt << make_get_block(indent, "i0", inlab[rlab], (rank() == 0 ? ci_index : rindex));
     }
 
     // loops over delta indices
@@ -178,14 +199,28 @@ string RDMI0::generate_not_merged(string indent, const string tag, const list<sh
     if (dindex.empty()) {
       tt << "  += " << setprecision(1) << fixed << factor() << ";" << endl;
     } else {
-      tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * i0data[";
-      for (auto riter = dindex.rbegin(); riter != dindex.rend(); ++riter) {
-        const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
-        tt << itag << (*riter)->num() << (riter != --dindex.rend() ? tmp : "");             // todo check, num() could cause problems
+      if (rank() == 0) {
+        tt << "  += (" << setprecision(1) << fixed << factor() << ") * i0data[";
+        for (auto riter = ci_index.rbegin(); riter != ci_index.rend(); ++riter) {
+          const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
+          tt << itag << (*riter)->str_gen() << (riter != --ci_index.rend() ? tmp : "");
+        }
+        for (auto riter = ++ci_index.begin(); riter != ci_index.end(); ++riter)
+          tt << ")";
+        tt << "];" << endl;
+      } else {
+        tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * i0data[";
+        for (auto riter = rindex.rbegin(); riter != rindex.rend(); ++riter) {
+          int inum = (*riter)->num();
+          for (auto& d : delta_)
+            if ((*riter)->label() != "ci" && d.first->num() == inum) inum = d.second->num();
+          const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
+          tt << itag << (*riter)->label() << inum << (riter != --rindex.rend() ? tmp : "");
+        }
+        for (auto riter = ++rindex.begin(); riter != rindex.end(); ++riter)
+          tt << ")";
+        tt << "];" << endl;
       }
-      for (auto riter = ++dindex.begin(); riter != dindex.end(); ++riter)
-        tt << ")";
-      tt << "];" << endl;
     }
 
     // close loops
@@ -200,7 +235,8 @@ string RDMI0::generate_not_merged(string indent, const string tag, const list<sh
     map<string, string> inlab;
     map_in_tensors(in_tensors, inlab);
 
-    if (rank() != 0) {
+    // rank can be zero in derivative case
+    {
       stringstream zz;
       zz << "rdm" << rank();
       string rlab = zz.str();
@@ -254,15 +290,18 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
   vector<string> close;
 
 #if 1
-  if (rank() == 0) tt << indent << "// rdm0 merged case" << endl;
+  if (rank() == 0) tt << indent << "// rdm0 merged ci derivative case" << endl;
 #endif
 
   list<shared_ptr<const Index>> dindex = index;
 
+  list<shared_ptr<const Index>> delta_index ;
   // first delta loops for blocks
   if (!delta_.empty()) {
     tt << indent << "if (";
     for (auto d = delta_.begin(); d != delta_.end(); ++d) {
+      delta_index.push_back(d->first);
+      delta_index.push_back(d->second);
       tt << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? " && " : "");
     }
     tt << ") {" << endl;
@@ -280,20 +319,31 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
   map<string, string> inlab;
   map_in_tensors(in_tensors, inlab);
 
+  // total index list
   list<shared_ptr<const Index>>  tindex;
   for (auto& i : merged) tindex.push_back(i);
-  for (auto& i : index ) tindex.push_back(i);
+  for (auto& i : index)  tindex.push_back(i);
 
-  if (!use_blas) {
-    if (rank() != 0) {
-      tt << make_get_block(indent, "i0", inlab[rlab], tindex);
+  // get rdm indices
+  list<shared_ptr<const Index>>  rindex;
+  for (auto& i : index_) {
+    bool found = false;
+    for (auto& j: delta_index) {
+      if ((i)->identical(j)) found = true;
     }
+    if (!found) rindex.push_back(i);
+  }
+  for (auto& i : index) if (i->label() == "ci") rindex.push_back(i);
+
+  // rank can be zero for derivative
+  if (!use_blas) {
+    tt << make_get_block(indent, "i0", inlab[rlab], rindex);
     // loops for index and merged
     tt << make_merged_loops(indent, itag, close, dindex);
     // make odata part of summation for target
     tt << make_odata(itag, indent, index);
     // mulitiply data and merge on the fly
-    tt << multiply_merge(itag, indent, merged, dindex);
+    tt << multiply_merge(itag, indent, merged, rindex);
   } else {
     throw logic_error("RDMI0::multiply merge, this code needs to be checked for rdm ci derivatives");
     if (rank() != 0) {
@@ -581,7 +631,7 @@ string RDMI0::make_merged_loops(string& indent, const string itag, vector<string
     bool found = false;
     for (auto& j : delta_) {
       // second index in deltas will not be looped
-      if (j.first->num() == i->num() || j.second->num() == i->num()) {      // todo check num with delta cases
+      if (j.first->num() == i->num() || j.second->num() == i->num()) {
         found = true;
         break;
       }
@@ -592,13 +642,7 @@ string RDMI0::make_merged_loops(string& indent, const string itag, vector<string
     loop.push_back(j.second);
 
   // add ci index
-  for(auto& i : index) {
-    bool found = false;
-    for (auto& j : index_) {
-      if (i == j) found = true;
-    }
-    if (!found) loop.push_back(i);
-  }
+  for (auto& i : index) if (i->label() == "ci") loop.push_back(i);
 
   // generate loops
   for (auto& i : loop) {
@@ -614,43 +658,58 @@ string RDMI0::make_merged_loops(string& indent, const string itag, vector<string
 
 string RDMI0::multiply_merge(const string itag, string& indent, const list<shared_ptr<const Index>>& merged, const list<shared_ptr<const Index>>& index) {
   stringstream tt;
+  list<shared_ptr<const Index>>  ci_index;
+  for (auto& i : index) if (i->label() == "ci") ci_index.push_back(i);
+
   if (rank() == 0) {
     tt << "  += " << setprecision(1) << fixed << factor();
-    tt << fdata_mult(itag, merged);
+    tt << fdata_mult(itag, merged, ci_index);
   } else {
 
-    list<shared_ptr<const Index>>  tindex;
-    for (auto& i : merged) tindex.push_back(i);
-    for (auto& i : index ) tindex.push_back(i);
     // make data part of summation
     tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * i0data[";
-    for (auto riter = tindex.rbegin(); riter != tindex.rend(); ++riter) {
+    for (auto riter = index.rbegin(); riter != index.rend(); ++riter) {
+      int inum = (*riter)->num();
+      for (auto& d : delta_)
+        if ((*riter)->label() != "ci" && d.first->num() == inum) inum = d.second->num();
       const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
-      tt << itag << (*riter)->str_gen() << (riter != --tindex.rend() ? tmp : "");
+      tt << itag <<  (*riter)->label() << inum << (riter != --index.rend() ? tmp : "");
     }
-    for (auto riter = ++tindex.begin(); riter != tindex.end(); ++riter)
+    for (auto riter = ++index.begin(); riter != index.end(); ++riter)
       tt << ")";
     tt << "]";
     // multiply merge
-    tt << fdata_mult(itag, merged);
+    tt << fdata_mult(itag, merged, ci_index);
   }
   return tt.str();
 }
 
 
-string RDMI0::fdata_mult(const string itag, const list<shared_ptr<const Index>>& merged) {
+string RDMI0::fdata_mult(const string itag, const list<shared_ptr<const Index>>& merged, const list<shared_ptr<const Index>>& ci_index) {
   stringstream tt;
+
   tt << " * " << "fdata" << "[";
   for (auto mi = merged.rbegin(); mi != merged.rend()  ; ++mi) {
     int inum = (*mi)->num();
-    for (auto& i : delta_)
-      if (i.first->num() == inum) inum = i.second->num();      // this num should not conflict
+    for (auto& i : delta_) {
+      if (i.first->num() == inum) inum = i.second->num();  // this num should not conflict with ci derivative index
+    }
     const string tmp = "+" + (*mi)->str_gen() + ".size()*(";
-    tt << itag << (*mi)->str_gen() << (mi != --merged.rend() ? tmp : "");
+    tt << itag << (*mi)->label() << inum << (mi != --merged.rend() ? tmp : "");
   }
   for (auto mi = ++merged.begin(); mi != merged.end()  ; ++mi)
     tt << ")";
-  tt << "];" << endl;
+  tt << "]";
+  if (rank() != 0) {
+    tt << ";" << endl;
+  } else {
+    tt << " * i0data[";
+    for (auto ci = ci_index.rbegin(); ci != ci_index.rend()  ; ++ci) {
+      const string tmp = "+" + (*ci)->str_gen() + ".size()*(";
+      tt << itag << (*ci)->str_gen() << (ci != --ci_index.rend() ? tmp : "");
+    }
+    tt << "];" << endl;
+  }
 
   return tt.str();
 }
@@ -666,9 +725,9 @@ string RDMI0::make_odata(const string itag, string& indent, const list<shared_pt
     for (auto ri = index.rbegin(); ri != index.rend(); ++ri) {
       int inum = (*ri)->num();
       for (auto& d : delta_)
-        if (d.first->num() == inum) inum = d.second->num();    // todo check delta cases, could be dangerous if comparing to ci number
+        if ((*ri)->label() != "ci" && d.first->num() == inum) inum = d.second->num();
       const string tmp = "+" + (*ri)->str_gen() + ".size()*(";
-      tt << itag <<  (*ri)->str_gen() << (ri != --index.rend() ? tmp : "");
+      tt << itag <<  (*ri)->label() << inum << (ri != --index.rend() ? tmp : "");
     }
   }
   for (auto ri = ++index.begin(); ri != index.end(); ++ri)
@@ -687,9 +746,10 @@ string RDMI0::make_sort_loops(const string itag, string& indent, const list<shar
     const int inum = i->num();
     bool found = false;
     for (auto& d : delta_)
-      if (d.first->num() == inum) found = true;
+      // do not want to compare number of ci index
+      if (d.first->num() == inum && i->label() != "ci") found = true;
     if (!found) {
-      tt << indent << "for (int " << itag << inum << " = 0; " << itag << inum << " != " << i->str_gen() << ".size(); ++" << itag << inum << ") {" << endl;      // todo check this, shouldn't inum cause problems?
+      tt << indent << "for (int " << itag << i->str_gen() << " = 0; " << itag << i->str_gen() << " != " << i->str_gen() << ".size(); ++" << itag << i->str_gen() << ") {" << endl;
       close.push_back(indent + "}");
       indent += "  ";
     }

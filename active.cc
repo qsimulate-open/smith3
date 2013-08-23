@@ -35,7 +35,7 @@ using namespace smith;
 
 
 
-Active::Active(const list<shared_ptr<const Index>>& in, pair<bool,bool> braket) {
+Active::Active(const list<shared_ptr<const Index>>& in, pair<bool,bool> braket) : bra_(braket.first), ket_(braket.second) {
   shared_ptr<RDM> tmp;
   if (!braket.first && !braket.second) {
     tmp = make_shared<RDM00>(in, map<shared_ptr<const Index>, shared_ptr<const Index>>(), braket, 1.0);
@@ -137,10 +137,18 @@ string Active::generate(const string indent, const string tag, const list<shared
 
 vector<int> Active::required_rdm() const {
   vector<int> out;
-  for (auto& i : rdm_) {
-    // rdm0 does not need to be included in header
-    if (i->rank() > 0 && find(out.begin(), out.end(), i->rank()) == out.end())
-      out.push_back(i->rank());
+  if (bra_ || ket_) {
+    for (auto& i : rdm_) {
+      // rdm0 needs to be included as an additional tensor is now needed, <I|0>
+      if (find(out.begin(), out.end(), i->rank()) == out.end())
+        out.push_back(i->rank());
+    }
+  } else {
+    for (auto& i : rdm_) {
+      // rdm0 does not need to be included in header
+      if (i->rank() > 0 && find(out.begin(), out.end(), i->rank()) == out.end())
+        out.push_back(i->rank());
+    }
   }
   sort(out.begin(), out.end());
   return out;

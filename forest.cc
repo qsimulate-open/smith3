@@ -128,7 +128,6 @@ pair<string, string> Forest::generate_headers() const {
     ss << "    std::shared_ptr<Tensor<T>> den1;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> den2;" << endl;
     ss << "    double correct_den1;" << endl;
-    ss << "    std::shared_ptr<Tensor<T>> dci;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> deci;" << endl;
     ss << "" << endl;
     ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
@@ -230,8 +229,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      r = t2->clone();" << endl;
   ss << "      den1 = this->h1_->clone();" << endl;
   ss << "      den2 = this->v2_->clone();" << endl;
-  ss << "      dci  = this->civec_;" << endl;
-  ss << "      deci = dci->clone();" << endl;
+  ss << "      deci = this->rdm0deriv_->clone();" << endl;
   ss << "    };" << endl;
   ss << "    ~" << forest_name_ << "() {}; " << endl;
   ss << "" << endl;
@@ -256,7 +254,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "        dec->next_compute();" << endl;
   ss << "      deci->print1(\"CI derivative tensor: \", 1.0e-15); " << endl;
   ss << "      std::cout << std::endl;" << endl;
-  ss << "      std::cout << \"CI derivative * cI  = \" << std::setprecision(10) <<  deci->dot_product(dci) << std::endl; " << endl;
+  ss << "      std::cout << \"CI derivative * cI  = \" << std::setprecision(10) <<  deci->dot_product(this->rdm0deriv_) << std::endl; " << endl;
   ss << "      std::cout << std::endl;" << endl;
   ss << "" << endl;
   ss << "      std::cout << \" === Unrelaxed density matrix, dm1, <1|E_pq|1> + 2<0|E_pq|1> ===\" << std::endl; " << endl;

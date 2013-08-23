@@ -67,8 +67,6 @@ class RDM {
     // for task summation line
     /// Generates odata (Gamma) part of for summation ie LHS in equations gamma += rdm or gamma += rdm * f1
     virtual std::string make_odata(const std::string itag, std::string& indent, const std::list<std::shared_ptr<const Index>>& index) = 0;
-    /// Adds merged (fock) tensor with indices, used by muliply_merge member.
-    virtual std::string fdata_mult(const std::string itag, const std::list<std::shared_ptr<const Index>>& merged) = 0;
 
     /// Do blas multiplication of Gamma and fock tensors...not implemented yet for subtask code!
     virtual std::string make_blas_multiply(std::string indent, const std::list<std::shared_ptr<const Index>>& loop, const std::list<std::shared_ptr<const Index>>& index) = 0;
