@@ -71,6 +71,9 @@ class Tensor {
     /// For counting Gamma tensors, used when adding all active tensor, see merge().
     mutable int num_;
 
+    // For tensor reindexing in case of ket.
+    std::map<int, int> num_map_;
+
 
   public:
     /// Constructor for intermediate tensors, and also ci tensor. todo what about scalar--needed for intermediates or ci tensor? check!
@@ -81,7 +84,9 @@ class Tensor {
     /// Constructor for const active tensor.
     Tensor(const std::shared_ptr<Active> active);
     /// Constructor for const active tensor and index list. For rdm ci derivatives have target index.
-    Tensor(const std::shared_ptr<Active> active, const std::list<std::shared_ptr<const Index>>& i);
+    Tensor(const std::shared_ptr<Active> active, const std::list<std::shared_ptr<const Index>>& i) : Tensor(active, i, std::map<int, int>()) { }
+    /// Constructor for const active tensor and index list. For rdm ci derivatives have target index and kets.
+    Tensor(const std::shared_ptr<Active> active, const std::list<std::shared_ptr<const Index>>& i, std::map<int, int> m);
     /// Construct tensor with no arguements.
     Tensor() { }
     ~Tensor() { }
@@ -140,6 +145,9 @@ class Tensor {
     bool is_gamma() const;
     /// if deriviative tensor
     bool der() { return !der_.empty(); }
+
+    /// Return number map for tensor. Originally generated when rdm is reindexed in active.
+    std::map<int, int> num_map() const { return num_map_; }
 
     /// Generates string for constructor for tensors in Method.h file
     std::string constructor_str(std::string indent) const;

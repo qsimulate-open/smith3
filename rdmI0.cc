@@ -66,6 +66,17 @@ shared_ptr<RDM> RDMI0::copy() const {
   return out;
 }
 
+
+list<shared_ptr<const Index>> RDMI0::conjugate() {
+  list<shared_ptr<const Index>> out;
+  for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
+    shared_ptr<const Index> tmp = make_shared<const Index>((**i),(*i)->dagger());
+    out.push_back(tmp);
+  }
+  return out;
+}
+
+
 //
 // An application of "Wick's theorem"
 // This function is controlled by const Index::num_. Not a great code, it could have been driven by pointers... lazy me.

@@ -52,6 +52,27 @@ Active::Active(const list<shared_ptr<const Index>>& in, pair<bool,bool> braket) 
 
 
 void Active::reduce(shared_ptr<RDM> in) {
+
+  if (ket_) {  // in this case we should take conjugate and reindex
+    list<shared_ptr<const Index>> cindex = in->conjugate();
+    // map
+    shared_ptr<RDM> stmp = in->copy();
+    list<shared_ptr<const Index>> sindex = stmp->index();
+    map<int, int> num_map;
+    list<shared_ptr<const Index>> rev_ind(sindex.rbegin(), sindex.rend());
+    for (auto i = sindex.begin(), j = rev_ind.begin(); i != sindex.end(); ++i, ++j) num_map[(*i)->num()] = (*j)->num();
+    num_map_ = num_map;
+    // reindex
+    list<shared_ptr<const Index>> new_index;
+    for (auto i : cindex) {
+      shared_ptr<const Index> tmp = make_shared<const Index>((*i), num_map[i->num()]);
+      new_index.push_back(tmp);
+    }
+    shared_ptr<RDM> tmp = make_shared<RDMI0>(*in, new_index);
+    in = tmp;
+  }
+
+
   list<int> d;
   list<pair<shared_ptr<RDM>, list<int>> > buf(1, make_pair(in,d));
 
@@ -61,7 +82,6 @@ void Active::reduce(shared_ptr<RDM> in) {
     for (auto& it : buf) {
       shared_ptr<RDM> tmp = it.first;
       list<int> done = it.second;
-
       // taking delta
       list<shared_ptr<RDM>> out = tmp->reduce_one(done);
       // this is also needed!

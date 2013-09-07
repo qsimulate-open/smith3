@@ -276,7 +276,7 @@ bool Diagram::consistent_indices() const {
 void Diagram::active() {
   // const Index should be updated.
   refresh_indices();
-  list<shared_ptr<const Index>>  ac = active_indices();
+  list<shared_ptr<const Index>> ac = active_indices();
   if (ac.size()) {
     // if ket has been absorbed the indices need to be reversed
     if (absorbed_) ac.reverse();

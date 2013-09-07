@@ -61,25 +61,18 @@ Tensor::Tensor(const shared_ptr<Active> activ) : factor_(1.0), scalar_("") {
 }
 
 
-Tensor::Tensor(const shared_ptr<Active> activ, const list<shared_ptr<const Index>>& in) : factor_(1.0), scalar_(""), der_(in) {
+Tensor::Tensor(const shared_ptr<Active> activ, const list<shared_ptr<const Index>>& in, map<int, int> m) : factor_(1.0), scalar_(""), der_(in), num_map_(m) {
   // scalar quantity..defined on bagel side
   // label
   stringstream ss; ss << "Gamma" << ig; ++ig;
   label_ = ss.str();
   // op
-#if 1
   index_ = activ->index();
   // add extra index, eg ci0
   for (auto& i : in) index_.push_back(i);
-#else // reverse indices
-  list<shared_ptr<const Index>> ind = activ->index();
-  ind.reverse();
-  for (auto& i : in) ind.push_back(i);
-  ind.reverse();
-  index_ = ind;
-#endif
   active_ = activ;
 }
+
 
 // print
 string Tensor::str() const {

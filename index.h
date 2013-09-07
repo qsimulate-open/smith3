@@ -72,7 +72,12 @@ class Index {
   public:
     /// Make index object from label and dagger info. Initialize label, number(0), dagger.
     Index(std::string lab, bool dag) : label_(lab), num_(0), dagger_(dag) {}
+    /// Make a copy of the index
     Index(const Index& o) : label_(o.label_), num_(o.num_), dagger_(o.dagger_), spin_(o.spin_) { }
+    /// Make copy of the index but with reversed dagger info
+    Index(const Index& o, bool b) : label_(o.label_), num_(o.num_), dagger_(!b), spin_(o.spin_) { }
+    /// Make copy of index but with altered number
+    Index(const Index& o, int i) : label_(o.label_), num_(i), dagger_(o.dagger_), spin_(o.spin_) { }
     ~Index() { }
 
 

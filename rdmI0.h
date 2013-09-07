@@ -50,7 +50,6 @@ class RDMI0 : public RDM {
     /// Adds merged (fock) tensor with indices, used by muliply_merge member, as well as ci index tensor multiplication in case of rdm0.
     std::string fdata_mult(const std::string itag, const std::list<std::shared_ptr<const Index>>& merged, const std::list<std::shared_ptr<const Index>>& ci_index);
 
-
     // virtual
     /// Generate entire task code for Gamma RDM summation.
     std::string generate_not_merged(std::string indent, const std::string tlab, const std::list<std::shared_ptr<const Index>>& loop, std::vector<std::string> in_tensors) override;
@@ -59,10 +58,8 @@ class RDMI0 : public RDM {
 
     /// Makes if statement in delta cases ie index equivalency check line.
     std::string make_delta_if(std::string& indent, std::vector<std::string>& close) override;
-
     /// Replaces tensor labels to more general labels in(x), where x is a counter for in tensors. RDM tensors numbered before merged (fock) tensor. Eg, rdm1 is mapped to in(0), rdm2 -> in(1), and in merged case with max rdm2, f1 -> in(2).
     void map_in_tensors(std::vector<std::string> in_tensors, std::map<std::string,std::string>& inlab) override;
-
 
     /// Loops over delta indices in Gamma summation.
     std::string make_sort_loops(const std::string itag, std::string& indent, const std::list<std::shared_ptr<const Index>>& index, std::vector<std::string>& close) override;
@@ -83,8 +80,13 @@ class RDMI0 : public RDM {
         const std::map<std::shared_ptr<const Index>, std::shared_ptr<const Index>>& in2, std::pair<bool, bool> braket,
         const double& f = 1.0)
       : RDM(in, in2, braket, f) { }
+    /// Copy RDM but use new indices for index. Useful when have kets, see active reduce.
+    RDMI0(RDM& o, std::list<std::shared_ptr<const Index>>& in)
+      : RDM(in, o.delta(), o.braket(), o.fac()) { }
     virtual ~RDMI0() { }
 
+    /// Reverse order and dagger for list of indices.
+    std::list<std::shared_ptr<const Index>> conjugate() override;
 
     /// Copies this rdm.
     std::shared_ptr<RDM> copy() const override;

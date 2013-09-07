@@ -49,7 +49,7 @@ class Active {
   protected:
     /// List of RDMs.
     std::list<std::shared_ptr<RDM>> rdm_;
-    /// This function calls RDM::reduce_one and RDM::reduce_done functions and does sort to apply Wick's theorem to this RDM. Use anticommutator property to rearrange indices
+    /// This function calls RDM::reduce_one and RDM::reduce_done functions and does sort to apply Wick's theorem to this RDM. Uses anticommutator property to rearrange indices.
     void reduce(std::shared_ptr<RDM> in);
 
     /// if have bra
@@ -59,6 +59,9 @@ class Active {
 
     /// TODO double check if needed.
     mutable int count__;
+
+    /// Map from ket reindexing.
+    std::map<int, int> num_map_;
 
 
   public:
@@ -81,6 +84,10 @@ class Active {
     std::string generate(const std::string indent, const std::string tag, const std::list<std::shared_ptr<const Index>> index, const std::list<std::shared_ptr<const Index>> merged = std::list<std::shared_ptr<const Index>>(), const std::string mlab = "", const bool use_blas = false) const;
     /// Returns vector of int cooresponding to RDM numbers in Gamma. RDM0 is not included for non derivative trees.
     std::vector<int> required_rdm() const;
+
+
+    /// Map from ket reindexing.
+    std::map<int, int> num_map() const { return num_map_; }
 
 };
 

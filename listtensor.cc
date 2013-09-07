@@ -51,9 +51,14 @@ ListTensor::ListTensor(shared_ptr<Diagram> d) {
   }
 
   // add rdm tensors.
-  if (d->rdm() && (d->braket().first || d->braket().second)) { // the rdm ci derivatives have an extra index
+  // the rdm ci derivatives have an extra index
+  if (d->rdm() && d->braket().first) {  // bra
     list<shared_ptr<const Index>> in = d->target_index();
     shared_ptr<Tensor> t = make_shared<Tensor>(d->rdm(), in);
+    list_.push_back(t);
+  } else if (d->rdm() && d->braket().second) { // ket
+    list<shared_ptr<const Index>> in = d->target_index();
+    shared_ptr<Tensor> t = make_shared<Tensor>(d->rdm(), in, d->rdm()->num_map());
     list_.push_back(t);
   } else if (d->rdm() && (!d->braket().first && !d->braket().second)) { // add normal rdm tensor
     shared_ptr<Tensor> t = make_shared<Tensor>(d->rdm());
@@ -85,10 +90,13 @@ void ListTensor::absorb_all_internal() {
 void ListTensor::absorb_ket() {
   if (braket_.second) {
     assert(!braket_.first);
+    // original reindexing from rdm derivative
+    map<int, int> rdm_num_map;
     // get modified rdm indices. these will be reversed in associated tensors
     list<shared_ptr<const Index>> ind;
     for (auto i = list_.begin(); i != list_.end(); ++i) {
       if ((*i)->is_gamma()) {
+        rdm_num_map = (*i)->num_map();
         list<shared_ptr<const Index>> tmp;
         tmp = (*i)->index();
         for (auto& j : tmp) {  // check to make sure not ci target index
@@ -99,11 +107,6 @@ void ListTensor::absorb_ket() {
       }
     }
 
-    // map indices to reverse
-    list<shared_ptr<const Index>> rev_ind(ind.rbegin(),ind.rend());
-    map<shared_ptr<const Index>, shared_ptr<const Index>> ind_map;
-    for (auto i = ind.begin(), j = rev_ind.begin(); i != ind.end() ; ++i, ++j) ind_map[(*i)] = (*j);
-
     for (auto i = list_.begin(); i != list_.end(); ++i) {
       list<shared_ptr<const Index>> newind;
       if (!(*i)->is_gamma() && !ind.empty() && (*i)->label() != "proj") {
@@ -111,12 +114,14 @@ void ListTensor::absorb_ket() {
           if (!j->active()) {
             newind.push_back(j);
           } else {
-            newind.push_back(ind_map[j]);
+            shared_ptr<const Index> tmp = make_shared<const Index>(*j,rdm_num_map[j->num()]);
+            newind.push_back(tmp);
           }
         }
         (*i)->set_index(newind);
       }
     }
+
     // now braket can be reversed for this listtensor
     set_braket(make_pair(true,false));
 
@@ -132,7 +137,6 @@ void ListTensor::absorb_ket() {
         }
       }
     }
-
   }
 }
 
@@ -200,7 +204,7 @@ void ListTensor::print() const {
   } else {
     for (auto& i : list_) {
       if (i->str().find("Gamma") != string::npos) {
-        if (braket().first || braket().second) cout << "CI_" << i->str();
+        if (braket().first || braket().second) cout << "dcI_" << i->str();
         else cout << i->str();
       } else {
         cout << i->str();

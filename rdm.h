@@ -57,7 +57,6 @@ class RDM {
 
     /// Makes if statement in delta cases ie index equivalency check line.
     virtual std::string make_delta_if(std::string& indent, std::vector<std::string>& close) = 0;
-
     /// Replaces tensor labels to more general labels in(x), where x is a counter for in tensors. RDM tensors numbered before merged (fock) tensor. Eg, rdm1 is mapped to in(0), rdm2 -> in(1), and in merged case with max rdm2, f1 -> in(2).
     virtual void map_in_tensors(std::vector<std::string> in_tensors, std::map<std::string,std::string>& inlab) = 0;
 
@@ -98,6 +97,8 @@ class RDM {
     bool bra() const { return bra_; }
     /// Returns ket, false for zero order reference.
     bool ket() const { return ket_; }
+    /// Returns bra and ket pair.
+    std::pair<bool, bool> braket() { return std::make_pair(bra_,ket_); }
 
     /// Set bra, needed if ket is absorbed for diagram to reuse modified rdms.
     void set_bra(bool b) { bra_ = b; }
@@ -134,6 +135,10 @@ class RDM {
 
     /// Copies this rdm, needs to be virtual as creates derived rdms.
     virtual std::shared_ptr<RDM> copy() const = 0;
+
+    /// Reverse order and dagger information for list. Only used in derivative cases.
+    virtual std::list<std::shared_ptr<const Index>> conjugate() = 0;
+
 
 };
 
