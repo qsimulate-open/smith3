@@ -67,17 +67,24 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
               (l == "x" && k == "x" && j == "x" && i == "a") ||
               (l == "x" && k == "c" && j == "x" && i == "x")) {
 #else  // turn on one of the following lines
-       // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") ||  (l == "x" && k == "x" && j == "a" && i == "a")) {  // mp2 test ansatz
-       // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") ||  (l == "x" && k == "x" && j == "a" && i == "a") || (l == "c" && k == "c" && j == "x" && i == "a")) {
+       // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a")) {  // mp2 test ansatz
+       // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a") || (l == "c" && k == "c" && j == "x" && i == "a")) {
+       // if (l == "c" && k == "x" && j == "x" && i == "a") {  // test cxxa
+       // if (l == "x" && k == "c" && j == "x" && i == "a") {  // test xcxa
+       // if ((l == "c" && k == "c" && j == "x" && i == "a") || (l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a") || (l == "x" && k == "x" && j == "x" && i == "a")) {  // semi-internal cases
+       // if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a") || (l == "x" && k == "x" && j == "x" && i == "a")) {  // y4 internal test
+       // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a") ||  // y5 cases
+       //     (l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a") || (l == "x" && k == "x" && j == "x" && i == "a")) {
+       // if (l == "x" && k == "c" && j == "x" && i == "a") { // xcxa
 // *test single configuration cases*
 //        if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
 //        if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
-//        if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
+          if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
 //        if (l == "c" && k == "c" && j == "x" && i == "a") { // ccxa
 //        if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) { // cxxa or xcxa
 //        if (l == "c" && k == "c" && j == "x" && i == "x") { // ccxx
 //        if (l == "x" && k == "x" && j == "x" && i == "a") { // xxxa
-          if (l == "x" && k == "c" && j == "x" && i == "x") { // xcxx
+//        if (l == "x" && k == "c" && j == "x" && i == "x") { // xcxx
 // *end test single configuration cases*
 #endif
             stringstream ss; ss << cnt;
@@ -169,11 +176,15 @@ int main() {
   eq3->set_tree_type("energy");
   cout << eq3->generate();
 
+  // generate Norm <1|1> to be used in various places, y correction and correction term for one-body density matrix
+  shared_ptr<Equation> eq5(new Equation("ca", {dum, t_dagger, t_list}, 0.25));
+  eq5->set_tree_type("correction");
+  cout << eq5->generate();
 
   // cI derivative equations, dedci = dE/dcI  //
   // test energy, NB: for testing use 1/2 correct prefactor (scale). This should equate dedci with energy, otherwise expect 2E.
   double scale = 0.5;
-#if 0 // test hylleraas eqn:   d/dc( <0|T^+fT|0> -e0<0|T^+T|0> +2<0|T^+V2|0> + 2<0|T^+V2|0>) =>
+#if 1 // test hylleraas eqn:   d/dc( <0|T^+fT|0> -e0<0|T^+T|0> +2<0|T^+V2|0> + 2<0|T^+V2|0>) =>
       //  =   1/2(1/4<I|T^+fT|0> + 1/4<0|T^+fT|I>) - 1/2*(e0/4<I|T^+T|0> + e0/4<0|T^+T|I>) + 2*1/2 (1/4<I|T^+V|0> + 1/4<0|T^+V|I>) + 2*1/2 (1/4<I|T^+h1|0> + 1/4<0|T^+h1|I>)
   shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, f, t_list}, scale*0.25, make_pair(true, false)));
   shared_ptr<Equation> eq4a(new Equation("dedcib", {dum, t_dagger, f, t_list}, scale*0.25, make_pair(false, true)));
@@ -201,7 +212,7 @@ int main() {
   eq4->merge(eq4b);
   eq4->merge(eq4c);
 #endif
-#if 1 // test ket half hylleraas eqn:   d/dc( <0|T^+fT|0> -e0<0|T^+T|0> +2<0|T^+V2|0> + 2<0|T^+V2|0>) =>
+#if 0 // test ket half hylleraas eqn:   d/dc( <0|T^+fT|0> -e0<0|T^+T|0> +2<0|T^+V2|0> + 2<0|T^+V2|0>) =>
       //  =   1/4<0|T^+fT|I> - e0/4<0|T^+T|I> + 2 1/4<0|T^+V|I>  + 2*1/4<0|T^+h1|I>
   shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, f, t_list}, 0.25, make_pair(false, true)));
   shared_ptr<Equation> eq4a(new Equation("dedcib", {dum, t_dagger, t_list}, 0.25, "e0", make_pair(false, true)));
@@ -303,10 +314,6 @@ int main() {
 
 
   // density matrix equations //
-  // generate unlinked correction term for one-body density matrix
-  shared_ptr<Equation> eq5(new Equation("ca", {dum, t_dagger, t_list}, 0.25));
-  eq5->set_tree_type("correction");
-  cout << eq5->generate();
 
   // one-body contribution
   shared_ptr<Equation> eq6(new Equation("da", {dum, t_dagger, ex1b, t_list}, 0.25));
@@ -321,7 +328,7 @@ int main() {
   cout << eq7->generate();
 
   // done. generate the footer
-  cout << footer(eq0->tree_label(), eq3->tree_label(), eq4->tree_label(), eq5->tree_label(), eq6->tree_label(), eq7->tree_label()) << endl;
+  cout << footer(eq0->tree_label(), eq3->tree_label(), eq5->tree_label(), eq4->tree_label(), eq6->tree_label(), eq7->tree_label()) << endl;
 
 
   return 0;

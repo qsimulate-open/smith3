@@ -216,7 +216,7 @@ pair<string, string> Forest::generate_algorithm() const {
   string indent = "      ";
 
   // generate computational algorithm
-  ss << "      return make_tuple(queue_, energy_, dedci_, density_, correction_, density2_);" << endl;
+  ss << "      return make_tuple(queue_, energy_, correction_, dedci_, density_, density2_);" << endl;
   ss << "    };" << endl;
   ss << endl;
   ss << "  public:" << endl;
@@ -236,9 +236,9 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "    void solve() {" << endl;
   ss << "      this->print_iteration();" << endl;
   ss << "      int iter = 0;" << endl;
-  ss << "      std::shared_ptr<Queue<T>> queue, energ, dec, dens, correct, dens2;" << endl;
+  ss << "      std::shared_ptr<Queue<T>> queue, energ, correct, dec, dens, dens2;" << endl;
   ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
-  ss << "        std::tie(queue, energ, dec, dens, correct, dens2) = make_queue_();" << endl;
+  ss << "        std::tie(queue, energ, correct, dec, dens, dens2) = make_queue_();" << endl;
   ss << "        while (!queue->done())" << endl;
   ss << "          queue->next_compute();" << endl;
   ss << "        this->update_amplitude(t2, r);" << endl;
@@ -249,6 +249,9 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "        if (err < thresh_residual()) break;" << endl;
   ss << "      }" << endl;
   ss << "      this->print_iteration(iter == maxiter_);" << endl;
+  ss << "      correlated_norm = correction(correct);" << endl;
+  // use norm in various places, eg  y-=Nf<I|Eij|0> and dm1 -= N*rdm1
+  ss << "      std::cout << \"Norm, correlated overlap: <1|1> = \" << std::setprecision(10) << correlated_norm << std::endl;" << endl;
   ss << "      std::cout << \" === Calculating CI derivative dE/dcI ===\" << std::endl; " << endl;
   ss << "      while (!dec->done()) " << endl;
   ss << "        dec->next_compute();" << endl;
@@ -263,8 +266,6 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "#if 0" << endl;
   ss << "      den1->print2(\"smith d1 correlated one-body density matrix\", 1.0e-5);" << endl;
   ss << "#endif" << endl;
-  ss << "      correlated_norm = correction(correct);" << endl;
-  ss << "      std::cout << \"Norm, correlated overlap: <1|1> = \" << std::setprecision(10) << correlated_norm << \"*rdm1\" << std::endl;" << endl;
   ss << "      std::cout << \" === Computing unrelaxed density matrix, dm2, <0|E_pqrs|1>  ===\" << std::endl; " << endl;
   ss << "      while (!dens2->done())" << endl;
   ss << "        dens2->next_compute();" << endl;
