@@ -125,6 +125,7 @@ pair<string, string> Forest::generate_headers() const {
     ss << "    std::shared_ptr<Tensor<T>> t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> r;" << endl;
     ss << "    double e0_;" << endl;
+    ss << "    std::shared_ptr<Tensor<T>> sigma_;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> den1;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> den2;" << endl;
     ss << "    double correlated_norm;" << endl;
@@ -224,6 +225,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      this->eig_ = this->f1_->diag();" << endl;
   ss << "      t2 = this->v2_->clone();" << endl;
   ss << "      e0_ = this->e0();" << endl;
+  ss << "      sigma_ = this->sigma();" << endl;
   ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
   ss << "      t2->scale(2.0);" << endl;
   ss << "      r = t2->clone();" << endl;
@@ -237,6 +239,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      this->print_iteration();" << endl;
   ss << "      int iter = 0;" << endl;
   ss << "      std::shared_ptr<Queue<T>> queue, energ, correct, dec, dens, dens2;" << endl;
+  ss << "      double e2;" << endl;
   ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
   ss << "        std::tie(queue, energ, correct, dec, dens, dens2) = make_queue_();" << endl;
   ss << "        while (!queue->done())" << endl;
@@ -246,27 +249,34 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "        r->zero();" << endl;
   ss << "        const double en = energy(energ);" << endl;
   ss << "        this->print_iteration(iter, en, err);" << endl;
-  ss << "        if (err < thresh_residual()) break;" << endl;
+  ss << "        if (err < thresh_residual()) {" << endl;
+  ss << "          e2 = en;" << endl;
+  ss << "          break;" << endl;
+  ss << "        }" << endl;
   ss << "      }" << endl;
   ss << "      this->print_iteration(iter == maxiter_);" << endl;
+  ss << endl;
+  // using norm in various places, eg  y-=Nf<I|Eij|0> and dm1 -= N*rdm1
   ss << "      correlated_norm = correction(correct);" << endl;
-  // use norm in various places, eg  y-=Nf<I|Eij|0> and dm1 -= N*rdm1
   ss << "      std::cout << \"Norm, correlated overlap: <1|1> = \" << std::setprecision(10) << correlated_norm << std::endl;" << endl;
-  ss << "      std::cout << \" === Calculating CI derivative dE/dcI ===\" << std::endl; " << endl;
+  ss << endl;
+  ss << "      std::cout << \" === Calculating cI derivative dE/dcI ===\" << std::endl;" << endl;
   ss << "      while (!dec->done()) " << endl;
   ss << "        dec->next_compute();" << endl;
-  ss << "      deci->print1(\"CI derivative tensor: \", 1.0e-15); " << endl;
+  ss << "      deci->correct_cI_derivative(correlated_norm,sigma_);" << endl;
+  ss << "      deci->print1(\"cI derivative tensor: \", 1.0e-15);" << endl;
   ss << "      std::cout << std::endl;" << endl;
-  ss << "      std::cout << \"CI derivative * cI  = \" << std::setprecision(10) <<  deci->dot_product(this->rdm0deriv_) << std::endl; " << endl;
+  ss << "      std::cout << \"cI derivative * cI  = \" << std::setprecision(10) <<  deci->dot_product(this->rdm0deriv_) << std::endl;" << endl;
+  ss << "      std::cout << \"Expecting E - N*E0  = \" << std::setprecision(10) <<  e2-correlated_norm*e0_ << std::endl;" << endl;
   ss << "      std::cout << std::endl;" << endl;
   ss << "" << endl;
-  ss << "      std::cout << \" === Computing unrelaxed density matrix, dm1, <1|E_pq|1> + 2<0|E_pq|1> ===\" << std::endl; " << endl;
+  ss << "      std::cout << \" === Computing unrelaxed density matrix, dm1, <1|E_pq|1> + 2<0|E_pq|1> ===\" << std::endl;" << endl;
   ss << "      while (!dens->done())" << endl;
   ss << "        dens->next_compute();" << endl;
   ss << "#if 0" << endl;
   ss << "      den1->print2(\"smith d1 correlated one-body density matrix\", 1.0e-5);" << endl;
   ss << "#endif" << endl;
-  ss << "      std::cout << \" === Computing unrelaxed density matrix, dm2, <0|E_pqrs|1>  ===\" << std::endl; " << endl;
+  ss << "      std::cout << \" === Computing unrelaxed density matrix, dm2, <0|E_pqrs|1>  ===\" << std::endl;" << endl;
   ss << "      while (!dens2->done())" << endl;
   ss << "        dens2->next_compute();" << endl;
   ss << "#if 0" << endl;
@@ -288,12 +298,12 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      while (!correct->done()) {" << endl;
   ss << "        std::shared_ptr<Task<T>> c = correct->next_compute();" << endl;
   ss << "        n += c->correction();" << endl;
-  ss << "      }   " << endl;
-  ss << "      return n; " << endl;
-  ss << "    }  " << endl;
+  ss << "      }" << endl;
+  ss << "      return n;" << endl;
+  ss << "    }" << endl;
   ss << endl;  // end comparison correction
   ss << "    std::shared_ptr<const Matrix> rdm1() const { return den1->matrix(); }" << endl;
-  ss << "    std::shared_ptr<const Matrix> rdm2() const { return den2->matrix2(); } " << endl;
+  ss << "    std::shared_ptr<const Matrix> rdm2() const { return den2->matrix2(); }" << endl;
   ss << endl;
   ss << "    double rdm1_correction() const { return correlated_norm; }" << endl;
   ss << endl;
