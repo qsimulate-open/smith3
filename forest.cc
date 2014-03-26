@@ -120,8 +120,10 @@ pair<string, string> Forest::generate_headers() const {
     ss << "namespace " << forest_name_ << "{" << endl;
     ss << "" << endl;
     ss << "template <typename T>" << endl;
-    ss << "class " << forest_name_ << " : public SpinFreeMethod<T>, SMITH_info {" << endl;
+    ss << "class " << forest_name_ << " : public SpinFreeMethod<T>{" << endl;
     ss << "  protected:" << endl;
+    ss << "    using SpinFreeMethod<T>::ref_;" << endl;
+    ss << "" << endl;
     ss << "    std::shared_ptr<Tensor<T>> t2;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> r;" << endl;
     ss << "    double e0_;" << endl;
@@ -221,7 +223,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "    };" << endl;
   ss << endl;
   ss << "  public:" << endl;
-  ss << "    " << forest_name_ << "(std::shared_ptr<const Reference> ref) : SpinFreeMethod<T>(ref), SMITH_info() {" << endl;
+  ss << "    " << forest_name_ << "(std::shared_ptr<const SMITH_Info> ref) : SpinFreeMethod<T>(ref) {" << endl;
   ss << "      this->eig_ = this->f1_->diag();" << endl;
   ss << "      t2 = this->v2_->clone();" << endl;
   ss << "      e0_ = this->e0();" << endl;
@@ -240,7 +242,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      int iter = 0;" << endl;
   ss << "      std::shared_ptr<Queue<T>> queue, energ, correct, dec, dens, dens2;" << endl;
   ss << "      double e2;" << endl;
-  ss << "      for ( ; iter != maxiter_; ++iter) {" << endl;
+  ss << "      for ( ; iter != ref_->maxiter(); ++iter) {" << endl;
   ss << "        std::tie(queue, energ, correct, dec, dens, dens2) = make_queue_();" << endl;
   ss << "        while (!queue->done())" << endl;
   ss << "          queue->next_compute();" << endl;
@@ -249,12 +251,12 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "        r->zero();" << endl;
   ss << "        const double en = energy(energ);" << endl;
   ss << "        this->print_iteration(iter, en, err);" << endl;
-  ss << "        if (err < thresh_residual()) {" << endl;
+  ss << "        if (err < ref_->thresh()) {" << endl;
   ss << "          e2 = en;" << endl;
   ss << "          break;" << endl;
   ss << "        }" << endl;
   ss << "      }" << endl;
-  ss << "      this->print_iteration(iter == maxiter_);" << endl;
+  ss << "      this->print_iteration(iter == ref_->maxiter());" << endl;
   ss << endl;
   // using norm in various places, eg  y-=Nf<I|Eij|0> and dm1 -= N*rdm1
   ss << "      correlated_norm = correction(correct);" << endl;
