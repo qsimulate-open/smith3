@@ -66,13 +66,13 @@ pair<string, string> Residual::create_target(const string indent, const int i) c
   tt << "" << endl;
   tt << "    void compute_() {" << endl;
   tt << "      r_->zero();" << endl;
-  tt << "    };  " << endl;
+  tt << "    };" << endl;
   tt << "" << endl;
   tt << "  public:" << endl;
   tt << "    Task0(std::vector<std::shared_ptr<Tensor<T>>> t) : Task<T>() {" << endl;
   tt << "      r_ =  t[0];" << endl;
-  tt << "    };  " << endl;
-  tt << "    ~Task0() {}; " << endl;
+  tt << "    };" << endl;
+  tt << "    ~Task0() {};" << endl;
   tt << "};" << endl << endl;
 
   ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor0 = {r};" << endl;

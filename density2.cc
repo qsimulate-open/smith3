@@ -67,13 +67,13 @@ pair<string, string> Density2::create_target(const string indent, const int i) c
   tt << "" << endl;
   tt << "    void compute_() {" << endl;
   tt << "      d2_->zero();" << endl;
-  tt << "    };  " << endl;
+  tt << "    };" << endl;
   tt << "" << endl;
   tt << "  public:" << endl;
   tt << "    Task" << i << "(std::vector<std::shared_ptr<Tensor<T>>> t) : Density2Task<T>() {" << endl;
   tt << "      d2_ =  t[0];" << endl;
-  tt << "    };  " << endl;
-  tt << "    ~Task" << i << "() {}; " << endl;
+  tt << "    };" << endl;
+  tt << "    ~Task" << i << "() {};" << endl;
   tt << "};" << endl << endl;
 
   ss << "      std::shared_ptr<Queue<T>> density2_(new Queue<T>());" << endl;

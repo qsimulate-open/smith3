@@ -69,13 +69,13 @@ pair<string, string> Dedci::create_target(const string indent, const int i) cons
   tt << "" << endl;
   tt << "    void compute_() {" << endl;
   tt << "      dec_->zero();" << endl;
-  tt << "    };  " << endl;
+  tt << "    };" << endl;
   tt << "" << endl;
   tt << "  public:" << endl;
   tt << "    Task" << i << "(std::vector<std::shared_ptr<Tensor<T>>> t) : DedciTask<T>() {" << endl;
   tt << "      dec_ =  t[0];" << endl;
-  tt << "    };  " << endl;
-  tt << "    ~Task" << i << "() {}; " << endl;
+  tt << "    };" << endl;
+  tt << "    ~Task" << i << "() {};" << endl;
   tt << "};" << endl << endl;
 
   ss << "      std::shared_ptr<Queue<T>> dedci_(new Queue<T>());" << endl;

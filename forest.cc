@@ -102,8 +102,8 @@ pair<string, string> Forest::generate_headers() const {
     ss << header(forest_name_);
     tt << header(forest_name_ + "_tasks");
 
-    ss << "#ifndef __SRC_SMITH_" << forest_name_ << "_H " << endl;
-    ss << "#define __SRC_SMITH_" << forest_name_ << "_H " << endl;
+    ss << "#ifndef __SRC_SMITH_" << forest_name_ << "_H" << endl;
+    ss << "#define __SRC_SMITH_" << forest_name_ << "_H" << endl;
     ss << "" << endl;
     ss << "#include <src/smith/spinfreebase.h>" << endl;
     ss << "#include <src/scf/fock.h>" << endl;
@@ -136,8 +136,8 @@ pair<string, string> Forest::generate_headers() const {
     ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl;
     ss << indent << "std::array<std::shared_ptr<const IndexRange>,4> cindex = {{this->rclosed_, this->ractive_, this->rvirt_, this->rci_}};" << endl << endl;
 
-    tt << "#ifndef __SRC_SMITH_" << forest_name_ << "_TASKS_H " << endl;
-    tt << "#define __SRC_SMITH_" << forest_name_ << "_TASKS_H " << endl;
+    tt << "#ifndef __SRC_SMITH_" << forest_name_ << "_TASKS_H" << endl;
+    tt << "#define __SRC_SMITH_" << forest_name_ << "_TASKS_H" << endl;
     tt << "" << endl;
     tt << "#include <memory>" << endl;
     tt << "#include <algorithm>" << endl;
@@ -233,7 +233,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      den2 = this->v2_->clone();" << endl;
   ss << "      deci = this->rdm0deriv_->clone();" << endl;
   ss << "    };" << endl;
-  ss << "    ~" << forest_name_ << "() {}; " << endl;
+  ss << "    ~" << forest_name_ << "() {};" << endl;
   ss << "" << endl;
   ss << "    void solve() {" << endl;
   ss << "      this->print_iteration();" << endl;
@@ -261,7 +261,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      std::cout << \"Norm, correlated overlap: <1|1> = \" << std::setprecision(10) << correlated_norm << std::endl;" << endl;
   ss << endl;
   ss << "      std::cout << \" === Calculating cI derivative dE/dcI ===\" << std::endl;" << endl;
-  ss << "      while (!dec->done()) " << endl;
+  ss << "      while (!dec->done())" << endl;
   ss << "        dec->next_compute();" << endl;
   ss << "      deci->correct_cI_derivative(correlated_norm,sigma_);" << endl;
   ss << "      deci->print1(\"cI derivative tensor: \", 1.0e-15);" << endl;
@@ -289,9 +289,9 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      while (!energ->done()) {" << endl;
   ss << "        std::shared_ptr<Task<T>> c = energ->next_compute();" << endl;
   ss << "        en += c->energy();" << endl;  // prefactors included in main.cc
-  ss << "      }   " << endl;
-  ss << "      return en; " << endl;
-  ss << "    }  " << endl;
+  ss << "      }" << endl;
+  ss << "      return en;" << endl;
+  ss << "    }" << endl;
   ss << endl;
   ss << "    double correction(std::shared_ptr<Queue<T>> correct) {" << endl;
   ss << "      double n = 0.0;" << endl;

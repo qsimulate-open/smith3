@@ -576,8 +576,8 @@ string Tensor::generate_gamma(const int ic, const bool use_blas, const bool der)
   tt << ");" << endl;
 
   //////////// gamma footer  ////////////
-  tt << "        }  " << endl;
-  tt << "    };  " << endl;
+  tt << "        }" << endl;
+  tt << "    };" << endl;
   tt << "" << endl;
   tt << "    std::vector<std::shared_ptr<Task_local>> subtasks_;" << endl;
   tt << "" << endl;
