@@ -60,7 +60,7 @@ static std::string header() {
 };
 
 
-static std::string footer(const std::string res, const std::string energy, const std::string correction, const std::string dedci, const std::string density, const std::string density2) {
+static std::string footer(const std::string res, const std::string energy, const std::string correction, const std::string density, const std::string density2, const std::string dedci) {
   std::stringstream mm;
 
   mm << "  list<shared_ptr<Tree>> trees = {" << res << ", " << energy << ", " << correction << ", " << density << ", " << density2 << ", " << dedci <<  "};" << std::endl;
