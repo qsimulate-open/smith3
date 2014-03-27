@@ -77,9 +77,9 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
        //     (l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a") || (l == "x" && k == "x" && j == "x" && i == "a")) {
        // if (l == "x" && k == "c" && j == "x" && i == "a") { // xcxa
 // *test single configuration cases*
-//        if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
+          if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
 //        if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
-          if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
+//        if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
 //        if (l == "c" && k == "c" && j == "x" && i == "a") { // ccxa
 //        if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) { // cxxa or xcxa
 //        if (l == "c" && k == "c" && j == "x" && i == "x") { // ccxx
@@ -180,6 +180,24 @@ int main() {
   shared_ptr<Equation> eq5(new Equation("ca", {dum, t_dagger, t_list}, 0.25));
   eq5->set_tree_type("correction");
   cout << eq5->generate();
+
+
+
+
+  // density matrix equations //
+  // one-body contribution
+  shared_ptr<Equation> eq6(new Equation("da", {dum, t_dagger, ex1b, t_list}, 0.25));
+  shared_ptr<Equation> eq6a(new Equation("db", {dum, ex1b, t_list}, 1.0));
+  eq6->merge(eq6a);
+  eq6->set_tree_type("density");
+  cout << eq6->generate();
+
+  // two-body contribution
+  shared_ptr<Equation> eq7(new Equation("d2a", {dum, proj_list, t_list}, 0.5));
+  eq7->set_tree_type("density2");
+  cout << eq7->generate();
+
+
 
   // cI derivative equations, dedci = dE/dcI  //
   // test energy, NB: for testing use 1/2 correct prefactor (scale). This should equate dedci with energy, otherwise expect 2E.
@@ -313,22 +331,8 @@ int main() {
   cout << eq4->generate();
 
 
-  // density matrix equations //
-
-  // one-body contribution
-  shared_ptr<Equation> eq6(new Equation("da", {dum, t_dagger, ex1b, t_list}, 0.25));
-  shared_ptr<Equation> eq6a(new Equation("db", {dum, ex1b, t_list}, 1.0));
-  eq6->merge(eq6a);
-  eq6->set_tree_type("density");
-  cout << eq6->generate();
-
-  // two-body contribution
-  shared_ptr<Equation> eq7(new Equation("d2a", {dum, proj_list, t_list}, 0.5));
-  eq7->set_tree_type("density2");
-  cout << eq7->generate();
-
   // done. generate the footer
-  cout << footer(eq0->tree_label(), eq3->tree_label(), eq5->tree_label(), eq4->tree_label(), eq6->tree_label(), eq7->tree_label()) << endl;
+  cout << footer(eq0->tree_label(), eq3->tree_label(), eq5->tree_label(), eq6->tree_label(), eq7->tree_label(), eq4->tree_label()) << endl;
 
 
   return 0;

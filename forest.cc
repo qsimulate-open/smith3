@@ -128,6 +128,7 @@ pair<string, string> Forest::generate_headers() const {
     ss << "    std::shared_ptr<Tensor<T>> r;" << endl;
     ss << "    double e0_;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> sigma_;" << endl;
+    ss << "    std::shared_ptr<Tensor<T>> civec_;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> den1;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> den2;" << endl;
     ss << "    double correlated_norm;" << endl;
@@ -219,7 +220,7 @@ pair<string, string> Forest::generate_algorithm() const {
   string indent = "      ";
 
   // generate computational algorithm
-  ss << "      return make_tuple(queue_, energy_, correction_, dedci_, density_, density2_);" << endl;
+  ss << "      return make_tuple(queue_, energy_, correction_, density_, density2_, dedci_);" << endl;
   ss << "    };" << endl;
   ss << endl;
   ss << "  public:" << endl;
@@ -228,6 +229,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      t2 = this->v2_->clone();" << endl;
   ss << "      e0_ = this->e0();" << endl;
   ss << "      sigma_ = this->sigma();" << endl;
+  ss << "      civec_ = this->civec_tensor();" << endl;
   ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
   ss << "      t2->scale(2.0);" << endl;
   ss << "      r = t2->clone();" << endl;
@@ -240,10 +242,10 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "    void solve() {" << endl;
   ss << "      this->print_iteration();" << endl;
   ss << "      int iter = 0;" << endl;
-  ss << "      std::shared_ptr<Queue<T>> queue, energ, correct, dec, dens, dens2;" << endl;
+  ss << "      std::shared_ptr<Queue<T>> queue, energ, correct, dens, dens2, dec;" << endl;
   ss << "      double e2;" << endl;
   ss << "      for ( ; iter != ref_->maxiter(); ++iter) {" << endl;
-  ss << "        std::tie(queue, energ, correct, dec, dens, dens2) = make_queue_();" << endl;
+  ss << "        std::tie(queue, energ, correct, dens, dens2, dec) = make_queue_();" << endl;
   ss << "        while (!queue->done())" << endl;
   ss << "          queue->next_compute();" << endl;
   ss << "        this->update_amplitude(t2, r);" << endl;
@@ -265,7 +267,8 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      std::cout << \" === Calculating cI derivative dE/dcI ===\" << std::endl;" << endl;
   ss << "      while (!dec->done())" << endl;
   ss << "        dec->next_compute();" << endl;
-  ss << "      deci->ax_plus_y(-1.0*correlated_norm,sigma_);" << endl;
+  ss << "      deci->ax_plus_y(-1.0*correlated_norm, sigma_);" << endl;
+  ss << "      deci->ax_plus_y(-1.0*e2, civec_);" << endl;
   ss << "      deci->print1(\"cI derivative tensor: \", 1.0e-15);" << endl;
   ss << "      std::cout << std::endl;" << endl;
   ss << "      std::cout << \"cI derivative * cI  = \" << std::setprecision(10) <<  deci->dot_product(this->rdm0deriv_) << std::endl;" << endl;
