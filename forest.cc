@@ -265,7 +265,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      std::cout << \" === Calculating cI derivative dE/dcI ===\" << std::endl;" << endl;
   ss << "      while (!dec->done())" << endl;
   ss << "        dec->next_compute();" << endl;
-  ss << "      deci->correct_cI_derivative(correlated_norm,sigma_);" << endl;
+  ss << "      deci->ax_plus_y(-1.0*correlated_norm,sigma_);" << endl;
   ss << "      deci->print1(\"cI derivative tensor: \", 1.0e-15);" << endl;
   ss << "      std::cout << std::endl;" << endl;
   ss << "      std::cout << \"cI derivative * cI  = \" << std::setprecision(10) <<  deci->dot_product(this->rdm0deriv_) << std::endl;" << endl;
