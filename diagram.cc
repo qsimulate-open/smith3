@@ -131,6 +131,15 @@ void Diagram::refresh_indices() {
 }
 
 
+bool Diagram::gamma_derivative() {
+  bool out = false;
+  for (auto& i : op_) {
+    if (i->num_active_nodagger() + i->num_active_dagger() != 0)  out = true;
+  }
+  return out;
+}
+
+
 // this is not a const function because it refreshes the indices
 void Diagram::print() {
   refresh_indices();

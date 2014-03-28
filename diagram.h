@@ -63,6 +63,7 @@ class Diagram {
     bool dagger_;
 
 
+
   public:
     /// Construct diagram from operator list. Set prefactor and dagger information.
     Diagram(std::list<std::shared_ptr<Operator>> op) : Diagram(op, 1.0, "", std::make_pair(false,false)) { }
@@ -109,6 +110,7 @@ class Diagram {
     /// Returns absorbed_, true if ket has been absorbed and indices need to be reversed in rdms.
     bool absorbed() const { return absorbed_; }
 
+    bool gamma_derivative();
 
     /// Set operator for private members.
     void set_op(const std::list<std::shared_ptr<Operator>>& o) { op_ = o; }

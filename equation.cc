@@ -45,7 +45,14 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
           if (!found) break;
           if (n->valid() || n->done()) {
             out2.push_back(n);
-            if (n->done_noactive()) diagram_.push_back(n);
+            if (n->done_noactive()) {
+              // drop <I|0> terms
+              if (n->braket().first || n->braket().second) {
+                if (n->gamma_derivative()) diagram_.push_back(n);
+              } else {
+                diagram_.push_back(n);
+              }
+            }
           }
         }
       }
