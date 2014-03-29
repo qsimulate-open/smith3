@@ -283,11 +283,11 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      std::cout << \" === Computing cI derivative dE/dcI ===\" << std::endl;" << endl;
   ss << "      while (!dec->done())" << endl;
   ss << "        dec->next_compute();" << endl;
-  ss << "      deci->ax_plus_y(-1.0*correlated_norm, sigma_);" << endl;
+  ss << "      deci->ax_plus_y(-2.0*correlated_norm, sigma_);" << endl;
   ss << "      deci->print1(\"cI derivative tensor: \", 1.0e-15);" << endl;
   ss << "      std::cout << std::endl;" << endl;
   ss << "      std::cout << \"      cI derivative * cI  = \" << std::setprecision(10) <<  deci->dot_product(this->rdm0deriv_) << std::endl;" << endl;
-  ss << "      std::cout << \"      Expecting E - N*E0  = \" << std::setprecision(10) <<  e2-correlated_norm*e0_ << std::endl;" << endl;
+  ss << "      std::cout << \"      Expecting E - N*E0  = \" << std::setprecision(10) <<  2.0*e2-2.0*correlated_norm*e0_ << std::endl;" << endl;
   ss << "      std::cout << std::endl;" << endl;
   ss << "" << endl;
   ss << "    };" << endl;

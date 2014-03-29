@@ -143,10 +143,21 @@ int main() {
   cout << eq0->generate();
 
   // energy equations //
- // second order energy correction
+  // second order energy correction
+#if 1
   shared_ptr<Equation> eq3(new Equation("ea", {dum, t_dagger, H}, 0.25));
   shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, hc}, 0.25));
   eq3->merge(eq3a);
+#endif
+#if 0 // test hylleraas variational E2
+  shared_ptr<Equation> eq3(new Equation("ea",  {dum, t_dagger, f, t_list}, 0.25));
+  shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, t_list}, -0.25, "e0"));
+  shared_ptr<Equation> eq3b(new Equation("ec", {dum, t_dagger, H}, 0.50));
+  shared_ptr<Equation> eq3c(new Equation("ed", {dum, t_dagger, hc}, 0.50));
+  eq3->merge(eq3a);
+  eq3->merge(eq3b);
+  eq3->merge(eq3c);
+#endif
   eq3->set_tree_type("energy");
   cout << eq3->generate();
 
@@ -169,18 +180,16 @@ int main() {
   cout << eq7->generate();
 
   // cI derivative equations, dedci = dE/dcI  //
-  // test energy, NB: for testing use 1/2 correct prefactor (scale). This should equate dedci with energy, otherwise expect 2E.
-  double scale = 0.5;
   // test hylleraas eqn:   d/dc( <0|T^+fT|0> -e0<0|T^+T|0> +2<0|T^+V2|0> + 2<0|T^+V2|0>) =>
   //  =   1/2(1/4<I|T^+fT|0> + 1/4<0|T^+fT|I>) - 1/2*(e0/4<I|T^+T|0> + e0/4<0|T^+T|I>) + 2*1/2 (1/4<I|T^+V|0> + 1/4<0|T^+V|I>) + 2*1/2 (1/4<I|T^+h1|0> + 1/4<0|T^+h1|I>)
-  shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, f, t_list}, scale*0.25, make_pair(true, false)));
-  shared_ptr<Equation> eq4a(new Equation("dedcib", {dum, t_dagger, f, t_list}, scale*0.25, make_pair(false, true)));
-  shared_ptr<Equation> eq4b(new Equation("dedcic", {dum, t_dagger, t_list}, -1.0*scale*0.25, "e0", make_pair(true, false)));
-  shared_ptr<Equation> eq4c(new Equation("dedcid", {dum, t_dagger, t_list}, -1.0*scale*0.25, "e0", make_pair(false, true)));
-  shared_ptr<Equation> eq4d(new Equation("dedcie", {dum, t_dagger, H}, scale*0.50, make_pair(true, false)));
-  shared_ptr<Equation> eq4e(new Equation("dedcif", {dum, t_dagger, H}, scale*0.50, make_pair(false, true)));
-  shared_ptr<Equation> eq4f(new Equation("dedcig", {dum, t_dagger, hc}, scale*0.50, make_pair(true, false)));
-  shared_ptr<Equation> eq4g(new Equation("dedcih", {dum, t_dagger, hc}, scale*0.50, make_pair(false, true)));
+  shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, f, t_list}, 0.25, make_pair(true, false)));
+  shared_ptr<Equation> eq4a(new Equation("dedcib", {dum, t_dagger, f, t_list}, 0.25, make_pair(false, true)));
+  shared_ptr<Equation> eq4b(new Equation("dedcic", {dum, t_dagger, t_list}, -0.25, "e0", make_pair(true, false)));
+  shared_ptr<Equation> eq4c(new Equation("dedcid", {dum, t_dagger, t_list}, -0.25, "e0", make_pair(false, true)));
+  shared_ptr<Equation> eq4d(new Equation("dedcie", {dum, t_dagger, H}, 0.50, make_pair(true, false)));
+  shared_ptr<Equation> eq4e(new Equation("dedcif", {dum, t_dagger, H}, 0.50, make_pair(false, true)));
+  shared_ptr<Equation> eq4f(new Equation("dedcig", {dum, t_dagger, hc}, 0.50, make_pair(true, false)));
+  shared_ptr<Equation> eq4g(new Equation("dedcih", {dum, t_dagger, hc}, 0.50, make_pair(false, true)));
   eq4->merge(eq4a);
   eq4->merge(eq4b);
   eq4->merge(eq4c);
