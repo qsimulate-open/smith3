@@ -133,7 +133,7 @@ int main() {
 
   // residual equations //
   shared_ptr<Equation> eq0(new Equation("ra", {dum, proj_list, f, t_list}));
-  shared_ptr<Equation> eq1(new Equation("rb", {dum, proj_list, t_list}, 1.0, "e0"));
+  shared_ptr<Equation> eq1(new Equation("rb", {dum, proj_list, t_list}, -1.0, "e0"));
   shared_ptr<Equation> eq2(new Equation("rc", {dum, proj_list, H}));
   shared_ptr<Equation> eq2a(new Equation("rd", {dum, proj_list, hc}));
   eq0->merge(eq1);
@@ -175,8 +175,8 @@ int main() {
   //  =   1/2(1/4<I|T^+fT|0> + 1/4<0|T^+fT|I>) - 1/2*(e0/4<I|T^+T|0> + e0/4<0|T^+T|I>) + 2*1/2 (1/4<I|T^+V|0> + 1/4<0|T^+V|I>) + 2*1/2 (1/4<I|T^+h1|0> + 1/4<0|T^+h1|I>)
   shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, f, t_list}, scale*0.25, make_pair(true, false)));
   shared_ptr<Equation> eq4a(new Equation("dedcib", {dum, t_dagger, f, t_list}, scale*0.25, make_pair(false, true)));
-  shared_ptr<Equation> eq4b(new Equation("dedcic", {dum, t_dagger, t_list}, scale*0.25, "e0", make_pair(true, false)));
-  shared_ptr<Equation> eq4c(new Equation("dedcid", {dum, t_dagger, t_list}, scale*0.25, "e0", make_pair(false, true)));
+  shared_ptr<Equation> eq4b(new Equation("dedcic", {dum, t_dagger, t_list}, -1.0*scale*0.25, "e0", make_pair(true, false)));
+  shared_ptr<Equation> eq4c(new Equation("dedcid", {dum, t_dagger, t_list}, -1.0*scale*0.25, "e0", make_pair(false, true)));
   shared_ptr<Equation> eq4d(new Equation("dedcie", {dum, t_dagger, H}, scale*0.50, make_pair(true, false)));
   shared_ptr<Equation> eq4e(new Equation("dedcif", {dum, t_dagger, H}, scale*0.50, make_pair(false, true)));
   shared_ptr<Equation> eq4f(new Equation("dedcig", {dum, t_dagger, hc}, scale*0.50, make_pair(true, false)));

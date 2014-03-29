@@ -214,7 +214,7 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
     for (auto i = index_.rbegin(); i != index_.rend(); ++i)
       tt << (i != index_.rbegin() ? "*" : "") << (*i)->str_gen() << ".size()";
     // update scalar_ name directly
-    tt << ", -" << scalar_ << "_, " << lab << "data.get(), 1);" << endl;
+    tt << ", " << scalar_ << "_, " << lab << "data.get(), 1);" << endl;
   }
   return tt.str();
 }
