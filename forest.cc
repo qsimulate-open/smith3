@@ -241,7 +241,6 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      this->print_iteration();" << endl;
   ss << "      int iter = 0;" << endl;
   ss << "      std::shared_ptr<Queue<T>> queue, energ, correct, dens, dens2, dec;" << endl;
-  ss << "      double e2;" << endl;
   ss << "      for ( ; iter != ref_->maxiter(); ++iter) {" << endl;
   ss << "        std::tie(queue, energ, correct, dens, dens2, dec) = make_queue_();" << endl;
   ss << "        while (!queue->done())" << endl;
@@ -249,12 +248,9 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "        this->update_amplitude(t2, r);" << endl;
   ss << "        const double err = r->rms();" << endl;
   ss << "        r->zero();" << endl;
-  ss << "        const double en = energy(energ);" << endl;
-  ss << "        this->print_iteration(iter, en, err);" << endl;
-  ss << "        if (err < ref_->thresh()) {" << endl;
-  ss << "          e2 = en;" << endl;
-  ss << "          break;" << endl;
-  ss << "        }" << endl;
+  ss << "        this->energy_ = energy(energ);" << endl;
+  ss << "        this->print_iteration(iter, this->energy_, err);" << endl;
+  ss << "        if (err < ref_->thresh()) break;" << endl;
   ss << "      }" << endl;
   ss << "      this->print_iteration(iter == ref_->maxiter());" << endl;
   ss << endl;
@@ -286,8 +282,8 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      deci->ax_plus_y(-2.0*correlated_norm, sigma_);" << endl;
   ss << "      deci->print1(\"cI derivative tensor: \", 1.0e-15);" << endl;
   ss << "      std::cout << std::endl;" << endl;
-  ss << "      std::cout << \"      cI derivative * cI  = \" << std::setprecision(10) <<  deci->dot_product(this->rdm0deriv_) << std::endl;" << endl;
-  ss << "      std::cout << \"      Expecting 2E - 2N*E0  = \" << std::setprecision(10) <<  2.0*e2-2.0*correlated_norm*e0_ << std::endl;" << endl;
+  ss << "      std::cout << \"      cI derivative * cI    = \" << std::setprecision(10) <<  deci->dot_product(this->rdm0deriv_) << std::endl;" << endl;
+  ss << "      std::cout << \"      Expecting 2E - 2N*E0  = \" << std::setprecision(10) <<  2.0*this->energy_-2.0*correlated_norm*e0_ << std::endl;" << endl;
   ss << "      std::cout << std::endl;" << endl;
   ss << "" << endl;
   ss << "    };" << endl;
