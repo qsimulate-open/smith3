@@ -49,6 +49,7 @@ static std::string header() {
   mm << "#include \"energy.h\"" << std::endl;
   mm << "#include \"dedci.h\"" << std::endl;
   mm << "#include \"density.h\"" << std::endl;
+  mm << "#include \"density1.h\"" << std::endl;
   mm << "#include \"density2.h\"" << std::endl;
   mm << "#include \"correction.h\"" << std::endl;
   mm << "" << std::endl;
@@ -60,10 +61,10 @@ static std::string header() {
 };
 
 
-static std::string footer(const std::string res, const std::string energy, const std::string correction, const std::string density, const std::string density2, const std::string dedci) {
+static std::string footer(const std::string res, const std::string energy, const std::string correction, const std::string density, const std::string density1, const std::string density2, const std::string dedci) {
   std::stringstream mm;
 
-  mm << "  list<shared_ptr<Tree>> trees = {" << res << ", " << energy << ", " << correction << ", " << density << ", " << density2 << ", " << dedci <<  "};" << std::endl;
+  mm << "  list<shared_ptr<Tree>> trees = {" << res << ", " << energy << ", " << correction << ", " << density << ", " <<  density1 << ", " << density2 << ", " << dedci <<  "};" << std::endl;
   mm << "  shared_ptr<Forest> fr(new Forest(trees));" << std::endl;
 
   mm << "" <<  std::endl;
@@ -86,13 +87,15 @@ static std::string footer(const std::string res, const std::string energy, const
   mm << "  // output" << std::endl;
   mm << "  cout << std::endl << \"   ***  Residual  ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << res << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Energy  ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  cout << std::endl << \"   ***  Energy E2 ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << energy << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Norm  ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  cout << std::endl << \"   ***  Correlated Norm <1|1> ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << correction << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  One-body Density Matrix  ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  cout << std::endl << \"   ***  One-body Density Matrix d2 ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << density << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Two-body Density Matrix  ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  cout << std::endl << \"   ***  One-body Density Matrix d1 ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  " << density1 << "->print();" << std::endl;
+  mm << "  cout << std::endl << \"   ***  Two-body Density Matrix D1 ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << density2 << "->print();" << std::endl;
   mm << "  cout << std::endl << \"   ***  CI derivative  ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << dedci << "->print();" << std::endl;

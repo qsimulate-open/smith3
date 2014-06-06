@@ -45,7 +45,7 @@ static string merge__(vector<string> array) {
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
     if (label == "f1" || label == "v2" || label == "h1") label = "this->" + label + "_";
-    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? "den2" : label);
+    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? "Den1" : label);
   }
   return ss.str();
 }
@@ -77,7 +77,7 @@ pair<string, string> Density2::create_target(const string indent, const int i) c
   tt << "};" << endl << endl;
 
   ss << "      std::shared_ptr<Queue<T>> density2_(new Queue<T>());" << endl;
-  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << i << " = {den2};" << endl;
+  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << i << " = {Den1};" << endl;
   ss << indent << "std::shared_ptr<Task" << i << "<T>> task" << i << "(new Task" << i << "<T>(tensor" << i << "));" << endl;
   ss << indent << "density2_->add_task(task" << i << ");" << endl << endl;
 
@@ -86,7 +86,7 @@ pair<string, string> Density2::create_target(const string indent, const int i) c
 
 
 shared_ptr<Tensor> Density2::create_tensor(list<shared_ptr<const Index>> dm) const {
- shared_ptr<Tensor> density(new Tensor(1.0, "den2", dm));
+ shared_ptr<Tensor> density(new Tensor(1.0, "Den1", dm));
  return density;
 }
 

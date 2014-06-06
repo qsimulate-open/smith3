@@ -144,12 +144,12 @@ int main() {
 
   // energy equations //
   // second order energy correction
-#if 1
+#if 0
   shared_ptr<Equation> eq3(new Equation("ea", {dum, t_dagger, H}, 0.25));
   shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, hc}, 0.25));
   eq3->merge(eq3a);
 #endif
-#if 0 // test hylleraas variational E2
+#if 1 // test full hylleraas variational E2
   shared_ptr<Equation> eq3(new Equation("ea",  {dum, t_dagger, f, t_list}, 0.25));
   shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, t_list}, -0.25, "e0"));
   shared_ptr<Equation> eq3b(new Equation("ec", {dum, t_dagger, H}, 0.50));
@@ -167,12 +167,14 @@ int main() {
   cout << eq5->generate();
 
   // density matrix equations //
-  // one-body contribution
+  // one-body contribution d2
   shared_ptr<Equation> eq6(new Equation("da", {dum, t_dagger, ex1b, t_list}, 0.25));
-  shared_ptr<Equation> eq6a(new Equation("db", {dum, ex1b, t_list}, 1.0));
-  eq6->merge(eq6a);
   eq6->set_tree_type("density");
   cout << eq6->generate();
+  // one-body contribution d1
+  shared_ptr<Equation> eq6a(new Equation("db", {dum, ex1b, t_list}, 1.0));
+  eq6a->set_tree_type("density1");
+  cout << eq6a->generate();
 
   // two-body contribution
   shared_ptr<Equation> eq7(new Equation("d2a", {dum, proj_list, t_list}, 0.5));
@@ -180,6 +182,7 @@ int main() {
   cout << eq7->generate();
 
   // cI derivative equations, dedci = dE/dcI  //
+#if 1 // test full hylleraas variational E2
   // test hylleraas eqn:   d/dc( <0|T^+fT|0> -e0<0|T^+T|0> +2<0|T^+V2|0> + 2<0|T^+V2|0>) =>
   //  =   1/2(1/4<I|T^+fT|0> + 1/4<0|T^+fT|I>) - 1/2*(e0/4<I|T^+T|0> + e0/4<0|T^+T|I>) + 2*1/2 (1/4<I|T^+V|0> + 1/4<0|T^+V|I>) + 2*1/2 (1/4<I|T^+h1|0> + 1/4<0|T^+h1|I>)
   shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, f, t_list}, 0.25, make_pair(true, false)));
@@ -197,11 +200,21 @@ int main() {
   eq4->merge(eq4e);
   eq4->merge(eq4f);
   eq4->merge(eq4g);
+#endif
+#if 0 // testing  only d/dcI (<1|H|0>)
+  shared_ptr<Equation> eq4(new Equation("dedcie", {dum, t_dagger, H}, 0.50, make_pair(true, false)));
+  shared_ptr<Equation> eq4a(new Equation("dedcif", {dum, t_dagger, H}, 0.50, make_pair(false, true)));
+  shared_ptr<Equation> eq4b(new Equation("dedcig", {dum, t_dagger, hc}, 0.50, make_pair(true, false)));
+  shared_ptr<Equation> eq4c(new Equation("dedcih", {dum, t_dagger, hc}, 0.50, make_pair(false, true)));
+  eq4->merge(eq4a);
+  eq4->merge(eq4b);
+  eq4->merge(eq4c);
+#endif
   eq4->set_tree_type("dedci");
   cout << eq4->generate();
 
   // done. generate the footer
-  cout << footer(eq0->tree_label(), eq3->tree_label(), eq5->tree_label(), eq6->tree_label(), eq7->tree_label(), eq4->tree_label()) << endl;
+  cout << footer(eq0->tree_label(), eq3->tree_label(), eq5->tree_label(), eq6->tree_label(), eq6a->tree_label(), eq7->tree_label(), eq4->tree_label()) << endl;
 
 
   return 0;

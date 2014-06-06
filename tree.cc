@@ -28,6 +28,7 @@
 #include "energy.h"
 #include "residual.h"
 #include "density.h"
+#include "density1.h"
 #include "density2.h"
 #include "correction.h"
 #include "dedci.h"
@@ -69,6 +70,8 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
       tr = make_shared<Correction>(rest, lab, rt_targets);
     } else if (label_ == "density") {
       tr = make_shared<Density>(rest, lab, rt_targets);
+    } else if (label_ == "density1") {
+      tr = make_shared<Density1>(rest, lab, rt_targets);
     } else if (label_ == "density2") {
       tr = make_shared<Density2>(rest, lab, rt_targets);
     } else {
@@ -117,6 +120,8 @@ BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor
     tr = make_shared<Correction>(rest, lab, rt);
   } else if (label_ == "density") {
     tr = make_shared<Density>(rest, lab, rt);
+  } else if (label_ == "density1") {
+    tr = make_shared<Density1>(rest, lab, rt);
   } else if (label_ == "density2") {
     tr = make_shared<Density2>(rest, lab, rt);
   } else {

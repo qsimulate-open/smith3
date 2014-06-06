@@ -130,6 +130,8 @@ class Equation {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Correction(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else if (!tree_type_.empty() && tree_type_ == "density") {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Density(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
+      } else if (!tree_type_.empty() && tree_type_ == "density1") {
+          ss << "  shared_ptr<Tree> " << tree_label() << "(new Density1(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else if (!tree_type_.empty() && tree_type_ == "density2") {
           ss << "  shared_ptr<Tree> " << tree_label() << "(new Density2(e" << diagram_.front()->label() << ", \"" << tree_type_ << "\"));" << std::endl;
       } else {

@@ -130,10 +130,11 @@ pair<string, string> Forest::generate_headers() const {
     ss << "    std::shared_ptr<Tensor<T>> sigma_;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> den1;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> den2;" << endl;
+    ss << "    std::shared_ptr<Tensor<T>> Den1;" << endl;
     ss << "    double correlated_norm;" << endl;
     ss << "    std::shared_ptr<Tensor<T>> deci;" << endl;
     ss << "" << endl;
-    ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
+    ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
     ss << "      std::shared_ptr<Queue<T>> queue_(new Queue<T>());" << endl;
     ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl;
     ss << indent << "std::array<std::shared_ptr<const IndexRange>,4> cindex = {{this->rclosed_, this->ractive_, this->rvirt_, this->rci_}};" << endl << endl;
@@ -219,7 +220,7 @@ pair<string, string> Forest::generate_algorithm() const {
   string indent = "      ";
 
   // generate computational algorithm
-  ss << "      return make_tuple(queue_, energy_, correction_, density_, density2_, dedci_);" << endl;
+  ss << "      return make_tuple(queue_, energy_, correction_, density_, density1_, density2_, dedci_);" << endl;
   ss << "    };" << endl;
   ss << endl;
   ss << "  public:" << endl;
@@ -232,7 +233,8 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      t2->scale(2.0);" << endl;
   ss << "      r = t2->clone();" << endl;
   ss << "      den1 = this->h1_->clone();" << endl;
-  ss << "      den2 = this->v2_->clone();" << endl;
+  ss << "      den2 = this->h1_->clone();" << endl;
+  ss << "      Den1 = this->v2_->clone();" << endl;
   ss << "      deci = this->rdm0deriv_->clone();" << endl;
   ss << "    };" << endl;
   ss << "    ~" << forest_name_ << "() {};" << endl;
@@ -240,9 +242,9 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "    void solve() {" << endl;
   ss << "      this->print_iteration();" << endl;
   ss << "      int iter = 0;" << endl;
-  ss << "      std::shared_ptr<Queue<T>> queue, energ, correct, dens, dens2, dec;" << endl;
+  ss << "      std::shared_ptr<Queue<T>> queue, energ, correct, dens2, dens1, Dens1, dec;" << endl;
   ss << "      for ( ; iter != ref_->maxiter(); ++iter) {" << endl;
-  ss << "        std::tie(queue, energ, correct, dens, dens2, dec) = make_queue_();" << endl;
+  ss << "        std::tie(queue, energ, correct, dens2, dens1, Dens1, dec) = make_queue_();" << endl;
   ss << "        while (!queue->done())" << endl;
   ss << "          queue->next_compute();" << endl;
   ss << "        this->update_amplitude(t2, r);" << endl;
@@ -261,18 +263,25 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      std::cout << \"      Norm  = \" << std::setprecision(10) << correlated_norm << std::endl;" << endl;
   ss << "      std::cout << std::endl;" << endl;
   ss << endl;
-  ss << "      std::cout << \" === Computing unrelaxed density matrix, dm1, <1|E_pq|1> + 2<0|E_pq|1> ===\" << std::endl;" << endl;
-  ss << "      while (!dens->done())" << endl;
-  ss << "        dens->next_compute();" << endl;
-  ss << "#if 0" << endl;
-  ss << "      den1->print2(\"smith d1 correlated one-body density matrix\", 1.0e-5);" << endl;
-  ss << "#endif" << endl;
-  ss << "      std::cout << std::endl;" << endl;
-  ss << "      std::cout << \" === Computing unrelaxed density matrix, dm2, <0|E_pqrs|1>  ===\" << std::endl;" << endl;
+  ss << "      std::cout << \" === Computing unrelaxed one-body density matrix, dm2, <1|E_pq|1>  ===\" << std::endl;" << endl;
   ss << "      while (!dens2->done())" << endl;
   ss << "        dens2->next_compute();" << endl;
   ss << "#if 0" << endl;
-  ss << "      den2->print4(\"smith d2 correlated two-body density matrix\", 1.0e-5);" << endl;
+  ss << "      den2->print2(\"smith d1 correlated one-body density matrix dm2 \", 1.0e-5);" << endl;
+  ss << "#endif" << endl;
+  ss << "      std::cout << std::endl;" << endl;
+  ss << "      std::cout << \" === Computing unrelaxed one-body density matrix, dm1, 2<0|E_pq|1> ===\" << std::endl;" << endl;
+  ss << "      while (!dens1->done())" << endl;
+  ss << "        dens1->next_compute();" << endl;
+  ss << "#if 0" << endl;
+  ss << "      den1->print2(\"smith d1 correlated one-body density matrix dm1\", 1.0e-5);" << endl;
+  ss << "#endif" << endl;
+  ss << "      std::cout << std::endl;" << endl;
+  ss << "      std::cout << \" === Computing unrelaxed two-body density matrix, D1, <0|E_pqrs|1>  ===\" << std::endl;" << endl;
+  ss << "      while (!Dens1->done())" << endl;
+  ss << "        Dens1->next_compute();" << endl;
+  ss << "#if 0" << endl;
+  ss << "      Den1->print4(\"smith d2 correlated two-body density matrix D1\", 1.0e-5);" << endl;
   ss << "#endif" << endl;
   ss << "      std::cout << std::endl;" << endl;
   ss << endl;
@@ -306,8 +315,9 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "      return n;" << endl;
   ss << "    }" << endl;
   ss << endl;  // end comparison correction
-  ss << "    std::shared_ptr<const Matrix> rdm1() const { return den1->matrix(); }" << endl;
-  ss << "    std::shared_ptr<const Matrix> rdm2() const { return den2->matrix2(); }" << endl;
+  ss << "    std::shared_ptr<const Matrix> rdm11() const { return den1->matrix(); }" << endl;
+  ss << "    std::shared_ptr<const Matrix> rdm12() const { return den2->matrix(); }" << endl;
+  ss << "    std::shared_ptr<const Matrix> rdm21() const { return Den1->matrix2(); }" << endl;
   ss << endl;
   ss << "    double rdm1_correction() const { return correlated_norm; }" << endl;
   ss << endl;
