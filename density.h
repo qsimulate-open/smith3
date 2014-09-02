@@ -35,6 +35,7 @@
 
 namespace smith {
 
+/// Derived class for density tree. This is the unrelaxed one-body density matrix, dm2, <1|E_pq|1>.
 class Density : public Tree {
   protected:
 

@@ -89,13 +89,13 @@ static std::string footer(const std::string res, const std::string energy, const
   mm << "  " << res << "->print();" << std::endl;
   mm << "  cout << std::endl << \"   ***  Energy E2 ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << energy << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Correlated Norm <1|1> ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  cout << std::endl << \"   ***  Correlated norm <1|1> ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << correction << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  One-body Density Matrix d2 ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  cout << std::endl << \"   ***  Correlated one-body density matrix d2 ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << density << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  One-body Density Matrix d1 ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  cout << std::endl << \"   ***  Correlated one-body density matrix d1 ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << density1 << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Two-body Density Matrix D1 ***\" << std::endl << std::endl;" << std::endl;
+  mm << "  cout << std::endl << \"   ***  Correlated two-body density matrix D1 ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << density2 << "->print();" << std::endl;
   mm << "  cout << std::endl << \"   ***  CI derivative  ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << dedci << "->print();" << std::endl;

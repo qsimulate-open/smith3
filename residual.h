@@ -35,6 +35,7 @@
 
 namespace smith {
 
+/// Derived class for residual tree. Solve for T amplitudes iteratively.
 class Residual : public Tree {
   protected:
 

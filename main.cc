@@ -183,13 +183,13 @@ int main() {
   tra->print();
   cout << std::endl << "   ***  Energy E2 ***" << std::endl << std::endl;
   tea->print();
-  cout << std::endl << "   ***  Correlated Norm <1|1> ***" << std::endl << std::endl;
+  cout << std::endl << "   ***  Correlated norm <1|1> ***" << std::endl << std::endl;
   tca->print();
-  cout << std::endl << "   ***  One-body Density Matrix d2 ***" << std::endl << std::endl;
+  cout << std::endl << "   ***  Correlated one-body density matrix d2 ***" << std::endl << std::endl;
   tda->print();
-  cout << std::endl << "   ***  One-body Density Matrix d1 ***" << std::endl << std::endl;
+  cout << std::endl << "   ***  Correlated one-body density matrix d1 ***" << std::endl << std::endl;
   tdb->print();
-  cout << std::endl << "   ***  Two-body Density Matrix D1 ***" << std::endl << std::endl;
+  cout << std::endl << "   ***  Correlated two-body density matrix D1 ***" << std::endl << std::endl;
   td2a->print();
   cout << std::endl << "   ***  CI derivative  ***" << std::endl << std::endl;
   tdedcia->print();

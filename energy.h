@@ -35,6 +35,7 @@
 
 namespace smith {
 
+/// Derived class for energy tree.
 class Energy : public Tree {
   protected:
 

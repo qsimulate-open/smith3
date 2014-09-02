@@ -35,7 +35,7 @@
 
 namespace smith {
 
-/// This derived class generates the correction term <1|1> which is needed for comparisions to the MP2 density matrix.
+/// This derived class generates the correction term <1|1> which is needed for comparisons to the MP2 density matrix.
 class Correction : public Tree {
   protected:
 

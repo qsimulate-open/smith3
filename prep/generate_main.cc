@@ -68,6 +68,9 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
               (l == "x" && k == "c" && j == "x" && i == "x")) {
 #else  // turn on one of the following lines
        // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a")) {  // mp2 test ansatz
+       // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a")) {  // i)   mp2 test ansatz - xxaa = ccaa + xcaa
+       // if ((l == "x" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a")) {  // ii)  mp2 test ansatz - ccaa = xcaa + xxaa
+       // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a")) {  // iii) mp2 test ansatz - xcaa = ccaa + xxaa
        // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a") || (l == "c" && k == "c" && j == "x" && i == "a")) {
        // if (l == "c" && k == "x" && j == "x" && i == "a") {  // test cxxa
        // if (l == "x" && k == "c" && j == "x" && i == "a") {  // test xcxa
@@ -176,7 +179,7 @@ int main() {
   eq6a->set_tree_type("density1");
   cout << eq6a->generate();
 
-  // two-body contribution
+  // two-body contribution D1
   shared_ptr<Equation> eq7(new Equation("d2a", {dum, proj_list, t_list}, 0.5));
   eq7->set_tree_type("density2");
   cout << eq7->generate();
