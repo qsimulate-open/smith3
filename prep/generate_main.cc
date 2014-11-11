@@ -147,12 +147,12 @@ int main() {
 
   // energy equations //
   // second order energy correction
-#if 0
+#if 1
   shared_ptr<Equation> eq3(new Equation("ea", {dum, t_dagger, H}, 0.25));
   shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, hc}, 0.25));
   eq3->merge(eq3a);
-#endif
-#if 1 // test full hylleraas variational E2
+#else // test full hylleraas variational E2
+  // TODO E2 = <1|H|0> + <R|T>
   shared_ptr<Equation> eq3(new Equation("ea",  {dum, t_dagger, f, t_list}, 0.25));
   shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, t_list}, -0.25, "e0"));
   shared_ptr<Equation> eq3b(new Equation("ec", {dum, t_dagger, H}, 0.50));
