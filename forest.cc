@@ -64,43 +64,44 @@ void Forest::filter_gamma() {
 }
 
 
-pair<string, string> Forest::generate_code() const {
-  stringstream ss, tt;
-  string depends, tasks;
-  pair<string, string> out;
+tuple<string, string, string> Forest::generate_code() const {
+  stringstream ss, tt, cc;
+  string depends, tasks, specials;
 
-  out = generate_headers();
-  ss << out.first;
-  tt << out.second;
+  auto out = generate_headers();
+  ss << get<0>(out);
+  tt << get<1>(out);
+  cc << get<2>(out);
 
-  out = generate_gammas();
-  ss << out.first;
-  tt << out.second;
+  auto out1 = generate_gammas();
+  ss << out1.first;
+  tt << out1.second;
 
   for (auto& i : trees_) {
-    tuple<string, string, int, int, vector<shared_ptr<Tensor>>> tmp = i->generate_task_list(icnt, i0, gamma_, itensors_);
-    tie(depends, tasks, icnt, i0, itensors_) = tmp;
+    tie(depends, tasks, specials, icnt, i0, itensors_) = i->generate_task_list(icnt, i0, gamma_, itensors_);
     ss << depends;
     tt << tasks;
+    cc << specials;
   }
 
-  out = generate_algorithm();
-  ss << out.first;
-  tt << out.second;
+  out1 = generate_algorithm();
+  ss << out1.first;
+  tt << out1.second;
 
-  return make_pair(ss.str(),tt.str());
+  return make_tuple(ss.str(),tt.str(),cc.str());
 }
 
 
-pair<string, string> Forest::generate_headers() const {
-  stringstream ss, tt;
+tuple<string, string, string> Forest::generate_headers() const {
+  stringstream ss, tt, cc;
   string indent = "      ";
     // save task zero
     icnt = 0;
     i0 = icnt;
 
-    ss << header(forest_name_);
-    tt << header(forest_name_ + "_tasks");
+    ss << header(forest_name_ + ".h");
+    tt << header(forest_name_ + "_tasks.h");
+    cc << header(forest_name_ + "_tasks.cc");
 
     ss << "#ifndef __SRC_SMITH_" << forest_name_ << "_H" << endl;
     ss << "#define __SRC_SMITH_" << forest_name_ << "_H" << endl;
@@ -148,12 +149,18 @@ pair<string, string> Forest::generate_headers() const {
     tt << "#include <src/smith/tensor.h>" << endl;
     tt << "#include <src/smith/task.h>" << endl;
     tt << "#include <src/smith/subtask.h>" << endl;
+    tt << "#include <src/smith/storage.h>" << endl;
     tt << "#include <vector>" << endl;
     tt << "" << endl;
     tt << "namespace bagel {" << endl;
     tt << "namespace SMITH {" << endl;
     tt << "namespace " << forest_name_ << "{" << endl;
     tt << "" << endl;
+
+    cc << "#include <src/smith/" << forest_name_ << ".h>" << endl << endl; 
+    cc << "using namespace bagel;" << endl;
+    cc << "using namespace bagel::SMITH;" << endl << endl;
+    cc << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
 
     // virtual function, generate Task0 which zeros out the residual and starts zero level dependency queue.
     pair<string, string> rtmp = trees_.front()->create_target(indent, icnt);
@@ -162,7 +169,7 @@ pair<string, string> Forest::generate_headers() const {
     ++icnt;
 
 
-  return make_pair(ss.str(), tt.str());
+  return make_tuple(ss.str(), tt.str(), cc.str());
 }
 
 

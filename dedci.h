@@ -54,7 +54,7 @@ class Dedci : public Tree {
 
     std::string generate_task(const std::string, const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0, bool der = false) const override;
     std::string generate_compute_header(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool = false) const override;
-    std::string generate_compute_footer(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>) const override;
+    std::tuple<std::string,std::string> generate_compute_footer(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>) const override;
     std::pair<std::string, std::string> generate_bc(std::string indent, std::shared_ptr<BinaryContraction>) const override;
 
 };

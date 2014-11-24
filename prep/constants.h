@@ -73,15 +73,18 @@ static std::string footer(const std::string res, const std::string energy, const
   mm << "  const list<shared_ptr<Tensor>> gamma = gm;" << std::endl;
 
   mm << "" <<  std::endl;
-  mm << "  pair<string, string> tmp = fr->generate_code();" << std::endl;
+  mm << "  tuple<string, string, string> tmp = fr->generate_code();" << std::endl;
 
   mm << "" <<  std::endl;
   mm << "  ofstream fs(fr->name() + \".h\");" << std::endl;
   mm << "  ofstream es(fr->name() + \"_tasks.h\");" << std::endl;
-  mm << "  fs << tmp.first;" << std::endl;
-  mm << "  es << tmp.second;" << std::endl;
+  mm << "  ofstream cs(fr->name() + \"_tasks.cc\");" << std::endl;
+  mm << "  fs << get<0>(tmp);" << std::endl;
+  mm << "  es << get<1>(tmp);" << std::endl;
+  mm << "  cs << get<2>(tmp);" << std::endl;
   mm << "  fs.close();" << std::endl;
   mm << "  es.close();" << std::endl;
+  mm << "  cs.close();" << std::endl;
   mm << "  cout << std::endl;" << std::endl;
   mm << "" <<  std::endl;
   mm << "  // output" << std::endl;

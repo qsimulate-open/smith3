@@ -67,7 +67,7 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
               (l == "x" && k == "x" && j == "x" && i == "a") ||
               (l == "x" && k == "c" && j == "x" && i == "x")) {
 #else  // turn on one of the following lines
-       // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a")) {  // mp2 test ansatz
+          if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a")) {  // mp2 test ansatz
        // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a")) {  // i)   mp2 test ansatz - xxaa = ccaa + xcaa
        // if ((l == "x" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a")) {  // ii)  mp2 test ansatz - ccaa = xcaa + xxaa
        // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a")) {  // iii) mp2 test ansatz - xcaa = ccaa + xxaa
@@ -80,7 +80,7 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
        //     (l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a") || (l == "x" && k == "x" && j == "x" && i == "a")) {
        // if (l == "x" && k == "c" && j == "x" && i == "a") { // xcxa
 // *test single configuration cases*
-          if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
+//        if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
 //        if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
 //        if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
 //        if (l == "c" && k == "c" && j == "x" && i == "a") { // ccxa
@@ -147,7 +147,7 @@ int main() {
 
   // energy equations //
   // second order energy correction
-#if 1
+#if 0
   shared_ptr<Equation> eq3(new Equation("ea", {dum, t_dagger, H}, 0.25));
   shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, hc}, 0.25));
   eq3->merge(eq3a);

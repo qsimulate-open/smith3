@@ -39,8 +39,8 @@ static std::string header(const std::string& filename) {
   std::stringstream ss;
   ss << "//" << std::endl;
   ss << "// BAGEL - Parallel electron correlation program." << std::endl;
-  ss << "// Filename: " << filename << ".h" << std::endl;
-  ss << "// Copyright (C) 2012 Shiozaki group" << std::endl;
+  ss << "// Filename: " << filename << std::endl;
+  ss << "// Copyright (C) 2014 Shiozaki group" << std::endl;
   ss << "//" << std::endl;
   ss << "// Author: Shiozaki group <shiozaki@northwestern.edu>" << std::endl;
   ss << "// Maintainer: Shiozaki group" << std::endl;

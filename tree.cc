@@ -485,24 +485,26 @@ string Tree::add_depend(const shared_ptr<const Tensor> o, const list<shared_ptr<
 }
 
 
-tuple<string, string, int, int, vector<shared_ptr<Tensor>>> BinaryContraction::generate_task_list(int tcnt, int t0, const list<shared_ptr<Tensor>> gamma, vector<shared_ptr<Tensor>> itensors) const {
-  stringstream ss, tt;
-  string depends, tasks;
+tuple<string, string, string, int, int, vector<shared_ptr<Tensor>>>
+  BinaryContraction::generate_task_list(int tcnt, int t0, const list<shared_ptr<Tensor>> gamma, vector<shared_ptr<Tensor>> itensors) const {
+  stringstream ss, tt, cc;
+  string depends, tasks, specials;
 
   for (auto& i : subtree_) {
-    tuple<string, string, int, int, vector<shared_ptr<Tensor>>> tmp = i->generate_task_list(tcnt, t0, gamma, itensors);
-    tie(depends, tasks, tcnt, t0, itensors) = tmp;
+    tie(depends, tasks, specials, tcnt, t0, itensors) = i->generate_task_list(tcnt, t0, gamma, itensors);
     ss << depends;
     tt << tasks;
+    cc << specials;
   }
-  return make_tuple(ss.str(), tt.str(), tcnt, t0, itensors);
+  return make_tuple(ss.str(), tt.str(), cc.str(), tcnt, t0, itensors);
 }
 
 
-tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_task_list(int tcnt, int t0, const list<shared_ptr<Tensor>> gamma, vector<shared_ptr<Tensor>> itensors) const {
+tuple<string, string, string, int, int, vector<shared_ptr<Tensor>>>
+  Tree::generate_task_list(int tcnt, int t0, const list<shared_ptr<Tensor>> gamma, vector<shared_ptr<Tensor>> itensors) const {
   // here ss is dependencies, tt is tasks
-  stringstream ss, tt;
-  string depends, tasks;
+  stringstream ss, tt, cc;
+  string depends, tasks, specials;
   string indent = "      ";
 
   if (depth() == 0) { //////////////////// zero depth /////////////////////////////
@@ -580,55 +582,62 @@ tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_task_
                 // sending inner indices
                 list<shared_ptr<const Index>> di = j->loop_indices();
                 di.reverse();
-                tt << generate_compute_footer(num_, di, source_tensors);
+                string stringtt, stringcc;
+                tie(stringtt, stringcc) = generate_compute_footer(num_, di, source_tensors);
+                tt << stringtt;
+                cc << stringcc;
               } else {
                 // sending outer indices
-                tt << generate_compute_footer(num_, ti, source_tensors);
+                string stringtt, stringcc;
+                tie(stringtt, stringcc) = generate_compute_footer(num_, ti, source_tensors);
+                tt << stringtt;
+                cc << stringcc;
               }
             }
             // increment task counter
             ++tcnt;
           }
 
-          tuple<string, string, int, int, vector<shared_ptr<Tensor>>> tmp = j->generate_task_list(tcnt, t0, gamma, itensors);
-          tie(depends, tasks, tcnt, t0, itensors) = tmp;
+          tie(depends, tasks, specials, tcnt, t0, itensors) = j->generate_task_list(tcnt, t0, gamma, itensors);
           ss << depends;
           tt << tasks;
+          cc << specials;
 
         }
       } else { // residual
 
-      // step through op and bc. Careful, triggers recursive call
-      tuple<string, string, int, int, vector<shared_ptr<Tensor>>> tmp = generate_steps(indent, tcnt, t0, gamma, itensors);
-      tie(depends, tasks, tcnt, t0, itensors) = tmp;
-      ss << depends;
-      tt << tasks;
-     }
+        // step through op and bc. Careful, triggers recursive call
+        tie(depends, tasks, specials, tcnt, t0, itensors) = generate_steps(indent, tcnt, t0, gamma, itensors);
+        ss << depends;
+        tt << tasks;
+        cc << specials;
+      }
 
     } else {  // trees without root target indices
       ss << "      std::shared_ptr<Queue<T>> " << label() << "_(new Queue<T>());" << endl;
       num_ = tcnt;
       for (auto& j : bc_) {
-        tuple<string, string, int, int, vector<shared_ptr<Tensor>>> tmp = j->generate_task_list(tcnt, t0, gamma, itensors);
-        tie(depends, tasks, tcnt, t0, itensors) = tmp;
+        tie(depends, tasks, specials, tcnt, t0, itensors) = j->generate_task_list(tcnt, t0, gamma, itensors);
         ss << depends;
         tt << tasks;
+        cc << specials;
       }
     }
   } else { //////////////////// non-zero depth /////////////////////////////
-    tuple<string, string, int, int, vector<shared_ptr<Tensor>>> tmp = generate_steps(indent, tcnt, t0, gamma, itensors);
-    tie(depends, tasks, tcnt, t0, itensors) = tmp;
+    tie(depends, tasks, specials, tcnt, t0, itensors) = generate_steps(indent, tcnt, t0, gamma, itensors);
     ss << depends;
     tt << tasks;
+    cc << specials;
   }
 
-  return make_tuple(ss.str(), tt.str(), tcnt, t0, itensors);
+  return make_tuple(ss.str(), tt.str(), cc.str(), tcnt, t0, itensors);
 }
 
 
-tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_steps(string indent, int tcnt, int t0, const list<shared_ptr<Tensor>> gamma, vector<shared_ptr<Tensor>> itensors) const {
-  stringstream ss, tt;
-  string depends, tasks;
+tuple<string, string, string, int, int, vector<shared_ptr<Tensor>>>
+    Tree::generate_steps(string indent, int tcnt, int t0, const list<shared_ptr<Tensor>> gamma, vector<shared_ptr<Tensor>> itensors) const {
+  stringstream ss, tt, cc;
+  string depends, tasks, specials;
   /////////////////////////////////////////////////////////////////
   // if op_ is not empty, we add a task that adds up op_.
   /////////////////////////////////////////////////////////////////
@@ -658,7 +667,11 @@ tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_steps
 
     tt << generate_compute_header(tcnt, ti, uniq_tensors);
     tt << generate_compute_operators(indent, target_, op_);
-    tt << generate_compute_footer(tcnt, ti, uniq_tensors);
+
+    string stringtt, stringcc;
+    tie(stringtt, stringcc) = generate_compute_footer(tcnt, ti, uniq_tensors);
+    tt << stringtt;
+    cc << stringcc;
 
     ++tcnt;
   }
@@ -709,10 +722,16 @@ tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_steps
         // sending inner indices
         list<shared_ptr<const Index>> di = (*i)->loop_indices();
         di.reverse();
-        tt << generate_compute_footer(num_, di, source_tensors);
+        string stringtt, stringcc;
+        tie(stringtt, stringcc) = generate_compute_footer(num_, di, source_tensors);
+        tt << stringtt;
+        cc << stringcc;
       } else {
         // sending outer indices
-        tt << generate_compute_footer(num_, ti, source_tensors);
+        string stringtt, stringcc;
+        tie(stringtt,stringcc) = generate_compute_footer(num_, ti, source_tensors);
+        tt << stringtt;
+        cc << stringcc;
       }
     }
 
@@ -721,13 +740,13 @@ tuple<string, string, int, int, vector<shared_ptr<Tensor>>> Tree::generate_steps
     // increment tcnt before going to subtrees
     ++tcnt;
     // triggers a recursive call
-    tuple<string, string, int, int, vector<shared_ptr<Tensor>>> tmp = (*i)->generate_task_list(tcnt, t0, gamma, itensors);
-    tie(depends, tasks, tcnt, t0, itensors) = tmp;
+    tie(depends, tasks, specials, tcnt, t0, itensors) = (*i)->generate_task_list(tcnt, t0, gamma, itensors);
     ss << depends;
     tt << tasks;
+    cc << specials;
   } // end bc
 
-  return make_tuple(ss.str(), tt.str(), tcnt, t0, itensors);
+  return make_tuple(ss.str(), tt.str(), cc.str(), tcnt, t0, itensors);
 }
 
 

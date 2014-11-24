@@ -120,7 +120,8 @@ class BinaryContraction {
     int depth() const;
 
     /// Calls generate_task_list for subtree.
-    std::tuple<std::string, std::string, int, int, std::vector<std::shared_ptr<Tensor>>> generate_task_list(int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
+    std::tuple<std::string, std::string, std::string, int, int, std::vector<std::shared_ptr<Tensor>>>
+        generate_task_list(int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
 
 };
 
@@ -228,9 +229,11 @@ class Tree {
 
     // code generators!
     /// Generate task and task list files.
-    std::tuple<std::string,std::string, int, int, std::vector<std::shared_ptr<Tensor>>> generate_task_list(int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
+    std::tuple<std::string, std::string, std::string, int, int, std::vector<std::shared_ptr<Tensor>>>
+        generate_task_list(int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
     /// Generate code by stepping through op and bc.
-    std::tuple<std::string, std::string, int, int, std::vector<std::shared_ptr<Tensor>>> generate_steps(const std::string indent, int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
+    std::tuple<std::string, std::string, std::string, int, int, std::vector<std::shared_ptr<Tensor>>>
+        generate_steps(const std::string indent, int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
     /// Generate task in dependency file with ic as task number. Caution also have a virtual generate_task.
     std::string generate_task(const std::string indent, const int ic, const std::vector<std::shared_ptr<Tensor>>, const std::list<std::shared_ptr<Tensor>> g, const int i0 = 0) const;
 
@@ -248,7 +251,7 @@ class Tree {
     /// Generate task header.
     virtual std::string generate_compute_header(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool = false) const = 0;
     /// Generate task footer.
-    virtual std::string generate_compute_footer(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>) const = 0;
+    virtual std::tuple<std::string,std::string> generate_compute_footer(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>) const = 0;
     /// Generate Binary contraction code.
     virtual std::pair<std::string, std::string> generate_bc(const std::string, const std::shared_ptr<BinaryContraction>) const = 0;
 

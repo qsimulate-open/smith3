@@ -129,14 +129,14 @@ string Correction::generate_compute_header(const int ic, const list<shared_ptr<c
 }
 
 
-string Correction::generate_compute_footer(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors) const {
+tuple<string,string> Correction::generate_compute_footer(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors) const {
   const int ninptensors = tensors.size()-1;
   assert(ninptensors > 0);
   bool need_e0 = false;
   for (auto& s : tensors)
     if (!s->scalar().empty()) need_e0 = true;
 
-  stringstream tt;
+  stringstream tt,cc;
   tt << "        }" << endl;
   tt << "    };" << endl;
   tt << "" << endl;
@@ -183,10 +183,12 @@ string Correction::generate_compute_footer(const int ic, const list<shared_ptr<c
     tt << indent  << "subtasks_.push_back(std::shared_ptr<Task_local>(new Task_local(in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
   }
 
-  tt << "    };" << endl;
-  tt << "    ~Task" << ic << "() {};" << endl;
+  tt << "    }" << endl;
+  tt << "    ~Task" << ic << "() {}" << endl;
   tt << "};" << endl << endl;
-  return tt.str();
+  tt << "extern template class Task" << ic << "<Storage_Incore>;" << endl << endl;
+  cc << "template class Task" << ic << "<Storage_Incore>;" << endl;
+  return make_tuple(tt.str(), cc.str());
 }
 
 

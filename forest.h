@@ -80,9 +80,9 @@ class Forest {
 
     // code generation //
     /// Driver for code generation goes through trees and generates task and task list files.
-    std::pair<std::string,std::string> generate_code() const;
+    std::tuple<std::string,std::string,std::string> generate_code() const;
     /// Generates headers and residual target task.
-    std::pair<std::string,std::string> generate_headers() const;
+    std::tuple<std::string,std::string,std::string> generate_headers() const;
     /// Generates code for all unique gamma.
     std::pair<std::string,std::string> generate_gammas() const;
     /// Generates the algorithm to be used in BAGEL.
