@@ -106,12 +106,12 @@ tuple<string, string, string> Forest::generate_headers() const {
     ss << "#ifndef __SRC_SMITH_" << forest_name_ << "_H" << endl;
     ss << "#define __SRC_SMITH_" << forest_name_ << "_H" << endl;
     ss << "" << endl;
-    ss << "#include <src/smith/spinfreebase.h>" << endl;
-    ss << "#include <src/scf/fock.h>" << endl;
-    ss << "#include <src/util/f77.h>" << endl;
     ss << "#include <iostream>" << endl;
     ss << "#include <tuple>" << endl;
     ss << "#include <iomanip>" << endl;
+    ss << "#include <src/smith/spinfreebase.h>" << endl;
+    ss << "#include <src/scf/hf/fock.h>" << endl;
+    ss << "#include <src/util/f77.h>" << endl;
     ss << "#include <src/smith/queue.h>" << endl;
     ss << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl;
     ss << "#include <src/smith/smith_info.h>" << endl;
