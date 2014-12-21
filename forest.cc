@@ -167,6 +167,7 @@ tuple<string, string, string> Forest::generate_headers() const {
     auto rtmp = trees_.front()->create_target(indent, icnt);
     ss << get<0>(rtmp);
     tt << get<1>(rtmp);
+    cc << get<2>(rtmp);
     ++icnt;
 
 
