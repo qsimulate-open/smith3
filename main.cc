@@ -168,17 +168,20 @@ int main() {
   list<shared_ptr<Tensor>> gm = fr->gamma();
   const list<shared_ptr<Tensor>> gamma = gm;
 
-  tuple<string, string, string> tmp = fr->generate_code();
+  auto tmp = fr->generate_code();
 
   ofstream fs(fr->name() + ".h");
   ofstream es(fr->name() + "_tasks.h");
-  ofstream cs(fr->name() + "_tasks.cc");
-  fs << get<0>(tmp);
-  es << get<1>(tmp);
-  cs << get<2>(tmp);
+  ofstream cs(fr->name() + "_gen.cc");
+  ofstream ds(fr->name() + "_tasks.cc");
+  fs << tmp.ss.str();
+  es << tmp.tt.str();
+  cs << tmp.cc.str();
+  ds << tmp.dd.str();
   fs.close();
   es.close();
   cs.close();
+  ds.close();
   cout << std::endl;
 
   // output

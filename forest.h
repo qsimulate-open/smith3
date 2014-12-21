@@ -27,6 +27,7 @@
 #ifndef __FOREST_H
 #define __FOREST_H
 
+#include "output.h"
 #include <string>
 #include <memory>
 #include <list>
@@ -80,13 +81,13 @@ class Forest {
 
     // code generation //
     /// Driver for code generation goes through trees and generates task and task list files.
-    std::tuple<std::string,std::string,std::string> generate_code() const;
+    OutStream generate_code() const;
     /// Generates headers and residual target task.
-    std::tuple<std::string,std::string,std::string> generate_headers() const;
+    OutStream generate_headers() const;
     /// Generates code for all unique gamma.
-    std::tuple<std::string,std::string,std::string> generate_gammas() const;
+    OutStream generate_gammas() const;
     /// Generates the algorithm to be used in BAGEL.
-    std::pair<std::string,std::string> generate_algorithm() const;
+    OutStream generate_algorithm() const;
 
     /// Returns num_. Should be greater than zero, otherwise throws an error.
     int num() const {

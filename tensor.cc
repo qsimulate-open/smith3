@@ -479,10 +479,10 @@ string Tensor::generate_loop(string& indent, vector<string>& close) const {
 }
 
 
-tuple<string,string> Tensor::generate_gamma(const int ic, const bool use_blas, const bool der) const {
+OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool der) const {
   // TODO split generate_gamma function up to header/body/footer once working (too large now)
   assert(label_.find("Gamma") != string::npos);
-  stringstream tt, cc;
+  OutStream out;
 
 
   // determine number of task loops to be separeted, if merged combine
@@ -508,27 +508,27 @@ tuple<string,string> Tensor::generate_gamma(const int ic, const bool use_blas, c
 
   //////////// gamma header ////////////
 #ifdef debug_tasks
-  tt << "class Task" << ic << " : public Task {" <<  "  // associated with gamma" << endl;
+  out.tt << "class Task" << ic << " : public Task {" <<  "  // associated with gamma" << endl;
 #else
-  tt << "class Task" << ic << " : public Task {" << endl;
+  out.tt << "class Task" << ic << " : public Task {" << endl;
 #endif
-  tt << "  protected:" << endl;
-  tt << "    class Task_local : public SubTask<" << nindex << "," << ninptensors << "> {" << endl;
-  tt << "      protected:" << endl;
-  tt << "        const std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range_;" << endl;
-  tt << endl;
+  out.tt << "  protected:" << endl;
+  out.tt << "    class Task_local : public SubTask<" << nindex << "," << ninptensors << "> {" << endl;
+  out.tt << "      protected:" << endl;
+  out.tt << "        const std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range_;" << endl;
+  out.tt << endl;
 
-  tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
-  tt << "        const std::shared_ptr<const Tensor>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
-  tt << "        const std::shared_ptr<Tensor>& out() const { return this->out_tensor(); }" << endl;
-  tt << endl;
-  tt << "      public:" << endl;
-  tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor>," << ninptensors <<  ">& in, std::shared_ptr<Tensor>& out," << endl;
-  tt << "                   std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << ">& ran)" << endl;
-  tt << "          : SubTask<" << nindex << "," << ninptensors << ">(block, in, out), range_(ran) { }" << endl;
-  tt << endl;
-  tt << endl;
-  tt << "        void compute() override {" << endl;
+  out.tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
+  out.tt << "        const std::shared_ptr<const Tensor>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
+  out.tt << "        const std::shared_ptr<Tensor>& out() const { return this->out_tensor(); }" << endl;
+  out.tt << endl;
+  out.tt << "      public:" << endl;
+  out.tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor>," << ninptensors <<  ">& in, std::shared_ptr<Tensor>& out," << endl;
+  out.tt << "                   std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << ">& ran)" << endl;
+  out.tt << "          : SubTask<" << nindex << "," << ninptensors << ">(block, in, out), range_(ran) { }" << endl;
+  out.tt << endl;
+  out.tt << endl;
+  out.tt << "        void compute() override {" << endl;
 
   //////////// gamma body  ////////////
   string indent ="          ";
@@ -536,108 +536,108 @@ tuple<string,string> Tensor::generate_gamma(const int ic, const bool use_blas, c
   int bcnt = 0;
   if (der) {
     for (auto i = index_.rbegin(); i != index_.rend(); ++i, bcnt++)
-      tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
+      out.tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
     if (merged_) {
       for (auto i = merged.rbegin(); i != merged.rend(); ++i, bcnt++)
-        tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
+        out.tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
     }
   } else {
     for (auto i = index_.begin(); i != index_.end(); ++i, bcnt++)
-      tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
+      out.tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
     if (merged_) {
       for (auto i = merged.begin(); i != merged.end(); ++i, bcnt++)
-        tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
+        out.tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
     }
   }
 
 #ifdef debug_tasks // debug purposes
-   tt << indent <<  "// std::shared_ptr<Tensor > " << label() << ";" << endl;
+   out.tt << indent <<  "// std::shared_ptr<Tensor > " << label() << ";" << endl;
    for (auto& i: rdmn)
-     tt << indent << "// std::shared_ptr<Tensor > rdm" << i << (der ? "I0" : "") << ";" << endl;
+     out.tt << indent << "// std::shared_ptr<Tensor > rdm" << i << (der ? "I0" : "") << ";" << endl;
    if (merged_)
-     tt << indent << "// std::shared_ptr<Tensor > " << merged_->label() << ";" << endl;
-   tt << endl;
+     out.tt << indent << "// std::shared_ptr<Tensor > " << merged_->label() << ";" << endl;
+   out.tt << endl;
 #endif
 
   // generate gamma get block, true does a move_block
-  tt << generate_get_block(indent, "o", "out()", true, true); // first true means move, second true means we don't scale
+  out.tt << generate_get_block(indent, "o", "out()", true, true); // first true means move, second true means we don't scale
   if (merged_) {
-    if (use_blas && !index_.empty()) tt << generate_scratch_area(indent, "o", "out", true);
+    if (use_blas && !index_.empty()) out.tt << generate_scratch_area(indent, "o", "out", true);
   }
   // now generate codes for rdm
-  tt << generate_active(indent, "o", ninptensors, use_blas);
+  out.tt << generate_active(indent, "o", ninptensors, use_blas);
 
   // generate gamma put block
-  tt << indent << "out()->put_block(odata";
+  out.tt << indent << "out()->put_block(odata";
   for (auto i = index_.rbegin(); i != index_.rend(); ++i)
-    tt << ", " << (*i)->str_gen();
-  tt << ");" << endl;
+    out.tt << ", " << (*i)->str_gen();
+  out.tt << ");" << endl;
 
   //////////// gamma footer  ////////////
-  tt << "        }" << endl;
-  tt << "    };" << endl;
-  tt << "" << endl;
-  tt << "    std::vector<std::shared_ptr<Task_local>> subtasks_;" << endl;
-  tt << "" << endl;
+  out.tt << "        }" << endl;
+  out.tt << "    };" << endl;
+  out.tt << "" << endl;
+  out.tt << "    std::vector<std::shared_ptr<Task_local>> subtasks_;" << endl;
+  out.tt << "" << endl;
 
-  tt << "    void compute_() override {" << endl;
-  tt << "      for (auto& i : subtasks_) i->compute();" << endl;
-  tt << "    }" << endl << endl;
+  out.tt << "    void compute_() override {" << endl;
+  out.tt << "      for (auto& i : subtasks_) i->compute();" << endl;
+  out.tt << "    }" << endl << endl;
 
-  tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t,  std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range);" << endl;
+  out.tt << "  public:" << endl;
+  out.tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t,  std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range);" << endl;
 
-  cc << "Task" << ic << "::Task" << ic << "(vector<shared_ptr<Tensor>> t, array<shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range) {" << endl;
-  cc << "  array<shared_ptr<const Tensor>," << ninptensors << "> in = {{";
+  out.cc << "Task" << ic << "::Task" << ic << "(vector<shared_ptr<Tensor>> t, array<shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range) {" << endl;
+  out.cc << "  array<shared_ptr<const Tensor>," << ninptensors << "> in = {{";
 
   // write out tensors in increasing order
   for (auto i = 1;  i < ninptensors + 1; ++i)
-    cc << "t[" << i << "]" << (i == ninptensors ? "" : ", ");
-  cc << "}};" << endl << endl;
+    out.cc << "t[" << i << "]" << (i == ninptensors ? "" : ", ");
+  out.cc << "}};" << endl << endl;
 
 
   // over original outermost indices
   if (!index_.empty()) {
-    cc << "  subtasks_.reserve(";
+    out.cc << "  subtasks_.reserve(";
     for (auto i =index_.begin(); i != index_.end(); ++i) {
-      if (i != index_.begin()) cc << "*";
-      cc << (*i)->generate_range() << "->nblock()";
+      if (i != index_.begin()) out.cc << "*";
+      out.cc << (*i)->generate_range() << "->nblock()";
     }
     if (merged_){
       for (auto i = merged.begin(); i != merged.end(); ++i) {
-        cc << "*" << (*i)->generate_range() << "->nblock()";
+        out.cc << "*" << (*i)->generate_range() << "->nblock()";
       }
     }
-    cc << ");" << endl;
+    out.cc << ");" << endl;
   }
   // loops
   string cindent = "  ";
   for (auto i = index_.begin(); i != index_.end(); ++i, cindent += "  ")
-    cc << cindent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
+    out.cc << cindent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   if (merged_) {
     for (auto i = merged.begin(); i != merged.end(); ++i, cindent += "  ")
-      cc << cindent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
+      out.cc << cindent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   }
   // add subtasks
-  cc << cindent  << "subtasks_.push_back(make_shared<Task_local>(array<const Index," << nindex << ">{{";
+  out.cc << cindent  << "subtasks_.push_back(make_shared<Task_local>(array<const Index," << nindex << ">{{";
   for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
-    if (i != index_.rbegin()) cc << ", ";
-    cc << (*i)->str_gen();
+    if (i != index_.rbegin()) out.cc << ", ";
+    out.cc << (*i)->str_gen();
   }
   if (merged_) {
-    cc << (index_.empty() ? "" : ", ");
+    out.cc << (index_.empty() ? "" : ", ");
     for (auto i = merged.rbegin(); i != merged.rend(); ++i) {
-      cc << (*i)->str_gen();
-      if (i != --merged.rend()) cc << ", ";
+      out.cc << (*i)->str_gen();
+      if (i != --merged.rend()) out.cc << ", ";
     }
   }
-  cc << "}}, in, t[0], range));" << endl;
-  cc << "}" << endl << endl << endl;
+  out.cc << "}}, in, t[0], range));" << endl;
+  out.cc << "}" << endl << endl << endl;
 
-  tt << "    ~Task" << ic << "() {}" << endl;
-  tt << "};" << endl << endl;
+  out.tt << "    ~Task" << ic << "() {}" << endl;
+  out.tt << "};" << endl << endl;
 
-  return make_tuple(tt.str(), cc.str());
+  return out;
 }
 
 
