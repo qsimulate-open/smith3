@@ -52,9 +52,8 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 // local functions... (not a good practice...) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
-pair<string, string> Residual::create_target(const string indent, const int i) const {
-  stringstream ss;
-  stringstream tt;
+tuple<string, string, string> Residual::create_target(const string indent, const int i) const {
+  stringstream ss, tt, cc;
 
   tt << "class Task0 : public Task {" << endl;
   tt << "  protected:" << endl;
@@ -68,17 +67,20 @@ pair<string, string> Residual::create_target(const string indent, const int i) c
   tt << "    };" << endl;
   tt << "" << endl;
   tt << "  public:" << endl;
-  tt << "    Task0(std::vector<std::shared_ptr<Tensor>> t) : Task() {" << endl;
-  tt << "      r_ =  t[0];" << endl;
-  tt << "    };" << endl;
-  tt << "    ~Task0() {};" << endl;
+  tt << "    Task0(std::vector<std::shared_ptr<Tensor>> t);" << endl;
+
+  cc << "Task0::Task0(vector<shared_ptr<Tensor>> t) {" << endl;
+  cc << "  r_ =  t[0];" << endl;
+  cc << "}" << endl << endl << endl;
+
+  tt << "    ~Task0() {}" << endl;
   tt << "};" << endl << endl;
 
   ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor0 = {r};" << endl;
   ss << indent << "auto task0 = std::make_shared<Task0>(tensor0);" << endl;
   ss << indent << "queue_->add_task(task0);" << endl << endl;
 
-  return make_pair(ss.str(), tt.str());
+  return make_tuple(ss.str(), tt.str(), cc.str());
 }
 
 

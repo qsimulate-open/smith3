@@ -73,9 +73,10 @@ tuple<string, string, string> Forest::generate_code() const {
   tt << get<1>(out);
   cc << get<2>(out);
 
-  auto out1 = generate_gammas();
-  ss << out1.first;
-  tt << out1.second;
+  out = generate_gammas();
+  ss << get<0>(out);
+  tt << get<1>(out);
+  cc << get<2>(out);
 
   for (auto& i : trees_) {
     tie(depends, tasks, specials, icnt, i0, itensors_) = i->generate_task_list(icnt, i0, gamma_, itensors_);
@@ -84,7 +85,7 @@ tuple<string, string, string> Forest::generate_code() const {
     cc << specials;
   }
 
-  out1 = generate_algorithm();
+  auto out1 = generate_algorithm();
   ss << out1.first;
   tt << out1.second;
 
@@ -163,9 +164,9 @@ tuple<string, string, string> Forest::generate_headers() const {
     cc << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
 
     // virtual function, generate Task0 which zeros out the residual and starts zero level dependency queue.
-    pair<string, string> rtmp = trees_.front()->create_target(indent, icnt);
-    ss << rtmp.first;
-    tt << rtmp.second;
+    auto rtmp = trees_.front()->create_target(indent, icnt);
+    ss << get<0>(rtmp);
+    tt << get<1>(rtmp);
     ++icnt;
 
 
@@ -173,8 +174,8 @@ tuple<string, string, string> Forest::generate_headers() const {
 }
 
 
-pair<string, string> Forest::generate_gammas() const {
-  stringstream ss, tt;
+tuple<string, string, string> Forest::generate_gammas() const {
+  stringstream ss, tt, cc;
   string indent = "      ";
 
   // All the gamma tensors (for all trees) should be defined here. Only distinct Gammas are computed.
@@ -187,7 +188,9 @@ pair<string, string> Forest::generate_gammas() const {
 
     // switch for blas, if true merged rdm*f1 tensor multiplication will use blas
     bool use_blas = false;
-    tt << i->generate_gamma(icnt, use_blas, i->der());
+    auto gen = i->generate_gamma(icnt, use_blas, i->der());
+    tt << get<0>(gen);
+    cc << get<1>(gen);
 
     vector<string> tmp = {i->label()};
     vector<int> rdms = i->active()->required_rdm();
@@ -218,7 +221,7 @@ pair<string, string> Forest::generate_gammas() const {
     ++icnt;
   }
 
-  return make_pair(ss.str(),tt.str());
+  return make_tuple(ss.str(),tt.str(),cc.str());
 }
 
 

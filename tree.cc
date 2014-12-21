@@ -516,9 +516,10 @@ tuple<string, string, string, int, int, vector<shared_ptr<Tensor>>>
         t0 = tcnt;
 
         // virtual
-        pair<string, string> rtmp = create_target(indent, tcnt);
-        ss << rtmp.first;
-        tt << rtmp.second;
+        auto rtmp = create_target(indent, tcnt);
+        ss << get<0>(rtmp);
+        tt << get<1>(rtmp);
+        cc << get<2>(rtmp);
         ++tcnt;
 
         for (auto& j : bc_) {

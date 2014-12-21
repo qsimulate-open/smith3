@@ -243,7 +243,7 @@ class Tree {
 
     // Tree specific code generation moved to derived classes.
     /// Needed for zero level target tensors. Generates a Task '0' ie task to initialize top (zero depth) target tensor also sets up dependency queue.
-    virtual std::pair<std::string, std::string> create_target(const std::string, const int i) const = 0;
+    virtual std::tuple<std::string, std::string, std::string> create_target(const std::string, const int i) const = 0;
     /// Create new tensor based on derived tree.
     virtual std::shared_ptr<Tensor> create_tensor(std::list<std::shared_ptr<const Index>>) const = 0;
     /// Generate a task. Here ip is the tag of parent, ic is the tag of this.

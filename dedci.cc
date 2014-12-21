@@ -55,9 +55,9 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 // local functions... (not a good practice...) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
-pair<string, string> Dedci::create_target(const string indent, const int i) const {
-  stringstream ss;
-  stringstream tt;
+tuple<string, string, string> Dedci::create_target(const string indent, const int i) const {
+  stringstream ss, tt, cc;
+
   tt << "class Task" << i << " : public DedciTask {" << endl;
   tt << "  protected:" << endl;
   tt << "    std::shared_ptr<Tensor> dec_;" << endl;
@@ -71,9 +71,12 @@ pair<string, string> Dedci::create_target(const string indent, const int i) cons
   tt << "    }" << endl;
   tt << "" << endl;
   tt << "  public:" << endl;
-  tt << "    Task" << i << "(std::vector<std::shared_ptr<Tensor>> t) : DedciTask() {" << endl;
-  tt << "      dec_ =  t[0];" << endl;
-  tt << "    }" << endl;
+  tt << "    Task" << i << "(std::vector<std::shared_ptr<Tensor>> t);" << endl;
+
+  cc << "Task" << i << "::Task" << i << "(vector<shared_ptr<Tensor>> t) {" << endl;
+  cc << "  dec_ =  t[0];" << endl;
+  cc << "}" << endl << endl << endl;
+
   tt << "    ~Task" << i << "() {}" << endl;
   tt << "};" << endl << endl;
 
@@ -82,7 +85,7 @@ pair<string, string> Dedci::create_target(const string indent, const int i) cons
   ss << indent << "auto task" << i << " = std::make_shared<Task" << i << ">(tensor" << i << ");" << endl;
   ss << indent << "dedci_->add_task(task" << i << ");" << endl << endl;
 
-  return make_pair(ss.str(), tt.str());
+  return make_tuple(ss.str(), tt.str(), cc.str());
 }
 
 

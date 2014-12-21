@@ -182,7 +182,7 @@ tuple<string,string> Correction::generate_compute_footer(const int ic, const lis
   } else {
     cc << indent  << "subtasks_.push_back(make_shared<Task_local>(in, t[0], range" << (need_e0 ? ", e" : "") << "));" << endl;
   }
-  cc << "}" << endl;
+  cc << "}" << endl << endl << endl;
 
   tt << "    ~Task" << ic << "() {}" << endl;
   tt << "};" << endl << endl;

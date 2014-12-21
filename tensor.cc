@@ -479,10 +479,10 @@ string Tensor::generate_loop(string& indent, vector<string>& close) const {
 }
 
 
-string Tensor::generate_gamma(const int ic, const bool use_blas, const bool der) const {
+tuple<string,string> Tensor::generate_gamma(const int ic, const bool use_blas, const bool der) const {
   // TODO split generate_gamma function up to header/body/footer once working (too large now)
   assert(label_.find("Gamma") != string::npos);
-  stringstream tt;
+  stringstream tt, cc;
 
 
   // determine number of task loops to be separeted, if merged combine
@@ -504,7 +504,6 @@ string Tensor::generate_gamma(const int ic, const bool use_blas, const bool der)
   } else {
     ninptensors = rdmn.size();
   }
-
 
 
   //////////// gamma header ////////////
@@ -586,56 +585,59 @@ string Tensor::generate_gamma(const int ic, const bool use_blas, const bool der)
   tt << "    }" << endl << endl;
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t,  std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range) : Task() {" << endl;
-  tt << "      std::array<std::shared_ptr<const Tensor>," << ninptensors << "> in = {{";
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t,  std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range);" << endl;
+
+  cc << "Task" << ic << "::Task" << ic << "(vector<shared_ptr<Tensor>> t, array<shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range) {" << endl;
+  cc << "  array<shared_ptr<const Tensor>," << ninptensors << "> in = {{";
 
   // write out tensors in increasing order
   for (auto i = 1;  i < ninptensors + 1; ++i)
-    tt << "t[" << i << "]" << (i == ninptensors ? "" : ", ");
-  tt << "}};" << endl << endl;
+    cc << "t[" << i << "]" << (i == ninptensors ? "" : ", ");
+  cc << "}};" << endl << endl;
 
 
   // over original outermost indices
   if (!index_.empty()) {
-    tt << "      subtasks_.reserve(";
+    cc << "  subtasks_.reserve(";
     for (auto i =index_.begin(); i != index_.end(); ++i) {
-      if (i != index_.begin()) tt << "*";
-      tt << (*i)->generate_range() << "->nblock()";
+      if (i != index_.begin()) cc << "*";
+      cc << (*i)->generate_range() << "->nblock()";
     }
     if (merged_){
       for (auto i = merged.begin(); i != merged.end(); ++i) {
-        tt << "*" << (*i)->generate_range() << "->nblock()";
+        cc << "*" << (*i)->generate_range() << "->nblock()";
       }
     }
-    tt << ");" << endl;
+    cc << ");" << endl;
   }
   // loops
-  for (auto i = index_.begin(); i != index_.end(); ++i, indent += "  ")
-    tt << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
+  string cindent = "  ";
+  for (auto i = index_.begin(); i != index_.end(); ++i, cindent += "  ")
+    cc << cindent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   if (merged_) {
-    for (auto i = merged.begin(); i != merged.end(); ++i, indent += "  ")
-      tt << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
+    for (auto i = merged.begin(); i != merged.end(); ++i, cindent += "  ")
+      cc << cindent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   }
   // add subtasks
-  tt << indent  << "subtasks_.push_back(std::make_shared<Task_local>(std::array<const Index," << nindex << ">{{";
+  cc << cindent  << "subtasks_.push_back(make_shared<Task_local>(array<const Index," << nindex << ">{{";
   for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
-    if (i != index_.rbegin()) tt << ", ";
-    tt << (*i)->str_gen();
+    if (i != index_.rbegin()) cc << ", ";
+    cc << (*i)->str_gen();
   }
   if (merged_) {
-    tt << (index_.empty() ? "" : ", ");
+    cc << (index_.empty() ? "" : ", ");
     for (auto i = merged.rbegin(); i != merged.rend(); ++i) {
-      tt << (*i)->str_gen();
-      if (i != --merged.rend()) tt << ", ";
+      cc << (*i)->str_gen();
+      if (i != --merged.rend()) cc << ", ";
     }
   }
-  tt << "}}, in, t[0], range));" << endl;
+  cc << "}}, in, t[0], range));" << endl;
+  cc << "}" << endl << endl << endl;
 
-  tt << "    }" << endl;
   tt << "    ~Task" << ic << "() {}" << endl;
   tt << "};" << endl << endl;
 
-  return tt.str();
+  return make_tuple(tt.str(), cc.str());
 }
 
 

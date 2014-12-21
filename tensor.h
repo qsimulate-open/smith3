@@ -167,7 +167,7 @@ class Tensor {
     /// Generate for loops.
     std::string generate_loop(std::string&, std::vector<std::string>&) const;
     /// Generate code for Gamma task.
-    std::string generate_gamma(const int, const bool use_blas, const bool der) const;
+    std::tuple<std::string,std::string> generate_gamma(const int, const bool use_blas, const bool der) const;
     /// Returns Gamma number.
     int num() const { assert(is_gamma()); return num_; }
     /// Set Gamma number.
