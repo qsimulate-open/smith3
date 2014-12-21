@@ -346,16 +346,15 @@ list<shared_ptr<const Index>> BinaryContraction::loop_indices() {
 }
 
 
-OutStream Tree::generate_compute_operators(const string indent, const shared_ptr<Tensor> target, const vector<shared_ptr<Tensor>> op,
-                                           const bool dagger) const {
+OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vector<shared_ptr<Tensor>> op, const bool dagger) const {
   OutStream out;
 
   vector<string> close;
-  string cindent = indent + "    ";
+  string cindent = "  ";
   // note that I am using reverse_iterator
-  //out.tt << target->generate_loop(cindent, close);
+  //out.dd << target->generate_loop(cindent, close);
   // get data
-  out.tt << target->generate_get_block(cindent, "o", "out()", true);
+  out.dd << target->generate_get_block(cindent, "o", "out()", true);
 
   // needed in case the tensor labels are repeated..
   vector<shared_ptr<Tensor>> uniq_tensors;
@@ -381,16 +380,16 @@ OutStream Tree::generate_compute_operators(const string indent, const shared_ptr
   int j = 0;
   for (auto s = op.begin(); s != op.end(); ++s, ++j) {
     stringstream uu; uu << "i" << j;
-    out.tt << cindent << "{" << endl;
+    out.dd << cindent << "{" << endl;
 
     // uses map to give label number consistent with operator, needed in case label is repeated (eg ccaa)
     string label = label__((*s)->label());
     stringstream instr; instr << "in(" << op_tensor_lab[label] << ")";
 
-    out.tt << (*s)->generate_get_block(cindent+"  ", uu.str(), instr.str());
+    out.dd << (*s)->generate_get_block(cindent+"  ", uu.str(), instr.str());
     list<shared_ptr<const Index>> di = target->index();
-    out.tt << (*s)->generate_sort_indices(cindent+"  ", uu.str(), instr.str(), di, true);
-    out.tt << cindent << "}" << endl;
+    out.dd << (*s)->generate_sort_indices(cindent+"  ", uu.str(), instr.str(), di, true);
+    out.dd << cindent << "}" << endl;
 
     // if this is at the top-level and needs to be daggered:
     if (depth() == 0 && dagger) {
@@ -417,11 +416,11 @@ OutStream Tree::generate_compute_operators(const string indent, const shared_ptr
           }
         }
         top->index() = tmp;
-        out.tt << cindent << "{" << endl;
-        out.tt << top->generate_get_block(cindent+"  ", uu.str(), instr.str());
+        out.dd << cindent << "{" << endl;
+        out.dd << top->generate_get_block(cindent+"  ", uu.str(), instr.str());
         list<shared_ptr<const Index>> di = target->index();
-        out.tt << top->generate_sort_indices(cindent+"  ", uu.str(), instr.str(), di, true);
-        out.tt << cindent << "}" << endl;
+        out.dd << top->generate_sort_indices(cindent+"  ", uu.str(), instr.str(), di, true);
+        out.dd << cindent << "}" << endl;
       }
     }
   }
@@ -430,13 +429,13 @@ OutStream Tree::generate_compute_operators(const string indent, const shared_ptr
   {
     string label = target->label();
     list<shared_ptr<const Index>> ti = target->index();
-    out.tt << cindent << "out()->put_block(odata";
+    out.dd << cindent << "out()->put_block(odata";
     for (auto i = ti.rbegin(); i != ti.rend(); ++i)
-      out.tt << ", " << (*i)->str_gen();
-    out.tt << ");" << endl;
+      out.dd << ", " << (*i)->str_gen();
+    out.dd << ");" << endl;
   }
   for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-    out.tt << *iter << endl;
+    out.dd << *iter << endl;
   return out; 
 }
 
@@ -561,7 +560,7 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
             shared_ptr<Tensor> proj_tensor = create_tensor(dm);
 
             vector<shared_ptr<Tensor>> op2 = { j->next_target() };
-            out << generate_compute_operators(indent, proj_tensor, op2, j->dagger());
+            out << generate_compute_operators(proj_tensor, op2, j->dagger());
 
             {
               // send outer loop indices if outer loop indices exist, otherwise send inner indices
@@ -645,7 +644,7 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
     }
 
     out << generate_compute_header(tcnt, ti, uniq_tensors);
-    out << generate_compute_operators(indent, target_, op_);
+    out << generate_compute_operators(target_, op_);
     out << generate_compute_footer(tcnt, ti, uniq_tensors);
 
     ++tcnt;
@@ -682,7 +681,7 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
     }
 
     // use virtual function to generate a task for this binary contraction
-    out << generate_bc(indent, (*i));
+    out << generate_bc(*i);
 
     {
       // send outer loop indices if outer loop indices exist, otherwise send inner indices

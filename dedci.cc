@@ -146,7 +146,9 @@ OutStream Dedci::generate_compute_header(const int ic, const list<shared_ptr<con
   }
   out.tt << endl;
   out.tt << endl;
-  out.tt << "        void compute() override {" << endl;
+  out.tt << "        void compute() override;" << endl;
+
+  out.dd << "void Task" << ic << "::Task_local::compute() {" << endl;
 
   if (!no_outside) {
     list<shared_ptr<const Index>> ti_copy = ti;
@@ -159,8 +161,8 @@ OutStream Dedci::generate_compute_header(const int ic, const list<shared_ptr<con
 
     int cnt = 0;
     for (auto i = ti_copy.rbegin(); i != ti_copy.rend(); ++i)
-      out.tt << "          const Index " << (*i)->str_gen() << " = b(" << cnt++ << ");" << endl;
-    out.tt << endl;
+      out.dd << "  const Index " << (*i)->str_gen() << " = b(" << cnt++ << ");" << endl;
+    out.dd << endl;
   }
 
   return out;
@@ -175,7 +177,8 @@ OutStream Dedci::generate_compute_footer(const int ic, const list<shared_ptr<con
     if (!s->scalar().empty()) need_e0 = true;
 
   OutStream out;
-  out.tt << "        }" << endl;
+  out.dd << "}" << endl << endl << endl;
+
   out.tt << "    };" << endl;
   out.tt << "" << endl;
   out.tt << "    std::vector<std::shared_ptr<Task_local>> subtasks_;" << endl;
@@ -228,15 +231,15 @@ OutStream Dedci::generate_compute_footer(const int ic, const list<shared_ptr<con
 }
 
 
-OutStream Dedci::generate_bc(const string indent, const shared_ptr<BinaryContraction> i) const {
+OutStream Dedci::generate_bc(const shared_ptr<BinaryContraction> i) const {
   OutStream out;
 
   if (depth() != 0) {
-    const string bindent = indent + "    ";
+    const string bindent = "  ";
     string dindent = bindent;
 
-    out.tt << target_->generate_get_block(dindent, "o", "out()", true);
-    out.tt << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
+    out.dd << target_->generate_get_block(dindent, "o", "out()", true);
+    out.dd << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
 
     list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
 
@@ -247,38 +250,38 @@ OutStream Dedci::generate_bc(const string indent, const shared_ptr<BinaryContrac
 
     vector<string> close2;
     if (ti.size() != 0) {
-      out.tt << endl;
+      out.dd << endl;
       for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent += "  ") {
         string index = (*iter)->str_gen();
-        out.tt << dindent << "for (auto& " << index << " : *" << (*iter)->generate_range("_") << ") {" << endl;
+        out.dd << dindent << "for (auto& " << index << " : *" << (*iter)->generate_range("_") << ") {" << endl;
         close2.push_back(dindent + "}");
       }
     } else {
       int cnt = 0;
-      for (auto k = di.begin(); k != di.end(); ++k, cnt++) out.tt << dindent << "const Index " <<  (*k)->str_gen() << " = b(" << cnt << ");" << endl;
-      out.tt << endl;
+      for (auto k = di.begin(); k != di.end(); ++k, cnt++) out.dd << dindent << "const Index " <<  (*k)->str_gen() << " = b(" << cnt << ");" << endl;
+      out.dd << endl;
     }
 
     // retrieving tensor_
-    out.tt << (i)->tensor()->generate_get_block(dindent, "i0", "in(0)");
-    out.tt << (i)->tensor()->generate_sort_indices(dindent, "i0", "in(0)", di) << endl;
+    out.dd << (i)->tensor()->generate_get_block(dindent, "i0", "in(0)");
+    out.dd << (i)->tensor()->generate_sort_indices(dindent, "i0", "in(0)", di) << endl;
     // retrieving subtree_
-    out.tt << (i)->next_target()->generate_get_block(dindent, "i1", "in(1)");
-    out.tt << (i)->next_target()->generate_sort_indices(dindent, "i1", "in(1)", di) << endl;
+    out.dd << (i)->next_target()->generate_get_block(dindent, "i1", "in(1)");
+    out.dd << (i)->next_target()->generate_sort_indices(dindent, "i1", "in(1)", di) << endl;
 
     // call dgemm
     {
       pair<string, string> t0 = (i)->tensor()->generate_dim(di);
       pair<string, string> t1 = (i)->next_target()->generate_dim(di);
       if (t0.first != "" || t1.first != "") {
-        out.tt << dindent << "dgemm_(\"T\", \"N\", ";
+        out.dd << dindent << "dgemm_(\"T\", \"N\", ";
         string tt0 = t0.first == "" ? "1" : t0.first;
         string tt1 = t1.first == "" ? "1" : t1.first;
         string ss0 = t1.second== "" ? "1" : t1.second;
-        out.tt << tt0 << ", " << tt1 << ", " << ss0 << "," << endl;
-        out.tt << dindent << "       1.0, i0data_sorted, " << ss0 << ", i1data_sorted, " << ss0 << "," << endl
+        out.dd << tt0 << ", " << tt1 << ", " << ss0 << "," << endl;
+        out.dd << dindent << "       1.0, i0data_sorted, " << ss0 << ", i1data_sorted, " << ss0 << "," << endl
            << dindent << "       1.0, odata_sorted, " << tt0;
-        out.tt << ");" << endl;
+        out.dd << ");" << endl;
       } else {
         // so far I am expecting the case of dedci vector contribution
         if (depth() != 1) throw logic_error("expecting dedci matrix contribution");
@@ -288,24 +291,24 @@ OutStream Dedci::generate_bc(const string indent, const shared_ptr<BinaryContrac
 
     if (ti.size() != 0) {
       for (auto iter = close2.rbegin(); iter != close2.rend(); ++iter)
-        out.tt << *iter << endl;
-      out.tt << endl;
+        out.dd << *iter << endl;
+      out.dd << endl;
     }
     // Inner loop ends here
 
     // sort buffer
     {
-      out.tt << (i)->target()->generate_sort_indices_target(bindent, "o", di, (i)->tensor(), (i)->next_target());
+      out.dd << (i)->target()->generate_sort_indices_target(bindent, "o", di, (i)->tensor(), (i)->next_target());
     }
     // put buffer
     {
       string label = target_->label();
       // new interface requires indices for put_block
-      out.tt << bindent << "out()->put_block(odata";
+      out.dd << bindent << "out()->put_block(odata";
       list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
       for (auto i = ti.rbegin(); i != ti.rend(); ++i)
-        out.tt << ", " << (*i)->str_gen();
-      out.tt << ");" << endl;
+        out.dd << ", " << (*i)->str_gen();
+      out.dd << ");" << endl;
     }
 
   } else { // bc depth = 0

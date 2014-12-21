@@ -528,53 +528,46 @@ OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool d
   out.tt << "          : SubTask<" << nindex << "," << ninptensors << ">(block, in, out), range_(ran) { }" << endl;
   out.tt << endl;
   out.tt << endl;
-  out.tt << "        void compute() override {" << endl;
+  out.tt << "        void compute() override;" << endl;
+
+  out.dd << "void Task" << ic << "::Task_local::compute() {" << endl;
 
   //////////// gamma body  ////////////
-  string indent ="          ";
+  string indent ="  ";
   // map indices
   int bcnt = 0;
   if (der) {
     for (auto i = index_.rbegin(); i != index_.rend(); ++i, bcnt++)
-      out.tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
+      out.dd << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
     if (merged_) {
       for (auto i = merged.rbegin(); i != merged.rend(); ++i, bcnt++)
-        out.tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
+        out.dd << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
     }
   } else {
     for (auto i = index_.begin(); i != index_.end(); ++i, bcnt++)
-      out.tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
+      out.dd << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
     if (merged_) {
       for (auto i = merged.begin(); i != merged.end(); ++i, bcnt++)
-        out.tt << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
+        out.dd << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
     }
   }
 
-#ifdef debug_tasks // debug purposes
-   out.tt << indent <<  "// std::shared_ptr<Tensor > " << label() << ";" << endl;
-   for (auto& i: rdmn)
-     out.tt << indent << "// std::shared_ptr<Tensor > rdm" << i << (der ? "I0" : "") << ";" << endl;
-   if (merged_)
-     out.tt << indent << "// std::shared_ptr<Tensor > " << merged_->label() << ";" << endl;
-   out.tt << endl;
-#endif
-
   // generate gamma get block, true does a move_block
-  out.tt << generate_get_block(indent, "o", "out()", true, true); // first true means move, second true means we don't scale
+  out.dd << generate_get_block(indent, "o", "out()", true, true); // first true means move, second true means we don't scale
   if (merged_) {
-    if (use_blas && !index_.empty()) out.tt << generate_scratch_area(indent, "o", "out", true);
+    if (use_blas && !index_.empty()) out.dd << generate_scratch_area(indent, "o", "out", true);
   }
   // now generate codes for rdm
-  out.tt << generate_active(indent, "o", ninptensors, use_blas);
+  out.dd << generate_active(indent, "o", ninptensors, use_blas);
 
   // generate gamma put block
-  out.tt << indent << "out()->put_block(odata";
+  out.dd << indent << "out()->put_block(odata";
   for (auto i = index_.rbegin(); i != index_.rend(); ++i)
-    out.tt << ", " << (*i)->str_gen();
-  out.tt << ");" << endl;
+    out.dd << ", " << (*i)->str_gen();
+  out.dd << ");" << endl;
+  out.dd << "}" << endl << endl << endl;
 
   //////////// gamma footer  ////////////
-  out.tt << "        }" << endl;
   out.tt << "    };" << endl;
   out.tt << "" << endl;
   out.tt << "    std::vector<std::shared_ptr<Task_local>> subtasks_;" << endl;

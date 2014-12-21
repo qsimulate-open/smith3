@@ -238,8 +238,7 @@ class Tree {
     OutStream generate_task(const std::string indent, const int ic, const std::vector<std::shared_ptr<Tensor>>, const std::list<std::shared_ptr<Tensor>> g, const int i0 = 0) const;
 
     /// Generate task for operator task (ie not a binary contraction task). Dagger arguement refers to front subtree used at top level.
-    OutStream generate_compute_operators(const std::string, const std::shared_ptr<Tensor>, const std::vector<std::shared_ptr<Tensor>>,
-                                         const bool dagger = false) const;
+    OutStream generate_compute_operators(const std::shared_ptr<Tensor>, const std::vector<std::shared_ptr<Tensor>>, const bool dagger = false) const;
 
     // Tree specific code generation moved to derived classes.
     /// Needed for zero level target tensors. Generates a Task '0' ie task to initialize top (zero depth) target tensor also sets up dependency queue.
@@ -254,7 +253,7 @@ class Tree {
     /// Generate task footer.
     virtual OutStream generate_compute_footer(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>) const = 0;
     /// Generate Binary contraction code.
-    virtual OutStream generate_bc(const std::string, const std::shared_ptr<BinaryContraction>) const = 0;
+    virtual OutStream generate_bc(const std::shared_ptr<BinaryContraction>) const = 0;
 
 };
 

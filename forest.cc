@@ -91,7 +91,8 @@ OutStream Forest::generate_headers() const {
 
   out.ss << header(forest_name_ + ".h");
   out.tt << header(forest_name_ + "_tasks.h");
-  out.cc << header(forest_name_ + "_tasks.cc");
+  out.cc << header(forest_name_ + "_gen.cc");
+  out.dd << header(forest_name_ + "_tasks.cc");
 
   out.ss << "#ifndef __SRC_SMITH_" << forest_name_ << "_H" << endl;
   out.ss << "#define __SRC_SMITH_" << forest_name_ << "_H" << endl;
@@ -151,6 +152,12 @@ OutStream Forest::generate_headers() const {
   out.cc << "using namespace bagel;" << endl;
   out.cc << "using namespace bagel::SMITH;" << endl;
   out.cc << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
+
+  out.dd << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl; 
+  out.dd << "using namespace std;" << endl;
+  out.dd << "using namespace bagel;" << endl;
+  out.dd << "using namespace bagel::SMITH;" << endl;
+  out.dd << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
 
   // virtual function, generate Task0 which zeros out the residual and starts zero level dependency queue.
   out << trees_.front()->create_target(indent, icnt);
