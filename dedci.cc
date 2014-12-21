@@ -58,10 +58,9 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 pair<string, string> Dedci::create_target(const string indent, const int i) const {
   stringstream ss;
   stringstream tt;
-  tt << "template <typename T>" << endl;
-  tt << "class Task" << i << " : public DedciTask<T> {" << endl;
+  tt << "class Task" << i << " : public DedciTask {" << endl;
   tt << "  protected:" << endl;
-  tt << "    std::shared_ptr<Tensor<T>> dec_;" << endl;
+  tt << "    std::shared_ptr<Tensor> dec_;" << endl;
   tt << "    IndexRange closed_;" << endl;
   tt << "    IndexRange active_;" << endl;
   tt << "    IndexRange virt_;" << endl;
@@ -69,18 +68,18 @@ pair<string, string> Dedci::create_target(const string indent, const int i) cons
   tt << "" << endl;
   tt << "    void compute_() {" << endl;
   tt << "      dec_->zero();" << endl;
-  tt << "    };" << endl;
+  tt << "    }" << endl;
   tt << "" << endl;
   tt << "  public:" << endl;
-  tt << "    Task" << i << "(std::vector<std::shared_ptr<Tensor<T>>> t) : DedciTask<T>() {" << endl;
+  tt << "    Task" << i << "(std::vector<std::shared_ptr<Tensor>> t) : DedciTask() {" << endl;
   tt << "      dec_ =  t[0];" << endl;
-  tt << "    };" << endl;
-  tt << "    ~Task" << i << "() {};" << endl;
+  tt << "    }" << endl;
+  tt << "    ~Task" << i << "() {}" << endl;
   tt << "};" << endl << endl;
 
-  ss << "      std::shared_ptr<Queue<T>> dedci_(new Queue<T>());" << endl;
-  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << i << " = {deci};" << endl;
-  ss << indent << "std::shared_ptr<Task" << i << "<T>> task" << i << "(new Task" << i << "<T>(tensor" << i << "));" << endl;
+  ss << "      auto dedci_ = std::make_shared<Queue>();" << endl;
+  ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor" << i << " = {deci};" << endl;
+  ss << indent << "auto task" << i << " = std::make_shared<Task" << i << ">(tensor" << i << ");" << endl;
   ss << indent << "dedci_->add_task(task" << i << ");" << endl << endl;
 
   return make_pair(ss.str(), tt.str());
@@ -88,16 +87,15 @@ pair<string, string> Dedci::create_target(const string indent, const int i) cons
 
 
 shared_ptr<Tensor> Dedci::create_tensor(list<shared_ptr<const Index>> dm) const {
- shared_ptr<Tensor> dedci(new Tensor(1.0, "deci", dm));
- return dedci;
+ return make_shared<Tensor>(1.0, "deci", dm);
 }
 
 
 string Dedci::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int iz, bool der) const {
   stringstream ss;
-  ss << indent << "std::vector<std::shared_ptr<Tensor<T>>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
-  ss << indent << "std::shared_ptr<Task" << ic << "<T>> task"
-               << ic << "(new Task" << ic << "<T>(tensor" << ic << ", cindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
+  ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
+  ss << indent << "std::shared_ptr<Task" << ic << "> task"
+               << ic << "(new Task" << ic << "(tensor" << ic << ", cindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
   if (parent_) {
     assert(parent_->parent());
     ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
@@ -121,29 +119,28 @@ string Dedci::generate_compute_header(const int ic, const list<shared_ptr<const 
 
   const int nindex = ti.size();
   stringstream tt;
-  tt << "template <typename T>" << endl;
-  tt << "class Task" << ic << " : public DedciTask<T> {" << endl;
+  tt << "class Task" << ic << " : public DedciTask {" << endl;
   tt << "  protected:" << endl;
   // if index is empty give dummy arg
-  tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << ",T> {" << endl;
+  tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << "> {" << endl;
   tt << "      protected:" << endl;
   tt << "        const std::array<std::shared_ptr<const IndexRange>,4> range_;" << endl << endl;
 
   tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
-  tt << "        const std::shared_ptr<const Tensor<T>>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
-  tt << "        const std::shared_ptr<Tensor<T>>& out() const { return this->out_tensor(); }" << endl;
+  tt << "        const std::shared_ptr<const Tensor>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
+  tt << "        const std::shared_ptr<Tensor>& out() const { return this->out_tensor(); }" << endl;
   if (need_e0) tt << endl << "        double e0_;" << endl;
   tt << endl;
   tt << "      public:" << endl;
   // if index is empty use dummy index 1 to subtask
   if (ti.empty()) {
-    tt << "        Task_local(const std::array<std::shared_ptr<const Tensor<T>>," << ninptensors <<  ">& in, std::shared_ptr<Tensor<T>>& out," << endl;
+    tt << "        Task_local(const std::array<std::shared_ptr<const Tensor>," << ninptensors <<  ">& in, std::shared_ptr<Tensor>& out," << endl;
     tt << "                   std::array<std::shared_ptr<const IndexRange>,4>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
-    tt << "          : SubTask<1," << ninptensors << ",T>(std::array<const Index, 1>(), in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
+    tt << "          : SubTask<1," << ninptensors << ">(std::array<const Index, 1>(), in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
   } else {
-    tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor<T>>," << ninptensors <<  ">& in, std::shared_ptr<Tensor<T>>& out," << endl;
+    tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor>," << ninptensors <<  ">& in, std::shared_ptr<Tensor>& out," << endl;
     tt << "                   std::array<std::shared_ptr<const IndexRange>,4>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
-    tt << "          : SubTask<" << nindex << "," << ninptensors << ",T>(block, in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
+    tt << "          : SubTask<" << nindex << "," << ninptensors << ">(block, in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
   }
   tt << endl;
   tt << endl;
@@ -189,42 +186,42 @@ tuple<string,string> Dedci::generate_compute_footer(const int ic, const list<sha
   tt << "    }" << endl << endl;
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t, std::array<std::shared_ptr<const IndexRange>,4> range" << (need_e0 ? ", double e" : "" ) <<  ") : DedciTask<T>() {" << endl;
-  tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t, std::array<std::shared_ptr<const IndexRange>,4> range" << (need_e0 ? ", double e" : "" ) <<  ");" << endl;
+
+  cc << "Task" << ic << "::Task" << ic << "(vector<shared_ptr<Tensor>> t, array<shared_ptr<const IndexRange>,4> range" << (need_e0 ? ", double e" : "" ) <<  ") {" << endl;
+  cc << "  array<shared_ptr<const Tensor>," << ninptensors << "> in = {{";
   for (auto i = 1; i < ninptensors + 1; ++i)
-    tt << "t[" << i << "]" << (i < ninptensors ? ", " : "");
-  tt << "}};" << endl << endl;
+    cc << "t[" << i << "]" << (i < ninptensors ? ", " : "");
+  cc << "}};" << endl << endl;
 
   // over original outermost indices
   if (!ti.empty()) {
-    tt << "      subtasks_.reserve(";
+    cc << "      subtasks_.reserve(";
     for (auto i = ti.begin(); i != ti.end(); ++i) {
-      if (i != ti.begin()) tt << "*";
-      tt << (*i)->generate_range() << "->nblock()";
+      if (i != ti.begin()) cc << "*";
+      cc << (*i)->generate_range() << "->nblock()";
     }
-    tt << ");" << endl;
+    cc << ");" << endl;
   }
   // loops
-  string indent = "      ";
+  string indent = "  ";
   for (auto i = ti.begin(); i != ti.end(); ++i, indent += "  ")
-    tt << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
+    cc << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   // add subtasks
   if (!ti.empty()) {
-    tt << indent  << "subtasks_.push_back(std::shared_ptr<Task_local>(new Task_local(std::array<const Index," << ti.size() << ">{{";
+    cc << indent  << "subtasks_.push_back(make_shared<Task_local>(std::array<const Index," << ti.size() << ">{{";
     for (auto i = ti.rbegin(); i != ti.rend(); ++i) {
-      if (i != ti.rbegin()) tt << ", ";
-      tt << (*i)->str_gen();
+      if (i != ti.rbegin()) cc << ", ";
+      cc << (*i)->str_gen();
     }
-    tt << "}}, in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
+    cc << "}}, in, t[0], range" << (need_e0 ? ", e" : "") << "));" << endl;
   } else {
-    tt << indent  << "subtasks_.push_back(std::shared_ptr<Task_local>(new Task_local(in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
+    cc << indent  << "subtasks_.push_back(make_shared<Task_local>(in, t[0], range" << (need_e0 ? ", e" : "") << "));" << endl;
   }
+  cc << "}" << endl << endl << endl;
 
-  tt << "    };" << endl;
-  tt << "    ~Task" << ic << "() {};" << endl;
+  tt << "    ~Task" << ic << "() {}" << endl;
   tt << "};" << endl << endl;
-  tt << "extern template class Task" << ic << "<Storage_Incore>;" << endl << endl;
-  cc << "template class Task" << ic << "<Storage_Incore>;" << endl;
   return make_tuple(tt.str(), cc.str());
 }
 

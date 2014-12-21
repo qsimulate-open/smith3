@@ -120,23 +120,22 @@ tuple<string, string, string> Forest::generate_headers() const {
     ss << "namespace SMITH {" << endl;
     ss << "namespace " << forest_name_ << "{" << endl;
     ss << "" << endl;
-    ss << "template <typename T>" << endl;
-    ss << "class " << forest_name_ << " : public SpinFreeMethod<T>{" << endl;
+    ss << "class " << forest_name_ << " : public SpinFreeMethod {" << endl;
     ss << "  protected:" << endl;
-    ss << "    using SpinFreeMethod<T>::ref_;" << endl;
+    ss << "    using SpinFreeMethod::ref_;" << endl;
     ss << "" << endl;
-    ss << "    std::shared_ptr<Tensor<T>> t2;" << endl;
-    ss << "    std::shared_ptr<Tensor<T>> r;" << endl;
+    ss << "    std::shared_ptr<Tensor> t2;" << endl;
+    ss << "    std::shared_ptr<Tensor> r;" << endl;
     ss << "    double e0_;" << endl;
-    ss << "    std::shared_ptr<Tensor<T>> sigma_;" << endl;
-    ss << "    std::shared_ptr<Tensor<T>> den1;" << endl;
-    ss << "    std::shared_ptr<Tensor<T>> den2;" << endl;
-    ss << "    std::shared_ptr<Tensor<T>> Den1;" << endl;
+    ss << "    std::shared_ptr<Tensor> sigma_;" << endl;
+    ss << "    std::shared_ptr<Tensor> den1;" << endl;
+    ss << "    std::shared_ptr<Tensor> den2;" << endl;
+    ss << "    std::shared_ptr<Tensor> Den1;" << endl;
     ss << "    double correlated_norm;" << endl;
-    ss << "    std::shared_ptr<Tensor<T>> deci;" << endl;
+    ss << "    std::shared_ptr<Tensor> deci;" << endl;
     ss << "" << endl;
-    ss << "    std::tuple<std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>>,  std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>, std::shared_ptr<Queue<T>>> make_queue_() {" << endl;
-    ss << "      std::shared_ptr<Queue<T>> queue_(new Queue<T>());" << endl;
+    ss << "    std::tuple<std::shared_ptr<Queue>, std::shared_ptr<Queue>, std::shared_ptr<Queue>,  std::shared_ptr<Queue>,  std::shared_ptr<Queue>, std::shared_ptr<Queue>, std::shared_ptr<Queue>> make_queue_() {" << endl;
+    ss << "      std::shared_ptr<Queue> queue_(new Queue());" << endl;
     ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl;
     ss << indent << "std::array<std::shared_ptr<const IndexRange>,4> cindex = {{this->rclosed_, this->ractive_, this->rvirt_, this->rci_}};" << endl << endl;
 
@@ -157,9 +156,10 @@ tuple<string, string, string> Forest::generate_headers() const {
     tt << "namespace " << forest_name_ << "{" << endl;
     tt << "" << endl;
 
-    cc << "#include <src/smith/" << forest_name_ << ".h>" << endl << endl; 
+    cc << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl; 
+    cc << "using namespace std;" << endl;
     cc << "using namespace bagel;" << endl;
-    cc << "using namespace bagel::SMITH;" << endl << endl;
+    cc << "using namespace bagel::SMITH;" << endl;
     cc << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
 
     // virtual function, generate Task0 which zeros out the residual and starts zero level dependency queue.
@@ -231,7 +231,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "    };" << endl;
   ss << endl;
   ss << "  public:" << endl;
-  ss << "    " << forest_name_ << "(std::shared_ptr<const SMITH_Info> ref) : SpinFreeMethod<T>(ref) {" << endl;
+  ss << "    " << forest_name_ << "(std::shared_ptr<const SMITH_Info> ref) : SpinFreeMethod(ref) {" << endl;
   ss << "      this->eig_ = this->f1_->diag();" << endl;
   ss << "      t2 = this->v2_->clone();" << endl;
   ss << "      e0_ = this->e0();" << endl;
@@ -249,7 +249,7 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "    void solve() {" << endl;
   ss << "      this->print_iteration();" << endl;
   ss << "      int iter = 0;" << endl;
-  ss << "      std::shared_ptr<Queue<T>> queue, energ, correct, dens2, dens1, Dens1, dec;" << endl;
+  ss << "      std::shared_ptr<Queue> queue, energ, correct, dens2, dens1, Dens1, dec;" << endl;
   ss << "      for ( ; iter != ref_->maxiter(); ++iter) {" << endl;
   ss << "        std::tie(queue, energ, correct, dens2, dens1, Dens1, dec) = make_queue_();" << endl;
   ss << "        while (!queue->done())" << endl;
@@ -303,19 +303,19 @@ pair<string, string> Forest::generate_algorithm() const {
   ss << "" << endl;
   ss << "    };" << endl;
   ss << "" << endl;
-  ss << "    double energy(std::shared_ptr<Queue<T>> energ) {" << endl;
+  ss << "    double energy(std::shared_ptr<Queue> energ) {" << endl;
   ss << "      double en = 0.0;" << endl;
   ss << "      while (!energ->done()) {" << endl;
-  ss << "        std::shared_ptr<Task<T>> c = energ->next_compute();" << endl;
+  ss << "        std::shared_ptr<Task> c = energ->next_compute();" << endl;
   ss << "        en += c->energy();" << endl;  // prefactors included in main.cc
   ss << "      }" << endl;
   ss << "      return en;" << endl;
   ss << "    }" << endl;
   ss << endl;
-  ss << "    double correction(std::shared_ptr<Queue<T>> correct) {" << endl;
+  ss << "    double correction(std::shared_ptr<Queue> correct) {" << endl;
   ss << "      double n = 0.0;" << endl;
   ss << "      while (!correct->done()) {" << endl;
-  ss << "        std::shared_ptr<Task<T>> c = correct->next_compute();" << endl;
+  ss << "        std::shared_ptr<Task> c = correct->next_compute();" << endl;
   ss << "        n += c->correction();" << endl;
   ss << "      }" << endl;
   ss << "      return n;" << endl;

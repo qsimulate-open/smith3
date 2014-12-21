@@ -166,7 +166,7 @@ string Tensor::constructor_str(string indent) const {
       ss << (i != index_.rbegin() ? ", this->" : "this->") << (*i)->generate();
     ss << "};" << endl;
   }
-  ss << indent << "std::shared_ptr<Tensor<T>> " << label() << "(new Tensor<T>(" << label() << "_index, false));";
+  ss << indent << "std::shared_ptr<Tensor> " << label() << "(new Tensor(" << label() << "_index, false));";
   return ss.str();
 }
 
@@ -508,26 +508,25 @@ string Tensor::generate_gamma(const int ic, const bool use_blas, const bool der)
 
 
   //////////// gamma header ////////////
-  tt << "template <typename T>" << endl;
 #ifdef debug_tasks
-  tt << "class Task" << ic << " : public Task<T> {" <<  "  // associated with gamma" << endl;
+  tt << "class Task" << ic << " : public Task {" <<  "  // associated with gamma" << endl;
 #else
-  tt << "class Task" << ic << " : public Task<T> {" << endl;
+  tt << "class Task" << ic << " : public Task {" << endl;
 #endif
   tt << "  protected:" << endl;
-  tt << "    class Task_local : public SubTask<" << nindex << "," << ninptensors << ",T> {" << endl;
+  tt << "    class Task_local : public SubTask<" << nindex << "," << ninptensors << "> {" << endl;
   tt << "      protected:" << endl;
   tt << "        const std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range_;" << endl;
   tt << endl;
 
   tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
-  tt << "        const std::shared_ptr<const Tensor<T>>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
-  tt << "        const std::shared_ptr<Tensor<T>>& out() const { return this->out_tensor(); }" << endl;
+  tt << "        const std::shared_ptr<const Tensor>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
+  tt << "        const std::shared_ptr<Tensor>& out() const { return this->out_tensor(); }" << endl;
   tt << endl;
   tt << "      public:" << endl;
-  tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor<T>>," << ninptensors <<  ">& in, std::shared_ptr<Tensor<T>>& out," << endl;
+  tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor>," << ninptensors <<  ">& in, std::shared_ptr<Tensor>& out," << endl;
   tt << "                   std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << ">& ran)" << endl;
-  tt << "          : SubTask<" << nindex << "," << ninptensors << ",T>(block, in, out), range_(ran) { }" << endl;
+  tt << "          : SubTask<" << nindex << "," << ninptensors << ">(block, in, out), range_(ran) { }" << endl;
   tt << endl;
   tt << endl;
   tt << "        void compute() override {" << endl;
@@ -553,11 +552,11 @@ string Tensor::generate_gamma(const int ic, const bool use_blas, const bool der)
   }
 
 #ifdef debug_tasks // debug purposes
-   tt << indent <<  "// std::shared_ptr<Tensor<T> > " << label() << ";" << endl;
+   tt << indent <<  "// std::shared_ptr<Tensor > " << label() << ";" << endl;
    for (auto& i: rdmn)
-     tt << indent << "// std::shared_ptr<Tensor<T> > rdm" << i << (der ? "I0" : "") << ";" << endl;
+     tt << indent << "// std::shared_ptr<Tensor > rdm" << i << (der ? "I0" : "") << ";" << endl;
    if (merged_)
-     tt << indent << "// std::shared_ptr<Tensor<T> > " << merged_->label() << ";" << endl;
+     tt << indent << "// std::shared_ptr<Tensor > " << merged_->label() << ";" << endl;
    tt << endl;
 #endif
 
@@ -587,8 +586,8 @@ string Tensor::generate_gamma(const int ic, const bool use_blas, const bool der)
   tt << "    }" << endl << endl;
 
   tt << "  public:" << endl;
-  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor<T>>> t,  std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range) : Task<T>() {" << endl;
-  tt << "      std::array<std::shared_ptr<const Tensor<T>>," << ninptensors << "> in = {{";
+  tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t,  std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range) : Task() {" << endl;
+  tt << "      std::array<std::shared_ptr<const Tensor>," << ninptensors << "> in = {{";
 
   // write out tensors in increasing order
   for (auto i = 1;  i < ninptensors + 1; ++i)
@@ -632,8 +631,8 @@ string Tensor::generate_gamma(const int ic, const bool use_blas, const bool der)
   }
   tt << "}}, in, t[0], range)));" << endl;
 
-  tt << "    };" << endl;
-  tt << "    ~Task" << ic << "() {};" << endl;
+  tt << "    }" << endl;
+  tt << "    ~Task" << ic << "() {}" << endl;
   tt << "};" << endl << endl;
 
   return tt.str();

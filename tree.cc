@@ -614,7 +614,7 @@ tuple<string, string, string, int, int, vector<shared_ptr<Tensor>>>
       }
 
     } else {  // trees without root target indices
-      ss << "      std::shared_ptr<Queue<T>> " << label() << "_(new Queue<T>());" << endl;
+      ss << "      auto " << label() << "_ = std::make_shared<Queue>();" << endl;
       num_ = tcnt;
       for (auto& j : bc_) {
         tie(depends, tasks, specials, tcnt, t0, itensors) = j->generate_task_list(tcnt, t0, gamma, itensors);
