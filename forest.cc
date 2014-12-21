@@ -135,7 +135,7 @@ tuple<string, string, string> Forest::generate_headers() const {
     ss << "    std::shared_ptr<Tensor> deci;" << endl;
     ss << "" << endl;
     ss << "    std::tuple<std::shared_ptr<Queue>, std::shared_ptr<Queue>, std::shared_ptr<Queue>,  std::shared_ptr<Queue>,  std::shared_ptr<Queue>, std::shared_ptr<Queue>, std::shared_ptr<Queue>> make_queue_() {" << endl;
-    ss << "      std::shared_ptr<Queue> queue_(new Queue());" << endl;
+    ss << "      auto queue_ = std::make_shared<Queue>();" << endl;
     ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl;
     ss << indent << "std::array<std::shared_ptr<const IndexRange>,4> cindex = {{this->rclosed_, this->ractive_, this->rvirt_, this->rci_}};" << endl << endl;
 

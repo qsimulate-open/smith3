@@ -51,15 +51,15 @@ class Diagram {
       std::stringstream ss;
       if (!ci_derivative_) {
         if (fac_ == 1.0) {
-          ss << "  shared_ptr<Diagram> " << diag_label() << "(new Diagram(" << label() << (scalar().empty() ? "" : ", \""+scalar()+"\"") << "));" << std::endl;
+          ss << "  auto " << diag_label() << " = make_shared<Diagram>(" << label() << (scalar().empty() ? "" : ", \""+scalar()+"\"") << ");" << std::endl;
         } else {
-          ss << "  shared_ptr<Diagram> " << diag_label() << "(new Diagram(" << label() << ", " << fac_ << (scalar().empty() ? "" : ", \""+scalar()+"\"") << "));" << std::endl;
+          ss << "  auto " << diag_label() << " = make_shared<Diagram>(" << label() << ", " << fac_ << (scalar().empty() ? "" : ", \""+scalar()+"\"") << ");" << std::endl;
         }
       } else {
         if (fac_ == 1.0) {
-          ss << "  shared_ptr<Diagram> " << diag_label() << "(new Diagram(" << label() << (scalar().empty() ? "" : ", \""+scalar()+"\"") << (braket_.first == true ? ", std::make_pair(true, false)));" : ", std::make_pair(false, true)));") << std::endl;
+          ss << "  auto " << diag_label() << " = make_shared<Diagram>(" << label() << (scalar().empty() ? "" : ", \""+scalar()+"\"") << (braket_.first == true ? ", make_pair(true, false));" : ", make_pair(false, true));") << std::endl;
         } else {
-          ss << "  shared_ptr<Diagram> " << diag_label() << "(new Diagram(" << label() << ", " << fac_ << (scalar().empty() ? "" : ", \""+scalar()+"\"") << (braket_.first == true ? ", std::make_pair(true, false)));" : ", std::make_pair(false, true)));") << std::endl;
+          ss << "  auto " << diag_label() << " = make_shared<Diagram>(" << label() << ", " << fac_ << (scalar().empty() ? "" : ", \""+scalar()+"\"") << (braket_.first == true ? ", make_pair(true, false));" : ", make_pair(false, true));") << std::endl;
         }
       }
       return ss.str();
@@ -67,7 +67,7 @@ class Diagram {
 
     std::string equation_str() const {
       std::stringstream ss;
-      ss << "  shared_ptr<Equation> " << eqn_label() << "(new Equation(" << diag_label() << ", theory));" << std::endl;
+      ss << "  auto " << eqn_label() << " = make_shared<Equation>(" << diag_label() << ", theory);" << std::endl;
       return ss.str();
     }
 

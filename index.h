@@ -97,7 +97,6 @@ class Index {
 
     /// Sets spin.
     void set_spin(const std::shared_ptr<Spin> s) const { spin_ = s; }
-//  std::shared_ptr<Index> set_spin(const std::shared_ptr<Spin> s) const { std::shared_ptr<Index> out(new Index(*this)); out->spin_ = s; return out; }
     /// Returns spin.
     std::shared_ptr<Spin> spin() { assert(spin_); return spin_; }
     /// Returns const spin.
@@ -132,7 +131,7 @@ class Index {
 
     /// Clone Index with label_, num_ and dagger_ info. Note that this does not set spin.
     std::shared_ptr<Index> clone() const {
-      std::shared_ptr<Index> out(new Index(label_, dagger_));
+      auto out = std::make_shared<Index>(label_, dagger_);
       out->set_num(num_);
       return out;
     }

@@ -57,8 +57,7 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 string Correction::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der) const {
   stringstream ss;
   ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
-  ss << indent << "std::shared_ptr<Task" << ic << "> task"
-               << ic << "(new Task" << ic << "(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
+  ss << indent << "auto task" << ic << " = std::make_shared<Task" << ic << ">(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
 
   if (parent_) {
     if (ip != ic)
@@ -174,14 +173,14 @@ tuple<string,string> Correction::generate_compute_footer(const int ic, const lis
     cc << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   // add subtasks
   if (!ti.empty()) {
-    cc << indent  << "subtasks_.push_back(shared_ptr<Task_local>(new Task_local(array<const Index," << ti.size() << ">{{";
+    cc << indent  << "subtasks_.push_back(make_shared<Task_local>(array<const Index," << ti.size() << ">{{";
     for (auto i = ti.rbegin(); i != ti.rend(); ++i) {
       if (i != ti.rbegin()) cc << ", ";
       cc << (*i)->str_gen();
     }
-    cc << "}}, in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
+    cc << "}}, in, t[0], range" << (need_e0 ? ", e" : "") << "));" << endl;
   } else {
-    cc << indent  << "subtasks_.push_back(shared_ptr<Task_local>(new Task_local(in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
+    cc << indent  << "subtasks_.push_back(make_shared<Task_local>(in, t[0], range" << (need_e0 ? ", e" : "") << "));" << endl;
   }
   cc << "}" << endl;
 

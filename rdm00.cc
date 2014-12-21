@@ -47,7 +47,7 @@ shared_ptr<RDM> RDM00::copy() const {
     if (dict.find(o) == dict.end()) {
       (*j)->set_spin(o);
     } else {
-      shared_ptr<Spin> s(new Spin());
+      auto s = make_shared<Spin>();
       s->set_num(o->num());
       dict.insert(make_pair(o,s));
       (*j)->set_spin(s);
@@ -61,7 +61,7 @@ shared_ptr<RDM> RDM00::copy() const {
   list<shared_ptr<const Index>> inc;
   for (auto& i : in) inc.push_back(i);
 
-  shared_ptr<RDM> out(new RDM00(inc, d, make_pair(bra_, ket_)));
+  auto out = make_shared<RDM00>(inc, d, make_pair(bra_, ket_));
   out->fac() = fac_;
   return out;
 }

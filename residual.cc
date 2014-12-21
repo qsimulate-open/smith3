@@ -75,7 +75,7 @@ pair<string, string> Residual::create_target(const string indent, const int i) c
   tt << "};" << endl << endl;
 
   ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor0 = {r};" << endl;
-  ss << indent << "std::shared_ptr<Task0> task0(new Task0(tensor0));" << endl;
+  ss << indent << "auto task0 = std::make_shared<Task0>(tensor0);" << endl;
   ss << indent << "queue_->add_task(task0);" << endl << endl;
 
   return make_pair(ss.str(), tt.str());
@@ -85,8 +85,7 @@ pair<string, string> Residual::create_target(const string indent, const int i) c
 string Residual::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der) const {
   stringstream ss;
   ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
-  ss << indent << "std::shared_ptr<Task" << ic << "> task"
-               << ic << "(new Task" << ic << "(tensor" << ic << (der ? ", cindex" : ", pindex") << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
+  ss << indent << "auto task" << ic << " = std::make_shared<Task" << ic << ">(tensor" << ic << (der ? ", cindex" : ", pindex") << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
 
   if (parent_) {
     assert(parent_->parent());
@@ -300,7 +299,7 @@ pair<string, string> Residual::generate_bc(const string indent, const shared_ptr
         res.push_back(*j);
         res.push_back(*i);
       }
-      shared_ptr<Tensor> residual(new Tensor(1.0, "r", res));
+      auto residual = make_shared<Tensor>(1.0, "r", res);
       vector<shared_ptr<Tensor>> op2 = { (i)->next_target() };
       tt << generate_compute_operators(indent, residual, op2, (i)->dagger());
   }
@@ -311,8 +310,7 @@ pair<string, string> Residual::generate_bc(const string indent, const shared_ptr
 
 
 shared_ptr<Tensor> Residual::create_tensor(list<shared_ptr<const Index>> dm) const {
- shared_ptr<Tensor> residual(new Tensor(1.0, "r", dm));
- return residual;
+ return make_shared<Tensor>(1.0, "r", dm);
 }
 
 

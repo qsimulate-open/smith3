@@ -71,13 +71,13 @@ pair<string, string> Density1::create_target(const string indent, const int i) c
   tt << "  public:" << endl;
   tt << "    Task" << i << "(std::vector<std::shared_ptr<Tensor>> t) : Density1Task() {" << endl;
   tt << "      d1_ =  t[0];" << endl;
-  tt << "    };" << endl;
-  tt << "    ~Task" << i << "() {};" << endl;
+  tt << "    }" << endl;
+  tt << "    ~Task" << i << "() {}" << endl;
   tt << "};" << endl << endl;
 
-  ss << "      std::shared_ptr<Queue> density1_(new Queue());" << endl;
+  ss << "      auto density1_ = std::make_shared<Queue>();" << endl;
   ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor" << i << " = {den1};" << endl;
-  ss << indent << "std::shared_ptr<Task" << i << "> task" << i << "(new Task" << i << "(tensor" << i << "));" << endl;
+  ss << indent << "auto task" << i << " = std::make_shared<Task" << i << ">(tensor" << i << ");" << endl;
   ss << indent << "density1_->add_task(task" << i << ");" << endl << endl;
 
   return make_pair(ss.str(), tt.str());
@@ -85,16 +85,14 @@ pair<string, string> Density1::create_target(const string indent, const int i) c
 
 
 shared_ptr<Tensor> Density1::create_tensor(list<shared_ptr<const Index>> dm) const {
- shared_ptr<Tensor> density(new Tensor(1.0, "den1", dm));
- return density;
+ return make_shared<Tensor>(1.0, "den1", dm);
 }
 
 
 string Density1::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int iz, bool der) const {
   stringstream ss;
   ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
-  ss << indent << "std::shared_ptr<Task" << ic << "> task"
-               << ic << "(new Task" << ic << "(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
+  ss << indent << "auto task" << ic << " = std::make_shared<Task" << ic << ">(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
   if (parent_) {
     assert(parent_->parent());
     ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
@@ -206,14 +204,14 @@ tuple<string,string> Density1::generate_compute_footer(const int ic, const list<
     cc << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   // add subtasks
   if (!ti.empty()) {
-    cc << indent  << "subtasks_.push_back(shared_ptr<Task_local>(new Task_local(array<const Index," << ti.size() << ">{{";
+    cc << indent  << "subtasks_.push_back(make_shared<Task_local>(array<const Index," << ti.size() << ">{{";
     for (auto i = ti.rbegin(); i != ti.rend(); ++i) {
       if (i != ti.rbegin()) cc << ", ";
       cc << (*i)->str_gen();
     }
-    cc << "}}, in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
+    cc << "}}, in, t[0], range" << (need_e0 ? ", e" : "") << "));" << endl;
   } else {
-    cc << indent  << "subtasks_.push_back(shared_ptr<Task_local>(new Task_local(in, t[0], range" << (need_e0 ? ", e" : "") << ")));" << endl;
+    cc << indent  << "subtasks_.push_back(make_shared<Task_local>(in, t[0], range" << (need_e0 ? ", e" : "") << "));" << endl;
   }
   cc << "}" << endl << endl << endl;
 

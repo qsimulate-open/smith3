@@ -65,7 +65,7 @@ static std::string footer(const std::string res, const std::string energy, const
   std::stringstream mm;
 
   mm << "  list<shared_ptr<Tree>> trees = {" << res << ", " << energy << ", " << correction << ", " << density << ", " <<  density1 << ", " << density2 << ", " << dedci <<  "};" << std::endl;
-  mm << "  shared_ptr<Forest> fr(new Forest(trees));" << std::endl;
+  mm << "  auto fr = make_shared<Forest>(trees);" << std::endl;
 
   mm << "" <<  std::endl;
   mm << "  fr->filter_gamma();" << std::endl;

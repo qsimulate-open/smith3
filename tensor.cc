@@ -617,7 +617,7 @@ string Tensor::generate_gamma(const int ic, const bool use_blas, const bool der)
       tt << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   }
   // add subtasks
-  tt << indent  << "subtasks_.push_back(std::shared_ptr<Task_local>(new Task_local(std::array<const Index," << nindex << ">{{";
+  tt << indent  << "subtasks_.push_back(std::make_shared<Task_local>(std::array<const Index," << nindex << ">{{";
   for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
     if (i != index_.rbegin()) tt << ", ";
     tt << (*i)->str_gen();
@@ -629,7 +629,7 @@ string Tensor::generate_gamma(const int ic, const bool use_blas, const bool der)
       if (i != --merged.rend()) tt << ", ";
     }
   }
-  tt << "}}, in, t[0], range)));" << endl;
+  tt << "}}, in, t[0], range));" << endl;
 
   tt << "    }" << endl;
   tt << "    ~Task" << ic << "() {}" << endl;

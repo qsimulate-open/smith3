@@ -39,11 +39,9 @@ Ex::Ex(const std::string& oa, const std::string& ob, const std::string& oc, cons
 
 shared_ptr<Operator> Ex::copy() const {
   if (c_) {
-    shared_ptr<Operator> tmp(new Ex(a_->label(), b_->label(), c_->label(), d_->label()));
-    return tmp;
+    return make_shared<Ex>(a_->label(), b_->label(), c_->label(), d_->label());
   } else {
-    shared_ptr<Operator> tmp(new Ex(a_->label(), b_->label()));
-    return tmp;
+    return make_shared<Ex>(a_->label(), b_->label());
   }
 }
 

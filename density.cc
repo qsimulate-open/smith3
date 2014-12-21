@@ -75,9 +75,9 @@ pair<string, string> Density::create_target(const string indent, const int i) co
   tt << "    ~Task" << i << "() {};" << endl;
   tt << "};" << endl << endl;
 
-  ss << "      std::shared_ptr<Queue> density_(new Queue());" << endl;
+  ss << "      auto density_ = std::make_shared<Queue>();" << endl;
   ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor" << i << " = {den2};" << endl;
-  ss << indent << "std::shared_ptr<Task" << i << "> task" << i << "(new Task" << i << "(tensor" << i << "));" << endl;
+  ss << indent << "auto task" << i << " = std::make_shared<Task" << i << ">(tensor" << i << ");" << endl;
   ss << indent << "density_->add_task(task" << i << ");" << endl << endl;
 
   return make_pair(ss.str(), tt.str());
@@ -85,16 +85,14 @@ pair<string, string> Density::create_target(const string indent, const int i) co
 
 
 shared_ptr<Tensor> Density::create_tensor(list<shared_ptr<const Index>> dm) const {
- shared_ptr<Tensor> density(new Tensor(1.0, "den2", dm));
- return density;
+ return make_shared<Tensor>(1.0, "den2", dm);
 }
 
 
 string Density::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int iz, bool der) const {
   stringstream ss;
   ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
-  ss << indent << "std::shared_ptr<Task" << ic << "> task"
-               << ic << "(new Task" << ic << "(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << "));" << endl;
+  ss << indent << "auto task" << ic << " = std::make_shared<Task" << ic << ">(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
   if (parent_) {
     assert(parent_->parent());
     ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;

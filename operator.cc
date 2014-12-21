@@ -30,30 +30,26 @@
 using namespace std;
 using namespace smith;
 
-Operator::Operator(const std::string& ta, const std::string& tb)
-  : a_(new Index(ta,true)), b_(new Index(tb,false)) {
-  op_.push_back(std::make_tuple(&a_, ta!="x"?0:2, 0)); // index, dagger, spin
-  op_.push_back(std::make_tuple(&b_, tb!="x"?0:2, 0));
-  std::shared_ptr<Spin> tmp(new Spin());
-  rho_.push_back(tmp);
+Operator::Operator(const string& ta, const string& tb)
+  : a_(make_shared<Index>(ta,true)), b_(make_shared<Index>(tb,false)) {
+  op_.push_back(make_tuple(&a_, ta!="x"?0:2, 0)); // index, dagger, spin
+  op_.push_back(make_tuple(&b_, tb!="x"?0:2, 0));
+  rho_.push_back(make_shared<Spin>());
 
   perm_.push_back(0);
 }
 
 
-Operator::Operator(const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td)
-  : a_(new Index(ta,true)), b_(new Index(tb,true)), c_(new Index(tc,false)), d_(new Index(td,false)) {
+Operator::Operator(const string& ta, const string& tb, const string& tc, const string& td)
+  : a_(make_shared<Index>(ta,true)), b_(make_shared<Index>(tb,true)), c_(make_shared<Index>(tc,false)), d_(make_shared<Index>(td,false)) {
   // accept aa,ii and rearrange it to ai,ai
-  op_.push_back(std::make_tuple(&a_, ta!="x"?0:2, 0)); // index, no-active/active, spin
-  op_.push_back(std::make_tuple(&d_, td!="x"?0:2, 0)); // from historical reasons, it is 0 and 2. -1 when contracted.
-  op_.push_back(std::make_tuple(&b_, tb!="x"?0:2, 1));
-  op_.push_back(std::make_tuple(&c_, tc!="x"?0:2, 1));
+  op_.push_back(make_tuple(&a_, ta!="x"?0:2, 0)); // index, no-active/active, spin
+  op_.push_back(make_tuple(&d_, td!="x"?0:2, 0)); // from historical reasons, it is 0 and 2. -1 when contracted.
+  op_.push_back(make_tuple(&b_, tb!="x"?0:2, 1));
+  op_.push_back(make_tuple(&c_, tc!="x"?0:2, 1));
 
-  std::shared_ptr<Spin> tmp(new Spin());
-  rho_.push_back(tmp);
-
-  std::shared_ptr<Spin> tmp2(new Spin());
-  rho_.push_back(tmp2);
+  rho_.push_back(make_shared<Spin>());
+  rho_.push_back(make_shared<Spin>());
 
   perm_.push_back(0);
   perm_.push_back(1);
@@ -64,8 +60,8 @@ Operator::Operator(const std::string& ta, const std::string& tb, const std::stri
 Operator::Operator(shared_ptr<Index> ta, shared_ptr<Index> tb, shared_ptr<Spin> ts)
  : a_(ta), b_(tb) {
   rho_.push_back(ts); // just to prevent seg fault.
-  op_.push_back(std::make_tuple(&a_, -1, 0));
-  op_.push_back(std::make_tuple(&b_, -1, 0));
+  op_.push_back(make_tuple(&a_, -1, 0));
+  op_.push_back(make_tuple(&b_, -1, 0));
 }
 
 
