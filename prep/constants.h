@@ -38,11 +38,7 @@ static std::string header() {
   mm << "// This program is supposed to perform Wick's theorem for multireference problems." << std::endl;
   mm << "// Spin averaged quantities assumed." << std::endl;
   mm << "" << std::endl;
-  mm << "#include <iostream>" << std::endl;
   mm << "#include <fstream>" << std::endl;
-  mm << "#include <list>" << std::endl;
-  mm << "#include <string>" << std::endl;
-  mm << "#include \"equation.h\"" << std::endl;
   mm << "#include \"forest.h\"" << std::endl;
   mm << "#include \"tree.h\"" << std::endl;
   mm << "#include \"residual.h\"" << std::endl;

@@ -32,10 +32,6 @@
 #ifndef __ACTIVE_H
 #define __ACTIVE_H
 
-#include <string>
-#include <list>
-#include <memory>
-#include "operator.h"
 #include "op.h"
 #include "ex.h"
 #include "rdm.h"

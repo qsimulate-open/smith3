@@ -27,18 +27,7 @@
 #ifndef __EX_H
 #define __EX_H
 
-#include <memory>
-#include <string>
-#include <map>
-#include <vector>
-#include <iostream>
-#include <cassert>
-#include <stdexcept>
-#include <list>
-#include <tuple>
-#include "index.h"
 #include "operator.h"
-
 
 namespace smith {
 

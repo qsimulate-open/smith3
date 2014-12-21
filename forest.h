@@ -27,14 +27,7 @@
 #ifndef __FOREST_H
 #define __FOREST_H
 
-#include "output.h"
-#include <string>
-#include <memory>
-#include <list>
-#include <vector>
 #include "tree.h"
-#include "equation.h"
-#include "listtensor.h"
 
 namespace smith {
 

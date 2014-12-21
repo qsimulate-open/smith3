@@ -29,9 +29,6 @@
 
 #include "tensor.h"
 #include "diagram.h"
-#include <memory>
-#include <list>
-#include <map>
 
 namespace smith {
 

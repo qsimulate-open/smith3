@@ -27,10 +27,6 @@
 #ifndef __RESIDUAL_H
 #define __RESIDUAL_H
 
-#include <string>
-#include <memory>
-#include "equation.h"
-#include "listtensor.h"
 #include "tree.h"
 
 namespace smith {

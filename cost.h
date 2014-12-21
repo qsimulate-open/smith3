@@ -28,13 +28,6 @@
 #define _smith_cost_h
 
 #include <cmath>
-#include <vector>
-#include <string>
-#include <algorithm>
-#include <functional>
-#include <tuple>
-#include <cassert>
-#include <iostream>
 #include "indexmap.h"
 
 namespace smith {
@@ -69,7 +62,7 @@ class PCost {
       double out = 0.0;
       auto j = indmap_.begin();
       for (auto i = pcost_.begin(); i != pcost_.end(); ++i, ++j)
-        out += ::log(static_cast<double>(j->second.second))* *i;
+        out += std::log(static_cast<double>(j->second.second))* *i;
       return out;
     }
     /// Return pcost.

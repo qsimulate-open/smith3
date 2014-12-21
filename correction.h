@@ -27,10 +27,6 @@
 #ifndef __CORRECTION_H
 #define __CORRECTION_H
 
-#include <string>
-#include <memory>
-#include "equation.h"
-#include "listtensor.h"
 #include "tree.h"
 
 namespace smith {

@@ -27,18 +27,7 @@
 #ifndef __TWOOP_H
 #define __TWOOP_H
 
-#include <memory>
-#include <string>
-#include <map>
-#include <vector>
-#include <iostream>
-#include <cassert>
-#include <stdexcept>
-#include <list>
-#include <tuple>
-#include "index.h"
 #include "operator.h"
-
 
 namespace smith {
 

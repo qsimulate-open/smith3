@@ -27,7 +27,6 @@
 #ifndef __EQUATION_H
 #define __EQUATION_H
 
-#include <list>
 #include "diagram.h"
 
 namespace smith {

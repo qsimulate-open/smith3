@@ -27,17 +27,9 @@
 #ifndef __OPERATOR_H
 #define __OPERATOR_H
 
-#include <memory>
-#include <string>
-#include <map>
 #include <vector>
-#include <iostream>
-#include <cassert>
-#include <stdexcept>
-#include <list>
-#include <tuple>
+#include <map>
 #include "index.h"
-
 
 namespace smith {
 

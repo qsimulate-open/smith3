@@ -201,7 +201,7 @@ OutStream Dedci::generate_compute_footer(const int ic, const list<shared_ptr<con
 
   // over original outermost indices
   if (!ti.empty()) {
-    out.cc << "      subtasks_.reserve(";
+    out.cc << "  subtasks_.reserve(";
     for (auto i = ti.begin(); i != ti.end(); ++i) {
       if (i != ti.begin()) out.cc << "*";
       out.cc << (*i)->generate_range() << "->nblock()";

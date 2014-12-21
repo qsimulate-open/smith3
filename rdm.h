@@ -26,10 +26,6 @@
 #ifndef __SRC_RDM_H
 #define __SRC_RDM_H
 
-#include <list>
-#include <memory>
-#include <string>
-#include <cassert>
 #include <map>
 #include "index.h"
 

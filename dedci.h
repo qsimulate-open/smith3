@@ -27,10 +27,6 @@
 #ifndef __DEDCI_H
 #define __DEDCI_H
 
-#include <string>
-#include <memory>
-#include "equation.h"
-#include "listtensor.h"
 #include "tree.h"
 
 namespace smith {

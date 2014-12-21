@@ -28,12 +28,6 @@
 #define __DIAGRAM_H
 
 #include "active.h"
-#include "operator.h"
-#include <iostream>
-#include <iomanip>
-#include <memory>
-#include <list>
-#include <map>
 
 namespace smith {
 

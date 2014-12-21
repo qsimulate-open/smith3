@@ -24,6 +24,7 @@
 //
 
 
+#include <iomanip>
 #include "diagram.h"
 
 using namespace std;

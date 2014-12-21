@@ -27,10 +27,6 @@
 #ifndef __DENSITY_H
 #define __DENSITY_H
 
-#include <string>
-#include <memory>
-#include "equation.h"
-#include "listtensor.h"
 #include "tree.h"
 
 namespace smith {

@@ -29,6 +29,9 @@
 
 #include <string>
 #include <sstream>
+#include <memory>
+#include <list>
+#include <iostream>
 #include <cassert>
 
 namespace smith {

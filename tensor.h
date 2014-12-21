@@ -35,12 +35,6 @@
 
 // this object should generate some codes.
 
-#include <memory>
-#include <string>
-#include <list>
-#include "operator.h"
-#include "op.h"
-#include "ex.h"
 #include "active.h"
 #include "output.h"
 
