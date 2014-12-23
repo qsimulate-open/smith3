@@ -166,7 +166,7 @@ string Tensor::constructor_str(string indent) const {
       ss << (i != index_.rbegin() ? ", this->" : "this->") << (*i)->generate();
     ss << "};" << endl;
   }
-  ss << indent << "std::shared_ptr<Tensor> " << label() << "(new Tensor(" << label() << "_index, false));";
+  ss << indent << "auto " << label() << " = std::make_shared<Tensor>(" << label() << "_index, false);";
   return ss.str();
 }
 
