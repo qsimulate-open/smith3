@@ -146,7 +146,7 @@ OutStream Density1::generate_compute_header(const int ic, const list<shared_ptr<
   out.tt << endl;
   out.tt << "        void compute() override;" << endl;
 
-  out.tt << "void Task" << ic << "::Task_local::compute() {" << endl;
+  out.dd << "void Task" << ic << "::Task_local::compute() {" << endl;
 
   if (!no_outside) {
     list<shared_ptr<const Index>> ti_copy = ti;
@@ -157,8 +157,8 @@ OutStream Density1::generate_compute_header(const int ic, const list<shared_ptr<
 
     int cnt = 0;
     for (auto i = ti_copy.rbegin(); i != ti_copy.rend(); ++i)
-      out.tt << "  const Index " << (*i)->str_gen() << " = b(" << cnt++ << ");" << endl;
-    out.tt << endl;
+      out.dd << "  const Index " << (*i)->str_gen() << " = b(" << cnt++ << ");" << endl;
+    out.dd << endl;
   }
 
   return out; 
