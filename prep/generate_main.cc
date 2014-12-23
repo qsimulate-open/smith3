@@ -138,7 +138,7 @@ int main() {
   shared_ptr<Equation> eq0(new Equation("ra", {dum, proj_list, f, t_list}));
   shared_ptr<Equation> eq1(new Equation("rb", {dum, proj_list, t_list}, -1.0, "e0"));
   shared_ptr<Equation> eq2(new Equation("rc", {dum, proj_list, H}));
-  shared_ptr<Equation> eq2a(new Equation("rd", {dum, proj_list, hc}));
+  shared_ptr<Equation> eq2a(new Equation("rd", {dum, proj_list, hc}, 2.0));
   eq0->merge(eq1);
   eq0->merge(eq2);
   eq0->merge(eq2a);
@@ -151,7 +151,7 @@ int main() {
   shared_ptr<Equation> eq3(new Equation("ea",  {dum, t_dagger, f, t_list}, 0.25));
   shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, t_list}, -0.25, "e0"));
   shared_ptr<Equation> eq3b(new Equation("ec", {dum, t_dagger, H}, 0.50));
-  shared_ptr<Equation> eq3c(new Equation("ed", {dum, t_dagger, hc}, 0.50));
+  shared_ptr<Equation> eq3c(new Equation("ed", {dum, t_dagger, hc}, 1.00));
   eq3->merge(eq3a);
   eq3->merge(eq3b);
   eq3->merge(eq3c);
@@ -188,8 +188,8 @@ int main() {
   shared_ptr<Equation> eq4c(new Equation("dedcid", {dum, t_dagger, t_list}, -0.25, "e0", make_pair(false, true)));
   shared_ptr<Equation> eq4d(new Equation("dedcie", {dum, t_dagger, H}, 0.50, make_pair(true, false)));
   shared_ptr<Equation> eq4e(new Equation("dedcif", {dum, t_dagger, H}, 0.50, make_pair(false, true)));
-  shared_ptr<Equation> eq4f(new Equation("dedcig", {dum, t_dagger, hc}, 0.50, make_pair(true, false)));
-  shared_ptr<Equation> eq4g(new Equation("dedcih", {dum, t_dagger, hc}, 0.50, make_pair(false, true)));
+  shared_ptr<Equation> eq4f(new Equation("dedcig", {dum, t_dagger, hc}, 1.00, make_pair(true, false)));
+  shared_ptr<Equation> eq4g(new Equation("dedcih", {dum, t_dagger, hc}, 1.00, make_pair(false, true)));
   eq4->merge(eq4a);
   eq4->merge(eq4b);
   eq4->merge(eq4c);
