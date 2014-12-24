@@ -104,7 +104,7 @@ class Diagram {
     /// Returns absorbed_, true if ket has been absorbed and indices need to be reversed in rdms.
     bool absorbed() const { return absorbed_; }
 
-    bool gamma_derivative();
+    bool gamma_derivative() const;
 
     /// Set operator for private members.
     void set_op(const std::list<std::shared_ptr<Operator>>& o) { op_ = o; }

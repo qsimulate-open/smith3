@@ -300,8 +300,8 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
 
   // then write them out.
   ss << cindent << "sort_indices<";
-  for (auto i = done.begin(); i != done.end(); ++i)
-    ss << *i << ",";
+  for (auto& i : done)
+    ss << i << ",";
 
   string target_label = op ? "odata" : lab + "data_sorted";
 
@@ -311,17 +311,9 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
     for (auto i = index_.rbegin(); i != index_.rend(); ++i)
       ss << ", " << (*i)->str_gen() << ".size()";
   } else {
-#if 0
-    for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
-      string tmp = ", " + (*i)->str_gen() + ".size()";
-      ++i;
-      ss << ", " << (*i)->str_gen() << ".size()" << tmp;
+    for (auto& i : index_) {
+      ss << ", " << i->str_gen() << ".size()";
     }
-#else
-    for (auto i = index_.begin(); i != index_.end(); ++i) {
-      ss << ", " << (*i)->str_gen() << ".size()";
-    }
-#endif
   }
   ss << ");" << endl;
   return ss.str();
