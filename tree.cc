@@ -440,7 +440,7 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
 }
 
 
-OutStream Tree::generate_task(const string indent, const int ic, const vector<shared_ptr<Tensor>> op, const list<shared_ptr<Tensor>> g, const int iz) const {
+OutStream Tree::generate_task(const int ic, const vector<shared_ptr<Tensor>> op, const list<shared_ptr<Tensor>> g, const int iz) const {
   OutStream out;
 
   vector<string> ops;
@@ -459,12 +459,12 @@ OutStream Tree::generate_task(const string indent, const int ic, const vector<sh
 
   // if gamma, we need to add dependency.
   // this one is virtual, ie tree specific
-  out << generate_task(indent, ip, ic, ops, scalar, iz);
+  out << generate_task(ip, ic, ops, scalar, iz);
   for (auto& i : op) {
     if (i->label().find("Gamma") != string::npos)
-      out.ss << indent << "task" << ic << "->" << add_depend(i, g) << endl;
+      out.ee << "  task" << ic << "->" << add_depend(i, g) << endl;
   }
-  out.ss << endl;
+  out.ee << endl;
 
   return out;
 }
@@ -512,7 +512,7 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
         t0 = tcnt;
 
         // virtual
-        out << create_target(indent, tcnt);
+        out << create_target(tcnt);
         ++tcnt;
 
         for (auto& j : bc_) {
@@ -524,10 +524,10 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
               // if it contains a new intermediate tensor, dump a constructor
               if (find(itensors.begin(), itensors.end(), s) == itensors.end() && s->label().find("I") != string::npos) {
                 itensors.push_back(s);
-                out.ss << s->constructor_str(indent) << endl;
+                out.ee << s->constructor_str() << endl;
               }
             }
-            out << generate_task(indent, num_, source_tensors, gamma, t0);
+            out << generate_task(num_, source_tensors, gamma, t0);
 
             list<shared_ptr<const Index>> proj = j->target_index();
             // write out headers
@@ -597,7 +597,7 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
       }
 
     } else {  // trees without root target indices
-      out.ss << "      auto " << label() << "_ = std::make_shared<Queue>();" << endl;
+      out.ee << "      auto " << label() << "_ = std::make_shared<Queue>();" << endl;
       num_ = tcnt;
       for (auto& j : bc_) {
         tie(tmp, tcnt, t0, itensors) = j->generate_task_list(tcnt, t0, gamma, itensors);
@@ -624,12 +624,12 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
     // step through operators and if they are new, construct them.
     if (find(itensors.begin(), itensors.end(), target_) == itensors.end()) {
       itensors.push_back(target_);
-      out.ss << target_->constructor_str(indent) << endl;
+      out.ee << target_->constructor_str() << endl;
     }
 
     vector<shared_ptr<Tensor>> op = {target_};
     op.insert(op.end(), op_.begin(), op_.end());
-    out << generate_task(indent, tcnt, op, gamma, t0);
+    out << generate_task(tcnt, op, gamma, t0);
 
     list<shared_ptr<const Index>> ti = target_->index();
 
@@ -660,12 +660,12 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
       // if it contains a new intermediate tensor, dump a constructor
       if (find(itensors.begin(), itensors.end(), s) == itensors.end() && s->label().find("I") != string::npos) {
         itensors.push_back(s);
-        out.ss << s->constructor_str(indent) << endl;
+        out.ee << s->constructor_str() << endl;
       }
     }
     // saving a counter to a protected member for dependency checks
     num_ = tcnt;
-    out << generate_task(indent, num_, source_tensors, gamma, t0);
+    out << generate_task(num_, source_tensors, gamma, t0);
 
     // write out headers
     {

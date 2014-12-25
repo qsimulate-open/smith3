@@ -52,7 +52,7 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 // local functions... (not a good practice...) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
-OutStream Residual::create_target(const string indent, const int i) const {
+OutStream Residual::create_target(const int i) const {
   OutStream out;
 
   out.tt << "class Task0 : public Task {" << endl;
@@ -76,29 +76,29 @@ OutStream Residual::create_target(const string indent, const int i) const {
   out.tt << "    ~Task0() {}" << endl;
   out.tt << "};" << endl << endl;
 
-  out.ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor0 = {r};" << endl;
-  out.ss << indent << "auto task0 = std::make_shared<Task0>(tensor0);" << endl;
-  out.ss << indent << "queue_->add_task(task0);" << endl << endl;
+  out.ee << "  vector<shared_ptr<Tensor>> tensor0 = {r};" << endl;
+  out.ee << "  auto task0 = make_shared<Task0>(tensor0);" << endl;
+  out.ee << "  queue_->add_task(task0);" << endl << endl;
 
   return out;
 }
 
 
-OutStream Residual::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der) const {
+OutStream Residual::generate_task(const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der) const {
   OutStream out;
-  out.ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
-  out.ss << indent << "auto task" << ic << " = std::make_shared<Task" << ic << ">(tensor" << ic << (der ? ", cindex" : ", pindex") << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
+  out.ee << "  vector<shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
+  out.ee << "  auto task" << ic << " = make_shared<Task" << ic << ">(tensor" << ic << (der ? ", cindex" : ", pindex") << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
 
   if (parent_) {
     assert(parent_->parent());
-    out.ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
-    out.ss << indent << "task" << ic << "->add_dep(task0);" << endl;
+    out.ee << "  task" << ip << "->add_dep(task" << ic << ");" << endl;
+    out.ee << "  task" << ic << "->add_dep(task0);" << endl;
   } else {
     assert(depth() == 0);
-    out.ss << indent << "task" << ic << "->add_dep(task0);" << endl;
+    out.ee << "  task" << ic << "->add_dep(task0);" << endl;
   }
-  out.ss << indent << "queue_->add_task(task" << ic << ");" << endl;
-  out.ss << endl;
+  out.ee << "  queue_->add_task(task" << ic << ");" << endl;
+  out.ee << endl;
   return out;
 }
 

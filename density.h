@@ -45,10 +45,10 @@ class Density : public Tree {
     /// Return label of tree.
     std::string label() const override { return label_; }
 
-    OutStream create_target(const std::string, const int i) const override;
+    OutStream create_target(const int i) const override;
     std::shared_ptr<Tensor> create_tensor(std::list<std::shared_ptr<const Index>>) const override;
 
-    OutStream generate_task(const std::string, const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0, bool der = false) const override;
+    OutStream generate_task(const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0, bool der = false) const override;
     OutStream generate_compute_header(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool = false) const override;
     OutStream generate_compute_footer(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>) const override;
     OutStream generate_bc(std::shared_ptr<BinaryContraction>) const override;

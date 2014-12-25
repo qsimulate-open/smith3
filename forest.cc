@@ -93,6 +93,7 @@ OutStream Forest::generate_headers() const {
   out.tt << header(forest_name_ + "_tasks.h");
   out.cc << header(forest_name_ + "_gen.cc");
   out.dd << header(forest_name_ + "_tasks.cc");
+  out.ee << header(forest_name_ + ".cc");
 
   out.ss << "#ifndef __SRC_SMITH_" << forest_name_ << "_H" << endl;
   out.ss << "#define __SRC_SMITH_" << forest_name_ << "_H" << endl;
@@ -145,10 +146,17 @@ OutStream Forest::generate_headers() const {
   out.ss << "    double correlated_norm_;" << endl;
   out.ss << "    std::shared_ptr<Tensor> deci;" << endl;
   out.ss << "" << endl;
-  out.ss << "    std::tuple<std::shared_ptr<Queue>, std::shared_ptr<Queue>, std::shared_ptr<Queue>,  std::shared_ptr<Queue>,  std::shared_ptr<Queue>, std::shared_ptr<Queue>, std::shared_ptr<Queue>> make_queue_() {" << endl;
-  out.ss << "      auto queue_ = std::make_shared<Queue>();" << endl;
-  out.ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{rclosed_, ractive_, rvirt_}};" << endl;
-  out.ss << indent << "std::array<std::shared_ptr<const IndexRange>,4> cindex = {{rclosed_, ractive_, rvirt_, rci_}};" << endl << endl;
+  out.ss << "    std::tuple<std::shared_ptr<Queue>, std::shared_ptr<Queue>, std::shared_ptr<Queue>,  std::shared_ptr<Queue>,  std::shared_ptr<Queue>, std::shared_ptr<Queue>, std::shared_ptr<Queue>> make_queue_();" << endl;
+
+  out.ee << "#include <src/smith/" << forest_name_ << ".h>" << endl << endl;
+  out.ee << "using namespace std;" << endl;
+  out.ee << "using namespace bagel;" << endl;
+  out.ee << "using namespace bagel::SMITH;" << endl << endl;
+  out.ee << "tuple<shared_ptr<Queue>, shared_ptr<Queue>, shared_ptr<Queue>,  shared_ptr<Queue>,  shared_ptr<Queue>, shared_ptr<Queue>, shared_ptr<Queue>>" << endl;
+  out.ee << "  " << forest_name_ << "::" << forest_name_ << "::make_queue_() {" << endl << endl;
+  out.ee << "  auto queue_ = make_shared<Queue>();" << endl;
+  out.ee << "  array<shared_ptr<const IndexRange>,3> pindex = {{rclosed_, ractive_, rvirt_}};" << endl;
+  out.ee << "  array<shared_ptr<const IndexRange>,4> cindex = {{rclosed_, ractive_, rvirt_, rci_}};" << endl << endl;
 
   out.tt << "#ifndef __SRC_SMITH_" << forest_name_ << "_TASKS_H" << endl;
   out.tt << "#define __SRC_SMITH_" << forest_name_ << "_TASKS_H" << endl;
@@ -180,7 +188,7 @@ OutStream Forest::generate_headers() const {
   out.dd << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
 
   // virtual function, generate Task0 which zeros out the residual and starts zero level dependency queue.
-  out << trees_.front()->create_target(indent, icnt);
+  out << trees_.front()->create_target(icnt);
   ++icnt;
 
 
@@ -198,7 +206,7 @@ OutStream Forest::generate_gammas() const {
     i->set_num(icnt);
     assert(i->label().find("Gamma") != string::npos);
 
-    out.ss << i->constructor_str(indent) << endl;
+    out.ee << i->constructor_str() << endl;
 
     // switch for blas, if true merged rdm*f1 tensor multiplication will use blas
     bool use_blas = false;
@@ -226,9 +234,9 @@ OutStream Forest::generate_gammas() const {
     }
     // virtual generate_task
     if (i->der()) {
-      out << trees_.front()->generate_task(indent, 0, icnt, tmp, "", 0, true);
+      out << trees_.front()->generate_task(0, icnt, tmp, "", 0, true);
     } else {
-      out << trees_.front()->generate_task(indent, 0, icnt, tmp);
+      out << trees_.front()->generate_task(0, icnt, tmp);
     }
     ++icnt;
   }
@@ -242,62 +250,69 @@ OutStream Forest::generate_algorithm() const {
   string indent = "      ";
 
   // generate computational algorithm
-  out.ss << "      return make_tuple(queue_, energy_, correction_, density_, density1_, density2_, dedci_);" << endl;
-  out.ss << "    };" << endl;
+  out.ee << "  return make_tuple(queue_, energy_, correction_, density_, density1_, density2_, dedci_);" << endl;
+  out.ee << "}" << endl << endl;
+
   out.ss << endl;
   out.ss << "  public:" << endl;
-  out.ss << "    " << forest_name_ << "(std::shared_ptr<const SMITH_Info> ref) : SpinFreeMethod(ref) {" << endl;
-  out.ss << "      this->eig_ = f1_->diag();" << endl;
-  out.ss << "      t2 = v2_->clone();" << endl;
-  out.ss << "      e0_ = this->e0();" << endl;
-  out.ss << "      sigma_ = this->sigma();" << endl;
-  out.ss << "      this->update_amplitude(t2, v2_, true);" << endl;
-  out.ss << "      t2->scale(2.0);" << endl;
-  out.ss << "      r = t2->clone();" << endl;
-  out.ss << "      den1 = h1_->clone();" << endl;
-  out.ss << "      den2 = h1_->clone();" << endl;
-  out.ss << "      Den1 = v2_->clone();" << endl;
-  out.ss << "      deci = rdm0deriv_->clone();" << endl;
-  out.ss << "    }" << endl;
+  out.ss << "    " << forest_name_ << "(std::shared_ptr<const SMITH_Info> ref);" << endl;
+
+  out.ee << forest_name_ << "::" << forest_name_ << "::" << forest_name_ << "(shared_ptr<const SMITH_Info> ref) : SpinFreeMethod(ref) {" << endl;
+  out.ee << "  this->eig_ = f1_->diag();" << endl;
+  out.ee << "  t2 = v2_->clone();" << endl;
+  out.ee << "  e0_ = this->e0();" << endl;
+  out.ee << "  sigma_ = this->sigma();" << endl;
+  out.ee << "  this->update_amplitude(t2, v2_, true);" << endl;
+  out.ee << "  t2->scale(2.0);" << endl;
+  out.ee << "  r = t2->clone();" << endl;
+  out.ee << "  den1 = h1_->clone();" << endl;
+  out.ee << "  den2 = h1_->clone();" << endl;
+  out.ee << "  Den1 = v2_->clone();" << endl;
+  out.ee << "  deci = rdm0deriv_->clone();" << endl;
+  out.ee << "}" << endl << endl;
+
   out.ss << "    ~" << forest_name_ << "() {}" << endl;
   out.ss << "" << endl;
-  out.ss << "    void solve() {" << endl;
-  out.ss << "      Timer timer;" << endl;
-  out.ss << "      this->print_iteration();" << endl;
-  out.ss << "      int iter = 0;" << endl;
-  out.ss << "      std::shared_ptr<Queue> queue, energ, correct, dens2, dens1, Dens1, dec;" << endl;
-  out.ss << "      for ( ; iter != ref_->maxiter(); ++iter) {" << endl;
-  out.ss << "        std::tie(queue, energ, correct, dens2, dens1, Dens1, dec) = make_queue_();" << endl;
-  out.ss << "        while (!queue->done())" << endl;
-  out.ss << "          queue->next_compute();" << endl;
-  out.ss << "        this->update_amplitude(t2, r);" << endl;
-  out.ss << "        const double err = r->rms();" << endl;
-  out.ss << "        r->zero();" << endl;
-  out.ss << "        this->energy_ = accumulate(energ);" << endl;
-  out.ss << "        this->print_iteration(iter, this->energy_, err);" << endl;
-  out.ss << "        if (err < ref_->thresh()) break;" << endl;
-  out.ss << "      }" << endl;
-  out.ss << "      this->print_iteration(iter == ref_->maxiter());" << endl;
-  out.ss << "      timer.tick_print(\"CASPT2 energy evaluation\");" << endl;
-  out.ss << endl;
+  out.ss << "    void solve();" << endl;
+
+  out.ee << "void SMITH::" << forest_name_ << "::" << forest_name_ << "::solve() {" << endl;
+  out.ee << "  Timer timer;" << endl;
+  out.ee << "  this->print_iteration();" << endl;
+  out.ee << "  int iter = 0;" << endl;
+  out.ee << "  shared_ptr<Queue> queue, energ, correct, dens2, dens1, Dens1, dec;" << endl;
+  out.ee << "  for ( ; iter != ref_->maxiter(); ++iter) {" << endl;
+  out.ee << "    tie(queue, energ, correct, dens2, dens1, Dens1, dec) = make_queue_();" << endl;
+  out.ee << "    while (!queue->done())" << endl;
+  out.ee << "      queue->next_compute();" << endl;
+  out.ee << "    this->update_amplitude(t2, r);" << endl;
+  out.ee << "    const double err = r->rms();" << endl;
+  out.ee << "    r->zero();" << endl;
+  out.ee << "    this->energy_ = accumulate(energ);" << endl;
+  out.ee << "    this->print_iteration(iter, this->energy_, err);" << endl;
+  out.ee << "    if (err < ref_->thresh()) break;" << endl;
+  out.ee << "  }" << endl;
+  out.ee << "  this->print_iteration(iter == ref_->maxiter());" << endl;
+  out.ee << "  timer.tick_print(\"CASPT2 energy evaluation\");" << endl;
+  out.ee << endl;
   // using norm in various places, eg  y-=Nf<I|Eij|0> and dm1 -= N*rdm1
-  out.ss << "      correlated_norm_ = accumulate(correct);" << endl;
-  out.ss << "      timer.tick_print(\"T1 norm evaluation\");" << endl;
-  out.ss << endl;
-  out.ss << "      while (!dens2->done())" << endl;
-  out.ss << "        dens2->next_compute();" << endl;
-  out.ss << "      while (!dens1->done())" << endl;
-  out.ss << "        dens1->next_compute();" << endl;
-  out.ss << "      while (!Dens1->done())" << endl;
-  out.ss << "        Dens1->next_compute();" << endl;
-  out.ss << "      timer.tick_print(\"Correlated density matrix evaluation\");" << endl;
-  out.ss << endl;
-  out.ss << "      while (!dec->done())" << endl;
-  out.ss << "        dec->next_compute();" << endl;
-  out.ss << "      timer.tick_print(\"CI derivative evaluation\");" << endl;
-  out.ss << "      std::cout << std::endl;" << endl;
-  out.ss << "" << endl;
-  out.ss << "    }" << endl;
+  out.ee << "  correlated_norm_ = accumulate(correct);" << endl;
+  out.ee << "  timer.tick_print(\"T1 norm evaluation\");" << endl;
+  out.ee << endl;
+  out.ee << "  while (!dens2->done())" << endl;
+  out.ee << "    dens2->next_compute();" << endl;
+  out.ee << "  while (!dens1->done())" << endl;
+  out.ee << "    dens1->next_compute();" << endl;
+  out.ee << "  while (!Dens1->done())" << endl;
+  out.ee << "    Dens1->next_compute();" << endl;
+  out.ee << "  timer.tick_print(\"Correlated density matrix evaluation\");" << endl;
+  out.ee << endl;
+  out.ee << "  while (!dec->done())" << endl;
+  out.ee << "    dec->next_compute();" << endl;
+  out.ee << "  timer.tick_print(\"CI derivative evaluation\");" << endl;
+  out.ee << "  cout << endl;" << endl;
+  out.ee << endl;
+  out.ee << "}" << endl;
+
   out.ss << "" << endl;
   out.ss << "    double accumulate(std::shared_ptr<Queue> queue) {" << endl;
   out.ss << "      double sum = 0.0;" << endl;

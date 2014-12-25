@@ -1385,14 +1385,17 @@ int main() {
   ofstream es(fr->name() + "_tasks.h");
   ofstream cs(fr->name() + "_gen.cc");
   ofstream ds(fr->name() + "_tasks.cc");
+  ofstream gs(fr->name() + ".cc");
   fs << tmp.ss.str();
   es << tmp.tt.str();
   cs << tmp.cc.str();
   ds << tmp.dd.str();
+  gs << tmp.ee.str();
   fs.close();
   es.close();
   cs.close();
   ds.close();
+  gs.close();
   cout << std::endl;
 
   // output

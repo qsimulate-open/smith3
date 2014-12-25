@@ -55,7 +55,7 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 // local functions... (not a good practice...) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
-OutStream Dedci::create_target(const string indent, const int i) const {
+OutStream Dedci::create_target(const int i) const {
   OutStream out;
 
   out.tt << "class Task" << i << " : public Task {" << endl;
@@ -80,10 +80,10 @@ OutStream Dedci::create_target(const string indent, const int i) const {
   out.tt << "    ~Task" << i << "() {}" << endl;
   out.tt << "};" << endl << endl;
 
-  out.ss << "      auto dedci_ = std::make_shared<Queue>();" << endl;
-  out.ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor" << i << " = {deci};" << endl;
-  out.ss << indent << "auto task" << i << " = std::make_shared<Task" << i << ">(tensor" << i << ");" << endl;
-  out.ss << indent << "dedci_->add_task(task" << i << ");" << endl << endl;
+  out.ee << "  auto dedci_ = make_shared<Queue>();" << endl;
+  out.ee << "  vector<shared_ptr<Tensor>> tensor" << i << " = {deci};" << endl;
+  out.ee << "  auto task" << i << " = make_shared<Task" << i << ">(tensor" << i << ");" << endl;
+  out.ee << "  dedci_->add_task(task" << i << ");" << endl << endl;
 
   return out;
 }
@@ -94,20 +94,20 @@ shared_ptr<Tensor> Dedci::create_tensor(list<shared_ptr<const Index>> dm) const 
 }
 
 
-OutStream Dedci::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int iz, bool der) const {
+OutStream Dedci::generate_task(const int ip, const int ic, const vector<string> op, const string scalar, const int iz, bool der) const {
   OutStream out;
-  out.ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
-  out.ss << indent << "auto task" << ic << " = std::make_shared<Task" << ic << ">(tensor" << ic << ", cindex" << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
+  out.ee << "  vector<shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
+  out.ee << "  auto task" << ic << " = make_shared<Task" << ic << ">(tensor" << ic << ", cindex" << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
   if (parent_) {
     assert(parent_->parent());
-    out.ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
-    out.ss << indent << "task" << ic << "->add_dep(task" << iz << ");" << endl;
+    out.ee << "  task" << ip << "->add_dep(task" << ic << ");" << endl;
+    out.ee << "  task" << ic << "->add_dep(task" << iz << ");" << endl;
   } else {
     assert(depth() == 0);
-    out.ss << indent << "task" << ic << "->add_dep(task" << iz << ");" << endl;
+    out.ee << "  task" << ic << "->add_dep(task" << iz << ");" << endl;
   }
-  out.ss << indent << "dedci_->add_task(task" << ic << ");" << endl;
-  out.ss << endl;
+  out.ee << "  dedci_->add_task(task" << ic << ");" << endl;
+  out.ee << endl;
   return out;
 }
 

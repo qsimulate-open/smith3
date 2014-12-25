@@ -75,14 +75,17 @@ static std::string footer(const std::string res, const std::string energy, const
   mm << "  ofstream es(fr->name() + \"_tasks.h\");" << std::endl;
   mm << "  ofstream cs(fr->name() + \"_gen.cc\");" << std::endl;
   mm << "  ofstream ds(fr->name() + \"_tasks.cc\");" << std::endl;
+  mm << "  ofstream gs(fr->name() + \".cc\");" << std::endl;
   mm << "  fs << tmp.ss.str();" << std::endl;
   mm << "  es << tmp.tt.str();" << std::endl;
   mm << "  cs << tmp.cc.str();" << std::endl;
   mm << "  ds << tmp.dd.str();" << std::endl;
+  mm << "  gs << tmp.ee.str();" << std::endl;
   mm << "  fs.close();" << std::endl;
   mm << "  es.close();" << std::endl;
   mm << "  cs.close();" << std::endl;
   mm << "  ds.close();" << std::endl;
+  mm << "  gs.close();" << std::endl;
   mm << "  cout << std::endl;" << std::endl;
   mm << "" <<  std::endl;
   mm << "  // output" << std::endl;

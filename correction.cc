@@ -54,19 +54,19 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 // local functions... (not a good practice...) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
-OutStream Correction::generate_task(const string indent, const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der) const {
+OutStream Correction::generate_task(const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der) const {
   OutStream out;
-  out.ss << indent << "std::vector<std::shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
-  out.ss << indent << "auto task" << ic << " = std::make_shared<Task" << ic << ">(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
+  out.ee << "  std::vector<std::shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
+  out.ee << "  auto task" << ic << " = std::make_shared<Task" << ic << ">(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
 
   if (parent_) {
     if (ip != ic)
-      out.ss << indent << "task" << ip << "->add_dep(task" << ic << ");" << endl;
+      out.ee << "  task" << ip << "->add_dep(task" << ic << ");" << endl;
   } else {
     assert(depth() == 0);
   }
-  out.ss << indent << "correction_->add_task(task" << ic << ");" << endl;
-  out.ss << endl;
+  out.ee << "  correction_->add_task(task" << ic << ");" << endl;
+  out.ee << endl;
   return out;
 }
 

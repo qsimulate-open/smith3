@@ -155,9 +155,9 @@ bool Tensor::operator==(const Tensor& o) const {
 }
 
 
-string Tensor::constructor_str(string indent) const {
+string Tensor::constructor_str() const {
   stringstream ss;
-  ss << indent << "std::vector<IndexRange> " << label() << "_index";
+  ss << "  vector<IndexRange> " << label() << "_index";
   if (index_.empty()) {
     ss << ";" << endl;
   } else {
@@ -166,7 +166,7 @@ string Tensor::constructor_str(string indent) const {
       ss << (i != index_.rbegin() ? ", " : "") << (*i)->generate();
     ss << "};" << endl;
   }
-  ss << indent << "auto " << label() << " = std::make_shared<Tensor>(" << label() << "_index, false);";
+  ss << "  auto " << label() << " = make_shared<Tensor>(" << label() << "_index, false);";
   return ss.str();
 }
 

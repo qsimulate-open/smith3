@@ -22,21 +22,24 @@
 namespace smith {
 
 struct OutStream {
-  std::stringstream ss;
-  std::stringstream tt;
-  std::stringstream cc;
-  std::stringstream dd;
+  std::stringstream ss; //name.h
+  std::stringstream tt; //name_tasks.h
+  std::stringstream cc; //name_gen.cc
+  std::stringstream dd; //name_tasks.cc
+  std::stringstream ee; //name.cc
+
   OutStream() { }
   OutStream(const OutStream& o) {
     ss << o.ss.str();
     tt << o.tt.str();
     cc << o.cc.str();
     dd << o.dd.str();
+    ee << o.ee.str();
   }
   OutStream& operator=(const OutStream& a) {
-    ss.str(std::string()); tt.str(std::string()); cc.str(std::string()); dd.str(std::string());
-    ss.clear(); tt.clear(); cc.clear(); dd.clear();
-    ss << a.ss.str(); tt << a.tt.str(); cc << a.cc.str(); dd << a.dd.str();
+    ss.str(std::string()); tt.str(std::string()); cc.str(std::string()); dd.str(std::string()); ee.str(std::string());
+    ss.clear(); tt.clear(); cc.clear(); dd.clear(); ee.clear();
+    ss << a.ss.str(); tt << a.tt.str(); cc << a.cc.str(); dd << a.dd.str(); ee << a.ee.str();
     return *this;
   }
 };
@@ -47,6 +50,7 @@ OutStream& operator<<(OutStream& o, const OutStream& a) {
   o.tt << a.tt.str();
   o.cc << a.cc.str();
   o.dd << a.dd.str();
+  o.ee << a.ee.str();
   return o;
 }
 }
