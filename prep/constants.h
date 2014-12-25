@@ -40,7 +40,6 @@ static std::string header() {
   mm << "" << std::endl;
   mm << "#include <fstream>" << std::endl;
   mm << "#include \"forest.h\"" << std::endl;
-  mm << "#include \"tree.h\"" << std::endl;
   mm << "#include \"residual.h\"" << std::endl;
   mm << "#include \"energy.h\"" << std::endl;
   mm << "#include \"dedci.h\"" << std::endl;
