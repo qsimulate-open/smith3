@@ -114,6 +114,26 @@ OutStream Forest::generate_headers() const {
   out.ss << "class " << forest_name_ << " : public SpinFreeMethod {" << endl;
   out.ss << "  protected:" << endl;
   out.ss << "    using SpinFreeMethod::ref_;" << endl;
+  out.ss << "    using SpinFreeMethod::closed_;" << endl;
+  out.ss << "    using SpinFreeMethod::active_;" << endl;
+  out.ss << "    using SpinFreeMethod::virt_;" << endl;
+  out.ss << "    using SpinFreeMethod::ci_;" << endl;
+  out.ss << "    using SpinFreeMethod::rclosed_;" << endl;
+  out.ss << "    using SpinFreeMethod::ractive_;" << endl;
+  out.ss << "    using SpinFreeMethod::rvirt_;" << endl;
+  out.ss << "    using SpinFreeMethod::rci_;" << endl;
+  out.ss << "    using SpinFreeMethod::h1_;" << endl;
+  out.ss << "    using SpinFreeMethod::f1_;" << endl;
+  out.ss << "    using SpinFreeMethod::v2_;" << endl;
+  out.ss << "    using SpinFreeMethod::rdm1_;" << endl;
+  out.ss << "    using SpinFreeMethod::rdm2_;" << endl;
+  out.ss << "    using SpinFreeMethod::rdm3_;" << endl;
+  out.ss << "    using SpinFreeMethod::rdm4_;" << endl;
+  out.ss << "    using SpinFreeMethod::rdm0deriv_;" << endl;
+  out.ss << "    using SpinFreeMethod::rdm1deriv_;" << endl;
+  out.ss << "    using SpinFreeMethod::rdm2deriv_;" << endl;
+  out.ss << "    using SpinFreeMethod::rdm3deriv_;" << endl;
+  out.ss << "    using SpinFreeMethod::rdm4deriv_;" << endl;
   out.ss << "" << endl;
   out.ss << "    std::shared_ptr<Tensor> t2;" << endl;
   out.ss << "    std::shared_ptr<Tensor> r;" << endl;
@@ -122,13 +142,13 @@ OutStream Forest::generate_headers() const {
   out.ss << "    std::shared_ptr<Tensor> den1;" << endl;
   out.ss << "    std::shared_ptr<Tensor> den2;" << endl;
   out.ss << "    std::shared_ptr<Tensor> Den1;" << endl;
-  out.ss << "    double correlated_norm;" << endl;
+  out.ss << "    double correlated_norm_;" << endl;
   out.ss << "    std::shared_ptr<Tensor> deci;" << endl;
   out.ss << "" << endl;
   out.ss << "    std::tuple<std::shared_ptr<Queue>, std::shared_ptr<Queue>, std::shared_ptr<Queue>,  std::shared_ptr<Queue>,  std::shared_ptr<Queue>, std::shared_ptr<Queue>, std::shared_ptr<Queue>> make_queue_() {" << endl;
   out.ss << "      auto queue_ = std::make_shared<Queue>();" << endl;
-  out.ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{this->rclosed_, this->ractive_, this->rvirt_}};" << endl;
-  out.ss << indent << "std::array<std::shared_ptr<const IndexRange>,4> cindex = {{this->rclosed_, this->ractive_, this->rvirt_, this->rci_}};" << endl << endl;
+  out.ss << indent << "std::array<std::shared_ptr<const IndexRange>,3> pindex = {{rclosed_, ractive_, rvirt_}};" << endl;
+  out.ss << indent << "std::array<std::shared_ptr<const IndexRange>,4> cindex = {{rclosed_, ractive_, rvirt_, rci_}};" << endl << endl;
 
   out.tt << "#ifndef __SRC_SMITH_" << forest_name_ << "_TASKS_H" << endl;
   out.tt << "#define __SRC_SMITH_" << forest_name_ << "_TASKS_H" << endl;
@@ -189,19 +209,19 @@ OutStream Forest::generate_gammas() const {
     if (i->der()) { // derivative rdm
       for (auto& j : rdms) {
         stringstream zz;
-        zz << "this->rdm" << j << "deriv_";
+        zz << "rdm" << j << "deriv_";
         tmp.push_back(zz.str());
       }
     } else {  // normal rdms
       for (auto& j : rdms) {
         stringstream zz;
-        zz << "this->rdm" << j << "_";
+        zz << "rdm" << j << "_";
         tmp.push_back(zz.str());
       }
     }
     if (i->merged()) {
       stringstream mm;
-      mm << "this->" << i->merged()->label() << "_";
+      mm << i->merged()->label() << "_";
       tmp.push_back(mm.str());
     }
     // virtual generate_task
@@ -227,19 +247,19 @@ OutStream Forest::generate_algorithm() const {
   out.ss << endl;
   out.ss << "  public:" << endl;
   out.ss << "    " << forest_name_ << "(std::shared_ptr<const SMITH_Info> ref) : SpinFreeMethod(ref) {" << endl;
-  out.ss << "      this->eig_ = this->f1_->diag();" << endl;
-  out.ss << "      t2 = this->v2_->clone();" << endl;
+  out.ss << "      this->eig_ = f1_->diag();" << endl;
+  out.ss << "      t2 = v2_->clone();" << endl;
   out.ss << "      e0_ = this->e0();" << endl;
   out.ss << "      sigma_ = this->sigma();" << endl;
-  out.ss << "      this->update_amplitude(t2, this->v2_, true);" << endl;
+  out.ss << "      this->update_amplitude(t2, v2_, true);" << endl;
   out.ss << "      t2->scale(2.0);" << endl;
   out.ss << "      r = t2->clone();" << endl;
-  out.ss << "      den1 = this->h1_->clone();" << endl;
-  out.ss << "      den2 = this->h1_->clone();" << endl;
-  out.ss << "      Den1 = this->v2_->clone();" << endl;
-  out.ss << "      deci = this->rdm0deriv_->clone();" << endl;
-  out.ss << "    };" << endl;
-  out.ss << "    ~" << forest_name_ << "() {};" << endl;
+  out.ss << "      den1 = h1_->clone();" << endl;
+  out.ss << "      den2 = h1_->clone();" << endl;
+  out.ss << "      Den1 = v2_->clone();" << endl;
+  out.ss << "      deci = rdm0deriv_->clone();" << endl;
+  out.ss << "    }" << endl;
+  out.ss << "    ~" << forest_name_ << "() {}" << endl;
   out.ss << "" << endl;
   out.ss << "    void solve() {" << endl;
   out.ss << "      Timer timer;" << endl;
@@ -261,7 +281,7 @@ OutStream Forest::generate_algorithm() const {
   out.ss << "      timer.tick_print(\"CASPT2 energy evaluation\");" << endl;
   out.ss << endl;
   // using norm in various places, eg  y-=Nf<I|Eij|0> and dm1 -= N*rdm1
-  out.ss << "      correlated_norm = accumulate(correct);" << endl;
+  out.ss << "      correlated_norm_ = accumulate(correct);" << endl;
   out.ss << "      timer.tick_print(\"T1 norm evaluation\");" << endl;
   out.ss << endl;
   out.ss << "      while (!dens2->done())" << endl;
@@ -277,7 +297,7 @@ OutStream Forest::generate_algorithm() const {
   out.ss << "      timer.tick_print(\"CI derivative evaluation\");" << endl;
   out.ss << "      std::cout << std::endl;" << endl;
   out.ss << "" << endl;
-  out.ss << "    };" << endl;
+  out.ss << "    }" << endl;
   out.ss << "" << endl;
   out.ss << "    double accumulate(std::shared_ptr<Queue> queue) {" << endl;
   out.ss << "      double sum = 0.0;" << endl;
@@ -290,7 +310,7 @@ OutStream Forest::generate_algorithm() const {
   out.ss << "    std::shared_ptr<const Matrix> rdm12() const { return den2->matrix(); }" << endl;
   out.ss << "    std::shared_ptr<const Matrix> rdm21() const { return Den1->matrix2(); }" << endl;
   out.ss << endl;
-  out.ss << "    double rdm1_correction() const { return correlated_norm; }" << endl;
+  out.ss << "    double correlated_norm() const { return correlated_norm_; }" << endl;
   out.ss << endl;
   out.ss << "    std::shared_ptr<const Civec> ci_deriv() const { return deci->civec(this->det_); }" << endl;
   out.ss << endl;

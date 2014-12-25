@@ -43,7 +43,7 @@ static string merge__(vector<string> array) {
     }
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
-    if (label == "f1" || label == "v2" || label == "h1") label = "this->" + label + "_";
+    if (label == "f1" || label == "v2" || label == "h1") label = label + "_";
     ss << (label != array.front() ? ", " : "") << ((label == "proj") ? "r" : label);
   }
   return ss.str();

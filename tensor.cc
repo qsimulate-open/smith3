@@ -163,7 +163,7 @@ string Tensor::constructor_str(string indent) const {
   } else {
     ss << " = {";
     for (auto i = index_.rbegin(); i != index_.rend(); ++i)
-      ss << (i != index_.rbegin() ? ", this->" : "this->") << (*i)->generate();
+      ss << (i != index_.rbegin() ? ", " : "") << (*i)->generate();
     ss << "};" << endl;
   }
   ss << indent << "auto " << label() << " = std::make_shared<Tensor>(" << label() << "_index, false);";
