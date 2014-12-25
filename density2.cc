@@ -56,7 +56,7 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 OutStream Density2::create_target(const string indent, const int i) const {
   OutStream out;
 
-  out.tt << "class Task" << i << " : public Density2Task {" << endl;
+  out.tt << "class Task" << i << " : public Task {" << endl;
   out.tt << "  protected:" << endl;
   out.tt << "    std::shared_ptr<Tensor> d2_;" << endl;
   out.tt << "    IndexRange closed_;" << endl;
@@ -118,7 +118,7 @@ OutStream Density2::generate_compute_header(const int ic, const list<shared_ptr<
 
   const int nindex = ti.size();
   OutStream out;
-  out.tt << "class Task" << ic << " : public Density2Task {" << endl;
+  out.tt << "class Task" << ic << " : public Task {" << endl;
   out.tt << "  protected:" << endl;
   // if index is empty give dummy arg
   out.tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << "> {" << endl;

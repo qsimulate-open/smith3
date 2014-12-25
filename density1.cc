@@ -57,7 +57,7 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 OutStream Density1::create_target(const string indent, const int i) const {
   OutStream out;
 
-  out.tt << "class Task" << i << " : public Density1Task {" << endl;
+  out.tt << "class Task" << i << " : public Task {" << endl;
   out.tt << "  protected:" << endl;
   out.tt << "    std::shared_ptr<Tensor> d1_;" << endl;
   out.tt << "    IndexRange closed_;" << endl;
@@ -119,7 +119,7 @@ OutStream Density1::generate_compute_header(const int ic, const list<shared_ptr<
 
   const int nindex = ti.size();
   OutStream out;
-  out.tt << "class Task" << ic << " : public Density1Task {" << endl;
+  out.tt << "class Task" << ic << " : public Task {" << endl;
   out.tt << "  protected:" << endl;
   // if index is empty give dummy arg
   out.tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << "> {" << endl;
@@ -189,7 +189,7 @@ OutStream Density1::generate_compute_footer(const int ic, const list<shared_ptr<
   out.tt << "  public:" << endl;
   out.tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t, std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", double e" : "" ) <<  ");" << endl;
 
-  out.cc << "Task" << ic << "::Task" << ic << "(vector<shared_ptr<Tensor>> t, array<shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", double e" : "" ) <<  ") : Density1Task() {" << endl;
+  out.cc << "Task" << ic << "::Task" << ic << "(vector<shared_ptr<Tensor>> t, array<shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", double e" : "" ) <<  ") {" << endl;
   out.cc << "  array<shared_ptr<const Tensor>," << ninptensors << "> in = {{";
   for (auto i = 1; i < ninptensors + 1; ++i)
     out.cc << "t[" << i << "]" << (i < ninptensors ? ", " : "");

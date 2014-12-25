@@ -80,7 +80,7 @@ OutStream Correction::generate_compute_header(const int ic, const list<shared_pt
 
   const int nindex = ti.size();
   OutStream out;
-  out.tt << "class Task" << ic << " : public CorrectionTask {" << endl;
+  out.tt << "class Task" << ic << " : public AccTask {" << endl;
   out.tt << "  protected:" << endl;
   // if index is empty give dummy arg
   out.tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << "> {" << endl;
@@ -145,10 +145,10 @@ OutStream Correction::generate_compute_footer(const int ic, const list<shared_pt
   out.tt << "" << endl;
 
   out.tt << "    void compute_() override {" << endl;
-  out.tt << "      this->correction_ = 0.0;" << endl;
+  out.tt << "      this->target_ = 0.0;" << endl;
   out.tt << "      for (auto& i : subtasks_) {" << endl;
   out.tt << "        i->compute();" << endl;
-  out.tt << "        this->correction_ += i->correction();" << endl;
+  out.tt << "        this->target_ += i->correction();" << endl;
   out.tt << "      }" << endl;
   out.tt << "    }" << endl << endl;
 

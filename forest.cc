@@ -253,7 +253,7 @@ OutStream Forest::generate_algorithm() const {
   out.ss << "        this->update_amplitude(t2, r);" << endl;
   out.ss << "        const double err = r->rms();" << endl;
   out.ss << "        r->zero();" << endl;
-  out.ss << "        this->energy_ = energy(energ);" << endl;
+  out.ss << "        this->energy_ = accumulate(energ);" << endl;
   out.ss << "        this->print_iteration(iter, this->energy_, err);" << endl;
   out.ss << "        if (err < ref_->thresh()) break;" << endl;
   out.ss << "      }" << endl;
@@ -261,9 +261,7 @@ OutStream Forest::generate_algorithm() const {
   out.ss << "      timer.tick_print(\"CASPT2 energy evaluation\");" << endl;
   out.ss << endl;
   // using norm in various places, eg  y-=Nf<I|Eij|0> and dm1 -= N*rdm1
-  out.ss << "      correlated_norm = correction(correct);" << endl;
-  out.ss << "      std::cout << std::endl;" << endl;
-  out.ss << "      std::cout << \"         T1 norm  = \" << std::setprecision(10) << correlated_norm << std::endl;" << endl;
+  out.ss << "      correlated_norm = accumulate(correct);" << endl;
   out.ss << "      timer.tick_print(\"T1 norm evaluation\");" << endl;
   out.ss << endl;
   out.ss << "      while (!dens2->done())" << endl;
@@ -281,22 +279,11 @@ OutStream Forest::generate_algorithm() const {
   out.ss << "" << endl;
   out.ss << "    };" << endl;
   out.ss << "" << endl;
-  out.ss << "    double energy(std::shared_ptr<Queue> energ) {" << endl;
-  out.ss << "      double en = 0.0;" << endl;
-  out.ss << "      while (!energ->done()) {" << endl;
-  out.ss << "        std::shared_ptr<Task> c = energ->next_compute();" << endl;
-  out.ss << "        en += c->energy();" << endl;  // prefactors included in main.cc
-  out.ss << "      }" << endl;
-  out.ss << "      return en;" << endl;
-  out.ss << "    }" << endl;
-  out.ss << endl;
-  out.ss << "    double correction(std::shared_ptr<Queue> correct) {" << endl;
-  out.ss << "      double n = 0.0;" << endl;
-  out.ss << "      while (!correct->done()) {" << endl;
-  out.ss << "        std::shared_ptr<Task> c = correct->next_compute();" << endl;
-  out.ss << "        n += c->correction();" << endl;
-  out.ss << "      }" << endl;
-  out.ss << "      return n;" << endl;
+  out.ss << "    double accumulate(std::shared_ptr<Queue> queue) {" << endl;
+  out.ss << "      double sum = 0.0;" << endl;
+  out.ss << "      while (!queue->done())" << endl;
+  out.ss << "        sum += queue->next_compute()->target();" << endl;  // prefactors included in main.cc
+  out.ss << "      return sum;" << endl;
   out.ss << "    }" << endl;
   out.ss << endl;  // end comparison correction
   out.ss << "    std::shared_ptr<const Matrix> rdm11() const { return den1->matrix(); }" << endl;

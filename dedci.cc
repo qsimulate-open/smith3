@@ -58,7 +58,7 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 OutStream Dedci::create_target(const string indent, const int i) const {
   OutStream out;
 
-  out.tt << "class Task" << i << " : public DedciTask {" << endl;
+  out.tt << "class Task" << i << " : public Task {" << endl;
   out.tt << "  protected:" << endl;
   out.tt << "    std::shared_ptr<Tensor> dec_;" << endl;
   out.tt << "    IndexRange closed_;" << endl;
@@ -121,7 +121,7 @@ OutStream Dedci::generate_compute_header(const int ic, const list<shared_ptr<con
 
   const int nindex = ti.size();
   OutStream out;
-  out.tt << "class Task" << ic << " : public DedciTask {" << endl;
+  out.tt << "class Task" << ic << " : public Task {" << endl;
   out.tt << "  protected:" << endl;
   // if index is empty give dummy arg
   out.tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << "> {" << endl;
