@@ -56,8 +56,8 @@ static string merge__(list<string> array) { return merge__(vector<string>(array.
 
 OutStream Energy::generate_task(const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der) const {
   OutStream out;
-  out.ee << "  std::vector<std::shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
-  out.ee << "  auto task" << ic << " = std::make_shared<Task" << ic << ">(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
+  out.ee << "  vector<shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
+  out.ee << "  auto task" << ic << " = make_shared<Task" << ic << ">(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
 
   if (parent_) {
     if (ip != ic)
