@@ -169,7 +169,7 @@ int main() {
   eq6->set_tree_type("density");
   cout << eq6->generate();
   // one-body contribution d1
-  shared_ptr<Equation> eq6a(new Equation("db", {dum, ex1b, t_list}, 1.0));
+  shared_ptr<Equation> eq6a(new Equation("db", {dum, ex1b, t_list}, 0.5));
   eq6a->set_tree_type("density1");
   cout << eq6a->generate();
 
