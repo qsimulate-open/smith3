@@ -56,40 +56,22 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
     for (auto& j : label) {
       for (auto& k : label) {
         for (auto& l : label) {
-#if 0     // full CASPT2
-          if ((l == "c" && k == "c" && j == "a" && i == "a") ||
+          // full CASPT2
+          if (
+#if 0
+              // all correct in this block
+              (l == "c" && k == "c" && j == "a" && i == "a") ||
               (l == "x" && k == "c" && j == "a" && i == "a") ||
               (l == "x" && k == "x" && j == "a" && i == "a") ||
               (l == "c" && k == "c" && j == "x" && i == "a") ||
               (l == "c" && k == "c" && j == "x" && i == "x") ||
-              (l == "c" && k == "x" && j == "x" && i == "a") ||
-              (l == "x" && k == "c" && j == "x" && i == "a") ||
-              (l == "x" && k == "x" && j == "x" && i == "a") ||
-              (l == "x" && k == "c" && j == "x" && i == "x")) {
-#else  // turn on one of the following lines
-       // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a")) {  // mp2 test ansatz
-       // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a")) {  // i)   mp2 test ansatz - xxaa = ccaa + xcaa
-       // if ((l == "x" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a")) {  // ii)  mp2 test ansatz - ccaa = xcaa + xxaa
-       // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a")) {  // iii) mp2 test ansatz - xcaa = ccaa + xxaa
-       // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a") || (l == "c" && k == "c" && j == "x" && i == "a")) {
-       // if (l == "c" && k == "x" && j == "x" && i == "a") {  // test cxxa
-       // if (l == "x" && k == "c" && j == "x" && i == "a") {  // test xcxa
-       // if ((l == "c" && k == "c" && j == "x" && i == "a") || (l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a") || (l == "x" && k == "x" && j == "x" && i == "a")) {  // semi-internal cases
-       // if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a") || (l == "x" && k == "x" && j == "x" && i == "a")) {  // y4 internal test
-       // if ((l == "c" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "c" && j == "a" && i == "a") || (l == "x" && k == "x" && j == "a" && i == "a") ||  // y5 cases
-       //     (l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a") || (l == "x" && k == "x" && j == "x" && i == "a")) {
-       // if (l == "x" && k == "c" && j == "x" && i == "a") { // xcxa
-// *test single configuration cases*
-//        if (l == "c" && k == "c" && j == "a" && i == "a") { // ccaa
-//        if (l == "x" && k == "c" && j == "a" && i == "a") { // xcaa
-          if (l == "x" && k == "x" && j == "a" && i == "a") { // xxaa
-//        if (l == "c" && k == "c" && j == "x" && i == "a") { // ccxa
-//        if ((l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")) { // cxxa or xcxa
-//        if (l == "c" && k == "c" && j == "x" && i == "x") { // ccxx
-//        if (l == "x" && k == "x" && j == "x" && i == "a") { // xxxa
-//        if (l == "x" && k == "c" && j == "x" && i == "x") { // xcxx
-// *end test single configuration cases*
 #endif
+#if 1
+              (l == "x" && k == "c" && j == "x" && i == "x") || 
+              (l == "x" && k == "x" && j == "x" && i == "a") ||
+              (l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")
+#endif
+            ) {
             stringstream ss; ss << cnt;
             lp.push_back(shared_ptr<Tensor>(new Tensor(ss.str(), {l, k, j, i})));
             td.push_back(shared_ptr<Tensor>(new Tensor("t2dagger", ss.str(), {l, k, j, i})));
