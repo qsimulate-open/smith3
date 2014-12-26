@@ -58,15 +58,13 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
         for (auto& l : label) {
           // full CASPT2
           if (
-#if 0
+#if 1
               // all correct in this block
               (l == "c" && k == "c" && j == "a" && i == "a") ||
               (l == "x" && k == "c" && j == "a" && i == "a") ||
               (l == "x" && k == "x" && j == "a" && i == "a") ||
               (l == "c" && k == "c" && j == "x" && i == "a") ||
               (l == "c" && k == "c" && j == "x" && i == "x") ||
-#endif
-#if 1
               (l == "x" && k == "c" && j == "x" && i == "x") || 
               (l == "x" && k == "x" && j == "x" && i == "a") ||
               (l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")

@@ -105,7 +105,6 @@ OutStream Forest::generate_headers() const {
   out.ss << "#include <src/scf/hf/fock.h>" << endl;
   out.ss << "#include <src/util/f77.h>" << endl;
   out.ss << "#include <src/smith/queue.h>" << endl;
-  out.ss << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl;
   out.ss << "#include <src/smith/smith_info.h>" << endl;
   out.ss << "" << endl;
   out.ss << "namespace bagel {" << endl;
@@ -148,7 +147,8 @@ OutStream Forest::generate_headers() const {
   out.ss << "" << endl;
   out.ss << "    std::tuple<std::shared_ptr<Queue>, std::shared_ptr<Queue>, std::shared_ptr<Queue>,  std::shared_ptr<Queue>,  std::shared_ptr<Queue>, std::shared_ptr<Queue>, std::shared_ptr<Queue>> make_queue_();" << endl;
 
-  out.ee << "#include <src/smith/" << forest_name_ << ".h>" << endl << endl;
+  out.ee << "#include <src/smith/" << forest_name_ << ".h>" << endl;
+  out.ee << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl;
   out.ee << "using namespace std;" << endl;
   out.ee << "using namespace bagel;" << endl;
   out.ee << "using namespace bagel::SMITH;" << endl << endl;
@@ -161,14 +161,11 @@ OutStream Forest::generate_headers() const {
   out.tt << "#ifndef __SRC_SMITH_" << forest_name_ << "_TASKS_H" << endl;
   out.tt << "#define __SRC_SMITH_" << forest_name_ << "_TASKS_H" << endl;
   out.tt << "" << endl;
-  out.tt << "#include <memory>" << endl;
-  out.tt << "#include <algorithm>" << endl;
   out.tt << "#include <src/smith/indexrange.h>" << endl;
   out.tt << "#include <src/smith/tensor.h>" << endl;
   out.tt << "#include <src/smith/task.h>" << endl;
   out.tt << "#include <src/smith/subtask.h>" << endl;
   out.tt << "#include <src/smith/storage.h>" << endl;
-  out.tt << "#include <vector>" << endl;
   out.tt << "" << endl;
   out.tt << "namespace bagel {" << endl;
   out.tt << "namespace SMITH {" << endl;
