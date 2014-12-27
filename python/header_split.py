@@ -79,7 +79,7 @@ header2 = "//\n\
 footer2 = "\n#endif\n\n"
 
 f = open('CAS_test_tasks.h', 'r')
-lines = f.read().split("\n")[42:][:-6]
+lines = f.read().split("\n")[39:][:-6]
 
 tasks = []
 tmp = ""
