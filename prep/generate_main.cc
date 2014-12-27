@@ -43,7 +43,7 @@
 using namespace std;
 
 //const string theory = "MP2";
-string theory = "CAS_test";
+string theory = "CASPT2";
 
 using namespace SMITH3::Prep;
 

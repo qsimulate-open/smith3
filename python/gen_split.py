@@ -6,7 +6,7 @@ import os
 def header(n) :
     return "//\n\
 // BAGEL - Parallel electron correlation program.\n\
-// Filename: CAS_test_gen" + str(n) + ".cc\n\
+// Filename: CASPT2_gen" + str(n) + ".cc\n\
 // Copyright (C) 2014 Shiozaki group\n\
 //\n\
 // Author: Shiozaki group <shiozaki@northwestern.edu>\n\
@@ -30,16 +30,16 @@ def header(n) :
 //\n\
 \n\
 \n\
-#include <src/smith/CAS_test_tasks" + str(n) + ".h>\n\
+#include <src/smith/CASPT2_tasks" + str(n) + ".h>\n\
 \n\
 using namespace std;\n\
 using namespace bagel;\n\
 using namespace bagel::SMITH;\n\
-using namespace bagel::SMITH::CAS_test;\n\
+using namespace bagel::SMITH::CASPT2;\n\
 \n\
 "
 
-f = open('CAS_test_gen.cc', 'r')
+f = open('CASPT2_gen.cc', 'r')
 lines = f.read().split("\n")[33:]
 
 tasks = []
@@ -62,7 +62,7 @@ chunk = 50
 for i in range(len(tasks)):
     if (num != 0 and num % chunk == 0): 
         n = num / chunk
-        fout = open("CAS_test_gen" + str(n) + ".cc", "w")
+        fout = open("CASPT2_gen" + str(n) + ".cc", "w")
         out = header(n) + tmp
         fout.write(out)
         fout.close()
@@ -71,9 +71,9 @@ for i in range(len(tasks)):
     tmp = tmp + tasks[i];
 
 n = (num-1) / chunk + 1
-fout = open("CAS_test_gen" + str(n) + ".cc", "w")
+fout = open("CASPT2_gen" + str(n) + ".cc", "w")
 out = header(n) + tmp
 fout.write(out)
 fout.close()
 
-os.remove("CAS_test_gen.cc")
+os.remove("CASPT2_gen.cc")
