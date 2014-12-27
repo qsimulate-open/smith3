@@ -225,9 +225,12 @@ OutStream Forest::generate_gammas() const {
       }
     }
     if (i->merged()) {
-      stringstream mm;
-      mm << i->merged()->label() << "_";
-      tmp.push_back(mm.str());
+      // 4RDM derivative is a priori contracted with the fock operator 
+      if (!i->der() || !(rdms.size() == 1 && rdms[0] == 4)) {
+        stringstream mm;
+        mm << i->merged()->label() << "_";
+        tmp.push_back(mm.str());
+      }
     }
     // virtual generate_task
     if (i->der()) {

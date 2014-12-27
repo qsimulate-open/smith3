@@ -42,7 +42,7 @@ class RDMI0 : public RDM {
     /// Generates RDM and merged (fock) tensor multipication.
     std::string multiply_merge(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<const Index>>& merged, const std::list<std::shared_ptr<const Index>>& index);
     /// If delta case, also makes index loops then checks to see if merged-or-delta indices are in loops..
-    std::string make_merged_loops(std::string& indent, const std::string tag, std::vector<std::string>& close, const std::list<std::shared_ptr<const Index>>& index);
+    std::string make_merged_loops(std::string& indent, const std::string tag, std::vector<std::string>& close, const std::list<std::shared_ptr<const Index>>& index, const bool overwrite = false);
     /// Adds merged (fock) tensor with indices, used by muliply_merge member, as well as ci index tensor multiplication in case of rdm0.
     std::string fdata_mult(const std::string itag, const std::list<std::shared_ptr<const Index>>& merged, const std::list<std::shared_ptr<const Index>>& ci_index);
 

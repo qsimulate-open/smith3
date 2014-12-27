@@ -336,7 +336,7 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
   for (auto& i : index)  tindex.push_back(i);
 
   // get rdm indices
-  list<shared_ptr<const Index>>  rindex;
+  list<shared_ptr<const Index>> rindex;
   for (auto& i : index_) {
     bool found = false;
     for (auto& j: delta_index) {
@@ -346,8 +346,33 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
   }
   for (auto& i : index) if (i->label() == "ci") rindex.push_back(i);
 
-  // rank can be zero for derivative
-  if (!use_blas) {
+  // if this is 4RDM derivative
+  if (rank() == 4) {
+    assert(delta_.empty());
+    // remove merge index from rindex, dindex
+    list<list<shared_ptr<const Index>>::iterator> rm, rm2;
+    for (auto& i : merged) {
+      for (auto r = rindex.begin(); r != rindex.end(); ++r)
+        if (i->num() == (*r)->num())
+          rm.push_back(r);
+      for (auto d = dindex.begin(); d != dindex.end(); ++d)
+        if (i->num() == (*d)->num())
+          rm.push_back(d);
+    }
+    for (auto i = rm.rbegin(); i != rm.rend(); ++i)
+      rindex.erase(*i);
+    for (auto i = rm2.rbegin(); i != rm2.rend(); ++i)
+      dindex.erase(*i);
+    
+    // to simplify we do not use blas here
+    tt << make_get_block(indent, "i0", inlab[rlab], rindex);
+    // loops for index and merged
+    tt << make_merged_loops(indent, itag, close, dindex, true);
+    // make odata part of summation for target
+    tt << make_odata(itag, indent, index);
+    // add the data.
+    tt << multiply_merge(itag, indent, list<shared_ptr<const Index>>(), rindex);
+  } else if (!use_blas) {
     tt << make_get_block(indent, "i0", inlab[rlab], rindex);
     // loops for index and merged
     tt << make_merged_loops(indent, itag, close, dindex);
@@ -632,13 +657,13 @@ string RDMI0::make_sort_indices(string indent, string tag, const list<shared_ptr
 }
 
 
-string RDMI0::make_merged_loops(string& indent, const string itag, vector<string>& close, const list<shared_ptr<const Index>>& index) {
+string RDMI0::make_merged_loops(string& indent, const string itag, vector<string>& close, const list<shared_ptr<const Index>>& index, const bool overwrite) {
   stringstream tt;
 
   // gather all the loop indices
   list<shared_ptr<const Index>> loop;
 
-  for (auto& i : index_) {
+  for (auto& i : (overwrite ? index : index_)) {
     bool found = false;
     for (auto& j : delta_) {
       // second index in deltas will not be looped
@@ -653,7 +678,9 @@ string RDMI0::make_merged_loops(string& indent, const string itag, vector<string
     loop.push_back(j.second);
 
   // add ci index
-  for (auto& i : index) if (i->label() == "ci") loop.push_back(i);
+  if (!overwrite)
+    for (auto& i : index)
+      if (i->label() == "ci") loop.push_back(i);
 
   // generate loops
   for (auto& i : loop) {
@@ -690,7 +717,10 @@ string RDMI0::multiply_merge(const string itag, string& indent, const list<share
       tt << ")";
     tt << "]";
     // multiply merge
-    tt << fdata_mult(itag, merged, ci_index);
+    if (!merged.empty())
+      tt << fdata_mult(itag, merged, ci_index);
+    else
+      tt << ";" << endl;
   }
   return tt.str();
 }
