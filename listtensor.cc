@@ -262,16 +262,19 @@ shared_ptr<Cost> ListTensor::calculate_cost() const {
   }
 
   out->sort_pcost();
-  cout << "* " << out->show() << endl;
   assert(list_.size()-1 == out->cost().size());
   return out;
 }
 
 
 void ListTensor::reorder() {
-  list<shared_ptr<Tensor>> out, tmp = list_;
+  // I need to sort list_ first
+  vector<shared_ptr<Tensor>> tmp(list_.begin(), list_.end());
+  sort(tmp.begin(), tmp.end());
+  list<shared_ptr<Tensor>> out(tmp.begin(), tmp.end());
+  list_ = out;
+
   shared_ptr<Cost> current;
-  cout << "begin" << endl;
   do {
     shared_ptr<Cost> cost = calculate_cost();
     if (!current || *cost < *current) {
@@ -279,11 +282,8 @@ void ListTensor::reorder() {
       current = cost;
     }
   } while (next_permutation(list_.begin(), list_.end())); 
-
-//list_ = out;
-list_ = tmp;
   cout << current->show() << endl;
-  cout << "end" << endl;
+  list_ = out;
 }
 
 
