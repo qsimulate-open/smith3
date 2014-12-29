@@ -270,6 +270,8 @@ list<shared_ptr<Tensor>> Tree::gather_gamma() const {
   }
   for (auto& i : op_)
     if (i->label().find("Gamma") != string::npos) out.push_back(i);
+  for (auto& b : bc_)
+    if (b->tensor()->label().find("Gamma") != string::npos) out.push_back(b->tensor());
   return out;
 }
 
