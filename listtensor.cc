@@ -25,6 +25,7 @@
 
 
 #include <iomanip>
+#include <algorithm>
 #include "listtensor.h"
 
 using namespace std;
@@ -218,6 +219,71 @@ void ListTensor::print() const {
     if (i->active()) i->active()->print("   ");
   }
   cout << endl;
+}
+
+
+shared_ptr<Cost> ListTensor::calculate_cost() const {
+  auto out = make_shared<Cost>();
+  list<shared_ptr<const Index>> current = list_.back()->index();
+
+  for (auto i = ++list_.rbegin(); i != list_.rend(); ++i) {
+    list<shared_ptr<const Index>> sumindex, outindex;
+    for (auto& a : current)
+      for (auto& b : (*i)->index())
+        if (a->same_num(b) && a->same_label(b))
+          sumindex.push_back(a);
+
+    current.insert(current.end(), (*i)->index().begin(), (*i)->index().end());
+    for (auto& a : current) {
+      bool check = false;
+      for (auto& b : sumindex)
+        if (a->same_num(b) && a->same_label(b)) 
+          check = true;
+      if (!check)
+        outindex.push_back(a); 
+    }
+
+    sumindex.insert(sumindex.end(), outindex.begin(), outindex.end());
+    vector<int> cost(4);
+    for (auto& a : sumindex) {
+      if (a->label() == "c") cost[0] += 1;
+      else if (a->label() == "x") cost[1] += 1;
+      else if (a->label() == "a") cost[2] += 1;
+      else if (a->label() == "ci") cost[3] += 1;
+      else {
+        stringstream ss; ss << "this should not happen - ListTensor::calculate_cost " << a->label() << endl;
+        throw logic_error(ss.str());
+      }
+    }
+    auto pcost = make_shared<PCost>(cost);
+    out->add_pcost(*pcost);
+
+    current = outindex;
+  }
+
+  out->sort_pcost();
+  cout << "* " << out->show() << endl;
+  assert(list_.size()-1 == out->cost().size());
+  return out;
+}
+
+
+void ListTensor::reorder() {
+  list<shared_ptr<Tensor>> out, tmp = list_;
+  shared_ptr<Cost> current;
+  cout << "begin" << endl;
+  do {
+    shared_ptr<Cost> cost = calculate_cost();
+    if (!current || *cost < *current) {
+      out = list_;
+      current = cost;
+    }
+  } while (next_permutation(list_.begin(), list_.end())); 
+
+//list_ = out;
+list_ = tmp;
+  cout << current->show() << endl;
+  cout << "end" << endl;
 }
 
 

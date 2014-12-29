@@ -27,6 +27,7 @@
 #ifndef __LISTTENSOR_H
 #define __LISTTENSOR_H
 
+#include "cost.h"
 #include "tensor.h"
 #include "diagram.h"
 
@@ -67,6 +68,8 @@ class ListTensor {
     /// check if listtensor has rdm(s).
     bool has_gamma() const;
 
+    /// Returns list_
+    const std::list<std::shared_ptr<Tensor>>& tensors() const { return list_; }
     /// Returns the size of the list of tensors.
     int length() const { return list_.size(); }
     /// Returns first tensor in the list of tensors.
@@ -86,6 +89,11 @@ class ListTensor {
     void set_braket(std::pair<bool,bool> bk) { braket_ = bk; }
     /// Returns dagger (if transpose) for listtensor.
     bool dagger() const { return dagger_; }
+
+    /// evaluate the cost of computing this diagram as in the current order
+    std::shared_ptr<Cost> calculate_cost() const;
+    /// reorder the tensors so that the cost is minimal
+    void reorder();
 };
 
 }

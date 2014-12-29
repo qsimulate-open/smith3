@@ -28,6 +28,7 @@
 #define _smith_cost_h
 
 #include <cmath>
+#include <cassert>
 #include "indexmap.h"
 
 namespace smith {
@@ -60,6 +61,7 @@ class PCost {
     /// Give total seconds.
     const double pcost_total() const {
       double out = 0.0;
+      assert(pcost_.size() == indmap_.size());
       auto j = indmap_.begin();
       for (auto i = pcost_.begin(); i != pcost_.end(); ++i, ++j)
         out += std::log(static_cast<double>(j->second.second))* *i;

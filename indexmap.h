@@ -51,7 +51,8 @@ class IndexMap {
       map_.push_back(std::make_pair("c", std::make_pair(0, 28)));
       map_.push_back(std::make_pair("x", std::make_pair(1, 6)));
       map_.push_back(std::make_pair("a", std::make_pair(2, 232)));
-    };
+      map_.push_back(std::make_pair("ci", std::make_pair(3, 2000)));
+    }
     ~IndexMap() { }
     /// Returns map_ size.
     int num_orb_class() const { return map_.size(); }

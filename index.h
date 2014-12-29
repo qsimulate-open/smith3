@@ -109,6 +109,8 @@ class Index {
     bool same_spin(const std::shared_ptr<const Index>& o) const { return o->spin() == spin(); }
     /// Returns true if index number is same for both indices.
     bool same_num(const std::shared_ptr<const Index>& o) const { return o->num() == num(); }
+    /// Returns true if label is same for both indices.
+    bool same_label(const std::shared_ptr<const Index>& o) const { return o->label() == label(); }
 
     /// Returns string with index label_, and if argument is true: dagger info (nothing or if daggered, +) and spin info.
     std::string str(const bool opr = true) const {

@@ -58,6 +58,9 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
     shared_ptr<Tensor> first = tmp->front();
     shared_ptr<ListTensor> rest = tmp->rest();
 
+    // reorder to minimize the cost
+    rest->reorder();
+
     // convert to tree and then bc
     shared_ptr<Tree> tr;
     if (label_ == "residual") {
