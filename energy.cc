@@ -245,9 +245,13 @@ OutStream Energy::generate_bc(const shared_ptr<BinaryContraction> i) const {
            << dindent << "       1.0, odata_sorted, " << tt0;
         out.dd << ");" << endl;
       } else {
-        if (depth() != 1) throw logic_error("Not expecting this in depth() != 1 see Energy::generate_bc");
-        string ss0 = t1.second== "" ? "1" : t1.second;
-        out.dd << dindent << "energy_ += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
+        if (depth() != 1) {
+          string ss0 = t1.second== "" ? "1" : t1.second;
+          out.dd << dindent << "odata_sorted[0] += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
+        } else {
+          string ss0 = t1.second== "" ? "1" : t1.second;
+          out.dd << dindent << "energy_ += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
+        }
       }
     }
 

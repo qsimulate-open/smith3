@@ -282,7 +282,6 @@ void ListTensor::reorder() {
       current = cost;
     }
   } while (next_permutation(list_.begin(), list_.end())); 
-  cout << current->show() << endl;
   list_ = out;
 }
 
