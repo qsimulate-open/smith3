@@ -241,12 +241,12 @@ OutStream Dedci::generate_bc(const shared_ptr<BinaryContraction> i) const {
     out.dd << target_->generate_get_block(dindent, "o", "out()", true);
     out.dd << target_->generate_scratch_area(dindent, "o", "out()", true); // true means zero-out
 
-    list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
+    list<shared_ptr<const Index>> ti = depth() != 0 ? i->target_indices() : i->tensor()->index();
 
     // inner loop (where similar indices in dgemm tensors are summed over) will show up here
     // but only if outer loop is not empty
-    list<shared_ptr<const Index>> di = (i)->loop_indices();
-    di.reverse();
+    list<shared_ptr<const Index>> di = i->loop_indices();
+//  di.reverse();
 
     vector<string> close2;
     if (ti.size() != 0) {
@@ -263,16 +263,16 @@ OutStream Dedci::generate_bc(const shared_ptr<BinaryContraction> i) const {
     }
 
     // retrieving tensor_
-    out.dd << (i)->tensor()->generate_get_block(dindent, "i0", "in(0)");
-    out.dd << (i)->tensor()->generate_sort_indices(dindent, "i0", "in(0)", di) << endl;
+    out.dd << i->tensor()->generate_get_block(dindent, "i0", "in(0)");
+    out.dd << i->tensor()->generate_sort_indices(dindent, "i0", "in(0)", di) << endl;
     // retrieving subtree_
-    out.dd << (i)->next_target()->generate_get_block(dindent, "i1", "in(1)");
-    out.dd << (i)->next_target()->generate_sort_indices(dindent, "i1", "in(1)", di) << endl;
+    out.dd << i->next_target()->generate_get_block(dindent, "i1", "in(1)");
+    out.dd << i->next_target()->generate_sort_indices(dindent, "i1", "in(1)", di) << endl;
 
     // call dgemm
     {
-      pair<string, string> t0 = (i)->tensor()->generate_dim(di);
-      pair<string, string> t1 = (i)->next_target()->generate_dim(di);
+      pair<string, string> t0 = i->tensor()->generate_dim(di);
+      pair<string, string> t1 = i->next_target()->generate_dim(di);
       if (t0.first != "" || t1.first != "") {
         out.dd << dindent << "dgemm_(\"T\", \"N\", ";
         string tt0 = t0.first == "" ? "1" : t0.first;
@@ -297,14 +297,14 @@ OutStream Dedci::generate_bc(const shared_ptr<BinaryContraction> i) const {
 
     // sort buffer
     {
-      out.dd << (i)->target()->generate_sort_indices_target(bindent, "o", di, (i)->tensor(), (i)->next_target());
+      out.dd << i->target()->generate_sort_indices_target(bindent, "o", di, i->tensor(), i->next_target());
     }
     // put buffer
     {
       string label = target_->label();
       // new interface requires indices for put_block
       out.dd << bindent << "out()->put_block(odata";
-      list<shared_ptr<const Index>> ti = depth() != 0 ? (i)->target_indices() : (i)->tensor()->index();
+      list<shared_ptr<const Index>> ti = depth() != 0 ? i->target_indices() : i->tensor()->index();
       for (auto i = ti.rbegin(); i != ti.rend(); ++i)
         out.dd << ", " << (*i)->str_gen();
       out.dd << ");" << endl;
