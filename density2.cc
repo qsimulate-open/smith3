@@ -82,7 +82,7 @@ OutStream Density2::create_target(const int i) const {
   out.ee << "  auto task" << i << " = make_shared<Task" << i << ">(tensor" << i << ");" << endl;
   out.ee << "  density2_->add_task(task" << i << ");" << endl << endl;
 
-  return out; 
+  return out;
 }
 
 
@@ -160,7 +160,7 @@ OutStream Density2::generate_compute_header(const int ic, const list<shared_ptr<
     out.dd << endl;
   }
 
-  return out; 
+  return out;
 }
 
 
@@ -222,7 +222,7 @@ OutStream Density2::generate_compute_footer(const int ic, const list<shared_ptr<
 
   out.tt << "    ~Task" << ic << "() {};" << endl;
   out.tt << "};" << endl << endl;
-  return out; 
+  return out;
 }
 
 
@@ -310,7 +310,7 @@ OutStream Density2::generate_bc(const shared_ptr<BinaryContraction> i) const {
     throw logic_error("shouldn't happen in Density2::generate_bc");
   }
 
-  return out; 
+  return out;
 }
 
 

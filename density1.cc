@@ -106,7 +106,7 @@ OutStream Density1::generate_task(const int ip, const int ic, const vector<strin
   }
   out.ee << "  density1_->add_task(task" << ic << ");" << endl;
   out.ee << endl;
-  return out; 
+  return out;
 }
 
 
@@ -161,7 +161,7 @@ OutStream Density1::generate_compute_header(const int ic, const list<shared_ptr<
     out.dd << endl;
   }
 
-  return out; 
+  return out;
 }
 
 

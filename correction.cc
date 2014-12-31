@@ -91,7 +91,7 @@ OutStream Correction::generate_compute_header(const int ic, const list<shared_pt
   out.tt << "        const std::shared_ptr<const Tensor>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
   out.tt << "        const std::shared_ptr<Tensor>& out() const { return this->out_tensor(); }" << endl;
   out.tt << "        double correction_;" << endl;
-  if (need_e0) out.tt << "        double e0_;" << endl;
+  if (need_e0)  out.tt << "        double e0_;" << endl;
   out.tt << endl;
   out.tt << "      public:" << endl;
   // if index is empty use dummy index 1 to subtask
@@ -125,7 +125,7 @@ OutStream Correction::generate_compute_header(const int ic, const list<shared_pt
     out.dd << endl;
   }
 
-  return out; 
+  return out;
 }
 
 
@@ -189,7 +189,7 @@ OutStream Correction::generate_compute_footer(const int ic, const list<shared_pt
 
   out.tt << "    ~Task" << ic << "() {}" << endl;
   out.tt << "};" << endl << endl;
-  return out; 
+  return out;
 }
 
 
@@ -285,7 +285,7 @@ OutStream Correction::generate_bc(const shared_ptr<BinaryContraction> i) const {
   }
 
 
-  return out; 
+  return out;
 }
 
 

@@ -331,6 +331,8 @@ string Tensor::generate_sort_indices_target(const string cindent, const string l
   list<shared_ptr<const Index>> source;
   {
     list<shared_ptr<const Index>> aind = a->index();
+    // if a is a daggered tensor, we reverse
+    if (a->label().find("dagger") != string::npos) aind.reverse();
     for (auto i = aind.rbegin(); i != aind.rend(); ++i) {
       bool found = false;
       for (auto& j : loop)
@@ -338,6 +340,8 @@ string Tensor::generate_sort_indices_target(const string cindent, const string l
       if (!found) source.push_back(*i);
     }
     aind = b->index();
+    // if b is a daggered tensor, we reverse
+    if (b->label().find("dagger") != string::npos) aind.reverse();
     for (auto i = aind.rbegin(); i != aind.rend(); ++i) {
       bool found = false;
       for (auto& j : loop)
