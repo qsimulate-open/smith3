@@ -258,10 +258,8 @@ OutStream Forest::generate_algorithm() const {
 
   out.ee << forest_name_ << "::" << forest_name_ << "::" << forest_name_ << "(shared_ptr<const SMITH_Info> ref) : SpinFreeMethod(ref) {" << endl;
   out.ee << "  this->eig_ = f1_->diag();" << endl;
-  out.ee << "  t2 = v2_->clone();" << endl;
+  out.ee << "  t2 = init_amplitude();" << endl;
   out.ee << "  e0_ = this->e0();" << endl;
-  out.ee << "  this->update_amplitude(t2, v2_, true);" << endl;
-  out.ee << "  t2->scale(2.0);" << endl;
   out.ee << "  r = t2->clone();" << endl;
   out.ee << "  den1 = h1_->clone();" << endl;
   out.ee << "  den2 = h1_->clone();" << endl;
