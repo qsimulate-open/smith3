@@ -4,4 +4,4 @@ import os
 
 for i in range(36):
     if (i > 0):
-        print "CAS_test_gen" + str(i) + ".cc CAS_test_tasks" + str(i) + ".cc"
+        print "CASPT2_gen" + str(i) + ".cc CASPT2_tasks" + str(i) + ".cc"
