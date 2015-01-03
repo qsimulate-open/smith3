@@ -30,7 +30,6 @@
 #include "density.h"
 #include "density1.h"
 #include "density2.h"
-#include "correction.h"
 #include "dedci.h"
 #include "constants.h"
 #include <algorithm>
@@ -65,12 +64,10 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
     shared_ptr<Tree> tr;
     if (label_ == "residual") {
       tr = make_shared<Residual>(rest, lab, rt_targets);
-    } else if (label_ == "energy") {
-      tr = make_shared<Energy>(rest, lab, rt_targets);
+    } else if (label_ == "energy" || label_ == "correction") {
+      tr = make_shared<Energy>(rest, label_, rt_targets);
     } else if (label_ == "dedci") {
       tr = make_shared<Dedci>(rest, lab, rt_targets);
-    } else if (label_ == "correction") {
-      tr = make_shared<Correction>(rest, lab, rt_targets);
     } else if (label_ == "density") {
       tr = make_shared<Density>(rest, lab, rt_targets);
     } else if (label_ == "density1") {
@@ -115,12 +112,10 @@ BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor
   shared_ptr<Tree> tr;
   if (label_ == "residual") {
     tr = make_shared<Residual>(rest, lab, rt);
-  } else if (label_ == "energy") {
+  } else if (label_ == "energy" || label_ == "correction") {
     tr = make_shared<Energy>(rest, lab, rt);
   } else if (label_ == "dedci") {
     tr = make_shared<Dedci>(rest, lab, rt);
-  } else if (label_ == "correction") {
-    tr = make_shared<Correction>(rest, lab, rt);
   } else if (label_ == "density") {
     tr = make_shared<Density>(rest, lab, rt);
   } else if (label_ == "density1") {

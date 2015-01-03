@@ -65,7 +65,7 @@ OutStream Energy::generate_task(const int ip, const int ic, const vector<string>
   } else {
     assert(depth() == 0);
   }
-  out.ee << "  energy_->add_task(task" << ic << ");" << endl;
+  out.ee << "  " << label_ << "_->add_task(task" << ic << ");" << endl;
   out.ee << endl;
   return out;
 }
@@ -90,7 +90,7 @@ OutStream Energy::generate_compute_header(const int ic, const list<shared_ptr<co
   out.tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
   out.tt << "        const std::shared_ptr<const Tensor>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
   out.tt << "        const std::shared_ptr<Tensor>& out() const { return this->out_tensor(); }" << endl;
-  out.tt << "        double energy_;" << endl;
+  out.tt << "        double target_;" << endl;
   if (need_e0)  out.tt << "        double e0_;" << endl;
   out.tt << endl;
   out.tt << "      public:" << endl;
@@ -105,12 +105,12 @@ OutStream Energy::generate_compute_header(const int ic, const list<shared_ptr<co
     out.tt << "          : SubTask<" << nindex << "," << ninptensors << ">(block, in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
   }
   out.tt << endl;
-  out.tt << "        double energy() const { return energy_; }" << endl;
+  out.tt << "        double target() const { return target_; }" << endl;
   out.tt << endl;
   out.tt << "        void compute() override;" << endl;
 
   out.dd << "void Task" << ic << "::Task_local::compute() {" << endl;
-  out.dd << "  energy_ = 0.0;" << endl;
+  out.dd << "  target_ = 0.0;" << endl;
 
   if (!no_outside) {
     list<shared_ptr<const Index>> ti_copy = ti;
@@ -148,7 +148,7 @@ OutStream Energy::generate_compute_footer(const int ic, const list<shared_ptr<co
   out.tt << "      this->target_ = 0.0;" << endl;
   out.tt << "      for (auto& i : subtasks_) {" << endl;
   out.tt << "        i->compute();" << endl;
-  out.tt << "        this->target_ += i->energy();" << endl;
+  out.tt << "        this->target_ += i->target();" << endl;
   out.tt << "      }" << endl;
   out.tt << "    }" << endl << endl;
 
@@ -250,7 +250,7 @@ OutStream Energy::generate_bc(const shared_ptr<BinaryContraction> i) const {
           out.dd << dindent << "odata_sorted[0] += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
         } else {
           string ss0 = t1.second== "" ? "1" : t1.second;
-          out.dd << dindent << "energy_ += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
+          out.dd << dindent << "target_ += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
         }
       }
     }

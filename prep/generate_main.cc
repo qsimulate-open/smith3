@@ -140,7 +140,7 @@ int main() {
 
   // generate Norm <1|1> to be used in various places, y correction and correction term for one-body density matrix
   shared_ptr<Equation> eq5(new Equation("ca", {dum, t_dagger, t_list}, 0.25));
-  eq5->set_tree_type("correction");
+  eq5->set_tree_type("energy", "correction");
   cout << eq5->generate();
 
   // density matrix equations //
