@@ -65,7 +65,7 @@ OutStream Energy::generate_task(const int ip, const int ic, const vector<string>
   } else {
     assert(depth() == 0);
   }
-  out.ee << "  " << label_ << "_->add_task(task" << ic << ");" << endl;
+  out.ee << "  " << label_ << "q->add_task(task" << ic << ");" << endl;
   out.ee << endl;
   return out;
 }

@@ -153,7 +153,6 @@ OutStream Forest::generate_headers() const {
   out.ee << "using namespace bagel::SMITH;" << endl << endl;
   out.ee << "tuple<shared_ptr<Queue>, shared_ptr<Queue>, shared_ptr<Queue>,  shared_ptr<Queue>,  shared_ptr<Queue>, shared_ptr<Queue>, shared_ptr<Queue>>" << endl;
   out.ee << "  " << forest_name_ << "::" << forest_name_ << "::make_queue_() {" << endl << endl;
-  out.ee << "  auto queue_ = make_shared<Queue>();" << endl;
   out.ee << "  array<shared_ptr<const IndexRange>,3> pindex = {{rclosed_, ractive_, rvirt_}};" << endl;
   out.ee << "  array<shared_ptr<const IndexRange>,4> cindex = {{rclosed_, ractive_, rvirt_, rci_}};" << endl << endl;
 
@@ -249,7 +248,7 @@ OutStream Forest::generate_algorithm() const {
   string indent = "      ";
 
   // generate computational algorithm
-  out.ee << "  return make_tuple(queue_, energy_, correction_, density_, density1_, density2_, dedci_);" << endl;
+  out.ee << "  return make_tuple(residualq, energyq, corrq, densityq, density1q, density2q, dedci_);" << endl;
   out.ee << "}" << endl << endl;
 
   out.ss << endl;

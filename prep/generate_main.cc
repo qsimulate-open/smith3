@@ -138,24 +138,24 @@ int main() {
   eq3->set_tree_type("energy");
   cout << eq3->generate();
 
-  // generate Norm <1|1> to be used in various places, y correction and correction term for one-body density matrix
+  // generate Norm <1|1> to be used in various places
   shared_ptr<Equation> eq5(new Equation("ca", {dum, t_dagger, t_list}, 0.25));
-  eq5->set_tree_type("energy", "correction");
+  eq5->set_tree_type("energy", "corr");
   cout << eq5->generate();
 
   // density matrix equations //
   // one-body contribution d2
   shared_ptr<Equation> eq6(new Equation("da", {dum, t_dagger, ex1b, t_list}, 0.25));
-  eq6->set_tree_type("density");
+  eq6->set_tree_type("residual", "density");
   cout << eq6->generate();
   // one-body contribution d1
   shared_ptr<Equation> eq6a(new Equation("db", {dum, ex1b, t_list}, 0.5));
-  eq6a->set_tree_type("density1");
+  eq6a->set_tree_type("residual", "density1");
   cout << eq6a->generate();
 
   // two-body contribution D1
   shared_ptr<Equation> eq7(new Equation("d2a", {dum, proj_list, t_list}, 0.5));
-  eq7->set_tree_type("density2");
+  eq7->set_tree_type("residual", "density2");
   cout << eq7->generate();
 
   // cI derivative equations, dedci = dE/dcI  //

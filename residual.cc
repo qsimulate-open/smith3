@@ -30,9 +30,18 @@
 using namespace std;
 using namespace smith;
 
-
 // local functions... (not a good practice...) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-static string merge__(vector<string> array) {
+static string target_name(string label) {
+  string out;
+  if (label == "residual") out = "r"; 
+  else if (label == "density") out = "den2"; 
+  else if (label == "density1") out = "den1"; 
+  else if (label == "density2") out = "Den1"; 
+  else throw logic_error("unrecognized label in residual.cc static string target_name");
+  return out;
+}
+
+static string merge__(vector<string> array, string name) {
   stringstream ss;
   vector<string> done;
   for (auto& label : array) {
@@ -44,41 +53,42 @@ static string merge__(vector<string> array) {
     if (find(done.begin(), done.end(), label) != done.end()) continue;
     done.push_back(label);
     if (label == "f1" || label == "v2" || label == "h1") label = label + "_";
-    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? "r" : label);
+    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? target_name(name) : label);
   }
   return ss.str();
 }
-static string merge__(list<string> array) { return merge__(vector<string>(array.begin(), array.end())); }
+static string merge__(list<string> array, string name) { return merge__(vector<string>(array.begin(), array.end()), name); }
 // local functions... (not a good practice...) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
 OutStream Residual::create_target(const int i) const {
   OutStream out;
 
-  out.tt << "class Task0 : public Task {" << endl;
+  out.tt << "class Task" << i << " : public Task {" << endl;
   out.tt << "  protected:" << endl;
-  out.tt << "    std::shared_ptr<Tensor> r_;" << endl;
+  out.tt << "    std::shared_ptr<Tensor> " << target_name(label_) << "_;" << endl;
   out.tt << "    IndexRange closed_;" << endl;
   out.tt << "    IndexRange active_;" << endl;
   out.tt << "    IndexRange virt_;" << endl;
   out.tt << "" << endl;
   out.tt << "    void compute_() {" << endl;
-  out.tt << "      r_->zero();" << endl;
+  out.tt << "      " << target_name(label_) << "_->zero();" << endl;
   out.tt << "    }" << endl;
   out.tt << "" << endl;
   out.tt << "  public:" << endl;
-  out.tt << "    Task0(std::vector<std::shared_ptr<Tensor>> t);" << endl;
+  out.tt << "    Task" << i << "(std::vector<std::shared_ptr<Tensor>> t);" << endl;
 
-  out.cc << "Task0::Task0(vector<shared_ptr<Tensor>> t) {" << endl;
-  out.cc << "  r_ =  t[0];" << endl;
+  out.cc << "Task" << i << "::Task" << i << "(vector<shared_ptr<Tensor>> t) {" << endl;
+  out.cc << "  " << target_name(label_) << "_ =  t[0];" << endl;
   out.cc << "}" << endl << endl << endl;
 
-  out.tt << "    ~Task0() {}" << endl;
+  out.tt << "    ~Task" << i << "() {}" << endl;
   out.tt << "};" << endl << endl;
 
-  out.ee << "  vector<shared_ptr<Tensor>> tensor0 = {r};" << endl;
-  out.ee << "  auto task0 = make_shared<Task0>(tensor0);" << endl;
-  out.ee << "  queue_->add_task(task0);" << endl << endl;
+  out.ee << "  auto " << label_ << "q = make_shared<Queue>();" << endl;
+  out.ee << "  vector<shared_ptr<Tensor>> tensor" << i << " = {" << target_name(label_) << "};" << endl;
+  out.ee << "  auto task" << i << " = make_shared<Task" << i << ">(tensor" << i << ");" << endl;
+  out.ee << "  " << label_ << "q->add_task(task" << i << ");" << endl << endl;
 
   return out;
 }
@@ -86,7 +96,7 @@ OutStream Residual::create_target(const int i) const {
 
 OutStream Residual::generate_task(const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der) const {
   OutStream out;
-  out.ee << "  vector<shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
+  out.ee << "  vector<shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op, label_) << "};" << endl;
   out.ee << "  auto task" << ic << " = make_shared<Task" << ic << ">(tensor" << ic << (der ? ", cindex" : ", pindex") << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
 
   if (parent_) {
@@ -97,7 +107,7 @@ OutStream Residual::generate_task(const int ip, const int ic, const vector<strin
     assert(depth() == 0);
     out.ee << "  task" << ic << "->add_dep(task0);" << endl;
   }
-  out.ee << "  queue_->add_task(task" << ic << ");" << endl;
+  out.ee << "  " << label_ << "q->add_task(task" << ic << ");" << endl;
   out.ee << endl;
   return out;
 }
@@ -304,7 +314,7 @@ OutStream Residual::generate_bc(const shared_ptr<BinaryContraction> i) const {
       res.push_back(*j);
       res.push_back(*i);
     }
-    auto residual = make_shared<Tensor>(1.0, "r", res);
+    auto residual = make_shared<Tensor>(1.0, target_name(label_), res);
     vector<shared_ptr<Tensor>> op2 = { i->next_target() };
     out << generate_compute_operators(residual, op2, i->dagger());
   }

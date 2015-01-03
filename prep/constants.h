@@ -43,9 +43,6 @@ static std::string header() {
   mm << "#include \"residual.h\"" << std::endl;
   mm << "#include \"energy.h\"" << std::endl;
   mm << "#include \"dedci.h\"" << std::endl;
-  mm << "#include \"density.h\"" << std::endl;
-  mm << "#include \"density1.h\"" << std::endl;
-  mm << "#include \"density2.h\"" << std::endl;
   mm << "" << std::endl;
   mm << "using namespace std;" << std::endl;
   mm << "using namespace smith;" << std::endl;

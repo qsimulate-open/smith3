@@ -27,9 +27,6 @@
 #include "tree.h"
 #include "energy.h"
 #include "residual.h"
-#include "density.h"
-#include "density1.h"
-#include "density2.h"
 #include "dedci.h"
 #include "constants.h"
 #include <algorithm>
@@ -62,18 +59,12 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
 
     // convert to tree and then bc
     shared_ptr<Tree> tr;
-    if (label_ == "residual") {
+    if (label_ == "residual" || label_ == "density" || label_ == "density1" || label_ == "density2") {
       tr = make_shared<Residual>(rest, lab, rt_targets);
-    } else if (label_ == "energy" || label_ == "correction") {
+    } else if (label_ == "energy" || label_ == "corr") {
       tr = make_shared<Energy>(rest, label_, rt_targets);
     } else if (label_ == "dedci") {
       tr = make_shared<Dedci>(rest, lab, rt_targets);
-    } else if (label_ == "density") {
-      tr = make_shared<Density>(rest, lab, rt_targets);
-    } else if (label_ == "density1") {
-      tr = make_shared<Density1>(rest, lab, rt_targets);
-    } else if (label_ == "density2") {
-      tr = make_shared<Density2>(rest, lab, rt_targets);
     } else {
       throw logic_error("Error Tree::Tree, code generation for this tree type not implemented");
     }
@@ -110,18 +101,12 @@ BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor
   shared_ptr<ListTensor> rest = l->rest();
 
   shared_ptr<Tree> tr;
-  if (label_ == "residual") {
+  if (label_ == "residual" || label_ == "density" || label_ == "density1" || label_ == "density2") {
     tr = make_shared<Residual>(rest, lab, rt);
-  } else if (label_ == "energy" || label_ == "correction") {
+  } else if (label_ == "energy" || label_ == "corr") {
     tr = make_shared<Energy>(rest, lab, rt);
   } else if (label_ == "dedci") {
     tr = make_shared<Dedci>(rest, lab, rt);
-  } else if (label_ == "density") {
-    tr = make_shared<Density>(rest, lab, rt);
-  } else if (label_ == "density1") {
-    tr = make_shared<Density1>(rest, lab, rt);
-  } else if (label_ == "density2") {
-    tr = make_shared<Density2>(rest, lab, rt);
   } else {
     throw logic_error("Error BinaryContraction::BinaryContraction, code generation for this tree type not implemented");
   }
@@ -597,7 +582,7 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
       }
 
     } else {  // trees without root target indices
-      out.ee << "  auto " << label() << "_ = make_shared<Queue>();" << endl;
+      out.ee << "  auto " << label() << "q = make_shared<Queue>();" << endl;
       num_ = tcnt;
       for (auto& j : bc_) {
         tie(tmp, tcnt, t0, itensors) = j->generate_task_list(tcnt, t0, gamma, itensors);
