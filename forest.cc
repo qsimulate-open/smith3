@@ -129,7 +129,6 @@ OutStream Forest::generate_headers() const {
   out.ss << "    using SpinFreeMethod::rdm2_;" << endl;
   out.ss << "    using SpinFreeMethod::rdm3_;" << endl;
   out.ss << "    using SpinFreeMethod::rdm4_;" << endl;
-  out.ss << "    using SpinFreeMethod::rdm0deriv_;" << endl;
   out.ss << "    using SpinFreeMethod::rdm1deriv_;" << endl;
   out.ss << "    using SpinFreeMethod::rdm2deriv_;" << endl;
   out.ss << "    using SpinFreeMethod::rdm3deriv_;" << endl;
@@ -263,7 +262,7 @@ OutStream Forest::generate_algorithm() const {
   out.ee << "  den1 = h1_->clone();" << endl;
   out.ee << "  den2 = h1_->clone();" << endl;
   out.ee << "  Den1 = v2_->clone();" << endl;
-  out.ee << "  deci = rdm0deriv_->clone();" << endl;
+  out.ee << "  deci = make_shared<Tensor>(vector<IndexRange>{ci_});" << endl;
   out.ee << "}" << endl << endl;
 
   out.ss << "    ~" << forest_name_ << "() {}" << endl;

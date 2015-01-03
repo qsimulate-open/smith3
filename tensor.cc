@@ -166,7 +166,7 @@ string Tensor::constructor_str() const {
       ss << (i != index_.rbegin() ? ", " : "") << (*i)->generate();
     ss << "};" << endl;
   }
-  ss << "  auto " << label() << " = make_shared<Tensor>(" << label() << "_index, false);";
+  ss << "  auto " << label() << " = make_shared<Tensor>(" << label() << "_index);";
   return ss.str();
 }
 
