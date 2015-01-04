@@ -32,10 +32,12 @@
 #include <stdexcept>
 #include <cmath>
 #include <cassert>
+#include <algorithm>
 
 namespace smith {
+namespace {
 
-static std::string header(const std::string& filename) {
+std::string header(const std::string& filename) {
   std::stringstream ss;
   ss << "//" << std::endl;
   ss << "// BAGEL - Parallel electron correlation program." << std::endl;
@@ -64,9 +66,9 @@ static std::string header(const std::string& filename) {
   ss << "" << std::endl;
   ss << "" << std::endl;
   return ss.str();
-};
+}
 
-static std::string prefac__(const double& factor_) {
+std::string prefac__(const double& factor_) {
   const double thresh = 1.0e-10;
   // bruteforce way...
   const int large = 1024;
@@ -78,9 +80,44 @@ static std::string prefac__(const double& factor_) {
   std::stringstream ss;
   ss << std::round(factor_*i) << "," << i;
   return ss.str();
-};
+}
 
+std::string target_name__(std::string label) {
+  std::string out;
+  if (label == "residual")      out = "r";
+  else if (label == "density")  out = "den2";
+  else if (label == "density1") out = "den1";
+  else if (label == "density2") out = "Den1";
+  else if (label == "deci")     out = "deci";
+  else throw std::logic_error("unrecognized label in residual.cc static string target_name");
+  return out;
+}
 
+std::string merge__(std::vector<std::string> array, std::string name = "") {
+  std::stringstream ss;
+  std::vector<std::string> done;
+  for (auto& label : array) {
+    size_t found = label.find("dagger");
+    if (found != std::string::npos) {
+      std::string tmp(label.begin(), label.begin() + found);
+      label = tmp;
+    }
+    // we only register once
+    if (std::find(done.begin(), done.end(), label) != done.end()) continue;
+    done.push_back(label);
+
+    // some tweaks
+    if (label == "f1" || label == "v2" || label == "h1")
+      label = label + "_";
+    else if (label != array.front() && label.find("Gamma") != std::string::npos)
+      label = label + "_()";
+
+    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? target_name__(name) : label);
+  }
+  return ss.str();
+}
+
+}
 }
 
 #endif

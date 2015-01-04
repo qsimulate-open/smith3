@@ -24,34 +24,12 @@
 //
 
 
+#include "constants.h"
 #include "energy.h"
 #include <algorithm>
 
 using namespace std;
 using namespace smith;
-
-
-
-
-// local functions... (not a good practice...) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-static string merge__(vector<string> array) {
-  stringstream ss;
-  vector<string> done;
-  for (auto& label : array) {
-    size_t found = label.find("dagger");
-    if (found != string::npos) {
-      string tmp(label.begin(), label.begin() + found);
-      label = tmp;
-    }
-    if (find(done.begin(), done.end(), label) != done.end()) continue;
-    done.push_back(label);
-    if (label == "f1" || label == "v2" || label == "h1") label = label + "_";
-    ss << (label != array.front() ? ", " : "") << ((label == "proj") ? "r" : label);
-  }
-  return ss.str();
-}
-static string merge__(list<string> array) { return merge__(vector<string>(array.begin(), array.end())); }
-// local functions... (not a good practice...) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
 OutStream Energy::generate_task(const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der) const {

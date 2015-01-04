@@ -27,6 +27,7 @@ struct OutStream {
   std::stringstream cc; //name_gen.cc
   std::stringstream dd; //name_tasks.cc
   std::stringstream ee; //name.cc
+  std::stringstream gg; //name_gamma.cc
 
   OutStream() { }
   OutStream(const OutStream& o) {
@@ -35,11 +36,12 @@ struct OutStream {
     cc << o.cc.str();
     dd << o.dd.str();
     ee << o.ee.str();
+    gg << o.gg.str();
   }
   OutStream& operator=(const OutStream& a) {
-    ss.str(std::string()); tt.str(std::string()); cc.str(std::string()); dd.str(std::string()); ee.str(std::string());
-    ss.clear(); tt.clear(); cc.clear(); dd.clear(); ee.clear();
-    ss << a.ss.str(); tt << a.tt.str(); cc << a.cc.str(); dd << a.dd.str(); ee << a.ee.str();
+    ss.str(std::string()); tt.str(std::string()); cc.str(std::string()); dd.str(std::string()); ee.str(std::string()); gg.str(std::string());
+    ss.clear(); tt.clear(); cc.clear(); dd.clear(); ee.clear(); gg.clear();
+    ss << a.ss.str(); tt << a.tt.str(); cc << a.cc.str(); dd << a.dd.str(); ee << a.ee.str(); gg << a.gg.str();
     return *this;
   }
 };
@@ -51,6 +53,7 @@ OutStream& operator<<(OutStream& o, const OutStream& a) {
   o.cc << a.cc.str();
   o.dd << a.dd.str();
   o.ee << a.ee.str();
+  o.gg << a.gg.str();
   return o;
 }
 }

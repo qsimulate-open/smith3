@@ -440,11 +440,14 @@ OutStream Tree::generate_task(const int ic, const vector<shared_ptr<Tensor>> op,
   // if gamma, we need to add dependency.
   // this one is virtual, ie tree specific
   out << generate_task(ip, ic, ops, scalar, iz);
+// TODO at this moment all gammas are recomputed. 
+#if 0
   for (auto& i : op) {
     if (i->label().find("Gamma") != string::npos)
       out.ee << "  task" << ic << "->" << add_depend(i, g) << endl;
   }
   out.ee << endl;
+#endif
 
   return out;
 }

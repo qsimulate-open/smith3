@@ -94,6 +94,7 @@ OutStream Forest::generate_headers() const {
   out.cc << header(forest_name_ + "_gen.cc");
   out.dd << header(forest_name_ + "_tasks.cc");
   out.ee << header(forest_name_ + ".cc");
+  out.gg << header(forest_name_ + ".cc");
 
   out.ss << "#ifndef __SRC_SMITH_" << forest_name_ << "_H" << endl;
   out.ss << "#define __SRC_SMITH_" << forest_name_ << "_H" << endl;
@@ -181,6 +182,12 @@ OutStream Forest::generate_headers() const {
   out.dd << "using namespace bagel::SMITH;" << endl;
   out.dd << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
 
+  out.gg << "#include <src/smith/" << forest_name_ << ".h>" << endl;
+  out.gg << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl; 
+  out.gg << "using namespace std;" << endl;
+  out.gg << "using namespace bagel;" << endl;
+  out.gg << "using namespace bagel::SMITH;" << endl << endl;
+
   // virtual function, generate Task0 which zeros out the residual and starts zero level dependency queue.
   out << trees_.front()->create_target(icnt);
   ++icnt;
@@ -195,12 +202,21 @@ OutStream Forest::generate_gammas() const {
   string indent = "      ";
 
   // All the gamma tensors (for all trees) should be defined here. Only distinct Gammas are computed.
+  out.ss << endl;
   for (auto& i : gamma_) {
 
     i->set_num(icnt);
     assert(i->label().find("Gamma") != string::npos);
 
-    out.ee << i->constructor_str() << endl;
+    out.ss << "    std::shared_ptr<FutureTensor> " << i->label() << "_();" << endl;
+
+    out.gg << "shared_ptr<FutureTensor> " << forest_name_ << "::" << forest_name_ << "::" << i->label() << "_() {" << endl;
+    out.gg << i->constructor_str() << endl;
+
+    if (!i->der())
+      out.gg << "  array<shared_ptr<const IndexRange>,3> pindex = {{rclosed_, ractive_, rvirt_}};" << endl;
+    else
+      out.gg << "  array<shared_ptr<const IndexRange>,4> cindex = {{rclosed_, ractive_, rvirt_, rci_}};" << endl;
 
     // switch for blas, if true merged rdm*f1 tensor multiplication will use blas
     bool use_blas = false;
@@ -235,6 +251,9 @@ OutStream Forest::generate_gammas() const {
     } else {
       out << trees_.front()->generate_task(0, icnt, tmp);
     }
+
+    out.gg << "  return make_shared<FutureTensor>(*" << i->label() << ", task" << icnt << ");" << endl;
+    out.gg << "}" << endl << endl;
     ++icnt;
   }
 
