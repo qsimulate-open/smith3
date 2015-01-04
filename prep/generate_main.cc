@@ -177,7 +177,7 @@ int main() {
   eq4->merge(eq4e);
   eq4->merge(eq4f);
   eq4->merge(eq4g);
-  eq4->set_tree_type("dedci");
+  eq4->set_tree_type("residual", "deci");
   cout << eq4->generate();
 
   // done. generate the footer

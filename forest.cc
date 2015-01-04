@@ -103,6 +103,7 @@ OutStream Forest::generate_headers() const {
   out.ss << "#include <tuple>" << endl;
   out.ss << "#include <iomanip>" << endl;
   out.ss << "#include <src/smith/spinfreebase.h>" << endl;
+  out.ss << "#include <src/smith/futuretensor.h>" << endl;
   out.ss << "#include <src/scf/hf/fock.h>" << endl;
   out.ss << "#include <src/util/f77.h>" << endl;
   out.ss << "#include <src/smith/queue.h>" << endl;
