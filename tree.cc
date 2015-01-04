@@ -488,95 +488,88 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
 
   if (depth() == 0) { //////////////////// zero depth /////////////////////////////
     if (root_targets()) {
-      // process tree with target indices eg, ci derivative, density matrix (residual zero level task is created above (forest::generate_header))
-      if (label() != "residual") {
-        num_ = tcnt;
-        // save density task zero
-        t0 = tcnt;
+      // process tree with target indices eg, ci derivative, density matrix
+      num_ = tcnt;
+      // save density task zero
+      t0 = tcnt;
 
-        // virtual
-        out << create_target(tcnt);
-        ++tcnt;
+      // virtual
+      out << create_target(tcnt);
+      ++tcnt;
 
-        for (auto& j : bc_) {
-          // if at top bc, add a task to for top level contraction (proj)
-          if (depth() == 0 ) {
-            vector<shared_ptr<Tensor>> source_tensors = j->tensors_vec();
-            num_ = tcnt;
-            for (auto& s : source_tensors) {
-              // if it contains a new intermediate tensor, dump a constructor
-              if (find(itensors.begin(), itensors.end(), s) == itensors.end() && s->label().find("I") != string::npos) {
-                itensors.push_back(s);
-                out.ee << s->constructor_str() << endl;
-              }
+      for (auto& j : bc_) {
+        // if at top bc, add a task to for top level contraction (proj)
+        if (depth() == 0 ) {
+          vector<shared_ptr<Tensor>> source_tensors = j->tensors_vec();
+          num_ = tcnt;
+          for (auto& s : source_tensors) {
+            // if it contains a new intermediate tensor, dump a constructor
+            if (find(itensors.begin(), itensors.end(), s) == itensors.end() && s->label().find("I") != string::npos) {
+              itensors.push_back(s);
+              out.ee << s->constructor_str() << endl;
             }
-            out << generate_task(num_, source_tensors, gamma, t0);
+          }
+          out << generate_task(num_, source_tensors, gamma, t0);
 
-            list<shared_ptr<const Index>> proj = j->target_index();
-            // write out headers
-            {
-              list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
-              // if outer loop is empty, send inner loop indices to header
-              if (ti.size() == 0) {
-                assert(depth() != 0);
-                list<shared_ptr<const Index>> di = j->loop_indices();
-                out << generate_compute_header(num_, di, source_tensors, true);
-              } else {
-                out << generate_compute_header(num_, ti, source_tensors);
-              }
-            }
-
-            list<shared_ptr<const Index>> dm;
-            if (proj.size() > 1) {
-              for (auto i = proj.begin(); i != proj.end(); ++i, ++i) {
-                auto k = i; ++k;
-                dm.push_back(*k);
-                dm.push_back(*i);
-              }
-            } else if (proj.size() == 1) {
-              for (auto& i : proj) dm.push_back(i);
+          list<shared_ptr<const Index>> proj = j->target_index();
+          // write out headers
+          {
+            list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
+            // if outer loop is empty, send inner loop indices to header
+            if (ti.size() == 0) {
+              assert(depth() != 0);
+              list<shared_ptr<const Index>> di = j->loop_indices();
+              out << generate_compute_header(num_, di, source_tensors, true);
             } else {
-              throw logic_error("Tree::generate_task_list, should not have empty target index here.");
+              out << generate_compute_header(num_, ti, source_tensors);
             }
-
-            // virtual
-            shared_ptr<Tensor> proj_tensor = create_tensor(dm);
-
-            vector<shared_ptr<Tensor>> op2 = { j->next_target() };
-            out << generate_compute_operators(proj_tensor, op2, j->dagger());
-
-            {
-              // send outer loop indices if outer loop indices exist, otherwise send inner indices
-              list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
-              if (depth() == 0)
-                if (ti.size() > 1) {
-                  for (auto m = ti.begin(), n = ++ti.begin(); m != ti.end(); ++m, ++m, ++n, ++n)
-                    swap(*m, *n);
-                }
-              if (ti.size() == 0) {
-                assert(depth() != 0);
-                // sending inner indices
-                list<shared_ptr<const Index>> di = j->loop_indices();
-                di.reverse();
-                out << generate_compute_footer(num_, di, source_tensors);
-              } else {
-                // sending outer indices
-                out << generate_compute_footer(num_, ti, source_tensors);
-              }
-            }
-            // increment task counter
-            ++tcnt;
           }
 
-          tie(tmp, tcnt, t0, itensors) = j->generate_task_list(tcnt, t0, gamma, itensors);
-          out << tmp;
+          list<shared_ptr<const Index>> dm;
+          if (proj.size() > 1) {
+            for (auto i = proj.begin(); i != proj.end(); ++i, ++i) {
+              auto k = i; ++k;
+              dm.push_back(*k);
+              dm.push_back(*i);
+            }
+          } else if (proj.size() == 1) {
+            for (auto& i : proj) dm.push_back(i);
+          } else {
+            throw logic_error("Tree::generate_task_list, should not have empty target index here.");
+          }
 
+          // virtual
+          shared_ptr<Tensor> proj_tensor = create_tensor(dm);
+
+          vector<shared_ptr<Tensor>> op2 = { j->next_target() };
+          out << generate_compute_operators(proj_tensor, op2, j->dagger());
+
+          {
+            // send outer loop indices if outer loop indices exist, otherwise send inner indices
+            list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
+            if (depth() == 0)
+              if (ti.size() > 1) {
+                for (auto m = ti.begin(), n = ++ti.begin(); m != ti.end(); ++m, ++m, ++n, ++n)
+                  swap(*m, *n);
+              }
+            if (ti.size() == 0) {
+              assert(depth() != 0);
+              // sending inner indices
+              list<shared_ptr<const Index>> di = j->loop_indices();
+              di.reverse();
+              out << generate_compute_footer(num_, di, source_tensors);
+            } else {
+              // sending outer indices
+              out << generate_compute_footer(num_, ti, source_tensors);
+            }
+          }
+          // increment task counter
+          ++tcnt;
         }
-      } else { // residual
 
-        // step through op and bc. Careful, triggers recursive call
-        tie(tmp, tcnt, t0, itensors) = generate_steps(indent, tcnt, t0, gamma, itensors);
+        tie(tmp, tcnt, t0, itensors) = j->generate_task_list(tcnt, t0, gamma, itensors);
         out << tmp;
+
       }
 
     } else {  // trees without root target indices

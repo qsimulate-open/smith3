@@ -189,11 +189,6 @@ OutStream Forest::generate_headers() const {
   out.gg << "using namespace bagel;" << endl;
   out.gg << "using namespace bagel::SMITH;" << endl << endl;
 
-  // virtual function, generate Task0 which zeros out the residual and starts zero level dependency queue.
-  out << trees_.front()->create_target(icnt);
-  ++icnt;
-
-
   return out; 
 }
 
