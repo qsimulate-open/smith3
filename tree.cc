@@ -27,7 +27,6 @@
 #include "tree.h"
 #include "energy.h"
 #include "residual.h"
-#include "dedci.h"
 #include "constants.h"
 #include <algorithm>
 #include <stdexcept>
@@ -59,12 +58,10 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
 
     // convert to tree and then bc
     shared_ptr<Tree> tr;
-    if (label_ == "residual" || label_ == "density" || label_ == "density1" || label_ == "density2") {
+    if (label_ == "residual" || label_ == "density" || label_ == "density1" || label_ == "density2" || label_ == "deci") {
       tr = make_shared<Residual>(rest, lab, rt_targets);
     } else if (label_ == "energy" || label_ == "corr") {
       tr = make_shared<Energy>(rest, label_, rt_targets);
-    } else if (label_ == "dedci") {
-      tr = make_shared<Dedci>(rest, lab, rt_targets);
     } else {
       throw logic_error("Error Tree::Tree, code generation for this tree type not implemented");
     }
@@ -101,12 +98,10 @@ BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor
   shared_ptr<ListTensor> rest = l->rest();
 
   shared_ptr<Tree> tr;
-  if (label_ == "residual" || label_ == "density" || label_ == "density1" || label_ == "density2") {
+  if (label_ == "residual" || label_ == "density" || label_ == "density1" || label_ == "density2" || label_ == "deci") {
     tr = make_shared<Residual>(rest, lab, rt);
   } else if (label_ == "energy" || label_ == "corr") {
     tr = make_shared<Energy>(rest, lab, rt);
-  } else if (label_ == "dedci") {
-    tr = make_shared<Dedci>(rest, lab, rt);
   } else {
     throw logic_error("Error BinaryContraction::BinaryContraction, code generation for this tree type not implemented");
   }

@@ -33,10 +33,11 @@ using namespace smith;
 // local functions... (not a good practice...) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 static string target_name(string label) {
   string out;
-  if (label == "residual") out = "r"; 
-  else if (label == "density") out = "den2"; 
-  else if (label == "density1") out = "den1"; 
-  else if (label == "density2") out = "Den1"; 
+  if (label == "residual")      out = "r";
+  else if (label == "density")  out = "den2";
+  else if (label == "density1") out = "den1";
+  else if (label == "density2") out = "Den1";
+  else if (label == "deci")     out = "deci";
   else throw logic_error("unrecognized label in residual.cc static string target_name");
   return out;
 }
@@ -70,6 +71,8 @@ OutStream Residual::create_target(const int i) const {
   out.tt << "    IndexRange closed_;" << endl;
   out.tt << "    IndexRange active_;" << endl;
   out.tt << "    IndexRange virt_;" << endl;
+  if (label_ == "deci")
+    out.tt << "    IndexRange ci_;" << endl;
   out.tt << "" << endl;
   out.tt << "    void compute_() {" << endl;
   out.tt << "      " << target_name(label_) << "_->zero();" << endl;
@@ -97,15 +100,15 @@ OutStream Residual::create_target(const int i) const {
 OutStream Residual::generate_task(const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der) const {
   OutStream out;
   out.ee << "  vector<shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op, label_) << "};" << endl;
-  out.ee << "  auto task" << ic << " = make_shared<Task" << ic << ">(tensor" << ic << (der ? ", cindex" : ", pindex") << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
+  out.ee << "  auto task" << ic << " = make_shared<Task" << ic << ">(tensor" << ic << (der || label_=="deci" ? ", cindex" : ", pindex") << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
 
   if (parent_) {
     assert(parent_->parent());
     out.ee << "  task" << ip << "->add_dep(task" << ic << ");" << endl;
-    out.ee << "  task" << ic << "->add_dep(task0);" << endl;
+    out.ee << "  task" << ic << "->add_dep(task" << i0 << ");" << endl;
   } else {
     assert(depth() == 0);
-    out.ee << "  task" << ic << "->add_dep(task0);" << endl;
+    out.ee << "  task" << ic << "->add_dep(task" << i0 << ");" << endl;
   }
   out.ee << "  " << label_ << "q->add_task(task" << ic << ");" << endl;
   out.ee << endl;
@@ -120,6 +123,8 @@ OutStream Residual::generate_compute_header(const int ic, const list<shared_ptr<
   for (auto& s : tensors)
     if (!s->scalar().empty()) need_e0 = true;
 
+  const int arraysize = label_ == "deci" ? 4 : 3;
+
   const int nindex = ti.size();
   OutStream out;
   out.tt << "class Task" << ic << " : public Task {" << endl;
@@ -127,7 +132,7 @@ OutStream Residual::generate_compute_header(const int ic, const list<shared_ptr<
   // if index is empty give dummy arg
   out.tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << "> {" << endl;
   out.tt << "      protected:" << endl;
-  out.tt << "        const std::array<std::shared_ptr<const IndexRange>,3> range_;" << endl << endl;
+  out.tt << "        const std::array<std::shared_ptr<const IndexRange>," << arraysize << "> range_;" << endl << endl;
 
   out.tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
   out.tt << "        const std::shared_ptr<const Tensor>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
@@ -140,11 +145,11 @@ OutStream Residual::generate_compute_header(const int ic, const list<shared_ptr<
   // if index is empty use dummy index 1 to subtask
   if (ti.empty()) {
     out.tt << "        Task_local(const std::array<std::shared_ptr<const Tensor>," << ninptensors <<  ">& in, std::shared_ptr<Tensor>& out," << endl;
-    out.tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
+    out.tt << "                   std::array<std::shared_ptr<const IndexRange>," << arraysize << ">& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
     out.tt << "          : SubTask<1," << ninptensors << ">(std::array<const Index, 1>(), in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
   } else {
     out.tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor>," << ninptensors <<  ">& in, std::shared_ptr<Tensor>& out," << endl;
-    out.tt << "                   std::array<std::shared_ptr<const IndexRange>,3>& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
+    out.tt << "                   std::array<std::shared_ptr<const IndexRange>," << arraysize << ">& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
     out.tt << "          : SubTask<" << nindex << "," << ninptensors << ">(block, in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
   }
   out.tt << endl;
@@ -155,8 +160,9 @@ OutStream Residual::generate_compute_header(const int ic, const list<shared_ptr<
   if (!no_outside) {
     list<shared_ptr<const Index>> ti_copy = ti;
     if (depth() == 0) {
-      for (auto i = ti_copy.begin(), j = ++ti_copy.begin(); i != ti_copy.end(); ++i, ++i, ++j, ++j)
-        swap(*i, *j);
+      if (ti.size() > 1)
+        for (auto i = ti_copy.begin(), j = ++ti_copy.begin(); i != ti_copy.end(); ++i, ++i, ++j, ++j)
+          swap(*i, *j);
     }
 
     int cnt = 0;
@@ -176,6 +182,8 @@ OutStream Residual::generate_compute_footer(const int ic, const list<shared_ptr<
   for (auto& s : tensors)
     if (!s->scalar().empty()) need_e0 = true;
 
+  const int arraysize = label_ == "deci" ? 4 : 3;
+
   OutStream out;
   out.dd << "}" << endl << endl << endl;
 
@@ -189,9 +197,9 @@ OutStream Residual::generate_compute_footer(const int ic, const list<shared_ptr<
   out.tt << "    }" << endl << endl;
 
   out.tt << "  public:" << endl;
-  out.tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t,  std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", const double e" : "") << ");" << endl;
+  out.tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t,  std::array<std::shared_ptr<const IndexRange>," << arraysize << "> range" << (need_e0 ? ", const double e" : "") << ");" << endl;
 
-  out.cc << "Task" << ic << "::Task" << ic << "(vector<shared_ptr<Tensor>> t, array<shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", const double e" : "") << ") {" << endl;
+  out.cc << "Task" << ic << "::Task" << ic << "(vector<shared_ptr<Tensor>> t, array<shared_ptr<const IndexRange>," << arraysize << "> range" << (need_e0 ? ", const double e" : "") << ") {" << endl;
   out.cc << "  array<shared_ptr<const Tensor>," << ninptensors << "> in = {{";
   for (auto i = 1; i < ninptensors + 1; ++i)
     out.cc << "t[" << i << "]" << (i < ninptensors ? ", " : "");

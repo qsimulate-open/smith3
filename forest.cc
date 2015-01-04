@@ -247,7 +247,7 @@ OutStream Forest::generate_algorithm() const {
   string indent = "      ";
 
   // generate computational algorithm
-  out.ee << "  return make_tuple(residualq, energyq, corrq, densityq, density1q, density2q, dedci_);" << endl;
+  out.ee << "  return make_tuple(residualq, energyq, corrq, densityq, density1q, density2q, deciq);" << endl;
   out.ee << "}" << endl << endl;
 
   out.ss << endl;
