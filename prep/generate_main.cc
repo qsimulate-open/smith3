@@ -161,18 +161,18 @@ int main() {
   // cI derivative equations, dedci = dE/dcI  //
   // test hylleraas eqn:   d/dc( <0|T^+fT|0> -e0<0|T^+T|0> +2<0|T^+h1|0> + 2<0|T^+V2|0>) =>
   //  =   1/2(1/4<I|T^+fT|0> + 1/4<0|T^+fT|I>) - 1/2*(e0/4<I|T^+T|0> + e0/4<0|T^+T|I>) + 2*1/2 (1/4<I|T^+V|0> + 1/4<0|T^+V|I>) + 2*1/2 (1/4<I|T^+h1|0> + 1/4<0|T^+h1|I>)
-  // TODO in principle we can use bracket symmetry in some terms
-  shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, f, t_list}, 0.25, make_pair(true, false)));
-  shared_ptr<Equation> eq4a(new Equation("dedcib", {dum, t_dagger, f, t_list}, 0.25, make_pair(false, true)));
-  shared_ptr<Equation> eq4b(new Equation("dedcic", {dum, t_dagger, t_list}, -0.25, "e0", make_pair(true, false)));
-  shared_ptr<Equation> eq4c(new Equation("dedcid", {dum, t_dagger, t_list}, -0.25, "e0", make_pair(false, true)));
+  // using bracket symmetry in some terms
+  shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, f, t_list}, 0.5, make_pair(true, false)));
+//shared_ptr<Equation> eq4a(new Equation("dedcib", {dum, t_dagger, f, t_list}, 0.25, make_pair(false, true)));
+  shared_ptr<Equation> eq4b(new Equation("dedcic", {dum, t_dagger, t_list}, -0.5, "e0", make_pair(true, false)));
+//shared_ptr<Equation> eq4c(new Equation("dedcid", {dum, t_dagger, t_list}, -0.25, "e0", make_pair(false, true)));
   shared_ptr<Equation> eq4d(new Equation("dedcie", {dum, t_dagger, H}, 0.50, make_pair(true, false)));
   shared_ptr<Equation> eq4e(new Equation("dedcif", {dum, t_dagger, H}, 0.50, make_pair(false, true)));
   shared_ptr<Equation> eq4f(new Equation("dedcig", {dum, t_dagger, hc}, 1.00, make_pair(true, false)));
   shared_ptr<Equation> eq4g(new Equation("dedcih", {dum, t_dagger, hc}, 1.00, make_pair(false, true)));
-  eq4->merge(eq4a);
+//eq4->merge(eq4a);
   eq4->merge(eq4b);
-  eq4->merge(eq4c);
+//eq4->merge(eq4c);
   eq4->merge(eq4d);
   eq4->merge(eq4e);
   eq4->merge(eq4f);
