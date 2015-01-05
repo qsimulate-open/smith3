@@ -88,7 +88,7 @@ OutStream Forest::generate_code() const {
 
   out << generate_algorithm();
 
-  return out; 
+  return out;
 }
 
 
@@ -176,25 +176,25 @@ OutStream Forest::generate_headers() const {
   out.tt << "namespace " << forest_name_ << "{" << endl;
   out.tt << "" << endl;
 
-  out.cc << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl; 
+  out.cc << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl;
   out.cc << "using namespace std;" << endl;
   out.cc << "using namespace bagel;" << endl;
   out.cc << "using namespace bagel::SMITH;" << endl;
   out.cc << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
 
-  out.dd << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl; 
+  out.dd << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl;
   out.dd << "using namespace std;" << endl;
   out.dd << "using namespace bagel;" << endl;
   out.dd << "using namespace bagel::SMITH;" << endl;
   out.dd << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
 
   out.gg << "#include <src/smith/" << forest_name_ << ".h>" << endl;
-  out.gg << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl; 
+  out.gg << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl;
   out.gg << "using namespace std;" << endl;
   out.gg << "using namespace bagel;" << endl;
   out.gg << "using namespace bagel::SMITH;" << endl << endl;
 
-  return out; 
+  return out;
 }
 
 
@@ -239,7 +239,7 @@ OutStream Forest::generate_gammas() const {
       }
     }
     if (i->merged()) {
-      // 4RDM derivative is a priori contracted with the fock operator 
+      // 4RDM derivative is a priori contracted with the fock operator
       if (!i->der() || !(rdms.size() == 1 && rdms[0] == 4)) {
         stringstream mm;
         mm << i->merged()->label() << "_";
@@ -258,7 +258,7 @@ OutStream Forest::generate_gammas() const {
     ++icnt;
   }
 
-  return out; 
+  return out;
 }
 
 
@@ -291,15 +291,17 @@ OutStream Forest::generate_algorithm() const {
   out.ee << "  this->print_iteration();" << endl;
   out.ee << "  int iter = 0;" << endl;
   out.ee << "  for ( ; iter != ref_->maxiter(); ++iter) {" << endl;
+  out.ee << "    shared_ptr<Queue> energyq = make_energyq();" << endl;
+  out.ee << "    this->energy_ = accumulate(energyq);" << endl;
   out.ee << "    shared_ptr<Queue> queue = make_residualq();" << endl;
   out.ee << "    while (!queue->done())" << endl;
   out.ee << "      queue->next_compute();" << endl;
-  out.ee << "    this->update_amplitude(t2, r);" << endl;
+  out.ee << "    this->energy_ += dot_product_transpose(r, t2) * 0.25;" << endl;
   out.ee << "    const double err = r->rms();" << endl;
-  out.ee << "    r->zero();" << endl;
-  out.ee << "    shared_ptr<Queue> energyq = make_energyq();" << endl;
-  out.ee << "    this->energy_ = accumulate(energyq);" << endl;
   out.ee << "    this->print_iteration(iter, this->energy_, err);" << endl;
+  out.ee << endl;
+  out.ee << "    this->update_amplitude(t2, r);" << endl;
+  out.ee << "    r->zero();" << endl;
   out.ee << "    if (err < ref_->thresh()) break;" << endl;
   out.ee << "  }" << endl;
   out.ee << "  this->print_iteration(iter == ref_->maxiter());" << endl;
@@ -359,7 +361,7 @@ OutStream Forest::generate_algorithm() const {
   out.tt << "}" << endl;
   out.tt << "#endif" << endl << endl;
 
-  return out; 
+  return out;
 }
 
 

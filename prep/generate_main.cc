@@ -47,7 +47,7 @@ string theory = "CASPT2";
 
 using namespace SMITH3::Prep;
 
-tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>> create_proj() {
+tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>> create_proj() {
   vector<shared_ptr<Tensor>> lp, lt, ls, td;
   array<string, 3> label = {{"c", "x", "a"}};
 
@@ -74,7 +74,6 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
             lp.push_back(shared_ptr<Tensor>(new Tensor(ss.str(), {l, k, j, i})));
             td.push_back(shared_ptr<Tensor>(new Tensor("t2dagger", ss.str(), {l, k, j, i})));
             lt.push_back(shared_ptr<Tensor>(new Tensor("t2", ss.str(), {j, i, l, k})));
-            ls.push_back(shared_ptr<Tensor>(new Tensor("r", ss.str(), {j, i, l, k})));
             ++cnt;
           }
         }
@@ -82,7 +81,7 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
     }
   }
 
-  return tie(lp, lt, ls, td);
+  return tie(lp, lt, td);
 };
 
 int main() {
@@ -90,8 +89,8 @@ int main() {
   // generate common header
   cout << header() << endl;
 
-  vector<shared_ptr<Tensor>> proj_list, t_list, r_list, t_dagger;
-  tie(proj_list, t_list, r_list, t_dagger) = create_proj();
+  vector<shared_ptr<Tensor>> proj_list, t_list, t_dagger;
+  tie(proj_list, t_list, t_dagger) = create_proj();
 
   // make f and H tensors here
   vector<shared_ptr<Tensor>> f   = {shared_ptr<Tensor>(new Tensor("f1", "", {"g", "g"}))};
@@ -105,7 +104,6 @@ int main() {
 
   for (auto& i : proj_list) cout << i->generate();
   for (auto& i : t_list)    cout << i->generate();
-  for (auto& i : r_list)    cout << i->generate();
   for (auto& i : f)         cout << i->generate();
   for (auto& i : H)         cout << i->generate();
   for (auto& i : hc)        cout << i->generate();
@@ -127,14 +125,10 @@ int main() {
 
   // energy equations //
   // second order energy correction
-  // TODO E2 = <1|H|0> + <R|T>
-  shared_ptr<Equation> eq3(new Equation("ea",  {dum, t_dagger, f, t_list}, 0.25));
-  shared_ptr<Equation> eq3a(new Equation("eb", {dum, t_dagger, t_list}, -0.25, "e0"));
-  shared_ptr<Equation> eq3b(new Equation("ec", {dum, t_dagger, H}, 0.50));
-  shared_ptr<Equation> eq3c(new Equation("ed", {dum, t_dagger, hc}, 1.00));
+  // E2 = <1|H|0>. <R|T> will be added in bagel
+  shared_ptr<Equation> eq3(new Equation("ec", {dum, t_dagger, H}, 0.25));
+  shared_ptr<Equation> eq3a(new Equation("ed", {dum, t_dagger, hc}, 0.5));
   eq3->merge(eq3a);
-  eq3->merge(eq3b);
-  eq3->merge(eq3c);
   eq3->set_tree_type("energy");
   cout << eq3->generate();
 
