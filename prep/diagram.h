@@ -17,13 +17,19 @@ class Diagram {
     bool ci_derivative_;
 
   public:
-    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d) : op_(o), label_(la), fac_(d), scalar_(""), braket_(std::make_pair(false,false)), ci_derivative_(false) { }
-    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, std::string s) : op_(o), label_(la), fac_(1.0), scalar_(s), braket_(std::make_pair(false,false)), ci_derivative_(false) { }
-    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d, std::string s) : op_(o), label_(la), fac_(d), scalar_(s), braket_(std::make_pair(false,false)), ci_derivative_(false) { }
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d)
+     : op_(o), label_(la), fac_(d), scalar_(""), braket_(std::make_pair(false,false)), ci_derivative_(false) { }
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, std::string s)
+     : op_(o), label_(la), fac_(1.0), scalar_(s), braket_(std::make_pair(false,false)), ci_derivative_(false) { }
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d, std::string s)
+     : op_(o), label_(la), fac_(d), scalar_(s), braket_(std::make_pair(false,false)), ci_derivative_(false) { }
 
-    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d, std::pair<bool,bool> der) : op_(o), label_(la), fac_(d), scalar_(""), braket_(der), ci_derivative_(true) { }
-    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, std::string s, std::pair<bool,bool> der) : op_(o), label_(la), fac_(1.0), scalar_(s), braket_(der), ci_derivative_(true) { }
-    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d, std::string s, std::pair<bool,bool> der) : op_(o), label_(la), fac_(d), scalar_(s), braket_(der), ci_derivative_(true) { }
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d, std::pair<bool,bool> der)
+     : op_(o), label_(la), fac_(d), scalar_(""), braket_(der), ci_derivative_(true) { }
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, std::string s, std::pair<bool,bool> der)
+     : op_(o), label_(la), fac_(1.0), scalar_(s), braket_(der), ci_derivative_(true) { }
+    Diagram(const std::list<std::shared_ptr<Tensor>> o, const std::string la, double d, std::string s, std::pair<bool,bool> der)
+     : op_(o), label_(la), fac_(d), scalar_(s), braket_(der), ci_derivative_(true) { }
 
     const std::list<std::shared_ptr<Tensor>>& op() const { return op_; };
     std::string label() const { return label_; };

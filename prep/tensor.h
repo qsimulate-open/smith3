@@ -50,12 +50,12 @@ class Tensor {
     Tensor(const std::string b, const std::string postfix, const std::initializer_list<std::string> o)
      : tag_(b+postfix), base_(b) {
       for (auto& i : o) indices_.push_back(i);
-    };
+    }
 
     Tensor(const std::string postfix, const std::initializer_list<std::string> o)
      : tag_("ex_" + postfix), base_("") {
       for (auto& i : o) indices_.push_back(i);
-    };
+    }
 
     std::string str_index() const {
       std::stringstream ss;
@@ -64,7 +64,7 @@ class Tensor {
         ss << "\"" << *i << "\"";
       }
       return ss.str();
-    };
+    }
 
     std::string generate() const {
       std::stringstream ss;
@@ -74,10 +74,16 @@ class Tensor {
         ss << "  shared_ptr<Operator> " << tag_ << " = make_shared<Ex>(" << str_index() << ");" << std::endl;
       }
       return ss.str();
-    };
+    }
 
-    std::string base() const { return base_; };
-    std::string tag() const { return tag_; };
+    std::string base() const { return base_; }
+    std::string tag() const { return tag_; }
+
+    bool external() const {
+      std::list<std::string> l1 = {"a", "a", "c", "c"};
+      std::list<std::string> l2 = {"c", "c", "a", "a"};
+      return l1 == indices_ || l2 == indices_;
+    }
 };
 
 }}

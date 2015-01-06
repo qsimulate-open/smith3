@@ -296,6 +296,7 @@ OutStream Forest::generate_algorithm() const {
   out.ee << "    shared_ptr<Queue> queue = make_residualq();" << endl;
   out.ee << "    while (!queue->done())" << endl;
   out.ee << "      queue->next_compute();" << endl;
+  out.ee << "    diagonal(r, t2);" << endl;
   out.ee << "    this->energy_ += dot_product_transpose(r, t2) * 0.25;" << endl;
   out.ee << "    const double err = r->rms();" << endl;
   out.ee << "    this->print_iteration(iter, this->energy_, err);" << endl;

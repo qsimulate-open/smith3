@@ -22,16 +22,18 @@ class Equation {
     bool ci_derivative_;
 
   public:
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in) : Equation(l, in, 1.0, "", std::make_pair(false,false)) { }
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d) : Equation(l, in, d, "", std::make_pair(false,false)) { }
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::string scalar) : Equation(l, in, 1.0, scalar, std::make_pair(false,false)) { }
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d, const std::string scalar) : Equation(l, in, d, scalar, std::make_pair(false,false)) { }
-    // with ci derivative
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::pair<bool,bool> brkt) : Equation(l, in, 1.0, "", brkt) { }
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d, const std::pair<bool,bool> brkt) : Equation(l, in, d, "", brkt) { }
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const std::string scalar, const std::pair<bool,bool> brkt) : Equation(l, in, 1.0, scalar, brkt) { }
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>>> in, const double d = 1.0,
+             const std::pair<bool,bool> brkt = std::make_pair(false,false))
+     : Equation(l, in, d, "", brkt) { }
+
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>>> in, const std::string scalar,
+             const std::pair<bool,bool> brkt = std::make_pair(false,false))
+     : Equation(l, in, 1.0, scalar, brkt) { }
     // end ctor
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>> > in, const double d, const std::string scalar, const std::pair<bool,bool> bk) : label_(l), fac_(d), tree_type_(""), braket_(bk) {
+
+    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>>> in, const double d, const std::string scalar,
+             const std::pair<bool,bool> bk = std::make_pair(false,false))
+     : label_(l), fac_(d), tree_type_(""), braket_(bk) {
 
       // mkm assert(bk.first && bk.second);
       if (bk.first == false && bk.second == false) {
@@ -51,8 +53,12 @@ class Equation {
         // set the current vector
         std::list<std::shared_ptr<Tensor>> cc;
         auto inp = in.begin();
-        for (auto i = current.begin(); i != current.end(); ++i, ++inp) cc.push_back((*inp)[*i]);
-        out.push_back(cc);
+        for (auto i = current.begin(); i != current.end(); ++i, ++inp)
+          cc.push_back((*inp)[*i]);
+        // diagonal cc/aa will be removed from the residual equation for efficiency.
+        if (label_[0] != 'r' || !(cc.back()->external() && cc.front()->tag() == "proje" && (*(++cc.begin()))->external())) {
+          out.push_back(cc);
+        }
 
         // get the next vector
         auto m = max.rbegin();
