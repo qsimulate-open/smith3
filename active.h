@@ -33,7 +33,6 @@
 #define __ACTIVE_H
 
 #include "op.h"
-#include "ex.h"
 #include "rdm.h"
 #include "rdm00.h"
 #include "rdmI0.h"

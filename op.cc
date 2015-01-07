@@ -46,11 +46,13 @@ Op::Op(const string lab, shared_ptr<Index> ta, shared_ptr<Index> tb, shared_ptr<
 
 void Op::print() const {
   // tensor
-  cout << label_ << "(";
-  for (auto& i : op_) {
-    cout << (*get<0>(i))->str(false) << " ";
+  if (!label_.empty()) {
+    cout << label_ << "(";
+    for (auto& i : op_) {
+      cout << (*get<0>(i))->str(false) << " ";
+    }
+    cout << ") ";
   }
-  cout << ") ";
   // (non active) operator
   if (num_nodagger() + num_dagger() != 0) {
     cout << "{";
@@ -93,7 +95,7 @@ bool Op::identical(shared_ptr<Operator> o) const {
 // this function make a possible permutation of indices.
 pair<bool, double> Op::permute(const bool proj) {
   // if there is active daggered and no-daggered operators, you cannot do this as it changes the expression
-  if ((num_active_nodagger() && num_active_dagger()) || (!proj && label_ == "proj"))
+  if ((num_active_nodagger() && num_active_dagger()) || (!proj && (label_ == "" || label_ == "proj")))
     return make_pair(false, 1.0);
 
   const vector<int> prev = perm_;

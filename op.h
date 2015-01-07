@@ -32,6 +32,7 @@
 namespace smith {
 
 /// Derived class for spin-summed operators which produce tensors.
+/// for a historical reason, this is a derived class of Operator, although it does not have to be so.
 class Op : public Operator {
   protected:
     /// Related to tensor info.
@@ -46,10 +47,13 @@ class Op : public Operator {
     Op(const std::string lab, std::shared_ptr<Index> ta, std::shared_ptr<Index> tb, std::shared_ptr<Spin> ts = std::make_shared<Spin>());
     /// Create operator with label.
     Op(const std::string lab = "") : label_(lab) { }
+
+    Op(const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td) : Op("", ta, tb, tc, td) { }
+    Op(const std::string& ta, const std::string& tb) : Op("", ta, tb) { }
+
     virtual ~Op() { }
 
-
-    bool is_ex() const { return false; }
+    bool is_ex() const { return label_.empty(); }
 
     /// Returns operator name.
     std::string label() const override { return label_; }

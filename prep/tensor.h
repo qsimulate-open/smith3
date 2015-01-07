@@ -71,7 +71,7 @@ class Tensor {
       if (!base_.empty()) {
         ss << "  shared_ptr<Operator> " << tag_ << " = make_shared<Op>(\"" << base_ << "\"" << (indices_.empty() ? "" : ", ") << str_index() << ");" << std::endl;
       } else {
-        ss << "  shared_ptr<Operator> " << tag_ << " = make_shared<Ex>(" << str_index() << ");" << std::endl;
+        ss << "  shared_ptr<Operator> " << tag_ << " = make_shared<Op>(" << str_index() << ");" << std::endl;
       }
       return ss.str();
     }
