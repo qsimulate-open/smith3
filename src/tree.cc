@@ -416,7 +416,7 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
   }
   for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
     out.dd << *iter << endl;
-  return out; 
+  return out;
 }
 
 
@@ -440,7 +440,7 @@ OutStream Tree::generate_task(const int ic, const vector<shared_ptr<Tensor>> op,
   // if gamma, we need to add dependency.
   // this one is virtual, ie tree specific
   out << generate_task(ip, ic, ops, scalar, iz);
-// TODO at this moment all gammas are recomputed. 
+// TODO at this moment all gammas are recomputed.
 #if 0
   for (auto& i : op) {
     if (i->label().find("Gamma") != string::npos)

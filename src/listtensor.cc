@@ -237,10 +237,10 @@ shared_ptr<Cost> ListTensor::calculate_cost() const {
     for (auto& a : current) {
       bool check = false;
       for (auto& b : sumindex)
-        if (a->same_num(b) && a->same_label(b)) 
+        if (a->same_num(b) && a->same_label(b))
           check = true;
       if (!check)
-        outindex.push_back(a); 
+        outindex.push_back(a);
     }
 
     sumindex.insert(sumindex.end(), outindex.begin(), outindex.end());
@@ -281,7 +281,7 @@ void ListTensor::reorder() {
       out = list_;
       current = cost;
     }
-  } while (next_permutation(list_.begin(), list_.end())); 
+  } while (next_permutation(list_.begin(), list_.end()));
   list_ = out;
 }
 

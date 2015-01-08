@@ -58,6 +58,6 @@ OutStream& operator<<(OutStream& o, const OutStream& a) {
 }
 }
 
-} 
+}
 
 #endif

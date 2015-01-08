@@ -363,7 +363,7 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
       rindex.erase(*i);
     for (auto i = rm2.rbegin(); i != rm2.rend(); ++i)
       dindex.erase(*i);
-    
+
     // to simplify we do not use blas here
     tt << make_get_block(indent, "i0", inlab[rlab], rindex);
     // loops for index and merged

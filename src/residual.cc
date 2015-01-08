@@ -214,7 +214,7 @@ OutStream Residual::generate_compute_footer(const int ic, const list<shared_ptr<
 
   out.tt << "    ~Task" << ic << "() {}" << endl;
   out.tt << "};" << endl << endl;
-  return out; 
+  return out;
 }
 
 
@@ -309,7 +309,7 @@ OutStream Residual::generate_bc(const shared_ptr<BinaryContraction> i) const {
   }
 
 
-  return out; 
+  return out;
 }
 
 
