@@ -1,7 +1,1 @@
-* Reorder tensors so that it minimizes the cost:
-    It will be VERY important for non-linear Ansatz.
-    For the time being, I will go without it.
-
-    2T - T^dagger should be detected fully.
-
-    integral transformation should be done more efficiently (reuse half-transformed quantity!) 
+See Issues on github.
