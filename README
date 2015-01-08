@@ -16,5 +16,5 @@ please modify src/prep/generate_main.cc and do
 
 > obj/prep/Prep > src/main.cc
 
-* src/python includes python scripts that split
+* The python directory includes python scripts that split
 files into smaller files (used in BAGEL)
