@@ -4,7 +4,7 @@
 AC_PREREQ(2.57)
 AC_INIT([MulWick], 1.0, [shiozaki.toru@gmail.com])
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([main.cc])
+AC_CONFIG_SRCDIR([src/main.cc])
 AM_CONFIG_HEADER([config.h])
 AC_F77_LIBRARY_LDFLAGS
 
