@@ -24,12 +24,9 @@
 //
 
 
+#include <tuple>
 #include "forest.h"
 #include "constants.h"
-#include <algorithm>
-#include <stdexcept>
-#include <map>
-#include <tuple>
 
 using namespace std;
 using namespace smith;

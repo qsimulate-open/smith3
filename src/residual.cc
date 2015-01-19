@@ -26,7 +26,6 @@
 
 #include "constants.h"
 #include "residual.h"
-#include <algorithm>
 
 using namespace std;
 using namespace smith;

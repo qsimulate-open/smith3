@@ -24,12 +24,9 @@
 //
 
 
+#include <iomanip>
 #include "constants.h"
 #include "active.h"
-#include <sstream>
-#include <algorithm>
-#include <iomanip>
-#include <map>
 
 using namespace std;
 using namespace smith;

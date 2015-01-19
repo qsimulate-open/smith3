@@ -24,13 +24,9 @@
 //
 
 
-#include "tree.h"
 #include "energy.h"
 #include "residual.h"
 #include "constants.h"
-#include <algorithm>
-#include <stdexcept>
-#include <map>
 
 using namespace std;
 using namespace smith;

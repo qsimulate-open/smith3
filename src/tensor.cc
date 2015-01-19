@@ -24,11 +24,9 @@
 //
 
 
+#include <iomanip>
 #include "tensor.h"
 #include "constants.h"
-#include <sstream>
-#include <iomanip>
-#include <algorithm>
 
 #define debug_tasks
 

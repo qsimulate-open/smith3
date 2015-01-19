@@ -24,9 +24,8 @@
 //
 
 
-#include "constants.h"
 #include "energy.h"
-#include <algorithm>
+#include "constants.h"
 
 using namespace std;
 using namespace smith;
