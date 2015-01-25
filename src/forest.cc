@@ -101,7 +101,7 @@ OutStream Forest::generate_headers() const {
   out.cc << header(forest_name_ + "_gen.cc");
   out.dd << header(forest_name_ + "_tasks.cc");
   out.ee << header(forest_name_ + ".cc");
-  out.gg << header(forest_name_ + ".cc");
+  out.gg << header(forest_name_ + "_gamma.cc");
 
   out.ss << "#ifndef __SRC_SMITH_" << forest_name_ << "_H" << endl;
   out.ss << "#define __SRC_SMITH_" << forest_name_ << "_H" << endl;

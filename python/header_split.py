@@ -28,6 +28,9 @@ def header(n) :
 // the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.\n\
 //\n\
 \n\
+#include <bagel_config.h>\n\
+#ifdef COMPILE_SMITH\n\
+\n\
 #ifndef __SRC_SMITH_CASPT2_TASKS" + str(n) + "_H\n\
 #define __SRC_SMITH_CASPT2_TASKS" + str(n) + "_H\n\
 \n\
@@ -43,6 +46,7 @@ namespace CASPT2{\n\
 \n"
 
 footer = "\n}\n}\n}\n\
+#endif\n\
 #endif\n\
 \n"
 
@@ -72,11 +76,14 @@ header2 = "//\n\
 // the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.\n\
 //\n\
 \n\
+#include <bagel_config.h>\n\
+#ifdef COMPILE_SMITH\n\
+\n\
 #ifndef __SRC_SMITH_CASPT2_TASKS_H\n\
 #define __SRC_SMITH_CASPT2_TASKS_H\n\
 \n"
 
-footer2 = "\n#endif\n\n"
+footer2 = "\n#endif\n#endif\n\n"
 
 f = open('CASPT2_tasks.h', 'r')
 lines = f.read().split("\n")[39:][:-6]

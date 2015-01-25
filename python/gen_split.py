@@ -29,6 +29,8 @@ def header(n) :
 // the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.\n\
 //\n\
 \n\
+#include <bagel_config.h>\n\
+#ifdef COMPILE_SMITH\n\
 \n\
 #include <src/smith/CASPT2_tasks" + str(n) + ".h>\n\
 \n\
@@ -38,6 +40,8 @@ using namespace bagel::SMITH;\n\
 using namespace bagel::SMITH::CASPT2;\n\
 \n\
 "
+
+footer = "#endif\n"
 
 f = open('CASPT2_gen.cc', 'r')
 lines = f.read().split("\n")[33:]
@@ -63,7 +67,7 @@ for i in range(len(tasks)):
     if (num != 0 and num % chunk == 0): 
         n = num / chunk
         fout = open("CASPT2_gen" + str(n) + ".cc", "w")
-        out = header(n) + tmp
+        out = header(n) + tmp + footer
         fout.write(out)
         fout.close()
         tmp = ""
@@ -72,7 +76,7 @@ for i in range(len(tasks)):
 
 n = (num-1) / chunk + 1
 fout = open("CASPT2_gen" + str(n) + ".cc", "w")
-out = header(n) + tmp
+out = header(n) + tmp + footer
 fout.write(out)
 fout.close()
 

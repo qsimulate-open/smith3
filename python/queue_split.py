@@ -30,6 +30,9 @@ def header(n) :
 // the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.\n\
 //\n\
 \n\
+#include <bagel_config.h>\n\
+#ifdef COMPILE_SMITH\n\
+\n\
 \n\
 #include <src/smith/CASPT2.h>\n"
 
@@ -43,6 +46,8 @@ using namespace bagel;\n\
 using namespace bagel::SMITH;\n\
 \n\
 "
+
+footer = "#endif\n"
 
 f = open('CASPT2.cc', 'r')
 lines = f.read().split("\n")[33:]
@@ -64,13 +69,13 @@ p = re.compile('make_[a-z0-9]+q')
 for task in tasks[0:-1]:
     tag = p.search(task).group()[5:]
     fout = open("CASPT2_" + tag + ".cc", "w")
-    out = header("_" + tag + "q") + insert() + header2() + task
+    out = header("_" + tag + "q") + insert() + header2() + task + footer
     fout.write(out)
     fout.close()
 
 os.remove("CASPT2.cc")
 
 fout = open("CASPT2.cc", "w")
-out = header("") + header2() + tasks[len(tasks)-1]
+out = header("") + header2() + tasks[len(tasks)-1] + footer
 fout.write(out)
 fout.close()
