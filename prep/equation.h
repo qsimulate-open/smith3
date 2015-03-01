@@ -37,7 +37,6 @@ class Equation {
              const std::pair<bool,bool> bk = std::make_pair(false,false))
      : method_(m), label_(l), fac_(d), tree_type_(""), braket_(bk) {
 
-      // mkm assert(bk.first && bk.second);
       if (bk.first == false && bk.second == false) {
         ci_derivative_ = false;
       } else {
