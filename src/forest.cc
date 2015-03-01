@@ -282,6 +282,7 @@ OutStream Forest::generate_algorithm() const {
   out.ss << "    ~" << forest_name_ << "() {}" << endl;
   out.ss << "" << endl;
   out.ss << "    void solve();" << endl;
+  out.ss << "    void solve_deriv();" << endl;
 
   out.ee << "void " << forest_name_ << "::" << forest_name_ << "::solve() {" << endl;
   out.ee << "  Timer timer;" << endl;
@@ -303,8 +304,11 @@ OutStream Forest::generate_algorithm() const {
   out.ee << "    if (err < ref_->thresh()) break;" << endl;
   out.ee << "  }" << endl;
   out.ee << "  this->print_iteration(iter == ref_->maxiter());" << endl;
-  out.ee << "  timer.tick_print(\"CASPT2 energy evaluation\");" << endl;
+  out.ee << "  timer.tick_print(\"" << forest_name_ << " energy evaluation\");" << endl;
+  out.ee << "}" << endl;
   out.ee << endl;
+  out.ee << "void " << forest_name_ << "::" << forest_name_ << "::solve_deriv() {" << endl;
+  out.ee << "  Timer timer;" << endl;
   // using norm in various places, eg  y-=Nf<I|Eij|0> and dm1 -= N*rdm1
   out.ee << "  shared_ptr<Queue> corrq = make_corrq();" << endl;
   out.ee << "  correlated_norm_ = accumulate(corrq);" << endl;
@@ -326,7 +330,6 @@ OutStream Forest::generate_algorithm() const {
   out.ee << "    dec->next_compute();" << endl;
   out.ee << "  timer.tick_print(\"CI derivative evaluation\");" << endl;
   out.ee << "  cout << endl;" << endl;
-  out.ee << endl;
   out.ee << "}" << endl;
 
   out.ss << "" << endl;
