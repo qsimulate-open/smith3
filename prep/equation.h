@@ -13,6 +13,8 @@ namespace Prep {
 
 class Equation {
   protected:
+    std::string method_;
+
     std::list<std::shared_ptr<Diagram>> diagram_;
     std::string label_;
     double fac_;
@@ -22,18 +24,18 @@ class Equation {
     bool ci_derivative_;
 
   public:
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>>> in, const double d = 1.0,
+    Equation(const std::string m, const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>>> in, const double d = 1.0,
              const std::pair<bool,bool> brkt = std::make_pair(false,false))
-     : Equation(l, in, d, "", brkt) { }
+     : Equation(m, l, in, d, "", brkt) { }
 
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>>> in, const std::string scalar,
+    Equation(const std::string m, const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>>> in, const std::string scalar,
              const std::pair<bool,bool> brkt = std::make_pair(false,false))
-     : Equation(l, in, 1.0, scalar, brkt) { }
+     : Equation(m, l, in, 1.0, scalar, brkt) { }
     // end ctor
 
-    Equation(const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>>> in, const double d, const std::string scalar,
+    Equation(const std::string m, const std::string l, const std::initializer_list<std::vector<std::shared_ptr<Tensor>>> in, const double d, const std::string scalar,
              const std::pair<bool,bool> bk = std::make_pair(false,false))
-     : label_(l), fac_(d), tree_type_(""), braket_(bk) {
+     : method_(m), label_(l), fac_(d), tree_type_(""), braket_(bk) {
 
       // mkm assert(bk.first && bk.second);
       if (bk.first == false && bk.second == false) {
@@ -55,8 +57,8 @@ class Equation {
         auto inp = in.begin();
         for (auto i = current.begin(); i != current.end(); ++i, ++inp)
           cc.push_back((*inp)[*i]);
-        // diagonal cc/aa will be removed from the residual equation for efficiency.
-        if (label_[0] != 'r' || !(cc.back()->external() && cc.front()->tag() == "proje" && (*(++cc.begin()))->external())) {
+        // diagonal cc/aa will be removed from the CASPT2 residual equation for efficiency.
+        if (method_ != "CASPT2" || label_[0] != 'r' || !(cc.back()->external() && cc.front()->tag() == "proje" && (*(++cc.begin()))->external())) {
           out.push_back(cc);
         }
 
@@ -102,7 +104,6 @@ class Equation {
       diagram_.insert(diagram_.end(), o->diagram_.begin(), o->diagram_.end());
     }
 
-    // mkm std::string generate(std::initializer_list<std::shared_ptr<Equation>> o) const {
     std::string generate() const {
       std::stringstream ss;
       for (auto& i : diagram_) ss << i->construct_str();

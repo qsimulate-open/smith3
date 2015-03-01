@@ -113,10 +113,10 @@ int main() {
   cout << endl;
 
   // residual equations //
-  shared_ptr<Equation> eq0(new Equation("ra", {dum, proj_list, f, t_list}));
-  shared_ptr<Equation> eq1(new Equation("rb", {dum, proj_list, t_list}, -1.0, "e0"));
-  shared_ptr<Equation> eq2(new Equation("rc", {dum, proj_list, H}));
-  shared_ptr<Equation> eq2a(new Equation("rd", {dum, proj_list, hc}, 2.0));
+  shared_ptr<Equation> eq0(new Equation("CASPT2", "ra", {dum, proj_list, f, t_list}));
+  shared_ptr<Equation> eq1(new Equation("CASPT2", "rb", {dum, proj_list, t_list}, -1.0, "e0"));
+  shared_ptr<Equation> eq2(new Equation("CASPT2", "rc", {dum, proj_list, H}));
+  shared_ptr<Equation> eq2a(new Equation("CASPT2", "rd", {dum, proj_list, hc}, 2.0));
   eq0->merge(eq1);
   eq0->merge(eq2);
   eq0->merge(eq2a);
@@ -126,29 +126,29 @@ int main() {
   // energy equations //
   // second order energy correction
   // E2 = <1|H|0>. <R|T> will be added in bagel
-  shared_ptr<Equation> eq3(new Equation("ec", {dum, t_dagger, H}, 0.25));
-  shared_ptr<Equation> eq3a(new Equation("ed", {dum, t_dagger, hc}, 0.5));
+  shared_ptr<Equation> eq3(new Equation("CASPT2", "ec", {dum, t_dagger, H}, 0.25));
+  shared_ptr<Equation> eq3a(new Equation("CASPT2", "ed", {dum, t_dagger, hc}, 0.5));
   eq3->merge(eq3a);
   eq3->set_tree_type("energy");
   cout << eq3->generate();
 
   // generate Norm <1|1> to be used in various places
-  shared_ptr<Equation> eq5(new Equation("ca", {dum, t_dagger, t_list}, 0.25));
+  shared_ptr<Equation> eq5(new Equation("CASPT2", "ca", {dum, t_dagger, t_list}, 0.25));
   eq5->set_tree_type("energy", "corr");
   cout << eq5->generate();
 
   // density matrix equations //
   // one-body contribution d2
-  shared_ptr<Equation> eq6(new Equation("da", {dum, t_dagger, ex1b, t_list}, 0.25));
+  shared_ptr<Equation> eq6(new Equation("CASPT2", "da", {dum, t_dagger, ex1b, t_list}, 0.25));
   eq6->set_tree_type("residual", "density");
   cout << eq6->generate();
   // one-body contribution d1
-  shared_ptr<Equation> eq6a(new Equation("db", {dum, ex1b, t_list}, 0.5));
+  shared_ptr<Equation> eq6a(new Equation("CASPT2", "db", {dum, ex1b, t_list}, 0.5));
   eq6a->set_tree_type("residual", "density1");
   cout << eq6a->generate();
 
   // two-body contribution D1
-  shared_ptr<Equation> eq7(new Equation("d2a", {dum, proj_list, t_list}, 0.5));
+  shared_ptr<Equation> eq7(new Equation("CASPT2", "d2a", {dum, proj_list, t_list}, 0.5));
   eq7->set_tree_type("residual", "density2");
   cout << eq7->generate();
 
@@ -156,14 +156,14 @@ int main() {
   // test hylleraas eqn:   d/dc( <0|T^+fT|0> -e0<0|T^+T|0> +2<0|T^+h1|0> + 2<0|T^+V2|0>) =>
   //  =   1/2(1/4<I|T^+fT|0> + 1/4<0|T^+fT|I>) - 1/2*(e0/4<I|T^+T|0> + e0/4<0|T^+T|I>) + 2*1/2 (1/4<I|T^+V|0> + 1/4<0|T^+V|I>) + 2*1/2 (1/4<I|T^+h1|0> + 1/4<0|T^+h1|I>)
   // using bracket symmetry in some terms
-  shared_ptr<Equation> eq4(new Equation("dedcia", {dum, t_dagger, f, t_list}, 0.5, make_pair(true, false)));
-//shared_ptr<Equation> eq4a(new Equation("dedcib", {dum, t_dagger, f, t_list}, 0.25, make_pair(false, true)));
-  shared_ptr<Equation> eq4b(new Equation("dedcic", {dum, t_dagger, t_list}, -0.5, "e0", make_pair(true, false)));
-//shared_ptr<Equation> eq4c(new Equation("dedcid", {dum, t_dagger, t_list}, -0.25, "e0", make_pair(false, true)));
-  shared_ptr<Equation> eq4d(new Equation("dedcie", {dum, t_dagger, H}, 0.50, make_pair(true, false)));
-  shared_ptr<Equation> eq4e(new Equation("dedcif", {dum, t_dagger, H}, 0.50, make_pair(false, true)));
-  shared_ptr<Equation> eq4f(new Equation("dedcig", {dum, t_dagger, hc}, 1.00, make_pair(true, false)));
-  shared_ptr<Equation> eq4g(new Equation("dedcih", {dum, t_dagger, hc}, 1.00, make_pair(false, true)));
+  shared_ptr<Equation> eq4(new Equation("CASPT2", "dedcia", {dum, t_dagger, f, t_list}, 0.5, make_pair(true, false)));
+//shared_ptr<Equation> eq4a(new Equation("CASPT2", "dedcib", {dum, t_dagger, f, t_list}, 0.25, make_pair(false, true)));
+  shared_ptr<Equation> eq4b(new Equation("CASPT2", "dedcic", {dum, t_dagger, t_list}, -0.5, "e0", make_pair(true, false)));
+//shared_ptr<Equation> eq4c(new Equation("CASPT2", "dedcid", {dum, t_dagger, t_list}, -0.25, "e0", make_pair(false, true)));
+  shared_ptr<Equation> eq4d(new Equation("CASPT2", "dedcie", {dum, t_dagger, H}, 0.50, make_pair(true, false)));
+  shared_ptr<Equation> eq4e(new Equation("CASPT2", "dedcif", {dum, t_dagger, H}, 0.50, make_pair(false, true)));
+  shared_ptr<Equation> eq4f(new Equation("CASPT2", "dedcig", {dum, t_dagger, hc}, 1.00, make_pair(true, false)));
+  shared_ptr<Equation> eq4g(new Equation("CASPT2", "dedcih", {dum, t_dagger, hc}, 1.00, make_pair(false, true)));
 //eq4->merge(eq4a);
   eq4->merge(eq4b);
 //eq4->merge(eq4c);
