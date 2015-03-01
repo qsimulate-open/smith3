@@ -38,8 +38,8 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
 
   const bool rt_targets = eq->targets();
 
-  for (auto i = d.begin(); i != d.end(); ++i) {
-    shared_ptr<ListTensor> tmp = make_shared<ListTensor>(*i);
+  for (auto& i : d) {
+    shared_ptr<ListTensor> tmp = make_shared<ListTensor>(i);
     // All internal tensor should be included in the active part
     tmp->absorb_all_internal();
 
@@ -62,7 +62,7 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
       throw logic_error("Error Tree::Tree, code generation for this tree type not implemented");
     }
     list<shared_ptr<Tree>> lt; lt.push_back(tr);
-    shared_ptr<BinaryContraction> b = make_shared<BinaryContraction>(lt, first, (*i)->target_index());
+    shared_ptr<BinaryContraction> b = make_shared<BinaryContraction>(lt, first, i->target_index());
     bc_.push_back(b);
   }
 
