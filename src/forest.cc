@@ -289,15 +289,19 @@ OutStream Forest::generate_algorithm() const {
   out.ee << "  this->print_iteration();" << endl;
   out.ee << "  int iter = 0;" << endl;
   out.ee << "  for ( ; iter != ref_->maxiter(); ++iter) {" << endl;
-  out.ee << "    shared_ptr<Queue> energyq = make_energyq();" << endl;
-  out.ee << "    this->energy_ = accumulate(energyq);" << endl;
+  // Compute energies here in CASPT2
+  if (forest_name_ == "CASPT2") {
+    out.ee << "    shared_ptr<Queue> energyq = make_energyq();" << endl;
+    out.ee << "    this->energy_ = accumulate(energyq);" << endl;
+  }
   out.ee << "    shared_ptr<Queue> queue = make_residualq();" << endl;
   out.ee << "    while (!queue->done())" << endl;
   out.ee << "      queue->next_compute();" << endl;
   // for CASPT2 there is manual implemention for some diagonal part
-  if (forest_name_ == "CASPT2")
+  if (forest_name_ == "CASPT2") {
     out.ee << "    diagonal(r, t2);" << endl;
-  out.ee << "    this->energy_ += dot_product_transpose(r, t2) * 0.25;" << endl;
+    out.ee << "    this->energy_ += dot_product_transpose(r, t2) * 0.25;" << endl;
+  }
   out.ee << "    const double err = r->rms();" << endl;
   out.ee << "    this->print_iteration(iter, this->energy_, err);" << endl;
   out.ee << endl;
@@ -310,28 +314,33 @@ OutStream Forest::generate_algorithm() const {
   out.ee << "}" << endl;
   out.ee << endl;
   out.ee << "void " << forest_name_ << "::" << forest_name_ << "::solve_deriv() {" << endl;
-  out.ee << "  Timer timer;" << endl;
-  // using norm in various places, eg  y-=Nf<I|Eij|0> and dm1 -= N*rdm1
-  out.ee << "  shared_ptr<Queue> corrq = make_corrq();" << endl;
-  out.ee << "  correlated_norm_ = accumulate(corrq);" << endl;
-  out.ee << "  timer.tick_print(\"T1 norm evaluation\");" << endl;
-  out.ee << endl;
-  out.ee << "  shared_ptr<Queue> dens2 = make_densityq();" << endl;
-  out.ee << "  while (!dens2->done())" << endl;
-  out.ee << "    dens2->next_compute();" << endl;
-  out.ee << "  shared_ptr<Queue> dens1 = make_density1q();" << endl;
-  out.ee << "  while (!dens1->done())" << endl;
-  out.ee << "    dens1->next_compute();" << endl;
-  out.ee << "  shared_ptr<Queue> Dens1 = make_density2q();" << endl;
-  out.ee << "  while (!Dens1->done())" << endl;
-  out.ee << "    Dens1->next_compute();" << endl;
-  out.ee << "  timer.tick_print(\"Correlated density matrix evaluation\");" << endl;
-  out.ee << endl;
-  out.ee << "  shared_ptr<Queue> dec = make_deciq();" << endl;
-  out.ee << "  while (!dec->done())" << endl;
-  out.ee << "    dec->next_compute();" << endl;
-  out.ee << "  timer.tick_print(\"CI derivative evaluation\");" << endl;
-  out.ee << "  cout << endl;" << endl;
+  // derivative is only supported in CASPT2 so far
+  if (forest_name_ == "CASPT2") {
+    out.ee << "  Timer timer;" << endl;
+    // using norm in various places, eg  y-=Nf<I|Eij|0> and dm1 -= N*rdm1
+    out.ee << "  shared_ptr<Queue> corrq = make_corrq();" << endl;
+    out.ee << "  correlated_norm_ = accumulate(corrq);" << endl;
+    out.ee << "  timer.tick_print(\"T1 norm evaluation\");" << endl;
+    out.ee << endl;
+    out.ee << "  shared_ptr<Queue> dens2 = make_densityq();" << endl;
+    out.ee << "  while (!dens2->done())" << endl;
+    out.ee << "    dens2->next_compute();" << endl;
+    out.ee << "  shared_ptr<Queue> dens1 = make_density1q();" << endl;
+    out.ee << "  while (!dens1->done())" << endl;
+    out.ee << "    dens1->next_compute();" << endl;
+    out.ee << "  shared_ptr<Queue> Dens1 = make_density2q();" << endl;
+    out.ee << "  while (!Dens1->done())" << endl;
+    out.ee << "    Dens1->next_compute();" << endl;
+    out.ee << "  timer.tick_print(\"Correlated density matrix evaluation\");" << endl;
+    out.ee << endl;
+    out.ee << "  shared_ptr<Queue> dec = make_deciq();" << endl;
+    out.ee << "  while (!dec->done())" << endl;
+    out.ee << "    dec->next_compute();" << endl;
+    out.ee << "  timer.tick_print(\"CI derivative evaluation\");" << endl;
+    out.ee << "  cout << endl;" << endl;
+  } else {
+    out.ee << "  throw std::logic_error(\"Nuclear gradients not implemented for " << forest_name_ << "\");" << endl;
+  }
   out.ee << "}" << endl;
 
   out.ss << "" << endl;
