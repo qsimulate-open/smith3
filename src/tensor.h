@@ -78,12 +78,8 @@ class Tensor {
     Tensor(const std::shared_ptr<Operator> op);
     /// Constructor for const active tensor.
     Tensor(const std::shared_ptr<Active> active);
-    /// Constructor for const active tensor and index list. For rdm ci derivatives have target index.
-    Tensor(const std::shared_ptr<Active> active, const std::list<std::shared_ptr<const Index>>& i) : Tensor(active, i, std::map<int, int>()) { }
     /// Constructor for const active tensor and index list. For rdm ci derivatives have target index and kets.
-    Tensor(const std::shared_ptr<Active> active, const std::list<std::shared_ptr<const Index>>& i, std::map<int, int> m);
-    /// Construct tensor with no arguements.
-    Tensor() { }
+    Tensor(const std::shared_ptr<Active> active, const std::list<std::shared_ptr<const Index>>& i, std::map<int, int> m = std::map<int, int>());
     ~Tensor() { }
 
 

@@ -51,10 +51,18 @@ static std::string header() {
 };
 
 
-static std::string footer(const std::string res, const std::string energy, const std::string correction, const std::string density, const std::string density1, const std::string density2, const std::string dedci) {
+static std::string footer(const std::string res, const std::string energy = "", const std::string correction = "",
+                          const std::string density = "", const std::string density1 = "", const std::string density2 = "", const std::string dedci = "") {
   std::stringstream mm;
 
-  mm << "  list<shared_ptr<Tree>> trees = {" << res << ", " << energy << ", " << correction << ", " << density << ", " <<  density1 << ", " << density2 << ", " << dedci <<  "};" << std::endl;
+  mm << "  list<shared_ptr<Tree>> trees = {" << res;
+  if (!energy.empty())     mm << ", " << energy;
+  if (!correction.empty()) mm << ", " << correction;
+  if (!density.empty())    mm << ", " << density;
+  if (!density1.empty())   mm << ", " << density1;
+  if (!density2.empty())   mm << ", " << density2;
+  if (!dedci.empty())      mm << ", " << dedci;
+  mm <<  "};" << std::endl;
   mm << "  auto fr = make_shared<Forest>(trees);" << std::endl;
 
   mm << "" <<  std::endl;
@@ -89,18 +97,31 @@ static std::string footer(const std::string res, const std::string energy, const
   mm << "  // output" << std::endl;
   mm << "  cout << std::endl << \"   ***  Residual  ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << res << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Energy E2 ***\" << std::endl << std::endl;" << std::endl;
-  mm << "  " << energy << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Correlated norm <1|1> ***\" << std::endl << std::endl;" << std::endl;
-  mm << "  " << correction << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Correlated one-body density matrix d2 ***\" << std::endl << std::endl;" << std::endl;
-  mm << "  " << density << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Correlated one-body density matrix d1 ***\" << std::endl << std::endl;" << std::endl;
-  mm << "  " << density1 << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Correlated two-body density matrix D1 ***\" << std::endl << std::endl;" << std::endl;
-  mm << "  " << density2 << "->print();" << std::endl;
-  mm << "  cout << std::endl << \"   ***  CI derivative  ***\" << std::endl << std::endl;" << std::endl;
-  mm << "  " << dedci << "->print();" << std::endl;
+
+  if (!energy.empty()) {
+    mm << "  cout << std::endl << \"   ***  Energy E2 ***\" << std::endl << std::endl;" << std::endl;
+    mm << "  " << energy << "->print();" << std::endl;
+  }
+  if (!correction.empty()) {
+    mm << "  cout << std::endl << \"   ***  Correlated norm <1|1> ***\" << std::endl << std::endl;" << std::endl;
+    mm << "  " << correction << "->print();" << std::endl;
+  }
+  if (!density.empty()) {
+    mm << "  cout << std::endl << \"   ***  Correlated one-body density matrix d2 ***\" << std::endl << std::endl;" << std::endl;
+    mm << "  " << density << "->print();" << std::endl;
+  }
+  if (!density1.empty()) {
+    mm << "  cout << std::endl << \"   ***  Correlated one-body density matrix d1 ***\" << std::endl << std::endl;" << std::endl;
+    mm << "  " << density1 << "->print();" << std::endl;
+  }
+  if (!density2.empty()) {
+    mm << "  cout << std::endl << \"   ***  Correlated two-body density matrix D1 ***\" << std::endl << std::endl;" << std::endl;
+    mm << "  " << density2 << "->print();" << std::endl;
+  }
+  if (!dedci.empty()) {
+    mm << "  cout << std::endl << \"   ***  CI derivative  ***\" << std::endl << std::endl;" << std::endl;
+    mm << "  " << dedci << "->print();" << std::endl;
+  }
   mm << "  cout << std::endl << std::endl;" << std::endl;
   mm << "" <<  std::endl;
   mm << "  return 0;" << std::endl;
