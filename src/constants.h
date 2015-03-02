@@ -72,7 +72,7 @@ std::string prefac__(const double& factor_) {
   const double thresh = 1.0e-10;
   // bruteforce way...
   const int large = 1024;
-  int i, j;
+  int i;
   for (i = 1; i != large; ++i) {
     if (fabs(factor_*i-std::round(factor_*i)) < thresh)
       break;

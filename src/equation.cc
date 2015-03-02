@@ -75,7 +75,6 @@ bool Equation::targets() const {
 void Equation::term_select(list<string> t) {
   // go through diagrams and if do not contain desired target indices (t), remove.
   list<list<shared_ptr<Diagram>>::iterator> rm;
-  bool keep = true;
   for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
     const list<shared_ptr<Operator>> ops = (*i)->op();
     for (auto& j : ops) {

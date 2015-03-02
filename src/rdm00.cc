@@ -77,9 +77,6 @@ list<shared_ptr<RDM>> RDM00::reduce_one(list<int>& done) const {
     if ((*i)->dagger() || find(done.begin(), done.end(), (*i)->num()) != done.end())
       continue;
 
-    // again this function is controlled by numbers... sorry...
-    const int inum = (*i)->num();
-
     for (auto j = i; j != index_.end(); ++j) {
       if (!(*j)->dagger() || j==i) continue;
 
