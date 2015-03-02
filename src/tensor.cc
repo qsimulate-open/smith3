@@ -102,7 +102,7 @@ bool Tensor::all_active() const {
 
 
 bool Tensor::is_gamma() const {
-  bool found;
+  bool found = false;
   if (label_.find("Gamma") != std::string::npos) found = true;
   return found;
 }
