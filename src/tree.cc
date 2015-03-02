@@ -143,12 +143,10 @@ void BinaryContraction::factorize() {
 bool Tree::merge(shared_ptr<Tree> o) {
   bool out = false;
   if (o->bc_.size() > 0) {
-    shared_ptr<Tensor> a = bc_.front()->tensor();
-    shared_ptr<Tensor> b = o->bc_.front()->tensor();
-    if (*a == *b) {
+    if (bc_.size() == 0 || *bc_.front()->tensor() == *o->bc_.front()->tensor()) {
       out = true;
       bc_.insert(bc_.end(), o->bc_.begin(), o->bc_.end());
-      for (auto i = bc_.begin(); i != bc_.end(); ++i) (*i)->set_target(target_);
+      for (auto& i : bc_) i->set_target(target_);
     }
   } else if (o->op_.size() > 0) {
     out = true;

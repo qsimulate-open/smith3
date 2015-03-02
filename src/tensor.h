@@ -130,8 +130,7 @@ class Tensor {
     /// Sets alias used for equivalent Gamma tensor. Used in Tree::find_gamma(). The alias is given to tensor o.
     void set_alias(std::shared_ptr<Tensor> o) { alias_ = o; }
     /// if tensor is a repeat.
-    bool has_alias() { bool has_ = false;
-         if (alias_) has_ = true; return has_; }
+    bool has_alias() const { return !!alias_; }
     /// Checks if tensor is gamma.
     bool is_gamma() const;
     /// if deriviative tensor
