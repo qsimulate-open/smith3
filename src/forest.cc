@@ -123,6 +123,7 @@ OutStream Forest::generate_headers() const {
   out.ss << "class " << forest_name_ << " : public SpinFreeMethod {" << endl;
   out.ss << "  protected:" << endl;
   out.ss << "    using SpinFreeMethod::ref_;" << endl;
+  out.ss << "    using SpinFreeMethod::e0_;" << endl;
   out.ss << "    using SpinFreeMethod::closed_;" << endl;
   out.ss << "    using SpinFreeMethod::active_;" << endl;
   out.ss << "    using SpinFreeMethod::virt_;" << endl;
@@ -273,7 +274,6 @@ OutStream Forest::generate_algorithm() const {
   out.ee << forest_name_ << "::" << forest_name_ << "::" << forest_name_ << "(shared_ptr<const SMITH_Info> ref) : SpinFreeMethod(ref) {" << endl;
   out.ee << "  this->eig_ = f1_->diag();" << endl;
   out.ee << "  t2 = init_amplitude();" << endl;
-  out.ee << "  e0_ = this->e0();" << endl;
   out.ee << "  r = t2->clone();" << endl;
   if (forest_name_ == "MRCI")
     out.ee << "  s = t2->clone();" << endl;
