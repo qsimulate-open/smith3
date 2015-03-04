@@ -48,14 +48,15 @@ static std::string header() {
   mm << "" << std::endl;
   mm << "int main() {" << std::endl;
   return mm.str();
-};
-
+}
 
 static std::string footer(const std::string res, const std::string energy = "", const std::string correction = "",
-                          const std::string density = "", const std::string density1 = "", const std::string density2 = "", const std::string dedci = "") {
+                          const std::string density = "", const std::string density1 = "", const std::string density2 = "",
+                          const std::string dedci = "", const std::string source = "") {
   std::stringstream mm;
 
   mm << "  list<shared_ptr<Tree>> trees = {" << res;
+  if (!source.empty())     mm << ", " << source;
   if (!energy.empty())     mm << ", " << energy;
   if (!correction.empty()) mm << ", " << correction;
   if (!density.empty())    mm << ", " << density;
@@ -97,6 +98,9 @@ static std::string footer(const std::string res, const std::string energy = "", 
   mm << "  // output" << std::endl;
   mm << "  cout << std::endl << \"   ***  Residual  ***\" << std::endl << std::endl;" << std::endl;
   mm << "  " << res << "->print();" << std::endl;
+  if (!source.empty()) {
+    mm << "  " << source << "->print();" << std::endl;
+  }
 
   if (!energy.empty()) {
     mm << "  cout << std::endl << \"   ***  Energy E2 ***\" << std::endl << std::endl;" << std::endl;
@@ -127,7 +131,12 @@ static std::string footer(const std::string res, const std::string energy = "", 
   mm << "  return 0;" << std::endl;
   mm << "}" << std::endl;
   return mm.str();
-};
+}
+
+static std::string footer_ci(const std::string res, const std::string corr, const std::string source) {
+  return footer(res, "", corr, "", "", "", "", source);
+}
+
 
 }}
 

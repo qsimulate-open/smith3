@@ -85,6 +85,7 @@ std::string prefac__(const double& factor_) {
 std::string target_name__(std::string label) {
   std::string out;
   if (label == "residual")      out = "r";
+  else if (label == "source")   out = "s";
   else if (label == "density")  out = "den2";
   else if (label == "density1") out = "den1";
   else if (label == "density2") out = "Den1";

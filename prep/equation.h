@@ -120,16 +120,6 @@ class Equation {
           ss << "  auto " << tree_label() << " = make_shared<Residual>(e" << diagram_.front()->label() << ", \"" << tree_name_ << "\");" << std::endl;
       } else if (!tree_type_.empty() && tree_type_ == "energy") {
           ss << "  auto " << tree_label() << " = make_shared<Energy>(e" << diagram_.front()->label() << ", \"" << tree_name_ << "\");" << std::endl;
-      } else if (!tree_type_.empty() && tree_type_ == "dedci") {
-          ss << "  auto " << tree_label() << " = make_shared<Dedci>(e" << diagram_.front()->label() << ", \"" << tree_name_ << "\");" << std::endl;
-      } else if (!tree_type_.empty() && tree_type_ == "correction") {
-          ss << "  auto " << tree_label() << " = make_shared<Correction>(e" << diagram_.front()->label() << ", \"" << tree_name_ << "\");" << std::endl;
-      } else if (!tree_type_.empty() && tree_type_ == "density") {
-          ss << "  auto " << tree_label() << " = make_shared<Density>(e" << diagram_.front()->label() << ", \"" << tree_name_ << "\");" << std::endl;
-      } else if (!tree_type_.empty() && tree_type_ == "density1") {
-          ss << "  auto " << tree_label() << " = make_shared<Density1>(e" << diagram_.front()->label() << ", \"" << tree_name_ << "\");" << std::endl;
-      } else if (!tree_type_.empty() && tree_type_ == "density2") {
-          ss << "  auto " << tree_label() << " = make_shared<Density2>(e" << diagram_.front()->label() << ", \"" << tree_name_ << "\");" << std::endl;
       } else {
           throw std::logic_error("prep/equation.cc error, tree must be of derived type");
       }

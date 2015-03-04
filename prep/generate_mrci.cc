@@ -58,13 +58,15 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
         for (auto& l : label) {
           // full CASPT2
           if (
-#if 1
+#if 0
               // all correct in this block
               (l == "c" && k == "c" && j == "a" && i == "a") //||
+              (l == "x" && k == "c" && j == "a" && i == "a") ||
+#endif
+#if 1
+              (l == "x" && k == "x" && j == "a" && i == "a") //||
 #endif
 #if 0
-              (l == "x" && k == "c" && j == "a" && i == "a") ||
-              (l == "x" && k == "x" && j == "a" && i == "a") ||
               (l == "c" && k == "c" && j == "x" && i == "a") ||
               (l == "c" && k == "c" && j == "x" && i == "x") ||
               (l == "x" && k == "c" && j == "x" && i == "x") ||
@@ -107,6 +109,7 @@ int main() {
   for (auto& i : H)         cout << i->generate();
   for (auto& i : hc)        cout << i->generate();
   for (auto& i : dum)       cout << i->generate();
+  for (auto& i : t_dagger)  cout << i->generate();
   cout << endl;
 
   // residual equations //
@@ -118,8 +121,18 @@ int main() {
   eq0->set_tree_type("residual");
   cout << eq0->generate();
 
+  shared_ptr<Equation> eq3(new Equation(theory, "sa", {dum, proj_list, hc}));
+  shared_ptr<Equation> eq4(new Equation(theory, "sb", {dum, proj_list, H}, 0.5));
+  eq3->merge(eq4);
+  eq3->set_tree_type("residual", "source");
+  cout << eq3->generate();
+
+  shared_ptr<Equation> eq5(new Equation(theory, "ca", {dum, t_dagger, t_list}));
+  eq5->set_tree_type("energy", "corr");
+  cout << eq5->generate();
+
   // done. generate the footer
-  cout << footer(eq0->tree_label()) << endl;
+  cout << footer_ci(eq0->tree_label(), eq5->tree_label(), eq3->tree_label()) << endl;
 
 
   return 0;

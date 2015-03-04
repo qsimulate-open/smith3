@@ -145,6 +145,8 @@ OutStream Forest::generate_headers() const {
   out.ss << "" << endl;
   out.ss << "    std::shared_ptr<Tensor> t2;" << endl;
   out.ss << "    std::shared_ptr<Tensor> r;" << endl;
+  if (forest_name_ == "MRCI")
+    out.ss << "    std::shared_ptr<Tensor> s;" << endl;
   out.ss << "    double e0_;" << endl;
   out.ss << "    std::shared_ptr<Tensor> den1;" << endl;
   out.ss << "    std::shared_ptr<Tensor> den2;" << endl;
@@ -273,6 +275,9 @@ OutStream Forest::generate_algorithm() const {
   out.ee << "  t2 = init_amplitude();" << endl;
   out.ee << "  e0_ = this->e0();" << endl;
   out.ee << "  r = t2->clone();" << endl;
+  if (forest_name_ == "MRCI")
+    out.ee << "  s = t2->clone();" << endl;
+
   out.ee << "  den1 = h1_->clone();" << endl;
   out.ee << "  den2 = h1_->clone();" << endl;
   out.ee << "  Den1 = v2_->clone();" << endl;
@@ -287,6 +292,11 @@ OutStream Forest::generate_algorithm() const {
   out.ee << "void " << forest_name_ << "::" << forest_name_ << "::solve() {" << endl;
   out.ee << "  Timer timer;" << endl;
   out.ee << "  this->print_iteration();" << endl;
+  if (forest_name_ == "MRCI") {
+    out.ee << "  shared_ptr<Queue> sq = make_sourceq();" << endl;
+    out.ee << "  while (!sq->done())" << endl;
+    out.ee << "    sq->next_compute();" << endl;
+  }
   out.ee << "  int iter = 0;" << endl;
   out.ee << "  for ( ; iter != ref_->maxiter(); ++iter) {" << endl;
   // Compute energies here in CASPT2
@@ -301,8 +311,14 @@ OutStream Forest::generate_algorithm() const {
   if (forest_name_ == "CASPT2") {
     out.ee << "    diagonal(r, t2);" << endl;
     out.ee << "    this->energy_ += dot_product_transpose(r, t2) * 0.25;" << endl;
+  } else if (forest_name_ == "MRCI") {
+    out.ee << "    r->ax_plus_y(1.0, s);" << endl;
   }
   out.ee << "    const double err = r->rms();" << endl;
+  if (forest_name_ == "MRCI") {
+    out.ee << "    r->ax_plus_y(1.0, s);" << endl;
+    out.ee << "    this->energy_ += dot_product_transpose(r, t2);" << endl;
+  }
   out.ee << "    this->print_iteration(iter, this->energy_, err);" << endl;
   out.ee << endl;
   out.ee << "    this->update_amplitude(t2, r);" << endl;
