@@ -310,7 +310,7 @@ OutStream Forest::generate_algorithm() const {
   // for CASPT2 there is manual implemention for some diagonal part
   if (forest_name_ == "CASPT2") {
     out.ee << "    diagonal(r, t2);" << endl;
-    out.ee << "    this->energy_ += dot_product_transpose(r, t2) * 0.25;" << endl;
+    out.ee << "    this->energy_ += dot_product_transpose(r, t2);" << endl;
   } else if (forest_name_ == "MRCI") {
     out.ee << "    r->ax_plus_y(1.0, s);" << endl;
   }
