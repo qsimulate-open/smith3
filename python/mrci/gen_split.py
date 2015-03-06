@@ -6,7 +6,7 @@ import os
 def header(n) :
     return "//\n\
 // BAGEL - Parallel electron correlation program.\n\
-// Filename: CASPT2_gen" + str(n) + ".cc\n\
+// Filename: MRCI_gen" + str(n) + ".cc\n\
 // Copyright (C) 2014 Shiozaki group\n\
 //\n\
 // Author: Shiozaki group <shiozaki@northwestern.edu>\n\
@@ -32,18 +32,18 @@ def header(n) :
 #include <bagel_config.h>\n\
 #ifdef COMPILE_SMITH\n\
 \n\
-#include <src/smith/CASPT2_tasks" + str(n) + ".h>\n\
+#include <src/smith/MRCI_tasks" + str(n) + ".h>\n\
 \n\
 using namespace std;\n\
 using namespace bagel;\n\
 using namespace bagel::SMITH;\n\
-using namespace bagel::SMITH::CASPT2;\n\
+using namespace bagel::SMITH::MRCI;\n\
 \n\
 "
 
 footer = "#endif\n"
 
-f = open('CASPT2_gen.cc', 'r')
+f = open('MRCI_gen.cc', 'r')
 lines = f.read().split("\n")[33:]
 
 tasks = []
@@ -64,9 +64,9 @@ tmp = ""
 num = 0
 chunk = 50
 for i in range(len(tasks)):
-    if (num != 0 and num % chunk == 0): 
+    if (num != 0 and num % chunk == 0):
         n = num / chunk
-        fout = open("CASPT2_gen" + str(n) + ".cc", "w")
+        fout = open("MRCI_gen" + str(n) + ".cc", "w")
         out = header(n) + tmp + footer
         fout.write(out)
         fout.close()
@@ -75,9 +75,9 @@ for i in range(len(tasks)):
     tmp = tmp + tasks[i];
 
 n = (num-1) / chunk + 1
-fout = open("CASPT2_gen" + str(n) + ".cc", "w")
+fout = open("MRCI_gen" + str(n) + ".cc", "w")
 out = header(n) + tmp + footer
 fout.write(out)
 fout.close()
 
-os.remove("CASPT2_gen.cc")
+os.remove("MRCI_gen.cc")

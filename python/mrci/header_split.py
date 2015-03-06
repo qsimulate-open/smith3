@@ -5,7 +5,7 @@ import os
 def header(n) :
     return "//\n\
 // BAGEL - Parallel electron correlation program.\n\
-// Filename: CASPT2_tasks" + str(n) + ".h\n\
+// Filename: MRCI_tasks" + str(n) + ".h\n\
 // Copyright (C) 2014 Shiozaki group\n\
 //\n\
 // Author: Shiozaki group <shiozaki@northwestern.edu>\n\
@@ -31,8 +31,8 @@ def header(n) :
 #include <bagel_config.h>\n\
 #ifdef COMPILE_SMITH\n\
 \n\
-#ifndef __SRC_SMITH_CASPT2_TASKS" + str(n) + "_H\n\
-#define __SRC_SMITH_CASPT2_TASKS" + str(n) + "_H\n\
+#ifndef __SRC_SMITH_MRCI_TASKS" + str(n) + "_H\n\
+#define __SRC_SMITH_MRCI_TASKS" + str(n) + "_H\n\
 \n\
 #include <src/smith/indexrange.h>\n\
 #include <src/smith/tensor.h>\n\
@@ -42,7 +42,7 @@ def header(n) :
 \n\
 namespace bagel {\n\
 namespace SMITH {\n\
-namespace CASPT2{\n\
+namespace MRCI{\n\
 \n"
 
 footer = "\n}\n}\n}\n\
@@ -53,7 +53,7 @@ footer = "\n}\n}\n}\n\
 
 header2 = "//\n\
 // BAGEL - Parallel electron correlation program.\n\
-// Filename: CASPT2_tasks.h\n\
+// Filename: MRCI_tasks.h\n\
 // Copyright (C) 2014 Shiozaki group\n\
 //\n\
 // Author: Shiozaki group <shiozaki@northwestern.edu>\n\
@@ -79,13 +79,13 @@ header2 = "//\n\
 #include <bagel_config.h>\n\
 #ifdef COMPILE_SMITH\n\
 \n\
-#ifndef __SRC_SMITH_CASPT2_TASKS_H\n\
-#define __SRC_SMITH_CASPT2_TASKS_H\n\
+#ifndef __SRC_SMITH_MRCI_TASKS_H\n\
+#define __SRC_SMITH_MRCI_TASKS_H\n\
 \n"
 
 footer2 = "\n#endif\n#endif\n\n"
 
-f = open('CASPT2_tasks.h', 'r')
+f = open('MRCI_tasks.h', 'r')
 lines = f.read().split("\n")[39:][:-6]
 
 tasks = []
@@ -106,9 +106,9 @@ tmp = ""
 num = 0
 chunk = 50
 for i in range(len(tasks)):
-    if (num != 0 and num % chunk == 0): 
+    if (num != 0 and num % chunk == 0):
         n = num / chunk
-        fout = open("CASPT2_tasks" + str(n) + ".h", "w")
+        fout = open("MRCI_tasks" + str(n) + ".h", "w")
         out = header(n) + tmp + footer
         fout.write(out)
         fout.close()
@@ -117,17 +117,17 @@ for i in range(len(tasks)):
     tmp = tmp + tasks[i];
 
 n = (num-1) / chunk + 1
-fout = open("CASPT2_tasks" + str(n) + ".h", "w")
+fout = open("MRCI_tasks" + str(n) + ".h", "w")
 out = header(n) + tmp + footer
 fout.write(out)
 fout.close()
 
-os.remove("CASPT2_tasks.h")
-fout = open("CASPT2_tasks.h", "w")
+os.remove("MRCI_tasks.h")
+fout = open("MRCI_tasks.h", "w")
 out = header2
 for i in range(n+1):
     if (i > 0):
-        out += "#include <src/smith/CASPT2_tasks" + str(i) + ".h>\n"
+        out += "#include <src/smith/MRCI_tasks" + str(i) + ".h>\n"
 out += footer2
 fout.write(out)
 fout.close()

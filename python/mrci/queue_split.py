@@ -5,9 +5,9 @@ import re
 
 
 def header(n) :
-    return "//\n\
+    out = "//\n\
 // BAGEL - Parallel electron correlation program.\n\
-// Filename: CASPT2_tasks" + str(n) + ".cc\n\
+// Filename: MRCI" + n + ".cc\n\
 // Copyright (C) 2014 Shiozaki group\n\
 //\n\
 // Author: Shiozaki group <shiozaki@northwestern.edu>\n\
@@ -33,54 +33,55 @@ def header(n) :
 #include <bagel_config.h>\n\
 #ifdef COMPILE_SMITH\n\
 \n\
-#include <src/smith/CASPT2_tasks" + str(n) + ".h>\n\
-\n\
+\n"
+    if (n == ""):
+        out += "\
+#include <src/util/math/davidson.h>\n\
+#include <src/smith/extrap.h>\n"
+    out += "\
+#include <src/smith/MRCI.h>\n"
+    return out
+
+def insert():
+    return "#include <src/smith/MRCI_tasks.h>\n"
+
+def header2():
+    return "\n\
 using namespace std;\n\
 using namespace bagel;\n\
 using namespace bagel::SMITH;\n\
-using namespace bagel::SMITH::CASPT2;\n\
 \n\
 "
 
 footer = "#endif\n"
 
-f = open('CASPT2_tasks.cc', 'r')
-lines = f.read().split("\n")[33:]
+f = open('MRCI.cc', 'r')
+lines = f.read().split("\n")[35:]
 
 tasks = []
 tmp = ""
 
 for line in lines:
-    if (len(line) >= 9 and line[0:9] == "void Task"):
+    if (len(line) >= 17 and (line[0:17] == "shared_ptr<Queue>" or line[0:13] == "MRCI::MRCI::M")):
         if (tmp != ""):
             tasks.append(tmp)
             tmp = ""
-    if (line != ""):
-        tmp += line + "\n"
-        if (line == "}"):
-            tmp += "\n"
+    tmp += line + "\n"
+    if (line == "}"):
+        tmp += "\n"
 tasks.append(tmp)
 
-p = re.compile('[0-9]+')
-tmp = ""
-num = 0
-chunk = 50
-n = 1
-for task in tasks:
-    num = int(p.search(task).group())
-    if (num != 0 and num >= n*chunk): 
-        fout = open("CASPT2_tasks" + str(n) + ".cc", "w")
-        out = header(n) + tmp + footer
-        fout.write(out)
-        fout.close()
-        tmp = ""
-        n = n+1 
-    tmp = tmp + task;
+p = re.compile('make_[a-z0-9]+q')
+for task in tasks[0:-1]:
+    tag = p.search(task).group()[5:]
+    fout = open("MRCI_" + tag + ".cc", "w")
+    out = header("_" + tag + "q") + insert() + header2() + task + footer
+    fout.write(out)
+    fout.close()
 
-n = (num-1) / chunk + 1
-fout = open("CASPT2_tasks" + str(n) + ".cc", "w")
-out = header(n) + tmp + footer
+os.remove("MRCI.cc")
+
+fout = open("MRCI.cc", "w")
+out = header("") + header2() + tasks[len(tasks)-1] + footer
 fout.write(out)
 fout.close()
-
-os.remove("CASPT2_tasks.cc")

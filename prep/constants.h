@@ -52,7 +52,7 @@ static std::string header() {
 
 static std::string footer(const std::string res, const std::string energy = "", const std::string correction = "",
                           const std::string density = "", const std::string density1 = "", const std::string density2 = "",
-                          const std::string dedci = "", const std::string source = "") {
+                          const std::string dedci = "", const std::string source = "", const std::string norm = "") {
   std::stringstream mm;
 
   mm << "  list<shared_ptr<Tree>> trees = {" << res;
@@ -63,6 +63,7 @@ static std::string footer(const std::string res, const std::string energy = "", 
   if (!density1.empty())   mm << ", " << density1;
   if (!density2.empty())   mm << ", " << density2;
   if (!dedci.empty())      mm << ", " << dedci;
+  if (!norm.empty())       mm << ", " << norm;
   mm <<  "};" << std::endl;
   mm << "  auto fr = make_shared<Forest>(trees);" << std::endl;
 
@@ -110,6 +111,10 @@ static std::string footer(const std::string res, const std::string energy = "", 
     mm << "  cout << std::endl << \"   ***  Correlated norm <1|1> ***\" << std::endl << std::endl;" << std::endl;
     mm << "  " << correction << "->print();" << std::endl;
   }
+  if (!norm.empty()) {
+    mm << "  cout << std::endl << \"   ***  Norm <omega|1> ***\" << std::endl << std::endl;" << std::endl;
+    mm << "  " << norm << "->print();" << std::endl;
+  }
   if (!density.empty()) {
     mm << "  cout << std::endl << \"   ***  Correlated one-body density matrix d2 ***\" << std::endl << std::endl;" << std::endl;
     mm << "  " << density << "->print();" << std::endl;
@@ -133,8 +138,8 @@ static std::string footer(const std::string res, const std::string energy = "", 
   return mm.str();
 }
 
-static std::string footer_ci(const std::string res, const std::string corr, const std::string source) {
-  return footer(res, "", corr, "", "", "", "", source);
+static std::string footer_ci(const std::string res, const std::string source, const std::string norm) {
+  return footer(res, "", "", "", "", "", "", source, norm);
 }
 
 
