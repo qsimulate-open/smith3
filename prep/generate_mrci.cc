@@ -115,9 +115,7 @@ int main() {
   // residual equations //
   shared_ptr<Equation> eq0(new Equation(theory, "ra", {dum, proj_list, hc, t_list}));
   shared_ptr<Equation> eq1(new Equation(theory, "rb", {dum, proj_list, H, t_list}, 0.5));
-  shared_ptr<Equation> eq2(new Equation(theory, "rc", {dum, proj_list, t_list}, -1.0, "e0"));
   eq0->merge(eq1);
-  eq0->merge(eq2);
   eq0->set_tree_type("residual");
   cout << eq0->generate();
 
@@ -127,12 +125,12 @@ int main() {
   eq3->set_tree_type("residual", "source");
   cout << eq3->generate();
 
-  shared_ptr<Equation> eq5(new Equation(theory, "ca", {dum, t_dagger, t_list}));
-  eq5->set_tree_type("energy", "corr");
-  cout << eq5->generate();
+  shared_ptr<Equation> eq2(new Equation(theory, "rc", {dum, proj_list, t_list}));
+  eq2->set_tree_type("residual", "norm");
+  cout << eq2->generate();
 
   // done. generate the footer
-  cout << footer_ci(eq0->tree_label(), eq5->tree_label(), eq3->tree_label()) << endl;
+  cout << footer_ci(eq0->tree_label(), eq3->tree_label(), eq2->tree_label()) << endl;
 
 
   return 0;
