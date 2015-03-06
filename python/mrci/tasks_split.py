@@ -77,7 +77,7 @@ for task in tasks:
         n = n+1
     tmp = tmp + task;
 
-n = (num-1) / chunk + 1
+n = num / chunk + 1
 fout = open("MRCI_tasks" + str(n) + ".cc", "w")
 out = header(n) + tmp + footer
 fout.write(out)
