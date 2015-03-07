@@ -170,7 +170,6 @@ void Operator::refresh_indices(map<shared_ptr<const Index>, int>& dict,
 
     // set all the spins into operators
     (*get<0>(i))->set_spin(rho(get<2>(i)));
-//  *get<0>(i) = (*get<0>(i))->set_spin(rho(get<2>(i)));
   }
 }
 

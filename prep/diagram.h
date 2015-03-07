@@ -56,17 +56,9 @@ class Diagram {
     std::string diagram_str() const {
       std::stringstream ss;
       if (!ci_derivative_) {
-        if (fac_ == 1.0) {
-          ss << "  auto " << diag_label() << " = make_shared<Diagram>(" << label() << (scalar().empty() ? "" : ", \""+scalar()+"\"") << ");" << std::endl;
-        } else {
-          ss << "  auto " << diag_label() << " = make_shared<Diagram>(" << label() << ", " << fac_ << (scalar().empty() ? "" : ", \""+scalar()+"\"") << ");" << std::endl;
-        }
+        ss << "  auto " << diag_label() << " = make_shared<Diagram>(" << label() << ", " << fac_ << ", \"" << scalar() << "\"" << ");" << std::endl;
       } else {
-        if (fac_ == 1.0) {
-          ss << "  auto " << diag_label() << " = make_shared<Diagram>(" << label() << (scalar().empty() ? "" : ", \""+scalar()+"\"") << (braket_.first == true ? ", make_pair(true, false));" : ", make_pair(false, true));") << std::endl;
-        } else {
-          ss << "  auto " << diag_label() << " = make_shared<Diagram>(" << label() << ", " << fac_ << (scalar().empty() ? "" : ", \""+scalar()+"\"") << (braket_.first == true ? ", make_pair(true, false));" : ", make_pair(false, true));") << std::endl;
-        }
+        ss << "  auto " << diag_label() << " = make_shared<Diagram>(" << label() << ", " << fac_ << ", \"" << scalar() << "\"" << (braket_.first == true ? ", make_pair(true, false));" : ", make_pair(false, true));") << std::endl;
       }
       return ss.str();
     };

@@ -59,21 +59,10 @@ class Diagram {
 
 
   public:
-    /// Construct diagram from operator list. Set prefactor and dagger information.
-    Diagram(std::list<std::shared_ptr<Operator>> op) : Diagram(op, 1.0, "", std::make_pair(false,false)) { }
-    /// Construct diagram from operator list and scalar.  Set prefactor to 1.0 and dagger information.
-    Diagram(std::list<std::shared_ptr<Operator>> op, std::string s) : Diagram(op, 1.0, s, std::make_pair(false,false)) { }
-    /// Construct diagram from operator list and prefactor. Set dagger information.
-    Diagram(std::list<std::shared_ptr<Operator>> op, double d) : Diagram(op, d, "", std::make_pair(false,false)) { }
     /// Construct diagram from operator list and prefactor and scalar. Set dagger information.
-    Diagram(std::list<std::shared_ptr<Operator>> op, double d, std::string s) : Diagram(op, d, s, std::make_pair(false,false)) { }
-    // similar to previous, but adds bra and ket.
-    Diagram(std::list<std::shared_ptr<Operator>> op, std::pair<bool, bool> braket) : Diagram(op, 1.0, "", braket) { }
-    Diagram(std::list<std::shared_ptr<Operator>> op, std::string s, std::pair<bool, bool> braket) : Diagram(op, 1.0, s, braket) { }
-    Diagram(std::list<std::shared_ptr<Operator>> op, double d, std::pair<bool, bool> braket) : Diagram(op, d, "", braket) { }
-
-    // full diagram
-    Diagram(std::list<std::shared_ptr<Operator>> op, double d, std::string s, std::pair<bool, bool> braket) : op_(op), fac_(d), scalar_(s), bra_(braket.first), ket_(braket.second), absorbed_(false), dagger_(false) { }
+    Diagram(std::list<std::shared_ptr<Operator>> op, double d = 1.0, std::string s = "", std::pair<bool, bool> braket = std::make_pair(false,false))
+      : op_(op), fac_(d), scalar_(s), bra_(braket.first), ket_(braket.second), absorbed_(false), dagger_(false) {
+    }
     /// Construct diagram with prefactor and dagger information. Needed in equation ctor copy().
     Diagram() : fac_(1.0), bra_(false), ket_(false), absorbed_(false), dagger_(false) { }
     // copy constructor is complicated but preserves the same topology as this.

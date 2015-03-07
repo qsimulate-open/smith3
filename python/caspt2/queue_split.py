@@ -50,7 +50,7 @@ using namespace bagel::SMITH;\n\
 footer = "#endif\n"
 
 f = open('CASPT2.cc', 'r')
-lines = f.read().split("\n")[33:]
+lines = f.read().split("\n")[35:]
 
 tasks = []
 tmp = ""
