@@ -64,13 +64,13 @@ shared_ptr<Diagram> Diagram::copy() const {
     for (auto i = it->op().begin(); i != it->op().end(); ++i, ++j) {
       auto s = indexmap.find(*get<0>(*i));
       if (s == indexmap.end()) {
-        indexmap.insert(make_pair(*get<0>(*i), *get<0>(*j)));
+        indexmap.emplace(*get<0>(*i), *get<0>(*j));
       } else {
         *get<0>(*j) = s->second; // one of the operators has s->second...
       }
       auto z = spinmap.find(it->rho(get<2>(*i)));
       if (z == spinmap.end()) {
-        spinmap.insert(make_pair(it->rho(get<2>(*i)), a->rho(get<2>(*j))));
+        spinmap.emplace(it->rho(get<2>(*i)), a->rho(get<2>(*j)));
       } else {
         a->set_rho(get<2>(*j), z->second); // one of the operators has z->second...
       }
