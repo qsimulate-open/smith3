@@ -114,8 +114,10 @@ const list<shared_ptr<const Index>> Active::index() const {
     if (!done && (*i)->delta().size() == 0) {
       done = true;
       j = i;
+#if 0
     } else if ((*i)->delta().size() == 0) {
       throw logic_error("I think this won't happen. Active::index()");
+#endif
     }
   }
   return (*j)->index();
@@ -173,3 +175,23 @@ vector<int> Active::required_rdm() const {
   return out;
 }
 
+
+void Active::merge(shared_ptr<const Active> o, const double fac) {
+  // first merge
+  for (auto& i : o->rdm_) {
+    shared_ptr<RDM> tmp = i->copy();
+    tmp->fac() *= fac;
+    rdm_.push_back(tmp);
+  }
+  // then simplify
+  list<list<shared_ptr<RDM>>::iterator> rm;
+  for (auto i = rdm_.begin(); i != rdm_.end(); ++i) {
+    auto j = i; ++j;
+    for ( ; j != rdm_.end(); ++j) {
+      if ((*i)->identical(*j)) {
+        (*i)->fac() += (*j)->fac();
+        rm.push_back(j);
+      }
+    }
+  }
+}

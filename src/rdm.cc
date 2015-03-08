@@ -176,3 +176,6 @@ bool RDM::operator==(const RDM& o) const {
 }
 
 
+bool RDM::identical(shared_ptr<const RDM> o) const {
+  return false;
+}

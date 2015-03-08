@@ -339,6 +339,16 @@ void Diagram::active() {
 }
 
 
+void Diagram::merge_active(shared_ptr<const Diagram> o) {
+  auto j = o->op_.begin();
+  for (auto& i : op_)
+    if (!i->identical(*j++))
+      throw logic_error("illegal call of merge_active");
+  const double factor = o->fac_ / fac_;
+  rdm_->merge(o->rdm_, factor);
+}
+
+
 bool Diagram::permute(const bool proj) {
   bool found = false;
   // try the last one. If it returns zero, then go up.

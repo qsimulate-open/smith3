@@ -67,6 +67,8 @@ class Equation {
     void active();
     /// Identifies terms which are the same (via permuations) and updating term prefactor. Also can add a dagger to diagram.
     void duplicates();
+    /// Identifies terms which can be treated simultaneously and merge active
+    void simplify();
     /// Reorder tensors to facilitate maching
     void reorder_tensors();
 

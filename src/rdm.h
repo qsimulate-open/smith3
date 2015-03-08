@@ -121,6 +121,7 @@ class RDM {
 
     /// Compares for equivalency based on prefactor, indices, delta, and braket.
     bool operator==(const RDM& o) const;
+    bool identical(std::shared_ptr<const RDM> o) const;
 
     // virtual public functions
     /// Application of Wick's theorem and is controlled by const Index::num_. See active.cc. One index is going to be annihilated. done is updated inside the function.

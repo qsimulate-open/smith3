@@ -84,6 +84,9 @@ class Active {
     /// Map from ket reindexing.
     std::map<int, int> num_map() const { return num_map_; }
 
+    /// Merge two Active's
+    void merge(std::shared_ptr<const Active> o, const double fac);
+
 };
 
 }

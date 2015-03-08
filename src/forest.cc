@@ -351,6 +351,7 @@ OutStream Forest::generate_algorithm() const {
     out.ee << "    queue = make_residualq();" << endl;
     out.ee << "    while (!queue->done())" << endl;
     out.ee << "      queue->next_compute();" << endl;
+    out.ee << "    r->ax_plus_y(refen, n);" << endl;
     out.ee << endl;
     out.ee << "    a0 = make_shared<Amplitude>(0.0, t2, n, this);" << endl;
     out.ee << "    r0 = make_shared<Residual>(dot_product_transpose(s, t2), r, this);" << endl;

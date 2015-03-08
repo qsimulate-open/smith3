@@ -172,3 +172,19 @@ void Equation::duplicates_(const bool proj) {
 }
 
 
+void Equation::simplify() {
+  list<list<shared_ptr<Diagram>>::iterator> rm;
+  for (auto i = diagram_.begin(); i != diagram_.end(); ++i) {
+    // find identical
+    auto j = i;
+    for (++j ; j != diagram_.end(); ++j) {
+      if ((*i)->identical(*j)) {
+        (*j)->merge_active(*i);
+        rm.push_back(i);
+      }
+    }
+  }
+  for (auto& it : rm) diagram_.erase(it);
+}
+
+
