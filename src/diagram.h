@@ -115,6 +115,9 @@ class Diagram {
     /// Sort the order of tensors to faciliate matching diagrams
     void reorder_tensors();
 
+    /// Merge Active from identical diagram with different Active
+    void merge_active(std::shared_ptr<const Diagram> o);
+
     /// Processes the active part. Performs Wick's in constructor of an Active object.
     void active();
 
