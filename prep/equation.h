@@ -115,8 +115,10 @@ class Equation {
       if (ci_derivative_) ss << "  " << diagram_.front()->eqn_label() << "->absorb_ket();" << std::endl;
       ss << "  " << diagram_.front()->eqn_label() << "->duplicates();" << std::endl;
       ss << "  " << diagram_.front()->eqn_label() << "->active();" << std::endl;
-      ss << "  " << diagram_.front()->eqn_label() << "->reorder_tensors();" << std::endl;
-      ss << "  " << diagram_.front()->eqn_label() << "->simplify();" << std::endl;
+      if (method_ != "CASPT2") {
+        ss << "  " << diagram_.front()->eqn_label() << "->reorder_tensors();" << std::endl;
+        ss << "  " << diagram_.front()->eqn_label() << "->simplify();" << std::endl;
+      }
 
       if (!tree_type_.empty() && tree_type_ == "residual") {
           ss << "  auto " << tree_label() << " = make_shared<Residual>(e" << diagram_.front()->label() << ", \"" << tree_name_ << "\");" << std::endl;
