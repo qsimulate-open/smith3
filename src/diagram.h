@@ -110,7 +110,10 @@ class Diagram {
 
 
     /// Refresh the indices for each operator in diagram (ie calls operators refresh_indices function).
-    void refresh_indices();
+    void refresh_indices(std::list<std::shared_ptr<const Index>> target = std::list<std::shared_ptr<const Index>>());
+
+    /// Sort the order of tensors to faciliate matching diagrams
+    void reorder_tensors();
 
     /// Processes the active part. Performs Wick's in constructor of an Active object.
     void active();

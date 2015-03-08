@@ -25,6 +25,7 @@
 
 
 #include <iomanip>
+#include <algorithm>
 #include "diagram.h"
 
 using namespace std;
@@ -123,12 +124,56 @@ bool Diagram::has_target_index() const {
 }
 
 
-void Diagram::refresh_indices() {
+void Diagram::refresh_indices(list<shared_ptr<const Index>> target) {
   map<shared_ptr<const Index>, int> dict;
   map<shared_ptr<const Index>, int> done;
   map<shared_ptr<Spin>, int> spin;
+
+  // first register target indices in the map
+  for (auto& i : target) {
+    if (i->num() >= 0)
+      dict.emplace(i, i->num());
+    else
+      done.emplace(i, i->num());
+  }
+
   for (auto& i : op_)
     i->refresh_indices(dict, done, spin);
+}
+
+
+void Diagram::reorder_tensors() {
+cout <<  "-------------" << endl;
+  for (auto& i : op_) { i->print();}
+rdm()->print();
+cout << endl;
+  vector<shared_ptr<Operator>> tmp(op_.begin(), op_.end());
+  sort(tmp.begin(), tmp.end(), [](shared_ptr<Operator> a, shared_ptr<Operator> b) {
+                                 bool out;
+                                 if (a->label() == "proj")      out = true;
+                                 else if (b->label() == "proj") out = false;
+                                 else if (a->label() == "t2dagger")   out = true;
+                                 else if (b->label() == "t2dagger")   out = false;
+                                 else if (a->label() == "h1")   out = true;
+                                 else if (b->label() == "h1")   out = false;
+                                 else if (a->label() == "f1")   out = true;
+                                 else if (b->label() == "f1")   out = false;
+                                 else if (a->label() == "v2")   out = true;
+                                 else if (b->label() == "v2")   out = false;
+                                 else if (a->label() == "t2")   out = true;
+                                 else if (b->label() == "t2")   out = false;
+                                 else {
+                                    cout << a->label() << " " << b->label() << endl;
+                                    throw logic_error("I have not thought about this yet");
+                                 }
+                                 return out;
+                               });
+  op_ = list<shared_ptr<Operator>>(tmp.begin(), tmp.end());
+  refresh_indices(target_index());
+cout << endl;
+  for (auto& i : op_) { i->print(); }
+rdm()->print();
+cout << endl;
 }
 
 

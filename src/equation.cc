@@ -108,6 +108,10 @@ void Equation::active() {
   for (auto& i : diagram_) i->active();
 }
 
+void Equation::reorder_tensors() {
+  for (auto& i : diagram_) i->reorder_tensors();
+}
+
 void Equation::refresh_indices() {
   for (auto& i : diagram_) i->refresh_indices();
 }

@@ -133,8 +133,8 @@ bool Operator::contracted() const {
 
 
 void Operator::refresh_indices(map<shared_ptr<const Index>, int>& dict,
-                         map<shared_ptr<const Index>, int>& done,
-                         map<shared_ptr<Spin>, int>& spin) {
+                               map<shared_ptr<const Index>, int>& done,
+                               map<shared_ptr<Spin>, int>& spin) {
   //
   // Note: seperate labeling for those still in the operators and those
   //       already contracted. This is to make it easy to get the minus sign in the
@@ -146,7 +146,7 @@ void Operator::refresh_indices(map<shared_ptr<const Index>, int>& dict,
       auto iter = dict.find(*get<0>(i));
       if (iter == dict.end()) {
         const int c = dict.size();
-        dict.insert(make_pair(*get<0>(i), c));
+        dict.emplace(*get<0>(i), c);
         (*get<0>(i))->set_num(c);
       }
     // if this is already contracted, we use negative values (does not have to be, though - just for print out)
@@ -154,7 +154,7 @@ void Operator::refresh_indices(map<shared_ptr<const Index>, int>& dict,
       auto iter = done.find(*get<0>(i));
       if (iter == done.end()) {
         const int c = done.size();
-        done.insert(make_pair(*get<0>(i), -c-1));
+        done.emplace(*get<0>(i), -c-1);
         (*get<0>(i))->set_num(-c-1);
       }
     }
@@ -163,7 +163,7 @@ void Operator::refresh_indices(map<shared_ptr<const Index>, int>& dict,
     if (get<1>(i) != -1) {
       if (ster == spin.end()) {
         const int c = spin.size();
-        spin.insert(make_pair(rho(get<2>(i)), c));
+        spin.emplace(rho(get<2>(i)), c);
         rho(get<2>(i))->set_num(c);
       }
     }
