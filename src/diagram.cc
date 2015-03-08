@@ -245,16 +245,22 @@ bool Diagram::reduce_one_noactive(const int skip) {
   // skip until it comes to skip
   int cnt = 0;
   shared_ptr<Spin> newspin, oldspin;
+  bool closed = false;
   for (auto j = op_.begin(); j != op_.end(); ++j) {
     // cannot contract with self
-    if (i == j) continue;
+    if (i == j) {
+      closed = true;
+      continue;
+    }
     // all possible contraction pattern taken for *j (returned as a list).
     if (cnt + (*j)->num_nodagger() > skip) {
       tuple<double,shared_ptr<Spin>,shared_ptr<Spin>> tmp = (*j)->contract(data, skip-cnt);
-      fac_ *= get<0>(tmp);
-      newspin = get<1>(tmp);
-      oldspin = get<2>(tmp);
-      found = true;
+      if ((closed && (*data.first)->label() == "c") || (!closed && (*data.first)->label() == "a")) {
+        fac_ *= get<0>(tmp);
+        newspin = get<1>(tmp);
+        oldspin = get<2>(tmp);
+        found = true;
+      }
       break;
     } else {
       cnt += (*j)->num_nodagger();
