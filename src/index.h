@@ -102,11 +102,11 @@ class Index {
   public:
     /// Make index object from label and dagger info. Initialize label, number(0), dagger.
     Index(std::string lab, bool dag) { core_ = std::make_shared<Index_Core>(lab, dag); }
-    Index(const Index& o) { core_ = std::make_shared<Index_Core>(*o.core_); }
+    Index(const Index& o) : spin_(o.spin_) { core_ = std::make_shared<Index_Core>(*o.core_); }
     /// Make copy of the index but with reversed dagger info
-    Index(const Index& o, bool b) { core_ = std::make_shared<Index_Core>(*o.core_, b); }
+    Index(const Index& o, bool b) : spin_(o.spin_) { core_ = std::make_shared<Index_Core>(*o.core_, b); }
     /// Make copy of index but with altered number
-    Index(const Index& o, int i) { core_ = std::make_shared<Index_Core>(*o.core_, i); }
+    Index(const Index& o, int i) : spin_(o.spin_) { core_ = std::make_shared<Index_Core>(*o.core_, i); }
     Index(std::shared_ptr<Index_Core> c) : core_(c) { }
     ~Index() { }
 
