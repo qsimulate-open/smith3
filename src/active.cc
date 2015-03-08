@@ -194,4 +194,5 @@ void Active::merge(shared_ptr<const Active> o, const double fac) {
       }
     }
   }
+  for (auto& i : rm) rdm_.erase(i);
 }

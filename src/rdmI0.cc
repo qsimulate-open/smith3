@@ -133,8 +133,12 @@ list<shared_ptr<RDM>> RDMI0::reduce_one(list<int>& done) const {
 }
 
 
-string RDMI0::generate(string indent, const string tag, const list<shared_ptr<const Index>>& index, const list<shared_ptr<const Index>>& merged, const string mlab, vector<string> in_tensors, const bool use_blas) {
-  return merged.empty() ? generate_not_merged(indent, tag, index, in_tensors) : generate_merged(indent, tag, index, merged, mlab, in_tensors, use_blas);
+string RDMI0::generate(string indent, const string tag, const list<shared_ptr<const Index>>& index, const list<shared_ptr<const Index>>& merged,
+                       const string mlab, vector<string> in_tensors, const bool use_blas) {
+  if (fabs(fac_) < 1.e-15)
+    return "";
+  else
+    return merged.empty() ? generate_not_merged(indent, tag, index, in_tensors) : generate_merged(indent, tag, index, merged, mlab, in_tensors, use_blas);
 }
 
 

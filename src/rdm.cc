@@ -177,5 +177,31 @@ bool RDM::operator==(const RDM& o) const {
 
 
 bool RDM::identical(shared_ptr<const RDM> o) const {
-  return false;
+  bool out = true;
+  out &= bra_ == o->bra();
+  out &= ket_ == o->ket();
+  out &= index_.size() == o->index().size();
+  out &= delta_.size() == o->delta().size();
+  if (!out) return out;
+
+  assert(index_.size() % 2 == 0);
+  for (auto i = index_.begin(); i != index_.end(); ++i) {
+    const int a = (*i++)->num();
+    const int b = (*i)->num();
+    bool found = false;
+    for (auto j = o->index_.begin(); j != o->index_.end(); ++j)
+      if (a == (*j++)->num() && b == (*j)->num())
+        found = true;
+    out &= found;
+  }
+  for (auto& i : delta_) {
+    const int a = i.first->num();
+    const int b = i.second->num();
+    bool found = false;
+    for (auto& j : o->delta_)
+      if ((a == j.first->num() && b == j.second->num()) || (a == j.second->num() && b == j.first->num()))
+        found = true;
+    out &= found;
+  }
+  return out;
 }
