@@ -143,10 +143,6 @@ void Diagram::refresh_indices(list<shared_ptr<const Index>> target) {
 
 
 void Diagram::reorder_tensors() {
-cout <<  "-------------" << endl;
-  for (auto& i : op_) { i->print();}
-rdm()->print();
-cout << endl;
   vector<shared_ptr<Operator>> tmp(op_.begin(), op_.end());
   sort(tmp.begin(), tmp.end(), [](shared_ptr<Operator> a, shared_ptr<Operator> b) {
                                  bool out;
@@ -170,10 +166,6 @@ cout << endl;
                                });
   op_ = list<shared_ptr<Operator>>(tmp.begin(), tmp.end());
   refresh_indices(target_index());
-cout << endl;
-  for (auto& i : op_) { i->print(); }
-rdm()->print();
-cout << endl;
 }
 
 
