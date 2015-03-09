@@ -60,7 +60,9 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
           if (
 #if 0
               // all correct in this block
-              (l == "c" && k == "c" && j == "a" && i == "a") //||
+              (l == "c" && k == "c" && j == "a" && i == "a") ||
+#endif
+#if 1
               (l == "x" && k == "c" && j == "a" && i == "a") ||
 #endif
 #if 1
@@ -115,11 +117,16 @@ int main() {
   // residual equations //
   shared_ptr<Equation> eq0(new Equation(theory, "ra", {dum, proj_list, hc, t_list}));
   shared_ptr<Equation> eq1(new Equation(theory, "rb", {dum, proj_list, H, t_list}, 0.5));
-  shared_ptr<Equation> eq0m(new Equation(theory, "ram", {dum, proj_list, t_list, hc}, -1.0));
-  shared_ptr<Equation> eq1m(new Equation(theory, "rbm", {dum, proj_list, t_list, H}, -0.5));
   eq0->merge(eq1);
-  eq0->merge(eq0m);
-  eq0->merge(eq1m);
+  for (int i = 0; i != proj_list.size(); ++i) {
+    stringstream ss, tt;
+    ss << "ra" << i;
+    tt << "rb" << i;
+    shared_ptr<Equation> eq0m(new Equation(theory, ss.str(), {dum, vector<shared_ptr<Tensor>>{proj_list[i]}, vector<shared_ptr<Tensor>>{t_list[i]}, hc}, -1.0));
+    shared_ptr<Equation> eq1m(new Equation(theory, tt.str(), {dum, vector<shared_ptr<Tensor>>{proj_list[i]}, vector<shared_ptr<Tensor>>{t_list[i]}, H},  -0.5));
+    eq0->merge(eq0m);
+    eq0->merge(eq1m);
+  }
   eq0->set_tree_type("residual");
   cout << eq0->generate();
 
