@@ -58,17 +58,11 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
         for (auto& l : label) {
           // full CASPT2
           if (
-#if 0
+#if 1
               // all correct in this block
               (l == "c" && k == "c" && j == "a" && i == "a") ||
-#endif
-#if 1
               (l == "x" && k == "c" && j == "a" && i == "a") ||
-#endif
-#if 1
-              (l == "x" && k == "x" && j == "a" && i == "a") //||
-#endif
-#if 0
+              (l == "x" && k == "x" && j == "a" && i == "a") ||
               (l == "c" && k == "c" && j == "x" && i == "a") ||
               (l == "c" && k == "c" && j == "x" && i == "x") ||
               (l == "x" && k == "c" && j == "x" && i == "x") ||
@@ -120,8 +114,8 @@ int main() {
   eq0->merge(eq1);
   for (int i = 0; i != proj_list.size(); ++i) {
     stringstream ss, tt;
-    ss << "ra" << i;
-    tt << "rb" << i;
+    ss << "ra_" << i;
+    tt << "rb_" << i;
     shared_ptr<Equation> eq0m(new Equation(theory, ss.str(), {dum, vector<shared_ptr<Tensor>>{proj_list[i]}, vector<shared_ptr<Tensor>>{t_list[i]}, hc}, -1.0));
     shared_ptr<Equation> eq1m(new Equation(theory, tt.str(), {dum, vector<shared_ptr<Tensor>>{proj_list[i]}, vector<shared_ptr<Tensor>>{t_list[i]}, H},  -0.5));
     eq0->merge(eq0m);
