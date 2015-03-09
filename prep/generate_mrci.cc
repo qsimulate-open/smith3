@@ -112,7 +112,7 @@ int main() {
   shared_ptr<Equation> eq0(new Equation(theory, "ra", {dum, proj_list, hc, t_list}));
   shared_ptr<Equation> eq1(new Equation(theory, "rb", {dum, proj_list, H, t_list}, 0.5));
   eq0->merge(eq1);
-  for (int i = 0; i != proj_list.size(); ++i) {
+  for (int i = 0; i != 7; ++i) {
     stringstream ss, tt;
     ss << "ra_" << i;
     tt << "rb_" << i;
@@ -121,6 +121,10 @@ int main() {
     eq0->merge(eq0m);
     eq0->merge(eq1m);
   }
+  shared_ptr<Equation> eq0m(new Equation(theory, "ra_8", {dum, vector<shared_ptr<Tensor>>{proj_list[7], proj_list[8]}, vector<shared_ptr<Tensor>>{t_list[7], t_list[8]}, hc}, -1.0));
+  shared_ptr<Equation> eq1m(new Equation(theory, "rb_8", {dum, vector<shared_ptr<Tensor>>{proj_list[7], proj_list[8]}, vector<shared_ptr<Tensor>>{t_list[7], t_list[8]}, H},  -0.5));
+  eq0->merge(eq0m);
+  eq0->merge(eq1m);
   eq0->set_tree_type("residual");
   cout << eq0->generate();
 
