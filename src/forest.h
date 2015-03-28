@@ -56,6 +56,10 @@ class Forest {
     /// Intermediate tensors
     mutable std::vector<std::shared_ptr<Tensor>> itensors_;
 
+    /// Returns the main body of the CASPT2 driver
+    std::string caspt2_main_driver_() const;
+    /// Returns the main body of the MS-MRCI driver
+    std::string msmrci_main_driver_() const;
 
   public:
     Forest(std::list<std::shared_ptr<Tree>> o) : trees_(o), forest_name_(trees_.front()->tree_name()) { }

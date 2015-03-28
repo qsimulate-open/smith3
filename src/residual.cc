@@ -42,15 +42,16 @@ OutStream Residual::create_target(const int i) const {
   out.tt << "    IndexRange virt_;" << endl;
   if (label_ == "deci")
     out.tt << "    IndexRange ci_;" << endl;
+  out.tt << "    const bool reset_;" << endl;
   out.tt << "" << endl;
   out.tt << "    void compute_() {" << endl;
-  out.tt << "      " << target_name__(label_) << "_->zero();" << endl;
+  out.tt << "      if (reset_) " << target_name__(label_) << "_->zero();" << endl;
   out.tt << "    }" << endl;
   out.tt << "" << endl;
   out.tt << "  public:" << endl;
-  out.tt << "    Task" << i << "(std::vector<std::shared_ptr<Tensor>> t);" << endl;
+  out.tt << "    Task" << i << "(std::vector<std::shared_ptr<Tensor>> t, const bool reset);" << endl;
 
-  out.cc << "Task" << i << "::Task" << i << "(vector<shared_ptr<Tensor>> t) {" << endl;
+  out.cc << "Task" << i << "::Task" << i << "(vector<shared_ptr<Tensor>> t, const bool reset) : reset_(reset) {" << endl;
   out.cc << "  " << target_name__(label_) << "_ =  t[0];" << endl;
   out.cc << "}" << endl << endl << endl;
 
@@ -59,7 +60,7 @@ OutStream Residual::create_target(const int i) const {
 
   out.ee << "  auto " << label_ << "q = make_shared<Queue>();" << endl;
   out.ee << "  vector<shared_ptr<Tensor>> tensor" << i << " = {" << target_name__(label_) << "};" << endl;
-  out.ee << "  auto task" << i << " = make_shared<Task" << i << ">(tensor" << i << ");" << endl;
+  out.ee << "  auto task" << i << " = make_shared<Task" << i << ">(tensor" << i << ", reset);" << endl;
   out.ee << "  " << label_ << "q->add_task(task" << i << ");" << endl << endl;
 
   return out;

@@ -69,8 +69,9 @@ OutStream Forest::generate_code() const {
   out << generate_gammas();
 
   for (auto& i : trees_) {
-    out.ss << "    std::shared_ptr<Queue> make_" << i->label() << "q();" << endl;
-    out.ee << "shared_ptr<Queue> " << forest_name_ << "::" << forest_name_ << "::make_" << i->label() << "q() {" << endl << endl;
+    out.ss << "    std::shared_ptr<Queue> make_" << i->label() << "q(const bool reset = true);" << endl;
+
+    out.ee << "shared_ptr<Queue> " << forest_name_ << "::" << forest_name_ << "::make_" << i->label() << "q(const bool reset) {" << endl << endl;
     if (i->label() != "deci")
       out.ee << "  array<shared_ptr<const IndexRange>,3> pindex = {{rclosed_, ractive_, rvirt_}};" << endl;
     else
@@ -122,39 +123,19 @@ OutStream Forest::generate_headers() const {
   out.ss << "" << endl;
   out.ss << "class " << forest_name_ << " : public SpinFreeMethod {" << endl;
   out.ss << "  protected:" << endl;
-  out.ss << "    using SpinFreeMethod::ref_;" << endl;
-  out.ss << "    using SpinFreeMethod::e0_;" << endl;
-  out.ss << "    using SpinFreeMethod::closed_;" << endl;
-  out.ss << "    using SpinFreeMethod::active_;" << endl;
-  out.ss << "    using SpinFreeMethod::virt_;" << endl;
-  out.ss << "    using SpinFreeMethod::ci_;" << endl;
-  out.ss << "    using SpinFreeMethod::rclosed_;" << endl;
-  out.ss << "    using SpinFreeMethod::ractive_;" << endl;
-  out.ss << "    using SpinFreeMethod::rvirt_;" << endl;
-  out.ss << "    using SpinFreeMethod::rci_;" << endl;
-  out.ss << "    using SpinFreeMethod::h1_;" << endl;
-  out.ss << "    using SpinFreeMethod::f1_;" << endl;
-  out.ss << "    using SpinFreeMethod::v2_;" << endl;
-  out.ss << "    using SpinFreeMethod::rdm1_;" << endl;
-  out.ss << "    using SpinFreeMethod::rdm2_;" << endl;
-  out.ss << "    using SpinFreeMethod::rdm3_;" << endl;
-  out.ss << "    using SpinFreeMethod::rdm4_;" << endl;
-  out.ss << "    using SpinFreeMethod::rdm1deriv_;" << endl;
-  out.ss << "    using SpinFreeMethod::rdm2deriv_;" << endl;
-  out.ss << "    using SpinFreeMethod::rdm3deriv_;" << endl;
-  out.ss << "    using SpinFreeMethod::rdm4deriv_;" << endl;
-  out.ss << "" << endl;
   out.ss << "    std::shared_ptr<Tensor> t2;" << endl;
   out.ss << "    std::shared_ptr<Tensor> r;" << endl;
   if (forest_name_ == "MRCI") {
     out.ss << "    std::shared_ptr<Tensor> s;" << endl;
     out.ss << "    std::shared_ptr<Tensor> n;" << endl;
   }
-  out.ss << "    std::shared_ptr<Tensor> den1;" << endl;
-  out.ss << "    std::shared_ptr<Tensor> den2;" << endl;
-  out.ss << "    std::shared_ptr<Tensor> Den1;" << endl;
-  out.ss << "    double correlated_norm_;" << endl;
-  out.ss << "    std::shared_ptr<Tensor> deci;" << endl;
+  if (forest_name_ == "CASPT2") {
+    out.ss << "    std::shared_ptr<Tensor> den1;" << endl;
+    out.ss << "    std::shared_ptr<Tensor> den2;" << endl;
+    out.ss << "    std::shared_ptr<Tensor> Den1;" << endl;
+    out.ss << "    double correlated_norm_;" << endl;
+    out.ss << "    std::shared_ptr<Tensor> deci;" << endl;
+  }
   out.ss << "" << endl;
 
   out.ee << "#include <src/util/math/davidson.h>" << endl;
@@ -275,17 +256,19 @@ OutStream Forest::generate_algorithm() const {
   out.ss << "    " << forest_name_ << "(std::shared_ptr<const SMITH_Info> ref);" << endl;
 
   out.ee << forest_name_ << "::" << forest_name_ << "::" << forest_name_ << "(shared_ptr<const SMITH_Info> ref) : SpinFreeMethod(ref) {" << endl;
-  out.ee << "  this->eig_ = f1_->diag();" << endl;
+  out.ee << "  eig_ = f1_->diag();" << endl;
   out.ee << "  t2 = init_amplitude();" << endl;
   out.ee << "  r = t2->clone();" << endl;
   if (forest_name_ == "MRCI") {
     out.ee << "  s = t2->clone();" << endl;
     out.ee << "  n = t2->clone();" << endl;
   }
-  out.ee << "  den1 = h1_->clone();" << endl;
-  out.ee << "  den2 = h1_->clone();" << endl;
-  out.ee << "  Den1 = v2_->clone();" << endl;
-  out.ee << "  deci = make_shared<Tensor>(vector<IndexRange>{ci_});" << endl;
+  if (forest_name_ == "CASPT2") {
+    out.ee << "  den1 = h1_->clone();" << endl;
+    out.ee << "  den2 = h1_->clone();" << endl;
+    out.ee << "  Den1 = v2_->clone();" << endl;
+    out.ee << "  deci = make_shared<Tensor>(vector<IndexRange>{ci_});" << endl;
+  }
   out.ee << "}" << endl << endl;
 
   out.ss << "    ~" << forest_name_ << "() {}" << endl;
@@ -295,80 +278,11 @@ OutStream Forest::generate_algorithm() const {
 
   out.ee << "void " << forest_name_ << "::" << forest_name_ << "::solve() {" << endl;
 
-  if (forest_name_ == "CASPT2") {
-    out.ee << "  Timer timer;" << endl;
-    out.ee << "  this->print_iteration();" << endl;
-    out.ee << "  int iter = 0;" << endl;
-    out.ee << "  for ( ; iter != ref_->maxiter(); ++iter) {" << endl;
-    out.ee << "    shared_ptr<Queue> energyq = make_energyq();" << endl;
-    out.ee << "    this->energy_ = accumulate(energyq);" << endl;
-    out.ee << "    shared_ptr<Queue> queue = make_residualq();" << endl;
-    out.ee << "    while (!queue->done())" << endl;
-    out.ee << "      queue->next_compute();" << endl;
-    out.ee << "    diagonal(r, t2);" << endl;
-    out.ee << "    this->energy_ += dot_product_transpose(r, t2);" << endl;
-    out.ee << "    const double err = r->rms();" << endl;
-    out.ee << "    this->print_iteration(iter, this->energy_, err);" << endl;
-    out.ee << endl;
-    out.ee << "    this->update_amplitude(t2, r);" << endl;
-    out.ee << "    r->zero();" << endl;
-    out.ee << "    if (err < ref_->thresh()) break;" << endl;
-    out.ee << "  }" << endl;
-    out.ee << "  this->print_iteration(iter == ref_->maxiter());" << endl;
-    out.ee << "  timer.tick_print(\"CASPT2 energy evaluation\");" << endl;
+  if (forest_name_ == "CASPT2")
+    out.ee << caspt2_main_driver_();
+  else if (forest_name_ == "MRCI")
+    out.ee << msmrci_main_driver_();
 
-  } else if (forest_name_ == "MRCI") {
-    out.ee << "  Timer timer;" << endl;
-    out.ee << "  this->print_iteration();" << endl;
-    out.ee << endl;
-    out.ee << "  auto queue = make_sourceq();" << endl;
-    out.ee << "  while (!queue->done())" << endl;
-    out.ee << "    queue->next_compute();" << endl;
-    out.ee << "  queue = make_normq();" << endl;
-    out.ee << "  while (!queue->done())" << endl;
-    out.ee << "    queue->next_compute();" << endl;
-    out.ee << endl;
-    out.ee << "  DavidsonDiag_<Amplitude, Residual> davidson(1, 10);" << endl;
-    out.ee << endl;
-    out.ee << "  const double core_nuc = this->core_energy_ + ref_->geom()->nuclear_repulsion();" << endl;
-    out.ee << "  const double refen = ref_->ciwfn()->energy(ref_->target()) - core_nuc; " << endl;
-    out.ee << "  auto a0 = make_shared<Amplitude>(1.0, t2, n, this);" << endl;
-    out.ee << "  auto r0 = make_shared<Residual>(refen, s, this);" << endl;
-    out.ee << "  davidson.compute(a0, r0);" << endl;
-    out.ee << "  r = davidson.residual().front()->tensor();" << endl;
-    out.ee << "  this->update_amplitude(t2, r);" << endl;
-    out.ee << endl;
-    out.ee << "  int iter = 0;" << endl;
-    out.ee << "  for ( ; iter != ref_->maxiter(); ++iter) {" << endl;
-    out.ee << "    queue = make_normq();" << endl;
-    out.ee << "    while (!queue->done())" << endl;
-    out.ee << "      queue->next_compute();" << endl;
-    out.ee << endl;
-    out.ee << "    const double scal = 1.0 / sqrt(dot_product_transpose(n, t2));" << endl;
-    out.ee << "    n->scale(scal);" << endl;
-    out.ee << "    t2->scale(scal);" << endl;
-    out.ee << endl;
-    out.ee << "    queue = make_residualq();" << endl;
-    out.ee << "    while (!queue->done())" << endl;
-    out.ee << "      queue->next_compute();" << endl;
-    out.ee << "    r->ax_plus_y(refen, n);" << endl;
-    out.ee << endl;
-    out.ee << "    a0 = make_shared<Amplitude>(0.0, t2, n, this);" << endl;
-    out.ee << "    r0 = make_shared<Residual>(dot_product_transpose(s, t2), r, this);" << endl;
-    out.ee << endl;
-    out.ee << "    this->energy_ = davidson.compute(a0, r0);" << endl;
-    out.ee << "    r = davidson.residual()[0]->tensor();" << endl;
-    out.ee << "    const double err = r->rms();" << endl;
-    out.ee << "    this->print_iteration(iter, this->energy_+core_nuc, err);" << endl;
-    out.ee << endl;
-    out.ee << "    t2->zero();" << endl;
-    out.ee << "    this->update_amplitude(t2, r);" << endl;
-    out.ee << endl;
-    out.ee << "    if (err < ref_->thresh()) break;" << endl;
-    out.ee << "  }" << endl;
-    out.ee << "  this->print_iteration(iter == ref_->maxiter());" << endl;
-    out.ee << "  timer.tick_print(\"MRCI energy evaluation\");" << endl;
-  }
   out.ee << "}" << endl;
   out.ee << endl;
   out.ee << "void " << forest_name_ << "::" << forest_name_ << "::solve_deriv() {" << endl;
@@ -409,14 +323,16 @@ OutStream Forest::generate_algorithm() const {
   out.ss << "      return sum;" << endl;
   out.ss << "    }" << endl;
   out.ss << endl;  // end comparison correction
-  out.ss << "    std::shared_ptr<const Matrix> rdm11() const { return den1->matrix(); }" << endl;
-  out.ss << "    std::shared_ptr<const Matrix> rdm12() const { return den2->matrix(); }" << endl;
-  out.ss << "    std::shared_ptr<const Matrix> rdm21() const { return Den1->matrix2(); }" << endl;
-  out.ss << endl;
-  out.ss << "    double correlated_norm() const { return correlated_norm_; }" << endl;
-  out.ss << endl;
-  out.ss << "    std::shared_ptr<const Civec> ci_deriv() const { return deci->civec(this->det_); }" << endl;
-  out.ss << endl;
+  if (forest_name_ == "CASPT2") {
+    out.ss << "    std::shared_ptr<const Matrix> rdm11() const { return den1->matrix(); }" << endl;
+    out.ss << "    std::shared_ptr<const Matrix> rdm12() const { return den2->matrix(); }" << endl;
+    out.ss << "    std::shared_ptr<const Matrix> rdm21() const { return Den1->matrix2(); }" << endl;
+    out.ss << endl;
+    out.ss << "    double correlated_norm() const { return correlated_norm_; }" << endl;
+    out.ss << endl;
+    out.ss << "    std::shared_ptr<const Civec> ci_deriv() const { return deci->civec(det_); }" << endl;
+    out.ss << endl;
+  }
   out.ss << "};" << endl;
   out.ss << endl;
   out.ss << "}" << endl;
@@ -435,4 +351,34 @@ OutStream Forest::generate_algorithm() const {
 }
 
 
+string Forest::caspt2_main_driver_() const {
+  stringstream ss;
+  ss << "  Timer timer;" << endl;
+  ss << "  print_iteration();" << endl;
+  ss << "  Timer mtimer;" << endl;
+  ss << "  int iter = 0;" << endl;
+  ss << "  for ( ; iter != ref_->maxiter(); ++iter) {" << endl;
+  ss << "    shared_ptr<Queue> energyq = make_energyq();" << endl;
+  ss << "    energy_ = accumulate(energyq);" << endl;
+  ss << "    shared_ptr<Queue> queue = make_residualq();" << endl;
+  ss << "    while (!queue->done())" << endl;
+  ss << "      queue->next_compute();" << endl;
+  ss << "    diagonal(r, t2);" << endl;
+  ss << "    energy_ += dot_product_transpose(r, t2);" << endl;
+  ss << "    const double err = r->rms();" << endl;
+  ss << "    print_iteration(iter, energy_, err, mtimer.tick());" << endl;
+  ss << endl;
+  ss << "    update_amplitude(t2, r);" << endl;
+  ss << "    r->zero();" << endl;
+  ss << "    if (err < ref_->thresh()) break;" << endl;
+  ss << "  }" << endl;
+  ss << "  print_iteration(iter == ref_->maxiter());" << endl;
+  ss << "  timer.tick_print(\"CASPT2 energy evaluation\");" << endl;
+  return ss.str();
+}
 
+string Forest::msmrci_main_driver_() const {
+  stringstream ss;
+
+  return ss.str();
+}
