@@ -67,25 +67,38 @@ OutStream Residual::create_target(const int i) const {
 }
 
 
-OutStream Residual::generate_task(const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der) const {
+OutStream Residual::generate_task(const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der, bool diagonal) const {
   stringstream tmp;
 
-  tmp << "  vector<shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op, label_) << "};" << endl;
-  tmp << "  auto task" << ic << " = make_shared<Task" << ic << ">(tensor" << ic << (der || label_=="deci" ? ", cindex" : ", pindex") << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
+  // when there is no gamma under this, we must skip for off-digonal
+  string indent = "";
+
+  if (diagonal) {
+    tmp << "  shared_ptr<Task" << ic << "> task" << ic << ";" << endl;
+    tmp << "  if (diagonal) {" << endl;
+    indent += "  ";
+  }
+  tmp << indent << "  vector<shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op, label_) << "};" << endl;
+  tmp << indent << "  " << (diagonal ? "" : "auto ") << "task" << ic
+                << " = make_shared<Task" << ic << ">(tensor" << ic << (der || label_=="deci" ? ", cindex" : ", pindex") << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
 
   const bool is_gamma = op.front().find("Gamma") != string::npos;
   if (!is_gamma) {
     if (parent_) {
       assert(parent_->parent());
-      tmp << "  task" << ip << "->add_dep(task" << ic << ");" << endl;
-      tmp << "  task" << ic << "->add_dep(task" << i0 << ");" << endl;
+      tmp << indent << "  task" << ip << "->add_dep(task" << ic << ");" << endl;
+      tmp << indent << "  task" << ic << "->add_dep(task" << i0 << ");" << endl;
     } else {
       assert(depth() == 0);
-      tmp << "  task" << ic << "->add_dep(task" << i0 << ");" << endl;
+      tmp << indent << "  task" << ic << "->add_dep(task" << i0 << ");" << endl;
     }
-    tmp << "  " << label_ << "q->add_task(task" << ic << ");" << endl;
-    tmp << endl;
+    tmp << indent << "  " << label_ << "q->add_task(task" << ic << ");" << endl;
   }
+  if (diagonal)
+    tmp << "  }" << endl;
+
+  if (!is_gamma)
+    tmp << endl;
 
   OutStream out;
   if (!is_gamma) {

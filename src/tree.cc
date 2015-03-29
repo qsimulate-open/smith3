@@ -209,7 +209,7 @@ shared_ptr<Tensor> BinaryContraction::next_target() {
 }
 
 
-void Tree::sort_gamma(std::list<std::shared_ptr<Tensor>> o) {
+void Tree::sort_gamma(list<shared_ptr<Tensor>> o) {
   gamma_ = o;
   list<shared_ptr<Tensor>> g = gather_gamma();
   for (auto& i : g) find_gamma(i);
@@ -416,7 +416,7 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
 }
 
 
-OutStream Tree::generate_task(const int ic, const vector<shared_ptr<Tensor>> op, const list<shared_ptr<Tensor>> g, const int iz) const {
+OutStream Tree::generate_task(const int ic, const vector<shared_ptr<Tensor>> op, const list<shared_ptr<Tensor>> g, const int iz, const bool diagonal) const {
   OutStream out;
 
   vector<string> ops;
@@ -435,7 +435,8 @@ OutStream Tree::generate_task(const int ic, const vector<shared_ptr<Tensor>> op,
 
   // if gamma, we need to add dependency.
   // this one is virtual, ie tree specific
-  out << generate_task(ip, ic, ops, scalar, iz);
+  out << generate_task(ip, ic, ops, scalar, iz, /*der*/false, /*diagonal*/diagonal);
+
 // TODO at this moment all gammas are recomputed.
 #if 0
   for (auto& i : op) {
@@ -497,15 +498,16 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
         // if at top bc, add a task to for top level contraction (proj)
         if (depth() == 0 ) {
           vector<shared_ptr<Tensor>> source_tensors = j->tensors_vec();
+          const bool diagonal = j->diagonal_only();
           num_ = tcnt;
           for (auto& s : source_tensors) {
             // if it contains a new intermediate tensor, dump a constructor
             if (find(itensors.begin(), itensors.end(), s) == itensors.end() && s->label().find("I") != string::npos) {
               itensors.push_back(s);
-              out.ee << s->constructor_str() << endl;
+              out.ee << s->constructor_str(diagonal) << endl;
             }
           }
-          out << generate_task(num_, source_tensors, gamma, t0);
+          out << generate_task(num_, source_tensors, gamma, t0, diagonal);
 
           list<shared_ptr<const Index>> proj = j->target_index();
           // write out headers
@@ -596,12 +598,18 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
     // step through operators and if they are new, construct them.
     if (find(itensors.begin(), itensors.end(), target_) == itensors.end()) {
       itensors.push_back(target_);
-      out.ee << target_->constructor_str() << endl;
+      out.ee << target_->constructor_str(diagonal_only()) << endl;
     }
 
     vector<shared_ptr<Tensor>> op = {target_};
     op.insert(op.end(), op_.begin(), op_.end());
-    out << generate_task(tcnt, op, gamma, t0);
+    // check if op_ has gamma tensor
+    bool diagonal = nogamma_upstream();
+    for (auto& i : op_) {
+      string label = i->label();
+      diagonal &= label.find("Gamma") == string::npos;
+    }
+    out << generate_task(tcnt, op, gamma, t0, diagonal);
 
     list<shared_ptr<const Index>> ti = target_->index();
 
@@ -628,16 +636,17 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
   for (auto i = bc_.begin(); i != bc_.end(); ++i) {
     vector<shared_ptr<Tensor>> source_tensors = (*i)->tensors_vec();
 
+    const bool diagonal = (*i)->diagonal_only();
     for (auto& s : source_tensors) {
       // if it contains a new intermediate tensor, dump a constructor
       if (find(itensors.begin(), itensors.end(), s) == itensors.end() && s->label().find("I") != string::npos) {
         itensors.push_back(s);
-        out.ee << s->constructor_str() << endl;
+        out.ee << s->constructor_str(diagonal) << endl;
       }
     }
     // saving a counter to a protected member for dependency checks
     num_ = tcnt;
-    out << generate_task(num_, source_tensors, gamma, t0);
+    out << generate_task(num_, source_tensors, gamma, t0, diagonal);
 
     // write out headers
     {
@@ -693,6 +702,12 @@ vector<shared_ptr<Tensor>> BinaryContraction::tensors_vec() {
   if (!subtree_.empty())
     out.push_back(subtree_.front()->target());
   return out;
+}
+
+
+bool BinaryContraction::diagonal_only() const {
+  return tensor_->label().find("Gamma") == string::npos
+      && all_of(subtree_.begin(), subtree_.end(), [](shared_ptr<Tree> i){ return i->diagonal_only(); });
 }
 
 

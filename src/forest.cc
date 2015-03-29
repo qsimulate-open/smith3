@@ -69,9 +69,9 @@ OutStream Forest::generate_code() const {
   out << generate_gammas();
 
   for (auto& i : trees_) {
-    out.ss << "    std::shared_ptr<Queue> make_" << i->label() << "q(const bool reset = true);" << endl;
+    out.ss << "    std::shared_ptr<Queue> make_" << i->label() << "q(const bool reset = true, const bool diagonal = true);" << endl;
 
-    out.ee << "shared_ptr<Queue> " << forest_name_ << "::" << forest_name_ << "::make_" << i->label() << "q(const bool reset) {" << endl << endl;
+    out.ee << "shared_ptr<Queue> " << forest_name_ << "::" << forest_name_ << "::make_" << i->label() << "q(const bool reset, const bool diagonal) {" << endl << endl;
     if (i->label() != "deci")
       out.ee << "  array<shared_ptr<const IndexRange>,3> pindex = {{rclosed_, ractive_, rvirt_}};" << endl;
     else
@@ -115,6 +115,8 @@ OutStream Forest::generate_headers() const {
   out.ss << "#include <src/scf/hf/fock.h>" << endl;
   out.ss << "#include <src/util/f77.h>" << endl;
   out.ss << "#include <src/smith/queue.h>" << endl;
+  if (forest_name_ == "MRCI")
+    out.ss << "#include <src/smith/multitensor.h>" << endl;
   out.ss << "#include <src/smith/smith_info.h>" << endl;
   out.ss << "" << endl;
   out.ss << "namespace bagel {" << endl;
@@ -127,7 +129,16 @@ OutStream Forest::generate_headers() const {
   out.ss << "    std::shared_ptr<Tensor> r;" << endl;
   if (forest_name_ == "MRCI") {
     out.ss << "    std::shared_ptr<Tensor> s;" << endl;
-    out.ss << "    std::shared_ptr<Tensor> n;" << endl;
+    out.ss << "    std::shared_ptr<Tensor> n;" << endl << endl;;
+
+    out.ss << "    int nstates_;" << endl;
+    out.ss << "    std::vector<double> energy_;" << endl << endl;
+
+    out.ss << "    std::vector<std::shared_ptr<MultiTensor>> t2all_;" << endl;
+    out.ss << "    std::vector<std::shared_ptr<MultiTensor>> rall_;" << endl;
+    out.ss << "    std::vector<std::shared_ptr<MultiTensor>> sall_;" << endl;
+    out.ss << "    std::vector<std::shared_ptr<MultiTensor>> nall_;" << endl;
+
   }
   if (forest_name_ == "CASPT2") {
     out.ss << "    std::shared_ptr<Tensor> den1;" << endl;
@@ -147,18 +158,17 @@ OutStream Forest::generate_headers() const {
   out.ee << "using namespace bagel::SMITH;" << endl << endl;
 
   out.tt << "#ifndef __SRC_SMITH_" << forest_name_ << "_TASKS_H" << endl;
-  out.tt << "#define __SRC_SMITH_" << forest_name_ << "_TASKS_H" << endl;
-  out.tt << "" << endl;
+  out.tt << "#define __SRC_SMITH_" << forest_name_ << "_TASKS_H" << endl << endl;
+
   out.tt << "#include <src/smith/indexrange.h>" << endl;
   out.tt << "#include <src/smith/tensor.h>" << endl;
   out.tt << "#include <src/smith/task.h>" << endl;
   out.tt << "#include <src/smith/subtask.h>" << endl;
-  out.tt << "#include <src/smith/storage.h>" << endl;
-  out.tt << "" << endl;
+  out.tt << "#include <src/smith/storage.h>" << endl << endl;
+
   out.tt << "namespace bagel {" << endl;
   out.tt << "namespace SMITH {" << endl;
-  out.tt << "namespace " << forest_name_ << "{" << endl;
-  out.tt << "" << endl;
+  out.tt << "namespace " << forest_name_ << "{" << endl << endl;
 
   out.cc << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl;
   out.cc << "using namespace std;" << endl;

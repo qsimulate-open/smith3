@@ -140,7 +140,7 @@ class Tensor {
     std::map<int, int> num_map() const { return num_map_; }
 
     /// Generates string for constructor for tensors in Method.cc file
-    std::string constructor_str() const;
+    std::string constructor_str(const bool diagonal = false) const;
     /// Generates code for get_block - source block to be added later to target (move) block.
     std::string generate_get_block(const std::string, const std::string, const std::string, const bool move = false, const bool noscale = false) const;
     /// Generate code for unique_ptr scratch arrays.

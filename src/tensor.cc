@@ -153,9 +153,15 @@ bool Tensor::operator==(const Tensor& o) const {
 }
 
 
-string Tensor::constructor_str() const {
+string Tensor::constructor_str(const bool diagonal) const {
   stringstream ss;
-  ss << "  vector<IndexRange> " << label() << "_index";
+  string indent = "";
+  if (diagonal) {
+    indent += "  ";
+    ss << "  shared_ptr<Tensor> " << label() << ";" << endl;
+    ss << "  if (diagonal) {" << endl;
+  }
+  ss << indent << "  vector<IndexRange> " << label() << "_index";
   if (index_.empty()) {
     ss << ";" << endl;
   } else {
@@ -164,7 +170,9 @@ string Tensor::constructor_str() const {
       ss << (i != index_.rbegin() ? ", " : "") << (*i)->generate();
     ss << "};" << endl;
   }
-  ss << "  auto " << label() << " = make_shared<Tensor>(" << label() << "_index);";
+  ss << indent << "  " << (diagonal ? "" : "auto ") << label() << " = make_shared<Tensor>(" << label() << "_index);";
+  if (diagonal)
+    ss << endl << "  }";
   return ss.str();
 }
 
