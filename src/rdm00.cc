@@ -274,9 +274,7 @@ string RDM00::generate_merged(string indent, const string tag, const list<shared
   map_in_tensors(in_tensors, inlab);
 
   if (!use_blas) {
-    if (rank() != 0) {
-      tt <<  make_get_block(indent, "i0", inlab[rlab]);
-    }
+    tt <<  make_get_block(indent, "i0", inlab[rlab]);
     // loops for index and merged
     tt << make_merged_loops(indent, itag, close);
     // make odata part of summation for target
@@ -592,7 +590,7 @@ string RDM00::make_merged_loops(string& indent, const string itag, vector<string
 string RDM00::multiply_merge(const string itag, string& indent, const list<shared_ptr<const Index>>& merged) {
   stringstream tt;
   if (rank() == 0) {
-    tt << "  += " << setprecision(1) << fixed << factor();
+    tt << "  += " << setprecision(1) << fixed << factor() << " * i0data[0]";
     tt << fdata_mult(itag, merged);
   } else {
     // make data part of summation
