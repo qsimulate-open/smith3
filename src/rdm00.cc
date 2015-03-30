@@ -153,17 +153,15 @@ string RDM00::generate_not_merged(string indent, const string tag, const list<sh
     // first delta if statement
     tt << make_delta_if(indent, close);
 
-    if (!index_.empty() && rank() != 0) {
-      stringstream zz;
-      zz << "rdm" << rank();
-      string rlab = zz.str();
+    stringstream zz;
+    zz << "rdm" << rank();
+    string rlab = zz.str();
 
-      // make map of in_tensors
-      map<string, string> inlab;
-      map_in_tensors(in_tensors, inlab);
+    // make map of in_tensors
+    map<string, string> inlab;
+    map_in_tensors(in_tensors, inlab);
 
-      tt << make_get_block(indent, "i0", inlab[rlab]);
-    }
+    tt << make_get_block(indent, "i0", inlab[rlab]);
 
     // loops over delta indices
     tt << make_sort_loops(itag, indent, index, close);
@@ -173,7 +171,7 @@ string RDM00::generate_not_merged(string indent, const string tag, const list<sh
 
     // make data part of summation
     if (index_.empty()) {
-      tt << "  += " << setprecision(1) << fixed << factor() << ";" << endl;
+      tt << "  += " << setprecision(1) << fixed << factor() << " * i0data[0];" << endl;
     } else {
       tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * i0data[";
       for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {

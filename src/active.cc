@@ -166,8 +166,8 @@ vector<int> Active::required_rdm() const {
     }
   } else {
     for (auto& i : rdm_) {
-      // rdm0 does not need to be included in header
-      if (i->rank() > 0 && i->rank() < 5 && find(out.begin(), out.end(), i->rank()) == out.end())
+      // rdm0 does need to be included in header for multistate cases
+      if (i->rank() < 5 && find(out.begin(), out.end(), i->rank()) == out.end())
         out.push_back(i->rank());
     }
   }
