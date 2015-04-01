@@ -267,13 +267,25 @@ OutStream Forest::generate_algorithm() const {
 
   out.ee << forest_name_ << "::" << forest_name_ << "::" << forest_name_ << "(shared_ptr<const SMITH_Info> ref) : SpinFreeMethod(ref) {" << endl;
   out.ee << "  eig_ = f1_->diag();" << endl;
-  out.ee << "  t2 = init_amplitude();" << endl;
-  out.ee << "  r = t2->clone();" << endl;
   if (forest_name_ == "MRCI") {
-    out.ee << "  s = t2->clone();" << endl;
-    out.ee << "  n = t2->clone();" << endl;
+    out.ee << "  nstates_ = ref->ciwfn()->nstates();" << endl << endl;
+
+    out.ee << "  for (int i = 0; i != nstates_; ++i) {" << endl;
+    out.ee << "    auto tmp = make_shared<MultiTensor>(nstates_);" << endl;
+    out.ee << "    for (auto& j : *tmp)" << endl;
+    out.ee << "      j = init_amplitude();" << endl;
+    out.ee << "    t2all_.push_back(tmp);" << endl << endl;
+
+    out.ee << "    auto tmp2 = make_shared<MultiTensor>(nstates_);" << endl;
+    out.ee << "    for (auto& j : *tmp2)" << endl;
+    out.ee << "      j = init_residual();" << endl;
+    out.ee << "    sall_.push_back(tmp2);" << endl;
+    out.ee << "    nall_.push_back(tmp2->copy());" << endl;
+    out.ee << "  }" << endl;
   }
   if (forest_name_ == "CASPT2") {
+    out.ee << "  t2 = init_amplitude();" << endl;
+    out.ee << "  r = t2->clone();" << endl;
     out.ee << "  den1 = h1_->clone();" << endl;
     out.ee << "  den2 = h1_->clone();" << endl;
     out.ee << "  Den1 = v2_->clone();" << endl;
@@ -389,6 +401,148 @@ string Forest::caspt2_main_driver_() const {
 
 string Forest::msmrci_main_driver_() const {
   stringstream ss;
+  ss << "  Timer timer;" << endl;
+  ss << "  print_iteration();" << endl << endl;
+
+  ss << "  const double core_nuc = core_energy_ + ref_->geom()->nuclear_repulsion();" << endl << endl;
+
+  ss << "  // target state" << endl;
+  ss << "  for (int istate = 0; istate != nstates_; ++istate) {" << endl;
+  ss << "    const double refen = ref_->ciwfn()->energy(istate) - core_nuc;" << endl;
+  ss << "    // takes care of ref coefficients" << endl;
+  ss << "    t2all_[istate]->fac(istate) = 1.0;" << endl;
+  ss << "    nall_[istate]->fac(istate)  = 1.0;" << endl;
+  ss << "    sall_[istate]->fac(istate)  = refen;" << endl << endl;
+
+  ss << "    for (int jst = 0; jst != nstates_; ++jst) {" << endl;
+  ss << "      set_rdm(jst, istate);" << endl;
+  ss << "      s = sall_[istate]->at(jst);" << endl;
+  ss << "      auto queue = make_sourceq(false, jst == istate);" << endl;
+  ss << "      while (!queue->done())" << endl;
+  ss << "        queue->next_compute();" << endl;
+  ss << "    }" << endl;
+  ss << "  }" << endl << endl;
+
+  ss << "  DavidsonDiag_<Amplitude, Residual> davidson(nstates_, 10);" << endl << endl;
+
+  ss << "  // first iteration is trivial" << endl;
+  ss << "  {" << endl;
+  ss << "    vector<shared_ptr<const Amplitude>> a0;" << endl;
+  ss << "    vector<shared_ptr<const Residual>> r0;" << endl;
+  ss << "    for (int istate = 0; istate != nstates_; ++istate) {" << endl;
+  ss << "      a0.push_back(make_shared<Amplitude>(t2all_[istate]->copy(), nall_[istate]->copy(), this));" << endl;
+  ss << "      r0.push_back(make_shared<Residual>(sall_[istate]->copy(), this));" << endl;
+  ss << "    }" << endl;
+  ss << "    energy_ = davidson.compute(a0, r0);" << endl;
+  ss << "    for (int istate = 0; istate != nstates_; ++istate)" << endl;
+  ss << "      assert(fabs(energy_[istate]+core_nuc - ref_->ciwfn()->energy(istate)) < 1.0e-8);" << endl;
+  ss << "  }" << endl << endl;
+
+  ss << "  // set the result to t2" << endl;
+  ss << "  {" << endl;
+  ss << "    vector<shared_ptr<Residual>> res = davidson.residual();" << endl;
+  ss << "    for (int i = 0; i != nstates_; ++i) {" << endl;
+  ss << "      t2all_[i]->zero();" << endl;
+  ss << "      update_amplitude(t2all_[i], res[i]->tensor());" << endl;
+  ss << "    }" << endl;
+  ss << "  }" << endl << endl;
+
+  ss << "  shared_ptr<MultiTensor> rtmp = nall_[0]->copy();" << endl;
+  ss << "  rtmp->zero();" << endl << endl;
+
+  ss << "  Timer mtimer;" << endl;
+  ss << "  int iter = 0;" << endl;
+  ss << "  vector<bool> conv(nstates_, false);" << endl;
+  ss << "  for ( ; iter != ref_->maxiter(); ++iter) {" << endl << endl;
+
+  ss << "    // loop over state of interest" << endl;
+  ss << "    vector<shared_ptr<const Amplitude>> a0;" << endl;
+  ss << "    vector<shared_ptr<const Residual>> r0;" << endl;
+  ss << "    for (int istate = 0; istate != nstates_; ++istate) {" << endl;
+  ss << "      if (conv[istate]) {" << endl;
+  ss << "        a0.push_back(nullptr);" << endl;
+  ss << "        r0.push_back(nullptr);" << endl;
+  ss << "        continue;" << endl;
+  ss << "      }" << endl;
+  ss << "      // first calculate left-hand-side vectors of t2 (named n)" << endl;
+  ss << "      nall_[istate]->zero();" << endl;
+  ss << "      for (int ist = 0; ist != nstates_; ++ist) {" << endl;
+  ss << "        for (int jst = 0; jst != nstates_; ++jst) {" << endl;
+  ss << "          set_rdm(jst, ist);" << endl;
+  ss << "          t2 = t2all_[istate]->at(ist);" << endl;
+  ss << "          n  = nall_[istate]->at(jst);" << endl;
+  ss << "          auto queue = make_normq(false, jst == ist);" << endl;
+  ss << "          while (!queue->done())" << endl;
+  ss << "            queue->next_compute();" << endl;
+  ss << "        }" << endl;
+  ss << "      }" << endl << endl;
+
+  ss << "      // normalize t2 and n" << endl;
+  ss << "      const double scal = 1.0 / sqrt(dot_product_transpose(nall_[istate], t2all_[istate]));" << endl;
+  ss << "      nall_[istate]->scale(scal);" << endl;
+  ss << "      t2all_[istate]->scale(scal);" << endl << endl;
+
+  ss << "      a0.push_back(make_shared<Amplitude>(t2all_[istate]->copy(), nall_[istate]->copy(), this));" << endl << endl;
+
+  ss << "      // compute residuals (named r)" << endl;
+  ss << "      rtmp->zero();" << endl;
+  ss << "      for (int ist = 0; ist != nstates_; ++ist) { // ket sector" << endl;
+  ss << "        for (int jst = 0; jst != nstates_; ++jst) { // bra sector" << endl;
+  ss << "          set_rdm(jst, ist);" << endl;
+  ss << "          t2 = t2all_[istate]->at(ist);" << endl;
+  ss << "          r = rtmp->at(jst);" << endl;
+  ss << "          auto queue = make_residualq(false, jst == ist);" << endl;
+  ss << "          while (!queue->done())" << endl;
+  ss << "            queue->next_compute();" << endl;
+  ss << "        }" << endl;
+  ss << "      }" << endl << endl;
+
+  ss << "      // <ab/ij| T |0_ist> Eref_ist." << endl;
+  ss << "      {" << endl;
+  ss << "        shared_ptr<MultiTensor> m = t2all_[istate]->copy();" << endl;
+  ss << "        for (int ist = 0; ist != nstates_; ++ist) {" << endl;
+  ss << "          // First weighted T2 amplitude" << endl;
+  ss << "          m->at(ist)->scale(ref_->ciwfn()->energy(ist) - core_nuc);" << endl;
+  ss << "          // then add it to residual" << endl;
+  ss << "          for (int jst = 0; jst != nstates_; ++jst) {" << endl;
+  ss << "            set_rdm(jst, ist);" << endl;
+  ss << "            t2 = m->at(ist);" << endl;
+  ss << "            n  = rtmp->at(jst);" << endl;
+  ss << "            auto queue = make_normq(false, jst == ist);" << endl;
+  ss << "            while (!queue->done())" << endl;
+  ss << "              queue->next_compute();" << endl;
+  ss << "          }" << endl;
+  ss << "        }" << endl;
+  ss << "      }" << endl << endl;
+
+  ss << "      {" << endl;
+  ss << "        shared_ptr<MultiTensor> m = rtmp->copy();" << endl;
+  ss << "        for (int ist = 0; ist != nstates_; ++ist)" << endl;
+  ss << "          m->fac(ist) = dot_product_transpose(sall_[ist], t2all_[istate]);" << endl;
+  ss << "        r0.push_back(make_shared<Residual>(m, this));" << endl;
+  ss << "      }" << endl;
+  ss << "    }" << endl << endl;
+
+  ss << "    energy_ = davidson.compute(a0, r0);" << endl << endl;
+
+  ss << "    // find new trial vectors" << endl;
+  ss << "    vector<shared_ptr<Residual>> res = davidson.residual();" << endl;
+  ss << "    for (int i = 0; i != nstates_; ++i) {" << endl;
+  ss << "      const double err = res[i]->tensor()->rms();" << endl;
+  ss << "      print_iteration(iter, energy_[i]+core_nuc, err, mtimer.tick(), i);" << endl << endl;
+
+  ss << "      t2all_[i]->zero();" << endl;
+  ss << "      if (err < ref_->thresh())" << endl;
+  ss << "        conv[i] = true;" << endl;
+  ss << "      else" << endl;
+  ss << "        update_amplitude(t2all_[i], res[i]->tensor());" << endl;
+  ss << "    }" << endl;
+  ss << "    if (nstates_ > 1) cout << endl;" << endl << endl;
+
+  ss << "    if (all_of(conv.begin(), conv.end(), [](bool i){ return i;})) break;" << endl;
+  ss << "  }" << endl;
+  ss << "  print_iteration(iter == ref_->maxiter());" << endl;
+  ss << "  timer.tick_print(\"MRCI energy evaluation\");" << endl;
 
   return ss.str();
 }
