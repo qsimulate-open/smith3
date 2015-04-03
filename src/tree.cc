@@ -68,6 +68,7 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
   }
 
   factorize();
+  move_up_operator();
   set_parent_sub();
   set_target_rec();
 }
@@ -142,6 +143,23 @@ void BinaryContraction::factorize() {
 }
 
 
+void Tree::move_up_operator() {
+  for (auto& b : bc_)
+    b->move_up_operator();
+}
+
+
+void BinaryContraction::move_up_operator() {
+  if (subtree_.size() == 1 && subtree_.front()->can_move_up()) {
+    source_ = subtree_.front()->op().front();
+    subtree_.clear();
+  }
+
+  for (auto& i : subtree_)
+    i->move_up_operator();
+}
+
+
 bool Tree::merge(shared_ptr<Tree> o) {
   bool out = false;
   if (o->bc_.size() > 0) {
@@ -205,7 +223,7 @@ bool BinaryContraction::dagger() const {
 
 
 shared_ptr<Tensor> BinaryContraction::next_target() {
-  return subtree().front()->target();
+  return !subtree_.empty() ? subtree().front()->target() : source_;
 }
 
 
@@ -238,6 +256,8 @@ list<shared_ptr<Tensor>> Tree::gather_gamma() const {
       list<shared_ptr<Tensor>> tmp = j->gather_gamma();
       out.insert(out.end(), tmp.begin(), tmp.end());
     }
+    if (i->source() && i->source()->label().find("Gamma") != string::npos)
+      out.push_back(i->source());
   }
   for (auto& i : op_)
     if (i->label().find("Gamma") != string::npos) out.push_back(i);
@@ -264,7 +284,8 @@ string BinaryContraction::target_index_str() const {
 void BinaryContraction::print() const {
   string indent = "";
   for (int i = 0; i != depth(); ++i) indent += "  ";
-  cout << indent << (target_ ? (target_->str() + " = ") : "") << tensor_->str() << (depth() == 0 ? target_index_str() : "") << " * " << subtree_.front()->target()->str() << endl;
+  cout << indent << (target_ ? (target_->str() + " = ") : "") << tensor_->str() << (depth() == 0 ? target_index_str() : "") << " * "
+                 << (subtree_.empty() ? source_->str() : subtree_.front()->target()->str()) << endl;
   for (auto& i : subtree_) i->print();
 }
 
@@ -701,13 +722,24 @@ vector<shared_ptr<Tensor>> BinaryContraction::tensors_vec() {
   out.push_back(tensor_);
   if (!subtree_.empty())
     out.push_back(subtree_.front()->target());
+  else if (source_)
+    out.push_back(source_);
+
   return out;
 }
 
 
 bool BinaryContraction::diagonal_only() const {
   return tensor_->label().find("Gamma") == string::npos
-      && all_of(subtree_.begin(), subtree_.end(), [](shared_ptr<Tree> i){ return i->diagonal_only(); });
+      && all_of(subtree_.begin(), subtree_.end(), [](shared_ptr<Tree> i){ return i->diagonal_only(); })
+      && (!source_ || source_->label().find("Gamma") == string::npos)
+      && nogamma_upstream();
+}
+
+
+bool BinaryContraction::nogamma_upstream() const {
+  return tensor_->label().find("Gamma") == std::string::npos
+      && parent_->nogamma_upstream();
 }
 
 

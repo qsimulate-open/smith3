@@ -532,9 +532,8 @@ string Forest::msmrci_main_driver_() const {
   ss << "      print_iteration(iter, energy_[i]+core_nuc, err, mtimer.tick(), i);" << endl << endl;
 
   ss << "      t2all_[i]->zero();" << endl;
-  ss << "      if (err < ref_->thresh())" << endl;
-  ss << "        conv[i] = true;" << endl;
-  ss << "      else" << endl;
+  ss << "      conv[i] = err < ref_->thresh();" << endl;
+  ss << "      if (!conv[i])" << endl;
   ss << "        update_amplitude(t2all_[i], res[i]->tensor());" << endl;
   ss << "    }" << endl;
   ss << "    if (nstates_ > 1) cout << endl;" << endl << endl;

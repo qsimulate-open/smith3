@@ -33,7 +33,7 @@ using namespace smith;
 
 OutStream Energy::generate_task(const int ip, const int ic, const vector<string> op, const string scalar, const int, bool, bool) const {
   OutStream out;
-  out.ee << "  vector<shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op) << "};" << endl;
+  out.ee << "  auto tensor" << ic << " = vector<shared_ptr<Tensor>>{" << merge__(op) << "};" << endl;
   out.ee << "  auto task" << ic << " = make_shared<Task" << ic << ">(tensor" << ic << ", pindex" << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
 
   if (parent_) {

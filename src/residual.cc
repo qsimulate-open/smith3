@@ -59,7 +59,7 @@ OutStream Residual::create_target(const int i) const {
   out.tt << "};" << endl << endl;
 
   out.ee << "  auto " << label_ << "q = make_shared<Queue>();" << endl;
-  out.ee << "  vector<shared_ptr<Tensor>> tensor" << i << " = {" << target_name__(label_) << "};" << endl;
+  out.ee << "  auto tensor" << i << " = vector<shared_ptr<Tensor>>{" << target_name__(label_) << "};" << endl;
   out.ee << "  auto task" << i << " = make_shared<Task" << i << ">(tensor" << i << ", reset);" << endl;
   out.ee << "  " << label_ << "q->add_task(task" << i << ");" << endl << endl;
 
@@ -78,7 +78,7 @@ OutStream Residual::generate_task(const int ip, const int ic, const vector<strin
     tmp << "  if (diagonal) {" << endl;
     indent += "  ";
   }
-  tmp << indent << "  vector<shared_ptr<Tensor>> tensor" << ic << " = {" << merge__(op, label_) << "};" << endl;
+  tmp << indent << "  auto tensor" << ic << " = vector<shared_ptr<Tensor>>{" << merge__(op, label_) << "};" << endl;
   tmp << indent << "  " << (diagonal ? "" : "auto ") << "task" << ic
                 << " = make_shared<Task" << ic << ">(tensor" << ic << (der || label_=="deci" ? ", cindex" : ", pindex") << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
 

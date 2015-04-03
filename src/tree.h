@@ -44,6 +44,9 @@ class BinaryContraction {
     /// A list of trees
     std::list<std::shared_ptr<Tree>> subtree_;
 
+    /// Moved up tensor
+    std::shared_ptr<Tensor> source_; // this is used only when subtree_ is empty
+
     /// label for code generation specifics, corresponds to derived tree name.
     std::string label_;
 
@@ -70,6 +73,8 @@ class BinaryContraction {
     std::shared_ptr<Tensor> tensor() { return tensor_; }
     /// Return target tensor. An intermediate tensor, for example I0.
     std::shared_ptr<Tensor> target() { return target_; }
+    /// Return source tensor (an operator that is moved up).
+    std::shared_ptr<Tensor> source() const { return source_; }
     /// Retrieve next target--next intermediate below, for example I1. This is the front of subtree of target.
     std::shared_ptr<Tensor> next_target();
     /// Returns vector of tensor with target tensor.
@@ -84,6 +89,8 @@ class BinaryContraction {
 
     /// Do factorization and then merge subtrees.
     void factorize();
+    /// Move up an operator and delete the node if possible to remove unnecessary copying
+    void move_up_operator();
     /// Set parent to this tree pointer.
     void set_parent(Tree* o) { parent_ = o; };
     /// Sets parent and does set_parent_sub for subtree (bc and tree alternate in graph).
@@ -112,6 +119,8 @@ class BinaryContraction {
 
     /// Returns if all the subtrees are diagonal only
     bool diagonal_only() const;
+    /// Returns if gamma_ is multiplied in the upstream
+    bool nogamma_upstream() const;
 
     /// Returns the ranks of RDMs in subtree_.
     std::vector<int> required_rdm(std::vector<int> input = std::vector<int>()) const;
@@ -199,6 +208,10 @@ class Tree {
 
     /// Factorize (i.e., perform factorize in BinaryContraction).
     void factorize();
+    /// Move up an operator and delete the node if possible to remove unnecessary copying
+    void move_up_operator();
+    /// Judge if this node can moved up
+    bool can_move_up() const { return bc_.empty() && op_.size() == 1; }
     /// Combine trees if tensors are equal, or if have operator tensors.
     bool merge(std::shared_ptr<Tree> o);
 
@@ -211,7 +224,7 @@ class Tree {
     /// Set target to this tensor pointer.
     void set_target(std::shared_ptr<Tensor> o) {
       target_ = o;
-      for (auto i = bc_.begin(); i != bc_.end(); ++i) (*i)->set_target(o);
+      for (auto& i : bc_) i->set_target(o);
     };
 
     /// Function runs gather_gamma and find_gamma, called from top level (main.cc).
@@ -226,7 +239,7 @@ class Tree {
     /// Returns if this tree should be computed only for diagonals
     bool diagonal_only() const { return gather_gamma().empty() && nogamma_upstream(); }
     /// Returns if gamma_ is multiplied in the upstream
-    bool nogamma_upstream() const { return !parent_ || (parent_->tensor()->label().find("Gamma") == std::string::npos && parent_->parent()->nogamma_upstream()); }
+    bool nogamma_upstream() const { return !parent_ || parent_->nogamma_upstream(); }
 
     /// This function returns the rank of required RDMs here + inp. Goes through bc_ and op_ tensor lists.
     std::vector<int> required_rdm(std::vector<int> inp) const;
