@@ -49,7 +49,10 @@ OutStream Energy::generate_task(const int ip, const int ic, const vector<string>
 
 
 OutStream Energy::generate_compute_header(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors, const bool no_outside) const {
-  const int ninptensors = tensors.size()-1;
+  vector<string> labels;
+  for (auto i = ++tensors.begin(); i != tensors.end(); ++i)
+    labels.push_back((*i)->label());
+  const int ninptensors = count_distinct_tensors__(labels);
 
   bool need_e0 = false;
   for (auto& s : tensors)
@@ -107,8 +110,12 @@ OutStream Energy::generate_compute_header(const int ic, const list<shared_ptr<co
 
 
 OutStream Energy::generate_compute_footer(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors) const {
-  const int ninptensors = tensors.size()-1;
+  vector<string> labels;
+  for (auto i = ++tensors.begin(); i != tensors.end(); ++i)
+    labels.push_back((*i)->label());
+  const int ninptensors = count_distinct_tensors__(labels);
   assert(ninptensors > 0);
+
   bool need_e0 = false;
   for (auto& s : tensors)
     if (!s->scalar().empty()) need_e0 = true;
@@ -205,8 +212,9 @@ OutStream Energy::generate_bc(const shared_ptr<BinaryContraction> i) const {
     out.dd << i->tensor()->generate_get_block(dindent, "i0", "in(0)");
     out.dd << i->tensor()->generate_sort_indices(dindent, "i0", "in(0)", di) << endl;
     // retrieving subtree_
-    out.dd << i->next_target()->generate_get_block(dindent, "i1", "in(1)");
-    out.dd << i->next_target()->generate_sort_indices(dindent, "i1", "in(1)", di) << endl;
+    string inlabel("in("); inlabel += (same_tensor__(i->tensor()->label(), i->next_target()->label()) ? "0)" : "1)");
+    out.dd << i->next_target()->generate_get_block(dindent, "i1", inlabel);
+    out.dd << i->next_target()->generate_sort_indices(dindent, "i1", inlabel, di) << endl;
 
     // call dgemm
     {

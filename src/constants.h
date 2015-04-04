@@ -119,6 +119,35 @@ std::string merge__(std::vector<std::string> array, std::string name = "") {
   return ss.str();
 }
 
+bool same_tensor__(std::string a, std::string b) {
+  auto strip = [](const std::string& label) {
+    size_t found = label.find("dagger");
+    if (found != std::string::npos) {
+      std::string tmp(label.begin(), label.begin() + found);
+      return tmp;
+    } else {
+      return label;
+    }
+  };
+  return strip(a) == strip(b);
+}
+
+int count_distinct_tensors__(const std::vector<std::string>& labels) {
+  int out = 0;
+  std::vector<std::string> done;
+  for (auto& i : labels) {
+    bool found = false;
+    for (auto& j : done)
+      if (same_tensor__(i,j))
+        found = true;
+    if (!found) {
+      ++out;
+      done.push_back(i);
+    }
+  }
+  return out;
+}
+
 }
 }
 
