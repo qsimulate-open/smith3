@@ -352,7 +352,7 @@ OutStream Forest::generate_algorithm() const {
     out.ss << endl;
     out.ss << "    double correlated_norm() const { return correlated_norm_; }" << endl;
     out.ss << endl;
-    out.ss << "    std::shared_ptr<const Civec> ci_deriv() const { return deci->civec(det_); }" << endl;
+    out.ss << "    std::shared_ptr<const Civec> ci_deriv(std::shared_ptr<const Determinants> det) const { return deci->civec(det); }" << endl;
     out.ss << endl;
   }
   out.ss << "};" << endl;
