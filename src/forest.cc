@@ -186,7 +186,8 @@ OutStream Forest::generate_headers() const {
   out.gg << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl;
   out.gg << "using namespace std;" << endl;
   out.gg << "using namespace bagel;" << endl;
-  out.gg << "using namespace bagel::SMITH;" << endl << endl;
+  out.gg << "using namespace bagel::SMITH;" << endl;
+  out.dd << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
 
   return out;
 }
