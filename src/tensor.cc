@@ -199,7 +199,7 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
 #ifdef debug_tasks // if needed, eg debug
     tt  << cindent << "// tensor label: " << lbl << endl;
 #endif
-    tt << cindent << "std::unique_ptr<double[]> " << lab << "data = "
+    tt << cindent << "std::unique_ptr<" << DataType << "[]> " << lab << "data = "
                   << tlab << (move ? "->move" : "->get") << "_block(";
     if (found != string::npos) {
       for (auto i = index_.begin(); i != index_.end(); ++i) {
@@ -232,7 +232,7 @@ string Tensor::generate_scratch_area(const string cindent, const string lab, con
 
   stringstream ss;
   // using new move/get/put block interface
-  ss << cindent << "std::unique_ptr<double[]> " << lab << "data_sorted(new double[" << lbl << "->get_size(";
+  ss << cindent << "std::unique_ptr<" << DataType << "[]> " << lab << "data_sorted(new " << DataType << "[" << lbl << "->get_size(";
   if (found != string::npos) {
     for (auto i = index_.begin(); i != index_.end(); ++i) {
       if (i != index_.begin()) ss << ", ";
@@ -420,7 +420,7 @@ string Tensor::generate_active(string indent, const string tag, const int ninpte
     // add fdata
     list<shared_ptr<const Index>>& merged = merged_->index();
     // fdata tensor should be last to mirror gamma footer
-    tt << indent << "std::unique_ptr<double[]> fdata = in("<< ninptensors-1 << ")->get_block(";
+    tt << indent << "std::unique_ptr<" << DataType << "[]> fdata = in("<< ninptensors-1 << ")->get_block(";
     for (auto j = merged.rbegin(); j != merged.rend(); ++j) {
       if (j != merged.rbegin()) tt << ", ";
       tt << (*j)->str_gen();
@@ -428,7 +428,7 @@ string Tensor::generate_active(string indent, const string tag, const int ninpte
     tt << ");" << endl;
 
     if (use_blas) {
-      tt << indent << "std::unique_ptr<double[]> fdata_sorted(new double["<< merged_->label() << "->get_size(fhash)]);" << endl;
+      tt << indent << "std::unique_ptr<" << DataType << "[]> fdata_sorted(new " << DataType << "["<< merged_->label() << "->get_size(fhash)]);" << endl;
 
       // make sort_indices for merged op
       vector<int> done;

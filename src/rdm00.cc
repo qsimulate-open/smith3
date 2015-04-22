@@ -99,7 +99,7 @@ list<shared_ptr<RDM>> RDM00::reduce_one(list<int>& done) const {
       // Please note that this procedure does not change the sign (you can prove it in 30sec)
       tmp->fac() *= ((cnt0-1)&1 ? -1.0 : 1.0);
       if ((*i)->same_spin(*j)) {
-        tmp->fac() *= 2.0;
+        tmp->fac() *= fac2;
       } else {
         // this case we need to replace a spin
         const shared_ptr<Spin> s0 = (*rml[0])->spin();
@@ -461,7 +461,7 @@ void RDM00::map_in_tensors(std::vector<string> in_tensors, map<string,string>& i
 
 string RDM00::make_get_block(string indent, string tag, string lbl) {
   stringstream tt;
-  tt << indent << "std::unique_ptr<double[]> " << tag << "data = " << lbl << "->get_block(";
+  tt << indent << "std::unique_ptr<" << DataType << "[]> " << tag << "data = " << lbl << "->get_block(";
   for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
     if (i != index_.rbegin()) tt << ", ";
     tt << (*i)->str_gen();

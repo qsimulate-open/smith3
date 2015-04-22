@@ -148,6 +148,9 @@ int count_distinct_tensors__(const std::vector<std::string>& labels) {
   return out;
 }
 
+static const std::string DataType = "double";
+static const double fac2 = (DataType == "double" ? 2.0 : 1.0);
+
 }
 }
 

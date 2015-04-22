@@ -24,6 +24,7 @@
 //
 
 
+#include "constants.h"
 #include "operator.h"
 #include <algorithm>
 
@@ -215,7 +216,7 @@ tuple<double, shared_ptr<Spin>, shared_ptr<Spin>>
 
         *get<0>(*i) = *survive(get<0>(*i), dat.first);
         *dat.first = *get<0>(*i);
-        fac *= (*dat.second == rho(get<2>(*i))) ? 2.0 : 1.0;
+        fac *= (*dat.second == rho(get<2>(*i))) ? fac2 : 1.0;
         a = *dat.second;
         b = rho(get<2>(*i));
         set_rho(get<2>(*i), *dat.second);
