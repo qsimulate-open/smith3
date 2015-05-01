@@ -297,7 +297,8 @@ OutStream Forest::generate_algorithm() const {
     out.ee << "  den1 = h1_->clone();" << endl;
     out.ee << "  den2 = h1_->clone();" << endl;
     out.ee << "  Den1 = v2_->clone();" << endl;
-    out.ee << "  deci = make_shared<Tensor>(vector<IndexRange>{ci_});" << endl;
+    out.ee << "  if (info_->grad())" << endl;
+    out.ee << "    deci = make_shared<Tensor>(vector<IndexRange>{ci_});" << endl;
   }
   out.ee << "}" << endl << endl;
 
