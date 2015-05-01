@@ -221,7 +221,7 @@ OutStream Energy::generate_bc(const shared_ptr<BinaryContraction> i) const {
       pair<string, string> t0 = i->tensor()->generate_dim(di);
       pair<string, string> t1 = i->next_target()->generate_dim(di);
       if (t0.first != "" || t1.first != "") {
-        out.dd << dindent << "dgemm_(\"T\", \"N\", ";
+        out.dd << dindent << GEMM << "(\"T\", \"N\", ";
         string tt0 = t0.first == "" ? "1" : t0.first;
         string tt1 = t1.first == "" ? "1" : t1.first;
         string ss0 = t1.second== "" ? "1" : t1.second;

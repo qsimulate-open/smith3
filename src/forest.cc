@@ -115,7 +115,7 @@ OutStream Forest::generate_headers() const {
   out.ss << "#include <src/scf/hf/fock.h>" << endl;
   out.ss << "#include <src/util/f77.h>" << endl;
   out.ss << "#include <src/smith/queue.h>" << endl;
-  if (forest_name_ == "MRCI")
+  if (forest_name_ == "MRCI" || forest_name_ == "RelMRCI")
     out.ss << "#include <src/smith/multitensor.h>" << endl;
   out.ss << "#include <src/smith/smith_info.h>" << endl;
   out.ss << "" << endl;
@@ -123,11 +123,11 @@ OutStream Forest::generate_headers() const {
   out.ss << "namespace SMITH {" << endl;
   out.ss << "namespace " << forest_name_ << "{" << endl;
   out.ss << "" << endl;
-  out.ss << "class " << forest_name_ << " : public SpinFreeMethod {" << endl;
+  out.ss << "class " << forest_name_ << " : public SpinFreeMethod<" << DataType << "> {" << endl;
   out.ss << "  protected:" << endl;
   out.ss << "    std::shared_ptr<Tensor> t2;" << endl;
   out.ss << "    std::shared_ptr<Tensor> r;" << endl;
-  if (forest_name_ == "MRCI") {
+  if (forest_name_ == "MRCI" || forest_name_ == "RelMRCI") {
     out.ss << "    std::shared_ptr<Tensor> s;" << endl;
     out.ss << "    std::shared_ptr<Tensor> n;" << endl << endl;;
 
@@ -187,7 +187,7 @@ OutStream Forest::generate_headers() const {
   out.gg << "using namespace std;" << endl;
   out.gg << "using namespace bagel;" << endl;
   out.gg << "using namespace bagel::SMITH;" << endl;
-  out.dd << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
+  out.gg << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
 
   return out;
 }
@@ -264,11 +264,18 @@ OutStream Forest::generate_algorithm() const {
   // generate computational algorithm
   out.ss << endl;
   out.ss << "  public:" << endl;
-  out.ss << "    " << forest_name_ << "(std::shared_ptr<const SMITH_Info> ref);" << endl;
+  out.ss << "    " << forest_name_ << "(std::shared_ptr<const SMITH_Info<" << DataType << ">> ref);" << endl;
 
-  out.ee << forest_name_ << "::" << forest_name_ << "::" << forest_name_ << "(shared_ptr<const SMITH_Info> ref) : SpinFreeMethod(ref) {" << endl;
-  out.ee << "  eig_ = f1_->diag();" << endl;
-  if (forest_name_ == "MRCI") {
+  out.ee << forest_name_ << "::" << forest_name_ << "::" << forest_name_ << "(shared_ptr<const SMITH_Info<" << DataType << ">> ref) : SpinFreeMethod(ref) {" << endl;
+  if (DataType == "double") {
+    out.ee << "  eig_ = f1_->diag();" << endl;
+  } else {
+    out.ee << "  auto eig = f1_->diag();" << endl;
+    out.ee << "  eig_.resize(eig.size());" << endl;
+    out.ee << "  for (int i = 0; i != eig.size(); ++i)" << endl;
+    out.ee << "    eig_[i] = real(eig[i]);" << endl;
+  }
+  if (forest_name_ == "MRCI" || forest_name_ == "RelMRCI") {
     out.ee << "  nstates_ = ref->ciwfn()->nstates();" << endl << endl;
 
     out.ee << "  for (int i = 0; i != nstates_; ++i) {" << endl;
@@ -303,7 +310,7 @@ OutStream Forest::generate_algorithm() const {
 
   if (forest_name_ == "CASPT2")
     out.ee << caspt2_main_driver_();
-  else if (forest_name_ == "MRCI")
+  else if (forest_name_ == "MRCI" || forest_name_ == "RelMRCI")
     out.ee << msmrci_main_driver_();
 
   out.ee << "}" << endl;
@@ -380,7 +387,7 @@ string Forest::caspt2_main_driver_() const {
   ss << "  print_iteration();" << endl;
   ss << "  Timer mtimer;" << endl;
   ss << "  int iter = 0;" << endl;
-  ss << "  for ( ; iter != ref_->maxiter(); ++iter) {" << endl;
+  ss << "  for ( ; iter != info_->maxiter(); ++iter) {" << endl;
   ss << "    shared_ptr<Queue> energyq = make_energyq();" << endl;
   ss << "    energy_ = accumulate(energyq);" << endl;
   ss << "    shared_ptr<Queue> queue = make_residualq();" << endl;
@@ -393,9 +400,9 @@ string Forest::caspt2_main_driver_() const {
   ss << endl;
   ss << "    update_amplitude(t2, r);" << endl;
   ss << "    r->zero();" << endl;
-  ss << "    if (err < ref_->thresh()) break;" << endl;
+  ss << "    if (err < info_->thresh()) break;" << endl;
   ss << "  }" << endl;
-  ss << "  print_iteration(iter == ref_->maxiter());" << endl;
+  ss << "  print_iteration(iter == info_->maxiter());" << endl;
   ss << "  timer.tick_print(\"CASPT2 energy evaluation\");" << endl;
   return ss.str();
 }
@@ -405,11 +412,11 @@ string Forest::msmrci_main_driver_() const {
   ss << "  Timer timer;" << endl;
   ss << "  print_iteration();" << endl << endl;
 
-  ss << "  const double core_nuc = core_energy_ + ref_->geom()->nuclear_repulsion();" << endl << endl;
+  ss << "  const double core_nuc = core_energy_ + info_->geom()->nuclear_repulsion();" << endl << endl;
 
   ss << "  // target state" << endl;
   ss << "  for (int istate = 0; istate != nstates_; ++istate) {" << endl;
-  ss << "    const double refen = ref_->ciwfn()->energy(istate) - core_nuc;" << endl;
+  ss << "    const double refen = info_->ciwfn()->energy(istate) - core_nuc;" << endl;
   ss << "    // takes care of ref coefficients" << endl;
   ss << "    t2all_[istate]->fac(istate) = 1.0;" << endl;
   ss << "    nall_[istate]->fac(istate)  = 1.0;" << endl;
@@ -424,24 +431,24 @@ string Forest::msmrci_main_driver_() const {
   ss << "    }" << endl;
   ss << "  }" << endl << endl;
 
-  ss << "  DavidsonDiag_<Amplitude, Residual> davidson(nstates_, 10);" << endl << endl;
+  ss << "  DavidsonDiag_<Amplitude<" << DataType << ">, Residual<" << DataType << ">, " << MatType << "> davidson(nstates_, 10);" << endl << endl;
 
   ss << "  // first iteration is trivial" << endl;
   ss << "  {" << endl;
-  ss << "    vector<shared_ptr<const Amplitude>> a0;" << endl;
-  ss << "    vector<shared_ptr<const Residual>> r0;" << endl;
+  ss << "    vector<shared_ptr<const Amplitude<" << DataType << ">>> a0;" << endl;
+  ss << "    vector<shared_ptr<const Residual<" << DataType << ">>> r0;" << endl;
   ss << "    for (int istate = 0; istate != nstates_; ++istate) {" << endl;
-  ss << "      a0.push_back(make_shared<Amplitude>(t2all_[istate]->copy(), nall_[istate]->copy(), this));" << endl;
-  ss << "      r0.push_back(make_shared<Residual>(sall_[istate]->copy(), this));" << endl;
+  ss << "      a0.push_back(make_shared<Amplitude<" << DataType << ">>(t2all_[istate]->copy(), nall_[istate]->copy(), this));" << endl;
+  ss << "      r0.push_back(make_shared<Residual<" << DataType << ">>(sall_[istate]->copy(), this));" << endl;
   ss << "    }" << endl;
   ss << "    energy_ = davidson.compute(a0, r0);" << endl;
   ss << "    for (int istate = 0; istate != nstates_; ++istate)" << endl;
-  ss << "      assert(fabs(energy_[istate]+core_nuc - ref_->ciwfn()->energy(istate)) < 1.0e-8);" << endl;
+  ss << "      assert(fabs(energy_[istate]+core_nuc - info_->ciwfn()->energy(istate)) < 1.0e-8);" << endl;
   ss << "  }" << endl << endl;
 
   ss << "  // set the result to t2" << endl;
   ss << "  {" << endl;
-  ss << "    vector<shared_ptr<Residual>> res = davidson.residual();" << endl;
+  ss << "    vector<shared_ptr<Residual<" << DataType << ">>> res = davidson.residual();" << endl;
   ss << "    for (int i = 0; i != nstates_; ++i) {" << endl;
   ss << "      t2all_[i]->zero();" << endl;
   ss << "      update_amplitude(t2all_[i], res[i]->tensor());" << endl;
@@ -454,11 +461,11 @@ string Forest::msmrci_main_driver_() const {
   ss << "  Timer mtimer;" << endl;
   ss << "  int iter = 0;" << endl;
   ss << "  vector<bool> conv(nstates_, false);" << endl;
-  ss << "  for ( ; iter != ref_->maxiter(); ++iter) {" << endl << endl;
+  ss << "  for ( ; iter != info_->maxiter(); ++iter) {" << endl << endl;
 
   ss << "    // loop over state of interest" << endl;
-  ss << "    vector<shared_ptr<const Amplitude>> a0;" << endl;
-  ss << "    vector<shared_ptr<const Residual>> r0;" << endl;
+  ss << "    vector<shared_ptr<const Amplitude<" << DataType << ">>> a0;" << endl;
+  ss << "    vector<shared_ptr<const Residual<" << DataType << ">>> r0;" << endl;
   ss << "    for (int istate = 0; istate != nstates_; ++istate) {" << endl;
   ss << "      if (conv[istate]) {" << endl;
   ss << "        a0.push_back(nullptr);" << endl;
@@ -479,11 +486,11 @@ string Forest::msmrci_main_driver_() const {
   ss << "      }" << endl << endl;
 
   ss << "      // normalize t2 and n" << endl;
-  ss << "      const double scal = 1.0 / sqrt(dot_product_transpose(nall_[istate], t2all_[istate]));" << endl;
+  ss << "      const double scal = 1.0 / sqrt(detail::real(dot_product_transpose(nall_[istate], t2all_[istate])));" << endl;
   ss << "      nall_[istate]->scale(scal);" << endl;
   ss << "      t2all_[istate]->scale(scal);" << endl << endl;
 
-  ss << "      a0.push_back(make_shared<Amplitude>(t2all_[istate]->copy(), nall_[istate]->copy(), this));" << endl << endl;
+  ss << "      a0.push_back(make_shared<Amplitude<" << DataType << ">>(t2all_[istate]->copy(), nall_[istate]->copy(), this));" << endl << endl;
 
   ss << "      // compute residuals (named r)" << endl;
   ss << "      rtmp->zero();" << endl;
@@ -503,7 +510,7 @@ string Forest::msmrci_main_driver_() const {
   ss << "        shared_ptr<MultiTensor> m = t2all_[istate]->copy();" << endl;
   ss << "        for (int ist = 0; ist != nstates_; ++ist) {" << endl;
   ss << "          // First weighted T2 amplitude" << endl;
-  ss << "          m->at(ist)->scale(ref_->ciwfn()->energy(ist) - core_nuc);" << endl;
+  ss << "          m->at(ist)->scale(info_->ciwfn()->energy(ist) - core_nuc);" << endl;
   ss << "          // then add it to residual" << endl;
   ss << "          for (int jst = 0; jst != nstates_; ++jst) {" << endl;
   ss << "            set_rdm(jst, ist);" << endl;
@@ -520,20 +527,20 @@ string Forest::msmrci_main_driver_() const {
   ss << "        shared_ptr<MultiTensor> m = rtmp->copy();" << endl;
   ss << "        for (int ist = 0; ist != nstates_; ++ist)" << endl;
   ss << "          m->fac(ist) = dot_product_transpose(sall_[ist], t2all_[istate]);" << endl;
-  ss << "        r0.push_back(make_shared<Residual>(m, this));" << endl;
+  ss << "        r0.push_back(make_shared<Residual<" << DataType << ">>(m, this));" << endl;
   ss << "      }" << endl;
   ss << "    }" << endl << endl;
 
   ss << "    energy_ = davidson.compute(a0, r0);" << endl << endl;
 
   ss << "    // find new trial vectors" << endl;
-  ss << "    vector<shared_ptr<Residual>> res = davidson.residual();" << endl;
+  ss << "    vector<shared_ptr<Residual<" << DataType << ">>> res = davidson.residual();" << endl;
   ss << "    for (int i = 0; i != nstates_; ++i) {" << endl;
   ss << "      const double err = res[i]->tensor()->rms();" << endl;
   ss << "      print_iteration(iter, energy_[i]+core_nuc, err, mtimer.tick(), i);" << endl << endl;
 
   ss << "      t2all_[i]->zero();" << endl;
-  ss << "      conv[i] = err < ref_->thresh();" << endl;
+  ss << "      conv[i] = err < info_->thresh();" << endl;
   ss << "      if (!conv[i])" << endl;
   ss << "        update_amplitude(t2all_[i], res[i]->tensor());" << endl;
   ss << "    }" << endl;
@@ -541,7 +548,7 @@ string Forest::msmrci_main_driver_() const {
 
   ss << "    if (all_of(conv.begin(), conv.end(), [](bool i){ return i;})) break;" << endl;
   ss << "  }" << endl;
-  ss << "  print_iteration(iter == ref_->maxiter());" << endl;
+  ss << "  print_iteration(iter == info_->maxiter());" << endl;
   ss << "  timer.tick_print(\"MRCI energy evaluation\");" << endl;
 
   return ss.str();
