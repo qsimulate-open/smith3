@@ -216,7 +216,7 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
     }
   }
   if (!scalar_.empty() && !noscale) {
-    tt << cindent << "dscal_(";
+    tt << cindent << SCAL << "(";
     for (auto i = index_.rbegin(); i != index_.rend(); ++i)
       tt << (i != index_.rbegin() ? "*" : "") << (*i)->str_gen() << ".size()";
     // update scalar_ name directly

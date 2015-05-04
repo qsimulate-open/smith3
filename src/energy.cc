@@ -70,7 +70,7 @@ OutStream Energy::generate_compute_header(const int ic, const list<shared_ptr<co
   out.tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
   out.tt << "        const std::shared_ptr<const Tensor>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
   out.tt << "        const std::shared_ptr<Tensor>& out() const { return this->out_tensor(); }" << endl;
-  out.tt << "        double target_;" << endl;
+  out.tt << "        " << DataType << " target_;" << endl;
   if (need_e0)  out.tt << "        double e0_;" << endl;
   out.tt << endl;
   out.tt << "      public:" << endl;
@@ -85,7 +85,7 @@ OutStream Energy::generate_compute_header(const int ic, const list<shared_ptr<co
     out.tt << "          : SubTask<" << nindex << "," << ninptensors << ">(block, in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
   }
   out.tt << endl;
-  out.tt << "        double target() const { return target_; }" << endl;
+  out.tt << "        double target() const { return detail::real(target_); }" << endl;
   out.tt << endl;
   out.tt << "        void compute() override;" << endl;
 
@@ -232,10 +232,10 @@ OutStream Energy::generate_bc(const shared_ptr<BinaryContraction> i) const {
       } else {
         if (depth() != 1) {
           string ss0 = t1.second== "" ? "1" : t1.second;
-          out.dd << dindent << "odata_sorted[0] += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
+          out.dd << dindent << "odata_sorted[0] += " << DOT << "(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
         } else {
           string ss0 = t1.second== "" ? "1" : t1.second;
-          out.dd << dindent << "target_ += ddot_(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
+          out.dd << dindent << "target_ += " << DOT << "(" << ss0 << ", i0data_sorted, 1, i1data_sorted, 1);" << endl;
         }
       }
     }

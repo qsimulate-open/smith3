@@ -57,7 +57,8 @@ class Equation {
         for (auto i = current.begin(); i != current.end(); ++i, ++inp)
           cc.push_back((*inp)[*i]);
         // diagonal cc/aa will be removed from the CASPT2 residual equation for efficiency.
-        if (method_ != "CASPT2" || label_[0] != 'r' || !(cc.back()->external() && cc.front()->tag() == "proje" && (*(++cc.begin()))->external())) {
+        if ((method_ != "CASPT2") || label_[0] != 'r' || !(cc.back()->external() && cc.front()->tag() == "proje" && (*(++cc.begin()))->external())) {
+//      if ((method_ != "CASPT2" && method_ != "RelCASPT2") || label_[0] != 'r' || !(cc.back()->external() && cc.front()->tag() == "proje" && (*(++cc.begin()))->external())) {
           out.push_back(cc);
         }
 
@@ -115,7 +116,7 @@ class Equation {
       if (ci_derivative_) ss << "  " << diagram_.front()->eqn_label() << "->absorb_ket();" << std::endl;
       ss << "  " << diagram_.front()->eqn_label() << "->duplicates();" << std::endl;
       ss << "  " << diagram_.front()->eqn_label() << "->active();" << std::endl;
-      if (method_ != "CASPT2") {
+      if (method_ != "CASPT2" && method_ != "RelCASPT2") {
         ss << "  " << diagram_.front()->eqn_label() << "->reorder_tensors();" << std::endl;
         ss << "  " << diagram_.front()->eqn_label() << "->simplify();" << std::endl;
       }

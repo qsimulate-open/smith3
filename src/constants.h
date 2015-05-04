@@ -152,6 +152,8 @@ int count_distinct_tensors__(const std::vector<std::string>& labels) {
 static const std::string DataType = "std::complex<double>";
 static const double fac2 = (DataType == "double" ? 2.0 : 1.0);
 static const std::string GEMM = (DataType == "double" ? "dgemm_" : "zgemm3m_");
+static const std::string SCAL = (DataType == "double" ? "dscal_" : "zscal_");
+static const std::string DOT = (DataType == "double" ? "ddot_" : "zdotu_");
 static const std::string MatType = (DataType == "double" ? "Matrix" : "ZMatrix");
 
 }

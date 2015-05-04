@@ -364,7 +364,7 @@ string RDM00::generate_merged(string indent, const string tag, const list<shared
     } else {
       // for rdm0 case
       // add dscal
-      tt << indent << "dscal_(";
+      tt << indent << SCAL << "(";
       for (auto i = merged.rbegin(); i != merged.rend(); ++i)
         tt << (i != merged.rbegin() ? "*" : "") << (*i)->str_gen() << ".size()";
       tt << ", " << setprecision(1) << fixed << factor() << ", " << "fdata_sorted.get(), 1);" << endl;
@@ -489,7 +489,7 @@ string RDM00::make_blas_multiply(string dindent, const list<shared_ptr<const Ind
     throw logic_error("ddot needed in f1 merged");
 #else
     // TODO need to check this when general case is available
-    tt << dindent << "odata[0] = " << setprecision(1) << fixed << factor() <<  " * " << "ddot_(" << t1.first << ", fdata_sorted, 1, i0data_sorted, 1);" << endl;
+    tt << dindent << "odata[0] = " << setprecision(1) << fixed << factor() <<  " * " << DOT << "(" << t1.first << ", fdata_sorted, 1, i0data_sorted, 1);" << endl;
 #endif
   }
   return tt.str();

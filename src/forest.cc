@@ -291,14 +291,16 @@ OutStream Forest::generate_algorithm() const {
     out.ee << "    nall_.push_back(tmp2->copy());" << endl;
     out.ee << "  }" << endl;
   }
-  if (forest_name_ == "CASPT2") {
+  if (forest_name_ == "CASPT2" || forest_name_ == "RelCASPT2") {
     out.ee << "  t2 = init_amplitude();" << endl;
     out.ee << "  r = t2->clone();" << endl;
-    out.ee << "  den1 = h1_->clone();" << endl;
-    out.ee << "  den2 = h1_->clone();" << endl;
-    out.ee << "  Den1 = v2_->clone();" << endl;
-    out.ee << "  if (info_->grad())" << endl;
-    out.ee << "    deci = make_shared<Tensor>(vector<IndexRange>{ci_});" << endl;
+    if (forest_name_ == "CASPT2") {
+      out.ee << "  den1 = h1_->clone();" << endl;
+      out.ee << "  den2 = h1_->clone();" << endl;
+      out.ee << "  Den1 = v2_->clone();" << endl;
+      out.ee << "  if (info_->grad())" << endl;
+      out.ee << "    deci = make_shared<Tensor>(vector<IndexRange>{ci_});" << endl;
+    }
   }
   out.ee << "}" << endl << endl;
 
@@ -309,7 +311,7 @@ OutStream Forest::generate_algorithm() const {
 
   out.ee << "void " << forest_name_ << "::" << forest_name_ << "::solve() {" << endl;
 
-  if (forest_name_ == "CASPT2")
+  if (forest_name_ == "CASPT2" || forest_name_ == "RelCASPT2")
     out.ee << caspt2_main_driver_();
   else if (forest_name_ == "MRCI" || forest_name_ == "RelMRCI")
     out.ee << msmrci_main_driver_();
@@ -395,7 +397,7 @@ string Forest::caspt2_main_driver_() const {
   ss << "    while (!queue->done())" << endl;
   ss << "      queue->next_compute();" << endl;
   ss << "    diagonal(r, t2);" << endl;
-  ss << "    energy_ += dot_product_transpose(r, t2);" << endl;
+  ss << "    energy_ += detail::real(dot_product_transpose(r, t2));" << endl;
   ss << "    const double err = r->rms();" << endl;
   ss << "    print_iteration(iter, energy_, err, mtimer.tick());" << endl;
   ss << endl;
