@@ -138,8 +138,9 @@ OutStream Forest::generate_headers() const {
     out.ss << "    std::vector<std::shared_ptr<MultiTensor>> rall_;" << endl;
     out.ss << "    std::vector<std::shared_ptr<MultiTensor>> sall_;" << endl;
     out.ss << "    std::vector<std::shared_ptr<MultiTensor>> nall_;" << endl;
-
   }
+  if (forest_name_ == "RelCASPT2")
+    out.ss << "    std::shared_ptr<Tensor> s;" << endl;
   if (forest_name_ == "CASPT2") {
     out.ss << "    std::shared_ptr<Tensor> den1;" << endl;
     out.ss << "    std::shared_ptr<Tensor> den2;" << endl;
@@ -300,6 +301,8 @@ OutStream Forest::generate_algorithm() const {
       out.ee << "  Den1 = v2_->clone();" << endl;
       out.ee << "  if (info_->grad())" << endl;
       out.ee << "    deci = make_shared<Tensor>(vector<IndexRange>{ci_});" << endl;
+    } else if (forest_name_ == "RelCASPT2") {
+      out.ee << "  s = t2->clone();" << endl;
     }
   }
   out.ee << "}" << endl << endl;
@@ -391,12 +394,20 @@ string Forest::caspt2_main_driver_() const {
   ss << "  Timer mtimer;" << endl;
   ss << "  int iter = 0;" << endl;
   ss << "  for ( ; iter != info_->maxiter(); ++iter) {" << endl;
-  ss << "    shared_ptr<Queue> energyq = make_energyq();" << endl;
-  ss << "    energy_ = accumulate(energyq);" << endl;
+  if (DataType == "double") {
+    ss << "    shared_ptr<Queue> energyq = make_energyq();" << endl;
+    ss << "    energy_ = accumulate(energyq);" << endl;
+  } else {
+    ss << "    shared_ptr<Queue> source = make_sourceq();" << endl;
+    ss << "    while (!source->done())" << endl;
+    ss << "      source->next_compute();" << endl;
+    ss << "    energy_ = detail::real(dot_product_transpose(s, t2));" << endl;
+  }
   ss << "    shared_ptr<Queue> queue = make_residualq();" << endl;
   ss << "    while (!queue->done())" << endl;
   ss << "      queue->next_compute();" << endl;
-  ss << "    diagonal(r, t2);" << endl;
+  if (DataType == "double")
+    ss << "    diagonal(r, t2);" << endl;
   ss << "    energy_ += detail::real(dot_product_transpose(r, t2));" << endl;
   ss << "    const double err = r->rms();" << endl;
   ss << "    print_iteration(iter, energy_, err, mtimer.tick());" << endl;
