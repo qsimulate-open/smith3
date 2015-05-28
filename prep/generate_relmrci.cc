@@ -56,21 +56,15 @@ tuple<vector<shared_ptr<Tensor>>, vector<shared_ptr<Tensor>>, vector<shared_ptr<
     for (auto& j : label) {
       for (auto& k : label) {
         for (auto& l : label) {
-          // full CASPT2
           if (
-#if 1
-              // all correct in this block
-              (l == "c" && k == "c" && j == "a" && i == "a") //||
-#endif
-#if 0
+              (l == "c" && k == "c" && j == "a" && i == "a") ||
               (l == "x" && k == "c" && j == "a" && i == "a") ||
               (l == "x" && k == "x" && j == "a" && i == "a") ||
               (l == "c" && k == "c" && j == "x" && i == "a") ||
               (l == "c" && k == "c" && j == "x" && i == "x") ||
               (l == "x" && k == "c" && j == "x" && i == "x") ||
               (l == "x" && k == "x" && j == "x" && i == "a") ||
-              (l == "c" && k == "x" && j == "x" && i == "a") || (l == "x" && k == "c" && j == "x" && i == "a")
-#endif
+              (l == "c" && k == "x" && j == "x" && i == "a")
             ) {
             stringstream ss; ss << cnt;
             lp.push_back(shared_ptr<Tensor>(new Tensor(ss.str(), {l, k, j, i})));
@@ -115,7 +109,6 @@ int main() {
   shared_ptr<Equation> eq1(new Equation(theory, "rb", {dum, proj_list, H, t_list}, 0.5));
   eq0->merge(eq1);
   for (int i = 0; i != proj_list.size(); ++i) {
-    if (i == 3 || i == 4) continue;
     stringstream ss, tt;
     ss << "ra_" << i;
     tt << "rb_" << i;
@@ -124,12 +117,6 @@ int main() {
     eq0->merge(eq0m);
     eq0->merge(eq1m);
   }
-#if 0
-  shared_ptr<Equation> eq0m(new Equation(theory, "ra_3", {dum, vector<shared_ptr<Tensor>>{proj_list[3], proj_list[4]}, vector<shared_ptr<Tensor>>{t_list[3], t_list[4]}, hc}, -1.0));
-  shared_ptr<Equation> eq1m(new Equation(theory, "rb_3", {dum, vector<shared_ptr<Tensor>>{proj_list[3], proj_list[4]}, vector<shared_ptr<Tensor>>{t_list[3], t_list[4]}, H},  -0.5));
-  eq0->merge(eq0m);
-  eq0->merge(eq1m);
-#endif
   eq0->set_tree_type("residual");
   cout << eq0->generate();
 
