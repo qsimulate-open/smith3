@@ -177,6 +177,35 @@ string Tensor::constructor_str(const bool diagonal) const {
 }
 
 
+string Tensor::generate_ta(const string tlab, const bool noscale) const {
+  stringstream tt;
+
+  string lbl = label();
+  if (lbl == "proj") lbl = "r";
+  const size_t found = lbl.find("dagger");
+
+  tt << "(*" << tlab << ")(\"";
+  if (found != string::npos) {
+    for (auto i = index_.begin(); i != index_.end(); ++i) {
+      if (i != index_.begin()) tt << ", ";
+      tt << (*i)->str_gen();
+    }
+  } else {
+    for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
+      if (i != index_.rbegin()) tt << ", ";
+      tt << (*i)->str_gen();
+    }
+  }
+  tt << "\")";
+
+  if (!scalar_.empty() && !noscale)
+    tt << " * " << scalar_ << "_";
+  if (fabs(factor_-1.0) > 1.0e-8)
+    tt << " * " << setprecision(16) << (factor_ < 0.0 ? "(" : "") << factor_ << (factor_ < 0.0 ? ")" : "");
+  return tt.str();
+}
+
+
 string Tensor::generate_get_block(const string cindent, const string lab, const string tlab, const bool move, const bool noscale) const {
   string lbl = label();
   if (lbl == "proj") lbl = "r";

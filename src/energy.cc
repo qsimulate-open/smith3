@@ -137,9 +137,11 @@ OutStream Energy::generate_compute_footer(const int ic, const list<shared_ptr<co
   out.tt << "    }" << endl << endl;
 
   out.tt << "  public:" << endl;
-  out.tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t,  std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", const double e" : "") << ");" << endl;
+  out.tt << "    Task" << ic << "(std::array<std::shared_ptr<Tensor>," << (ninptensors+1)
+                       << "> t,  std::array<std::shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", const double e" : "") << ");" << endl;
 
-  out.cc << "Task" << ic << "::Task" << ic << "(vector<shared_ptr<Tensor>> t, array<shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", const double e" : "") << ") {" << endl;
+  out.cc << "Task" << ic << "::Task" << ic << "(array<shared_ptr<Tensor>," << (ninptensors+1)
+                   << "> t, array<shared_ptr<const IndexRange>,3> range" << (need_e0 ? ", const double e" : "") << ") {" << endl;
   out.cc << "  array<shared_ptr<const Tensor>," << ninptensors << "> in = {{";
   for (auto i = 1; i < ninptensors + 1; ++i)
     out.cc << "t[" << i << "]" << (i < ninptensors ? ", " : "");

@@ -282,6 +282,31 @@ void ListTensor::reorder() {
       current = cost;
     }
   } while (next_permutation(list_.begin(), list_.end()));
+
+  // sort the last two tensors...
+  if (out.size() > 1) {
+    shared_ptr<Tensor> a = *out.rbegin();
+    shared_ptr<Tensor> b = *(++out.rbegin());
+    bool sw = true;
+    if (a->label() == "proj")      sw = true;
+    else if (b->label() == "proj") sw = false;
+    else if (a->label() == "t2dagger")   sw = true;
+    else if (b->label() == "t2dagger")   sw = false;
+    else if (a->label() == "h1")   sw = true;
+    else if (b->label() == "h1")   sw = false;
+    else if (a->label() == "f1")   sw = true;
+    else if (b->label() == "f1")   sw = false;
+    else if (a->label() == "v2")   sw = true;
+    else if (b->label() == "v2")   sw = false;
+    else if (a->label() == "t2")   sw = true;
+    else if (b->label() == "t2")   sw = false;
+    else {
+       cout << a->label() << " " << b->label() << endl;
+       throw logic_error("I have not thought about this yet");
+    }
+    if (!sw)
+      swap(*out.rbegin(), *(++out.rbegin()));
+  }
   list_ = out;
 }
 

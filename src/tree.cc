@@ -346,12 +346,7 @@ list<shared_ptr<const Index>> BinaryContraction::loop_indices() {
 OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vector<shared_ptr<Tensor>> op, const bool dagger) const {
   OutStream out;
 
-  vector<string> close;
-  string cindent = "  ";
-  // note that I am using reverse_iterator
-  //out.dd << target->generate_loop(cindent, close);
   // get data
-  out.dd << target->generate_get_block(cindent, "o", "out()", true);
 
   // needed in case the tensor labels are repeated..
   vector<shared_ptr<Tensor>> uniq_tensors;
@@ -359,7 +354,7 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
   // map redundant tensor label to unique tensor label
   map<string, int> op_tensor_lab;
 
-  int uniq_cnt = 0;
+  int uniq_cnt = 1;
   for (auto& i : op) {
     string label = label__(i->label());
     // if we already have the label in the list
@@ -373,20 +368,26 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
     ++uniq_cnt;
   }
 
+  out.dd << "  auto ta0 = tensor_[0].tiledarray<" << target->index().size() << ">();" << endl;
+  for (auto& i : uniq_tensors) {
+    const int cnt = op_tensor_lab.at(label__(i->label()));
+    out.dd << "  auto ta" << cnt << " = tensor_[" << cnt << "].tiledarray<" << i->index().size() << ">();" << endl;
+  }
+
+  out.dd << "  madness::World::get_default().gop.fence();" << endl;
+  out.dd << "  " << target->generate_ta("ta0", true) << " += ";
+
   // add the source data to the target
   int j = 0;
   for (auto s = op.begin(); s != op.end(); ++s, ++j) {
     stringstream uu; uu << "i" << j;
-    out.dd << cindent << "{" << endl;
 
     // uses map to give label number consistent with operator, needed in case label is repeated (eg ccaa)
     string label = label__((*s)->label());
-    stringstream instr; instr << "in(" << op_tensor_lab[label] << ")";
+    stringstream instr; instr << "ta" << op_tensor_lab[label];
 
-    out.dd << (*s)->generate_get_block(cindent+"  ", uu.str(), instr.str());
+    out.dd << (s == op.begin() ? "" : "\n     + ") << (*s)->generate_ta(instr.str());
     list<shared_ptr<const Index>> di = target->index();
-    out.dd << (*s)->generate_sort_indices(cindent+"  ", uu.str(), instr.str(), di, true);
-    out.dd << cindent << "}" << endl;
 
     // if this is at the top-level and needs to be daggered:
     if (depth() == 0 && dagger) {
@@ -409,30 +410,17 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
               break;
             }
             auto ll = l;
-            if (++ll == map.end()) throw logic_error("should not happen: dagger stuffs");
+            if (++ll == map.end()) throw logic_error("should not happen: dagger");
           }
         }
         top->index() = tmp;
-        out.dd << cindent << "{" << endl;
-        out.dd << top->generate_get_block(cindent+"  ", uu.str(), instr.str());
-        list<shared_ptr<const Index>> di = target->index();
-        out.dd << top->generate_sort_indices(cindent+"  ", uu.str(), instr.str(), di, true);
-        out.dd << cindent << "}" << endl;
+        out.dd << " + " << top->generate_ta(instr.str());
       }
     }
   }
-
-  // put data
-  {
-    string label = target->label();
-    list<shared_ptr<const Index>> ti = target->index();
-    out.dd << cindent << "out()->put_block(odata";
-    for (auto i = ti.rbegin(); i != ti.rend(); ++i)
-      out.dd << ", " << (*i)->str_gen();
-    out.dd << ");" << endl;
-  }
-  for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-    out.dd << *iter << endl;
+  out.dd << ";" << endl;
+  out.dd << "  madness::World::get_default().gop.fence();" << endl;
+  out.dd << "  tensor_[0] = make_shared<Tensor>(*ta0);" << endl;
   return out;
 }
 

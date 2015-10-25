@@ -141,6 +141,9 @@ class Tensor {
 
     /// Generates string for constructor for tensors in Method.cc file
     std::string constructor_str(const bool diagonal = false) const;
+    /// Generates code for this tensor using TA expressions
+    std::string generate_ta(const std::string, const bool noscale = false) const;
+
     /// Generates code for get_block - source block to be added later to target (move) block.
     std::string generate_get_block(const std::string, const std::string, const std::string, const bool move = false, const bool noscale = false) const;
     /// Generate code for unique_ptr scratch arrays.
