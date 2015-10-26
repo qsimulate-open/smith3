@@ -40,7 +40,7 @@ OutStream Residual::create_target(const int i) const {
   out.tt << "    const bool reset_;" << endl;
   out.tt << "" << endl;
   out.tt << "    void compute_() {" << endl;
-  out.tt << "      if (reset_) " << target_name__(label_) << "_->zero();" << endl;
+  out.tt << "      if (reset_) tensor_[0]->zero();" << endl;
   out.tt << "    }" << endl;
   out.tt << "" << endl;
   out.tt << "  public:" << endl;
@@ -62,6 +62,8 @@ OutStream Residual::generate_task(const int ip, const int ic, const vector<strin
   // when there is no gamma under this, we must skip for off-digonal
   string indent = "";
 
+  const bool is_gamma = op.front().find("Gamma") != string::npos;
+
   if (diagonal) {
     tmp << "  shared_ptr<Task" << ic << "> task" << ic << ";" << endl;
     tmp << "  if (diagonal) {" << endl;
@@ -69,9 +71,9 @@ OutStream Residual::generate_task(const int ip, const int ic, const vector<strin
   }
   tmp << indent << "  auto tensor" << ic << " = array<shared_ptr<Tensor>," << count_distinct_tensors__(op) << ">{{" << merge__(op, label_) << "}};" << endl;
   tmp << indent << "  " << (diagonal ? "" : "auto ") << "task" << ic
-                << " = make_shared<Task" << ic << ">(tensor" << ic << (der || label_=="deci" ? ", cindex" : ", pindex") << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
+                << " = make_shared<Task" << ic << ">(tensor" << ic << (is_gamma ? (der ? ", cindex" : ", pindex") : "")
+                << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
 
-  const bool is_gamma = op.front().find("Gamma") != string::npos;
   if (!is_gamma) {
     if (parent_) {
       assert(parent_->parent());
@@ -155,7 +157,7 @@ OutStream Residual::generate_bc(const shared_ptr<BinaryContraction> i) const {
     if (i->next_target()->label().find("Gamma") != string::npos)
       out.dd << "  tensor_[2]->init();" << endl;
 
-    out.dd << "  auto ta0 = tensor_[0]->tiledarray<" << target_->index().size() << ">();" << endl;
+    out.dd << "  auto ta0 = tensor_[0]->tiledarray<" << target_->index().size() << ">(true);" << endl;
     out.dd << "  auto ta1 = tensor_[1]->tiledarray<" << i->tensor()->index().size() << ">();" << endl;
     if (!same_tensor__(i->tensor()->label(), i->next_target()->label()))
       out.dd << "  auto ta2 = tensor_[2]->tiledarray<" << i->next_target()->index().size() << ">();" << endl;
@@ -167,7 +169,7 @@ OutStream Residual::generate_bc(const shared_ptr<BinaryContraction> i) const {
     string inlabel("ta"); inlabel += (same_tensor__(i->tensor()->label(), i->next_target()->label()) ? "1" : "2");
     out.dd << i->next_target()->generate_ta(inlabel) << (target_->index().size() == 0 ? ").get()" : "") << ";" << endl;
     out.dd << "  madness::World::get_default().gop.fence();" << endl;
-    out.dd << "  *tensor_[0] = make_shared<Tensor>(*ta0);" << endl;
+    out.dd << "  *tensor_[0] = *make_shared<Tensor>(*ta0);" << endl;
   } else {  // now at bc depth 0
     // making residual vector...
     list<shared_ptr<const Index>> proj = i->target_index();

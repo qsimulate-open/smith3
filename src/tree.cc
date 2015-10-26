@@ -368,10 +368,10 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
     ++uniq_cnt;
   }
 
-  out.dd << "  auto ta0 = tensor_[0].tiledarray<" << target->index().size() << ">();" << endl;
+  out.dd << "  auto ta0 = tensor_[0]->tiledarray<" << target->index().size() << ">(true);" << endl;
   for (auto& i : uniq_tensors) {
     const int cnt = op_tensor_lab.at(label__(i->label()));
-    out.dd << "  auto ta" << cnt << " = tensor_[" << cnt << "].tiledarray<" << i->index().size() << ">();" << endl;
+    out.dd << "  auto ta" << cnt << " = tensor_[" << cnt << "]->tiledarray<" << i->index().size() << ">();" << endl;
   }
 
   out.dd << "  madness::World::get_default().gop.fence();" << endl;
@@ -397,11 +397,8 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
          throw logic_error("Daggered object is only supported for 4-index tensors");
       } else {
         auto k0 = di.begin(); auto k1 = k0; ++k1; auto k2 = k1; ++k2; auto k3 = k2; ++k3;
-        list<pair<list<shared_ptr<const Index>>::iterator, list<shared_ptr<const Index>>::iterator>> map;
-        map.push_back(make_pair(k0, k2));
-        map.push_back(make_pair(k2, k0));
-        map.push_back(make_pair(k1, k3));
-        map.push_back(make_pair(k3, k1));
+        using Iter = list<shared_ptr<const Index>>::iterator;
+        const list<pair<Iter, Iter>> map {{k0, k2}, {k2, k0}, {k1, k3}, {k3, k1}};
         list<shared_ptr<const Index>> tmp;
         for (auto& k : top->index()) {
           for (auto l = map.begin(); l != map.end(); ++l) {
@@ -420,7 +417,7 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
   }
   out.dd << ";" << endl;
   out.dd << "  madness::World::get_default().gop.fence();" << endl;
-  out.dd << "  tensor_[0] = make_shared<Tensor>(*ta0);" << endl;
+  out.dd << "  *tensor_[0] = *make_shared<Tensor>(*ta0);" << endl;
   return out;
 }
 

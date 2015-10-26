@@ -536,6 +536,8 @@ OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool d
     ninptensors = rdmn.size();
   }
 
+print();
+active_->print();
 
   //////////// gamma header ////////////
 #ifdef debug_tasks
@@ -609,9 +611,9 @@ OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool d
   out.tt << "    }" << endl << endl;
 
   out.tt << "  public:" << endl;
-  out.tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t,  std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range);" << endl;
+  out.tt << "    Task" << ic << "(std::array<std::shared_ptr<Tensor>," << (ninptensors+1) << "> t,  std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range);" << endl;
 
-  out.cc << "Task" << ic << "::Task" << ic << "(vector<shared_ptr<Tensor>> t, array<shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range) {" << endl;
+  out.cc << "Task" << ic << "::Task" << ic << "(array<shared_ptr<Tensor>," << (ninptensors+1) << "> t, array<shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range) {" << endl;
   out.cc << "  array<shared_ptr<const Tensor>," << ninptensors << "> in = {{";
 
   // write out tensors in increasing order
