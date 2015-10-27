@@ -383,7 +383,7 @@ OutStream Forest::generate_algorithm() const {
 }
 
 
-string Forest::caspt2_main_driver_() const {
+string Forest::caspt2_main_driver_() {
   stringstream ss;
   ss << "  Timer timer;" << endl;
   ss << "  print_iteration();" << endl;
@@ -419,7 +419,7 @@ string Forest::caspt2_main_driver_() const {
   return ss.str();
 }
 
-string Forest::msmrci_main_driver_() const {
+string Forest::msmrci_main_driver_() {
   stringstream ss;
   ss << "  Timer timer;" << endl;
   ss << "  print_iteration();" << endl << endl;
