@@ -230,7 +230,6 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
     stringstream instr; instr << "ta" << op_tensor_lab[label];
 
     out.dd << (s == op.begin() ? "" : "\n     + ") << (*s)->generate_ta(instr.str());
-    list<shared_ptr<const Index>> di = target->index();
 
     // if this is at the top-level and needs to be daggered:
     if (depth() == 0 && dagger) {
@@ -239,6 +238,7 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
       if (top->index().size() != 4) {
          throw logic_error("Daggered object is only supported for 4-index tensors");
       } else {
+        list<shared_ptr<const Index>> di = target->index();
         auto k0 = di.begin(); auto k1 = k0; ++k1; auto k2 = k1; ++k2; auto k3 = k2; ++k3;
         using Iter = list<shared_ptr<const Index>>::iterator;
         const list<pair<Iter, Iter>> map {{k0, k2}, {k2, k0}, {k1, k3}, {k3, k1}};
@@ -330,7 +330,6 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
   Tree::generate_task_list(int tcnt, int t0, const list<shared_ptr<Tensor>> gamma, vector<shared_ptr<Tensor>> itensors) const {
   // here ss is dependencies, tt is tasks
   OutStream out, tmp;
-  string indent = "      ";
 
   if (depth() == 0) { //////////////////// zero depth /////////////////////////////
     if (root_targets()) {
@@ -399,7 +398,7 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
       }
     }
   } else { //////////////////// non-zero depth /////////////////////////////
-    tie(tmp, tcnt, t0, itensors) = generate_steps(indent, tcnt, t0, gamma, itensors);
+    tie(tmp, tcnt, t0, itensors) = generate_steps(tcnt, t0, gamma, itensors);
     out << tmp;
   }
 
@@ -408,7 +407,7 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
 
 
 tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
-    Tree::generate_steps(string indent, int tcnt, int t0, const list<shared_ptr<Tensor>> gamma, vector<shared_ptr<Tensor>> itensors) const {
+    Tree::generate_steps(int tcnt, int t0, const list<shared_ptr<Tensor>> gamma, vector<shared_ptr<Tensor>> itensors) const {
   OutStream out, tmp;
   /////////////////////////////////////////////////////////////////
   // if op_ is not empty, we add a task that adds up op_.

@@ -281,32 +281,6 @@ void Tree::print() const {
 }
 
 
-list<shared_ptr<const Index>> BinaryContraction::target_indices() {
-  // returns a list of target indices
-  return target_->index();
-}
-
-
-list<shared_ptr<const Index>> BinaryContraction::loop_indices() {
-  // returns a list of inner loop indices.
-  list<shared_ptr<const Index>> out;
-  list<shared_ptr<const Index>> ti = target_->index();
-  for (auto iter = tensor_->index().begin(); iter != tensor_->index().end(); ++iter) {
-    bool found = false;
-    for (auto i = ti.begin(); i != ti.end(); ++i) {
-      if ((*i)->identical(*iter)) {
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      out.push_back(*iter);
-    }
-  }
-  return out;
-}
-
-
 vector<shared_ptr<Tensor>> BinaryContraction::tensors_vec() {
   vector<shared_ptr<Tensor>> out;
   if (target_) out.push_back(target_);

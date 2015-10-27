@@ -74,7 +74,7 @@ class BinaryContraction {
     /// Return target tensor. An intermediate tensor, for example I0.
     std::shared_ptr<Tensor> target() { return target_; }
     /// Return source tensor (an operator that is moved up).
-    std::shared_ptr<Tensor> source() const { return source_; }
+    std::shared_ptr<Tensor> source() { return source_; }
     /// Retrieve next target--next intermediate below, for example I1. This is the front of subtree of target.
     std::shared_ptr<Tensor> next_target();
     /// Returns vector of tensor with target tensor.
@@ -85,7 +85,7 @@ class BinaryContraction {
     /// Returns the target indices.
     std::string target_index_str() const;
     /// Returns bc label.
-    std::string label() { return label_; }
+    std::string label() const { return label_; }
 
     /// Do factorization and then merge subtrees.
     void factorize();
@@ -100,10 +100,6 @@ class BinaryContraction {
     /// Set target to this tensor pointer.
     void set_target(std::shared_ptr<Tensor> o) { target_ = o; };
 
-    /// Returns a list of inner loop indices, i.e., those which are the same between tensor_ and target_.
-    std::list<std::shared_ptr<const Index>> loop_indices();
-    /// Returns a list of target indices..these are to be stored (via put_block).
-    std::list<std::shared_ptr<const Index>> target_indices();
     /// Return excitation target indices.
     std::list<std::shared_ptr<const Index>> target_index() { return target_index_; }
     /// True if bc is associated with excitation target indices.
@@ -258,7 +254,7 @@ class Tree {
         generate_task_list(int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
     /// Generate code by stepping through op and bc.
     std::tuple<OutStream, int, int, std::vector<std::shared_ptr<Tensor>>>
-        generate_steps(const std::string indent, int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
+        generate_steps(int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
     /// Generate task in dependency file with ic as task number. Caution also have a virtual generate_task.
     OutStream generate_task(const int ic, const std::vector<std::shared_ptr<Tensor>>, const std::list<std::shared_ptr<Tensor>> g, const int i0 = 0, const bool diagonal = false) const;
 
