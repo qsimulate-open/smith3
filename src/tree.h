@@ -228,7 +228,7 @@ class Tree {
     void set_target(std::shared_ptr<Tensor> o) {
       target_ = o;
       for (auto& i : bc_) i->set_target(o);
-    };
+    }
 
     /// Function runs gather_gamma and find_gamma, called from top level (main.cc).
     void sort_gamma(std::list<std::shared_ptr<Tensor>> o = std::list<std::shared_ptr<Tensor>>());

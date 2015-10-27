@@ -89,7 +89,7 @@ class Tensor {
     const std::list<std::shared_ptr<const Index>>& index() const { return index_; }
 
     /// Returns const Tensor pointer.
-    const std::shared_ptr<const Tensor> merged() const { return merged_; }
+    std::shared_ptr<const Tensor> merged() const { return merged_; }
 
     /// Returns tensor rank, cannot be called by DF tensors so far.
     int rank() const {
@@ -117,7 +117,7 @@ class Tensor {
     /// Returns active tensor pointer.
     std::shared_ptr<Active> active() { return active_; }
     /// Returns const active tensor pointer.
-    const std::shared_ptr<Active> active() const { return active_; }
+    std::shared_ptr<const Active> active() const { return active_; }
 
     /// Returns true if all the indices are of active orbitals.
     bool all_active() const;
@@ -148,17 +148,8 @@ class Tensor {
     std::string generate_get_block(const std::string, const std::string, const std::string, const bool move = false, const bool noscale = false) const;
     /// Generate code for unique_ptr scratch arrays.
     std::string generate_scratch_area(const std::string, const std::string, const std::string tensor_lab, const bool zero = false) const;
-    /// Generate code for sort_indices. Based on operations needed to sort input tensor to output tensor.
-    std::string generate_sort_indices(const std::string, const std::string, const std::string, const std::list<std::shared_ptr<const Index>>&, const bool op = false) const;
-    /// Generate code for final sort_indices back to target indices (those not summed over).
-    std::string generate_sort_indices_target(const std::string, const std::string, const std::list<std::shared_ptr<const Index>>&,
-                                             const std::shared_ptr<Tensor>, const std::shared_ptr<Tensor>) const;
-    /// Obtain dimensions for code for tensor multiplication in dgemm.
-    std::pair<std::string, std::string> generate_dim(const std::list<std::shared_ptr<const Index>>&) const;
     /// Generates code for RDMs.
     std::string generate_active(const std::string indent, const std::string tag, const int ninptensors, const bool) const;
-    /// Generate for loops.
-    std::string generate_loop(std::string&, std::vector<std::string>&) const;
     /// Generate code for Gamma task.
     OutStream generate_gamma(const int, const bool use_blas, const bool der) const;
     /// Returns Gamma number.
