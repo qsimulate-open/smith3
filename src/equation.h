@@ -43,17 +43,14 @@ class Equation {
     /// Name of theory. Generated code for BAGEL will have this name, set in main.cc.
     std::string name_;
 
-
   public:
     /// Construct equation from diagram and name. Contract operators in diagram.
     Equation(std::shared_ptr<Diagram>, std::string nam);
-    ~Equation() { }
-
 
     /// Merging two sets of Equation.  Done by adding the diagrams of new equation (in merge arguement) to the original equation.
     void merge(const std::shared_ptr<Equation> o) {
       diagram_.insert(diagram_.end(), o->diagram_.begin(), o->diagram_.end());
-    };
+    }
 
     /// Prunes equation to those terms containing target indices.
     void term_select(std::list<std::string> t);

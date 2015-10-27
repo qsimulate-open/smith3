@@ -206,16 +206,6 @@ class Index {
 
 };
 
-/// Global function to list indices in reverse order.
-static std::string list_keys(const std::list<std::shared_ptr<Index>>& index) {
-  std::stringstream tt;
-  for (auto iter = index.rbegin(); iter != index.rend(); ++iter) {
-    if (iter != index.rbegin()) tt << ", ";
-    tt << (*iter)->str_gen() << ".key()";
-  }
-  return tt.str();
-}
-
 }
 
 #endif

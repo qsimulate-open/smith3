@@ -57,14 +57,12 @@ class Forest {
     mutable std::vector<std::shared_ptr<Tensor>> itensors_;
 
     /// Returns the main body of the CASPT2 driver
-    std::string caspt2_main_driver_() const;
+    static std::string caspt2_main_driver_();
     /// Returns the main body of the MS-MRCI driver
-    std::string msmrci_main_driver_() const;
+    static std::string msmrci_main_driver_();
 
   public:
     Forest(std::list<std::shared_ptr<Tree>> o) : trees_(o), forest_name_(trees_.front()->tree_name()) { }
-    ~Forest() { }
-
 
     /// Function runs from top level (main.cc) adds unique gamma to gamma_ list.
     void filter_gamma();
