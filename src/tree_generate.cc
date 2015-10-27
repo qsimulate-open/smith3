@@ -91,7 +91,8 @@ OutStream Tree::generate_task(const int ip, const int ic, const vector<string> o
   if (!is_gamma) {
     if (parent_) {
       assert(parent_->parent());
-      tmp << indent << "  task" << ip << "->add_dep(task" << ic << ");" << endl;
+      if (ip != ic)
+        tmp << indent << "  task" << ip << "->add_dep(task" << ic << ");" << endl;
     } else
       assert(depth() == 0);
 
