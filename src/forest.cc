@@ -418,6 +418,8 @@ string Forest::caspt2_main_driver_() const {
   ss << "  }" << endl;
   ss << "  print_iteration(iter == info_->maxiter());" << endl;
   ss << "  timer.tick_print(\"CASPT2 energy evaluation\");" << endl;
+  ss << endl;
+  ss << "  cout << \"    * CASPT2 energy : \" << fixed << setw(20) << setprecision(10) << energy_+info_->ciwfn()->energy(0) << endl;" << endl;
   return ss.str();
 }
 
