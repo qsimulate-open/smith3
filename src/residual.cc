@@ -101,7 +101,7 @@ OutStream Residual::generate_task(const int ip, const int ic, const vector<strin
 }
 
 
-OutStream Residual::generate_compute_header(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors, const bool no_outside) const {
+OutStream Residual::generate_compute_header(const int ic, const vector<shared_ptr<Tensor>> tensors) const {
   vector<string> labels;
   for (auto& i : tensors)
     labels.push_back(i->label());
@@ -111,7 +111,6 @@ OutStream Residual::generate_compute_header(const int ic, const list<shared_ptr<
   for (auto& s : tensors)
     if (!s->scalar().empty()) need_e0 = true;
 
-  const int nindex = ti.size();
   OutStream out;
   out.tt << "class Task" << ic << " : public Task {" << endl;
   out.tt << "  protected:" << endl;
@@ -123,28 +122,6 @@ OutStream Residual::generate_compute_header(const int ic, const list<shared_ptr<
   out.tt << endl;
 
   out.dd << "void Task" << ic << "::compute_() {" << endl;
-  return out;
-}
-
-
-OutStream Residual::generate_compute_footer(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors) const {
-  vector<string> labels;
-  for (auto& i : tensors)
-    labels.push_back(i->label());
-  const int ninptensors = count_distinct_tensors__(labels);
-  assert(ninptensors > 1);
-
-  bool need_e0 = false;
-  for (auto& s : tensors)
-    if (!s->scalar().empty()) need_e0 = true;
-
-  OutStream out;
-  out.dd << "}" << endl << endl << endl;
-
-  out.tt << "  public:" << endl;
-  out.tt << "    Task" << ic << "(std::array<std::shared_ptr<Tensor>," << ninptensors << "> t" << (need_e0 ? ", const double e" : "") << ") : tensor_(t)"
-                       << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
-  out.tt << "};" << endl << endl;
   return out;
 }
 

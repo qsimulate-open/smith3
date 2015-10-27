@@ -345,9 +345,6 @@ list<shared_ptr<const Index>> BinaryContraction::loop_indices() {
 
 OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vector<shared_ptr<Tensor>> op, const bool dagger) const {
   OutStream out;
-
-  // get data
-
   // needed in case the tensor labels are repeated..
   vector<shared_ptr<Tensor>> uniq_tensors;
   vector<string> tensor_labels;
@@ -380,8 +377,6 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
   // add the source data to the target
   int j = 0;
   for (auto s = op.begin(); s != op.end(); ++s, ++j) {
-    stringstream uu; uu << "i" << j;
-
     // uses map to give label number consistent with operator, needed in case label is repeated (eg ccaa)
     string label = label__((*s)->label());
     stringstream instr; instr << "ta" << op_tensor_lab[label];
@@ -517,17 +512,7 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
 
           list<shared_ptr<const Index>> proj = j->target_index();
           // write out headers
-          {
-            list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
-            // if outer loop is empty, send inner loop indices to header
-            if (ti.size() == 0) {
-              assert(depth() != 0);
-              list<shared_ptr<const Index>> di = j->loop_indices();
-              out << generate_compute_header(num_, di, source_tensors, true);
-            } else {
-              out << generate_compute_header(num_, ti, source_tensors);
-            }
-          }
+          out << generate_compute_header(num_, source_tensors);
 
           list<shared_ptr<const Index>> dm;
           if (proj.size() > 1) {
@@ -547,26 +532,7 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
 
           vector<shared_ptr<Tensor>> op2 = { j->next_target() };
           out << generate_compute_operators(proj_tensor, op2, j->dagger());
-
-          {
-            // send outer loop indices if outer loop indices exist, otherwise send inner indices
-            list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
-            if (depth() == 0)
-              if (ti.size() > 1) {
-                for (auto m = ti.begin(), n = ++ti.begin(); m != ti.end(); ++m, ++m, ++n, ++n)
-                  swap(*m, *n);
-              }
-            if (ti.size() == 0) {
-              assert(depth() != 0);
-              // sending inner indices
-              list<shared_ptr<const Index>> di = j->loop_indices();
-              di.reverse();
-              out << generate_compute_footer(num_, di, source_tensors);
-            } else {
-              // sending outer indices
-              out << generate_compute_footer(num_, ti, source_tensors);
-            }
-          }
+          out << generate_compute_footer(num_, source_tensors);
           // increment task counter
           ++tcnt;
         }
@@ -617,8 +583,6 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
     }
     out << generate_task(tcnt, op, gamma, t0, diagonal);
 
-    list<shared_ptr<const Index>> ti = target_->index();
-
     // make sure no duplicates in tensor list for compute header & footer
     vector<shared_ptr<Tensor>> uniq_tensors;
     vector<string> tensor_labels;
@@ -629,9 +593,9 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
       uniq_tensors.push_back(i);
     }
 
-    out << generate_compute_header(tcnt, ti, uniq_tensors);
+    out << generate_compute_header(tcnt, uniq_tensors);
     out << generate_compute_operators(target_, op_);
-    out << generate_compute_footer(tcnt, ti, uniq_tensors);
+    out << generate_compute_footer(tcnt, uniq_tensors);
 
     ++tcnt;
   }
@@ -655,40 +619,11 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
     out << generate_task(num_, source_tensors, gamma, t0, diagonal);
 
     // write out headers
-    {
-      list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->target_index();
-      // if outer loop is empty, send inner loop indices to header
-      if (ti.size() == 0) {
-        assert(depth() != 0);
-        list<shared_ptr<const Index>> di = (*i)->loop_indices();
-        out << generate_compute_header(num_, di, source_tensors, true);
-      } else {
-        out << generate_compute_header(num_, ti, source_tensors);
-      }
-    }
+    out << generate_compute_header(num_, source_tensors);
 
     // use virtual function to generate a task for this binary contraction
     out << generate_bc(*i);
-
-    {
-      // send outer loop indices if outer loop indices exist, otherwise send inner indices
-      list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->target_index();
-      if (depth() == 0)
-        for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
-          swap(*i, *j);
-      if (ti.size() == 0) {
-        assert(depth() != 0);
-        // sending inner indices
-        list<shared_ptr<const Index>> di = (*i)->loop_indices();
-        di.reverse();
-        out << generate_compute_footer(num_, di, source_tensors);
-      } else {
-        // sending outer indices
-        out << generate_compute_footer(num_, ti, source_tensors);
-      }
-    }
-
-    ///////////////////////////////////////////////////////////////////////
+    out << generate_compute_footer(num_, source_tensors);
 
     // increment tcnt before going to subtrees
     ++tcnt;
@@ -698,6 +633,28 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
   } // end bc
 
   return make_tuple(out, tcnt, t0, itensors);
+}
+
+
+OutStream Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Tensor>> tensors) const {
+  vector<string> labels;
+  for (auto& i : tensors)
+    labels.push_back(i->label());
+  const int ninptensors = count_distinct_tensors__(labels);
+  assert(ninptensors > 1);
+
+  bool need_e0 = false;
+  for (auto& s : tensors)
+    if (!s->scalar().empty()) need_e0 = true;
+
+  OutStream out;
+  out.dd << "}" << endl << endl << endl;
+
+  out.tt << "  public:" << endl;
+  out.tt << "    Task" << ic << "(std::array<std::shared_ptr<Tensor>," << ninptensors << "> t" << (need_e0 ? ", const double e" : "") << ") : tensor_(t)"
+                       << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
+  out.tt << "};" << endl << endl;
+  return out;
 }
 
 

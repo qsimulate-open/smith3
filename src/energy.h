@@ -50,8 +50,7 @@ class Energy : public Tree {
     std::shared_ptr<Tensor> create_tensor(std::list<std::shared_ptr<const Index>>) const override { return  std::shared_ptr<Tensor>(); }
 
     OutStream generate_task(const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0, bool der = false, bool diagonal = false) const override;
-    OutStream generate_compute_header(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool = false) const override;
-    OutStream generate_compute_footer(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>) const override;
+    OutStream generate_compute_header(const int, const std::vector<std::shared_ptr<Tensor>>) const override;
     OutStream generate_bc(std::shared_ptr<BinaryContraction>) const override;
 
 };

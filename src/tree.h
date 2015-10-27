@@ -267,9 +267,9 @@ class Tree {
     /// Generate a task. Here ip is the tag of parent, ic is the tag of this.
     virtual OutStream generate_task(const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0, bool der = false, bool diagonal = false) const = 0;
     /// Generate task header.
-    virtual OutStream generate_compute_header(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool = false) const = 0;
+    virtual OutStream generate_compute_header(const int, const std::vector<std::shared_ptr<Tensor>>) const = 0;
     /// Generate task footer.
-    virtual OutStream generate_compute_footer(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>) const = 0;
+    OutStream generate_compute_footer(const int, const std::vector<std::shared_ptr<Tensor>> ) const;
     /// Generate Binary contraction code.
     virtual OutStream generate_bc(const std::shared_ptr<BinaryContraction>) const = 0;
 
