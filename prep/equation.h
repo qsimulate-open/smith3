@@ -121,12 +121,10 @@ class Equation {
         ss << "  " << diagram_.front()->eqn_label() << "->simplify();" << std::endl;
       }
 
-      if (!tree_type_.empty() && tree_type_ == "residual") {
-          ss << "  auto " << tree_label() << " = make_shared<Residual>(e" << diagram_.front()->label() << ", \"" << tree_name_ << "\");" << std::endl;
-      } else if (!tree_type_.empty() && tree_type_ == "energy") {
-          ss << "  auto " << tree_label() << " = make_shared<Energy>(e" << diagram_.front()->label() << ", \"" << tree_name_ << "\");" << std::endl;
+      if (!tree_type_.empty()) {
+        ss << "  auto " << tree_label() << " = make_shared<Tree>(e" << diagram_.front()->label() << ", \"" << tree_name_ << "\");" << std::endl;
       } else {
-          throw std::logic_error("prep/equation.cc error, tree must be of derived type");
+        throw std::logic_error("prep/equation.cc error, tree must be of derived type");
       }
 
       ss << std::endl;

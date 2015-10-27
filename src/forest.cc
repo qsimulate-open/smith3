@@ -72,10 +72,6 @@ OutStream Forest::generate_code() const {
     out.ss << "    std::shared_ptr<Queue> make_" << i->label() << "q(const bool reset = true, const bool diagonal = true);" << endl;
 
     out.ee << "shared_ptr<Queue> " << forest_name_ << "::" << forest_name_ << "::make_" << i->label() << "q(const bool reset, const bool diagonal) {" << endl << endl;
-    if (i->label() != "deci")
-      out.ee << "  array<shared_ptr<const IndexRange>,3> pindex = {{rclosed_, ractive_, rvirt_}};" << endl;
-    else
-      out.ee << "  array<shared_ptr<const IndexRange>,4> cindex = {{rclosed_, ractive_, rvirt_, rci_}};" << endl << endl;
 
     tie(tmp, icnt, i0, itensors_) = i->generate_task_list(icnt, i0, gamma_, itensors_);
 

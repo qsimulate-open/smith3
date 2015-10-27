@@ -40,8 +40,7 @@ static std::string header() {
   mm << "" << std::endl;
   mm << "#include <fstream>" << std::endl;
   mm << "#include \"forest.h\"" << std::endl;
-  mm << "#include \"residual.h\"" << std::endl;
-  mm << "#include \"energy.h\"" << std::endl;
+  mm << "#include \"tree.h\"" << std::endl;
   mm << "" << std::endl;
   mm << "using namespace std;" << std::endl;
   mm << "using namespace smith;" << std::endl;

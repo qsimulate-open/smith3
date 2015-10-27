@@ -175,11 +175,18 @@ class Tree {
     Tree(const std::shared_ptr<Equation> eq, std::string lab = "");
     /// Construct tree of listtensors.
     Tree(const std::shared_ptr<ListTensor> l, std::string lab, const bool t);
-    virtual ~Tree() { }
-
 
     /// Return label of tree.
-    virtual std::string label() const = 0;
+    std::string label() const { return label_; }
+    bool is_energy_tree() const {
+      bool out = true;
+      if (label_ == "residual" || label_ == "source" || label_ == "density" || label_ == "density1"
+                               || label_ == "density2" || label_ == "deci" || label_ == "norm") {
+        out = false;
+      } else
+        assert(label_ == "energy" || label_ == "corr");
+      return out;
+    }
 
     /// Returns depth, 0 is top of graph.
     int depth() const;
@@ -258,20 +265,19 @@ class Tree {
     /// Generate task for operator task (ie not a binary contraction task). Dagger arguement refers to front subtree used at top level.
     OutStream generate_compute_operators(const std::shared_ptr<Tensor>, const std::vector<std::shared_ptr<Tensor>>, const bool dagger = false) const;
 
-    // Tree specific code generation moved to derived classes.
     /// Needed for zero level target tensors. Generates a Task '0' ie task to initialize top (zero depth) target tensor also sets up dependency queue.
-    virtual OutStream create_target(const int i) const = 0;
-    /// Create new tensor based on derived tree.
-    virtual std::shared_ptr<Tensor> create_tensor(std::list<std::shared_ptr<const Index>>) const = 0;
+    OutStream create_target(const int i) const;
+    /// Create new tensor
+    std::shared_ptr<Tensor> create_tensor(std::list<std::shared_ptr<const Index>>) const;
 
     /// Generate a task. Here ip is the tag of parent, ic is the tag of this.
-    virtual OutStream generate_task(const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0, bool der = false, bool diagonal = false) const = 0;
+    OutStream generate_task(const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0, bool der = false, bool diagonal = false) const;
     /// Generate task header.
-    virtual OutStream generate_compute_header(const int, const std::vector<std::shared_ptr<Tensor>>) const = 0;
+    OutStream generate_compute_header(const int, const std::vector<std::shared_ptr<Tensor>>) const;
     /// Generate task footer.
     OutStream generate_compute_footer(const int, const std::vector<std::shared_ptr<Tensor>> ) const;
     /// Generate Binary contraction code.
-    virtual OutStream generate_bc(const std::shared_ptr<BinaryContraction>) const = 0;
+    OutStream generate_bc(const std::shared_ptr<BinaryContraction>) const;
 
 };
 

@@ -29,8 +29,7 @@
 
 #include <fstream>
 #include "forest.h"
-#include "residual.h"
-#include "energy.h"
+#include "tree.h"
 
 using namespace std;
 using namespace smith;
@@ -785,7 +784,7 @@ int main() {
   era0->merge(erd8);
   era0->duplicates();
   era0->active();
-  auto tra = make_shared<Residual>(era0, "residual");
+  auto tra = make_shared<Tree>(era0, "residual");
 
   list<shared_ptr<Operator>> ec0 = {proje, t2dagger0, v2};
   list<shared_ptr<Operator>> ec1 = {proje, t2dagger1, v2};
@@ -860,7 +859,7 @@ int main() {
   eec0->merge(eed8);
   eec0->duplicates();
   eec0->active();
-  auto tec = make_shared<Energy>(eec0, "energy");
+  auto tec = make_shared<Tree>(eec0, "energy");
 
   list<shared_ptr<Operator>> ca0 = {proje, t2dagger0, t20};
   list<shared_ptr<Operator>> ca1 = {proje, t2dagger0, t21};
@@ -1187,7 +1186,7 @@ int main() {
   eca0->merge(eca80);
   eca0->duplicates();
   eca0->active();
-  auto tca = make_shared<Energy>(eca0, "corr");
+  auto tca = make_shared<Tree>(eca0, "corr");
 
   list<shared_ptr<Operator>> da0 = {proje, t2dagger0, ex_1b, t20};
   list<shared_ptr<Operator>> da1 = {proje, t2dagger0, ex_1b, t21};
@@ -1514,7 +1513,7 @@ int main() {
   eda0->merge(eda80);
   eda0->duplicates();
   eda0->active();
-  auto tda = make_shared<Residual>(eda0, "density");
+  auto tda = make_shared<Tree>(eda0, "density");
 
   list<shared_ptr<Operator>> db0 = {proje, ex_1b, t20};
   list<shared_ptr<Operator>> db1 = {proje, ex_1b, t21};
@@ -1553,7 +1552,7 @@ int main() {
   edb0->merge(edb8);
   edb0->duplicates();
   edb0->active();
-  auto tdb = make_shared<Residual>(edb0, "density1");
+  auto tdb = make_shared<Tree>(edb0, "density1");
 
   list<shared_ptr<Operator>> d2a0 = {proje, ex_0, t20};
   list<shared_ptr<Operator>> d2a1 = {proje, ex_0, t21};
@@ -1880,7 +1879,7 @@ int main() {
   ed2a0->merge(ed2a80);
   ed2a0->duplicates();
   ed2a0->active();
-  auto td2a = make_shared<Residual>(ed2a0, "density2");
+  auto td2a = make_shared<Tree>(ed2a0, "density2");
 
   list<shared_ptr<Operator>> dedcia0 = {proje, t2dagger0, f1, t20};
   list<shared_ptr<Operator>> dedcia1 = {proje, t2dagger0, f1, t21};
@@ -2676,7 +2675,7 @@ int main() {
   ededcia0->absorb_ket();
   ededcia0->duplicates();
   ededcia0->active();
-  auto tdedcia = make_shared<Residual>(ededcia0, "deci");
+  auto tdedcia = make_shared<Tree>(ededcia0, "deci");
 
   list<shared_ptr<Tree>> trees = {tra, tec, tca, tda, tdb, td2a, tdedcia};
   auto fr = make_shared<Forest>(trees);
