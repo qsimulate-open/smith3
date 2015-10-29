@@ -201,10 +201,11 @@ OutStream Forest::generate_gammas() const {
     i->set_num(icnt);
     assert(i->label().find("Gamma") != string::npos);
 
-    out.ss << "    std::shared_ptr<FutureTensor> " << i->label() << "_();" << endl;
+    out.ss << "    std::shared_ptr<FutureTATensor<" << DataType << "," << i->index().size() << ">> " << i->label() << "_();" << endl;
 
-    out.gg << "shared_ptr<FutureTensor> " << forest_name_ << "::" << forest_name_ << "::" << i->label() << "_() {" << endl;
+    out.gg << "shared_ptr<FutureTATensor<" << DataType << "," << i->index().size() << ">> " << forest_name_ << "::" << forest_name_ << "::" << i->label() << "_() {" << endl;
     out.gg << i->constructor_str() << endl;
+    out.gg << "  auto TA" << i->label() << " = " << i->label() << "->tiledarray<" << i->index().size() << ">();" << endl;
 
     if (!i->der())
       out.gg << "  array<shared_ptr<const IndexRange>,3> pindex = {{rclosed_, ractive_, rvirt_}};" << endl;
@@ -245,7 +246,7 @@ OutStream Forest::generate_gammas() const {
       out << trees_.front()->generate_task(0, icnt, tmp);
     }
 
-    out.gg << "  return make_shared<FutureTensor>(*" << i->label() << ", task" << icnt << ");" << endl;
+    out.gg << "  return make_shared<FutureTATensor<" << DataType << "," << i->index().size() << ">>(*TA" << i->label() << ", " << i->label() << ", task" << icnt << ");" << endl;
     out.gg << "}" << endl << endl;
     ++icnt;
   }

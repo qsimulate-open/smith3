@@ -181,7 +181,6 @@ string Tensor::generate_ta(const string tlab, const bool noscale) const {
   stringstream tt;
 
   string lbl = label();
-  if (lbl == "proj") lbl = "r";
   const size_t found = lbl.find("dagger");
 
   tt << "(*" << tlab << ")(\"";

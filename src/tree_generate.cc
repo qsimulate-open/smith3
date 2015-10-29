@@ -83,9 +83,8 @@ OutStream Tree::generate_task(const int ip, const int ic, const vector<string> o
     tmp << "  if (diagonal) {" << endl;
     indent += "  ";
   }
-  tmp << indent << "  auto tensor" << ic << " = array<shared_ptr<Tensor>," << count_distinct_tensors__(op) << ">{{" << merge__(op, label_) << "}};" << endl;
   tmp << indent << "  " << (diagonal ? "" : "auto ") << "task" << ic
-                << " = make_shared<Task" << ic << ">(tensor" << ic << (is_gamma ? (der ? ", cindex" : ", pindex") : "")
+                << " = make_shared<Task" << ic << ">(" << merge__(op, label_) << (is_gamma ? (der ? ", cindex" : ", pindex") : "")
                 << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
 
   if (!is_gamma) {
@@ -144,27 +143,23 @@ OutStream Tree::generate_compute_header(const int ic, const vector<shared_ptr<Te
 OutStream Tree::generate_bc(const shared_ptr<BinaryContraction> i) const {
   OutStream out;
   if (depth() != 0) {
+    out.dd << "  if (!ta0_->initialized())" << endl;
+    out.dd << "    ta0_->fill_local(0.0);" << endl;
     if (i->tensor()->label().find("Gamma") != string::npos)
-      out.dd << "  tensor_[1]->init();" << endl;
+      out.dd << "  ta1_->init();" << endl;
     if (i->next_target()->label().find("Gamma") != string::npos)
-      out.dd << "  tensor_[2]->init();" << endl;
+      out.dd << "  ta2_->init();" << endl;
 
-    out.dd << "  auto ta0 = tensor_[0]->tiledarray<" << target_->index().size() << ">(true);" << endl;
-    out.dd << "  auto ta1 = tensor_[1]->tiledarray<" << i->tensor()->index().size() << ">();" << endl;
-    if (!same_tensor__(i->tensor()->label(), i->next_target()->label()))
-      out.dd << "  auto ta2 = tensor_[2]->tiledarray<" << i->next_target()->index().size() << ">();" << endl;
     out.dd << "  madness::World::get_default().gop.fence();" << endl;
-    out.dd << "  " << target_->generate_ta("ta0", true) << " += ";
+    out.dd << "  " << target_->generate_ta("ta0_", true) << " += ";
     // retrieving tensor_
-    out.dd << i->tensor()->generate_ta("ta1") << (target_->index().size() == 0 ? ".dot(" : " * ");
+    out.dd << i->tensor()->generate_ta("ta1_") << (target_->index().size() == 0 ? ".dot(" : " * ");
     // retrieving subtree_
-    string inlabel("ta"); inlabel += (same_tensor__(i->tensor()->label(), i->next_target()->label()) ? "1" : "2");
+    string inlabel("ta"); inlabel += (same_tensor__(i->tensor()->label(), i->next_target()->label()) ? "1_" : "2_");
     out.dd << i->next_target()->generate_ta(inlabel) << (target_->index().size() == 0 ? ").get()" : "") << ";" << endl;
     out.dd << "  madness::World::get_default().gop.fence();" << endl;
     if (is_energy_tree() && depth() == 1)
       out.dd << "  target_ += (*ta0)(\"\");" << endl;
-    else
-      out.dd << "  *tensor_[0] = *make_shared<Tensor>(*ta0);" << endl;
   } else {  // now at bc depth 0
     assert(!is_energy_tree());
     // making residual vector...
@@ -213,21 +208,19 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
     ++uniq_cnt;
   }
 
-  out.dd << "  auto ta0 = tensor_[0]->tiledarray<" << target->index().size() << ">(true);" << endl;
-  for (auto& i : uniq_tensors) {
-    const int cnt = op_tensor_lab.at(label__(i->label()));
-    out.dd << "  auto ta" << cnt << " = tensor_[" << cnt << "]->tiledarray<" << i->index().size() << ">();" << endl;
+  if (depth() != 0) {
+    out.dd << "  if (!ta0_->initialized())" << endl;
+    out.dd << "    ta0_->fill_local(0.0);" << endl;
   }
-
   out.dd << "  madness::World::get_default().gop.fence();" << endl;
-  out.dd << "  " << target->generate_ta("ta0", true) << " += ";
+  out.dd << "  " << target->generate_ta("ta0_", true) << " += ";
 
   // add the source data to the target
   int j = 0;
   for (auto s = op.begin(); s != op.end(); ++s, ++j) {
     // uses map to give label number consistent with operator, needed in case label is repeated (eg ccaa)
     string label = label__((*s)->label());
-    stringstream instr; instr << "ta" << op_tensor_lab[label];
+    stringstream instr; instr << "ta" << op_tensor_lab[label] << "_";
 
     out.dd << (s == op.begin() ? "" : "\n     + ") << (*s)->generate_ta(instr.str());
 
@@ -260,7 +253,6 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
   }
   out.dd << ";" << endl;
   out.dd << "  madness::World::get_default().gop.fence();" << endl;
-  out.dd << "  *tensor_[0] = *make_shared<Tensor>(*ta0);" << endl;
   return out;
 }
 
