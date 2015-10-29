@@ -59,7 +59,7 @@ class PCost {
     bool operator!=(const PCost& other) const { return !(*this == other); }
 
     /// Give total seconds.
-    const double pcost_total() const {
+    double pcost_total() const {
       double out = 0.0;
       assert(pcost_.size() == indmap_.size());
       auto j = indmap_.begin();
@@ -68,7 +68,7 @@ class PCost {
       return out;
     }
     /// Return pcost.
-    const std::vector<int> pcost() const { return pcost_;}
+    std::vector<int> pcost() const { return pcost_;}
 
     /// add a vector.
     void add(std::vector<int>& o) {
@@ -79,7 +79,7 @@ class PCost {
     int pcost(const int i) const { return pcost_[i]; }
 
     /// Show mapping.
-    const std::string show() const;
+    std::string show() const;
 
 };
 
@@ -124,7 +124,7 @@ class Cost {
 //  void add_pcost(int i, int j, int k) { PCost a(i, j, k); cost_.push_back(a); };
 
     /// Show print the cost_ vector.
-    const std::string show() const;
+    std::string show() const;
 
     /// Sort cost_ items in reverse.
     void sort_pcost();
