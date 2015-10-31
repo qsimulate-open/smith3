@@ -121,11 +121,11 @@ OutStream Forest::generate_headers() const {
   out.ss << "" << endl;
   out.ss << "class " << forest_name_ << " : public SpinFreeMethod<" << DataType << "> {" << endl;
   out.ss << "  protected:" << endl;
-  out.ss << "    std::shared_ptr<Tensor> t2;" << endl;
-  out.ss << "    std::shared_ptr<Tensor> r;" << endl;
+  out.ss << "    std::shared_ptr<TATensor<" << DataType << ",4>> t2;" << endl;
+  out.ss << "    std::shared_ptr<TATensor<" << DataType << ",4>> r;" << endl;
   if (forest_name_ == "MRCI" || forest_name_ == "RelMRCI") {
-    out.ss << "    std::shared_ptr<Tensor> s;" << endl;
-    out.ss << "    std::shared_ptr<Tensor> n;" << endl << endl;;
+    out.ss << "    std::shared_ptr<TATensor<" << DataType << ",4>> s;" << endl;
+    out.ss << "    std::shared_ptr<TATensor<" << DataType << ",4>> n;" << endl << endl;;
 
     out.ss << "    int nstates_;" << endl;
     out.ss << "    std::vector<double> energy_;" << endl << endl;
@@ -136,13 +136,13 @@ OutStream Forest::generate_headers() const {
     out.ss << "    std::vector<std::shared_ptr<MultiTensor>> nall_;" << endl;
   }
   if (forest_name_ == "RelCASPT2")
-    out.ss << "    std::shared_ptr<Tensor> s;" << endl;
+    out.ss << "    std::shared_ptr<TATensor<" << DataType << ",4>> s;" << endl;
   if (forest_name_ == "CASPT2") {
-    out.ss << "    std::shared_ptr<Tensor> den1;" << endl;
-    out.ss << "    std::shared_ptr<Tensor> den2;" << endl;
-    out.ss << "    std::shared_ptr<Tensor> Den1;" << endl;
+    out.ss << "    std::shared_ptr<TATensor<" << DataType << ",2>> den1;" << endl;
+    out.ss << "    std::shared_ptr<TATensor<" << DataType << ",2>> den2;" << endl;
+    out.ss << "    std::shared_ptr<TATensor<" << DataType << ",4>> Den1;" << endl;
     out.ss << "    double correlated_norm_;" << endl;
-    out.ss << "    std::shared_ptr<Tensor> deci;" << endl;
+    out.ss << "    std::shared_ptr<TATensor<" << DataType << ",1>> deci;" << endl;
   }
   out.ss << "" << endl;
 
@@ -265,14 +265,6 @@ OutStream Forest::generate_algorithm() const {
   out.ss << "    " << forest_name_ << "(std::shared_ptr<const SMITH_Info<" << DataType << ">> ref);" << endl;
 
   out.ee << forest_name_ << "::" << forest_name_ << "::" << forest_name_ << "(shared_ptr<const SMITH_Info<" << DataType << ">> ref) : SpinFreeMethod(ref) {" << endl;
-  if (DataType == "double") {
-    out.ee << "  eig_ = f1_->diag();" << endl;
-  } else {
-    out.ee << "  auto eig = f1_->diag();" << endl;
-    out.ee << "  eig_.resize(eig.size());" << endl;
-    out.ee << "  for (int i = 0; i != eig.size(); ++i)" << endl;
-    out.ee << "    eig_[i] = real(eig[i]);" << endl;
-  }
   if (forest_name_ == "MRCI" || forest_name_ == "RelMRCI") {
     out.ee << "  nstates_ = ref->ciwfn()->nstates();" << endl << endl;
 
@@ -297,7 +289,7 @@ OutStream Forest::generate_algorithm() const {
       out.ee << "  den2 = h1_->clone();" << endl;
       out.ee << "  Den1 = v2_->clone();" << endl;
       out.ee << "  if (info_->grad())" << endl;
-      out.ee << "    deci = make_shared<Tensor>(vector<IndexRange>{ci_});" << endl;
+      out.ee << "    deci = make_shared<TATensor<" << DataType << ",1>>({ci_});" << endl;
     } else if (forest_name_ == "RelCASPT2") {
       out.ee << "  s = t2->clone();" << endl;
     }
@@ -357,13 +349,13 @@ OutStream Forest::generate_algorithm() const {
   out.ss << "    }" << endl;
   out.ss << endl;  // end comparison correction
   if (forest_name_ == "CASPT2") {
-    out.ss << "    std::shared_ptr<const Matrix> rdm11() const { return den1->matrix(); }" << endl;
-    out.ss << "    std::shared_ptr<const Matrix> rdm12() const { return den2->matrix(); }" << endl;
-    out.ss << "    std::shared_ptr<const Matrix> rdm21() const { return Den1->matrix2(); }" << endl;
+    out.ss << "    std::shared_ptr<const Matrix> rdm11() const { const Tensor d(*den1); return d.matrix(); }" << endl;
+    out.ss << "    std::shared_ptr<const Matrix> rdm12() const { const Tensor d(*den2); return d.matrix(); }" << endl;
+    out.ss << "    std::shared_ptr<const Matrix> rdm21() const { const Tensor d(*Den1); return d.matrix2(); }" << endl;
     out.ss << endl;
     out.ss << "    double correlated_norm() const { return correlated_norm_; }" << endl;
     out.ss << endl;
-    out.ss << "    std::shared_ptr<const Civec> ci_deriv(std::shared_ptr<const Determinants> det) const { return deci->civec(det); }" << endl;
+    out.ss << "    std::shared_ptr<const Civec> ci_deriv(std::shared_ptr<const Determinants> det) const { const Tensor d(*deci); return d.civec(det); }" << endl;
     out.ss << endl;
   }
   out.ss << "};" << endl;
@@ -404,7 +396,7 @@ string Forest::caspt2_main_driver_() {
   ss << "    while (!queue->done())" << endl;
   ss << "      queue->next_compute();" << endl;
   if (DataType == "double")
-    ss << "    diagonal(r, t2);" << endl;
+    ss << "    r = diagonal(r, t2);" << endl;
   ss << "    energy_ += detail::real(dot_product_transpose(r, t2));" << endl;
   ss << "    const double err = r->rms();" << endl;
   ss << "    print_iteration(iter, energy_, err, mtimer.tick());" << endl;

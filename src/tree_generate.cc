@@ -50,7 +50,7 @@ OutStream Tree::create_target(const int i) const {
   if (!is_energy_tree()) {
     out.tt << "class Task" << i << " : public Task {" << endl;
     out.tt << "  protected:" << endl;
-    out.tt << "    std::array<std::shared_ptr<Tensor>,1> tensor_;" << endl;
+    out.tt << "    std::shared_ptr<TATensor<" << DataType << ",4>> tensor_;" << endl;
     out.tt << "    const bool reset_;" << endl;
     out.tt << "" << endl;
     out.tt << "    void compute_() {" << endl;
@@ -58,12 +58,11 @@ OutStream Tree::create_target(const int i) const {
     out.tt << "    }" << endl;
     out.tt << "" << endl;
     out.tt << "  public:" << endl;
-    out.tt << "    Task" << i << "(std::array<std::shared_ptr<Tensor>,1> t, const bool reset) : tensor_(t), reset_(reset) { }" << endl;
+    out.tt << "    Task" << i << "(std::shared_ptr<TATensor<" << DataType << ",4>> t, const bool reset) : tensor_(t), reset_(reset) { }" << endl;
     out.tt << "};" << endl << endl;
 
     out.ee << "  auto " << label_ << "q = make_shared<Queue>();" << endl;
-    out.ee << "  auto tensor" << i << " = array<shared_ptr<Tensor>,1>{{" << target_name__(label_) << "}};" << endl;
-    out.ee << "  auto task" << i << " = make_shared<Task" << i << ">(tensor" << i << ", reset);" << endl;
+    out.ee << "  auto task" << i << " = make_shared<Task" << i << ">(" << target_name__(label_) << ", reset);" << endl;
     out.ee << "  " << label_ << "q->add_task(task" << i << ");" << endl << endl;
   }
   return out;

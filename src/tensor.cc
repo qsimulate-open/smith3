@@ -158,19 +158,13 @@ string Tensor::constructor_str(const bool diagonal) const {
   string indent = "";
   if (diagonal) {
     indent += "  ";
-    ss << "  shared_ptr<Tensor> " << label() << ";" << endl;
+    ss << "  shared_ptr<TATensor<" << DataType << "," << index_.size() << ">> " << label() << ";" << endl;
     ss << "  if (diagonal) {" << endl;
   }
-  ss << indent << "  vector<IndexRange> " << label() << "_index";
-  if (index_.empty()) {
-    ss << ";" << endl;
-  } else {
-    ss << " = {";
-    for (auto i = index_.rbegin(); i != index_.rend(); ++i)
-      ss << (i != index_.rbegin() ? ", " : "") << (*i)->generate();
-    ss << "};" << endl;
-  }
-  ss << indent << "  " << (diagonal ? "" : "auto ") << label() << " = make_shared<Tensor>(" << label() << "_index);";
+  ss << indent << "  " << (diagonal ? "" : "auto ") << label() << " = make_shared<TATensor<" << DataType << "," << index_.size() << ">>({";
+  for (auto i = index_.rbegin(); i != index_.rend(); ++i)
+    ss << (i != index_.rbegin() ? ", " : "") << (*i)->generate();
+  ss << "});";
   if (diagonal)
     ss << endl << "  }";
   return ss.str();
