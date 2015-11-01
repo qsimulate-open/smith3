@@ -395,7 +395,7 @@ string Forest::caspt2_main_driver_() {
   ss << "    const double err = r->rms();" << endl;
   ss << "    print_iteration(iter, energy_, err, mtimer.tick());" << endl;
   ss << endl;
-  ss << "    update_amplitude(t2, r);" << endl;
+  ss << "    t2 = update_amplitude(t2, r);" << endl;
   ss << "    r->zero();" << endl;
   ss << "    if (err < info_->thresh()) break;" << endl;
   ss << "  }" << endl;
@@ -450,7 +450,7 @@ string Forest::msmrci_main_driver_() {
   ss << "    vector<shared_ptr<Residual<" << DataType << ">>> res = davidson.residual();" << endl;
   ss << "    for (int i = 0; i != nstates_; ++i) {" << endl;
   ss << "      t2all_[i]->zero();" << endl;
-  ss << "      update_amplitude(t2all_[i], res[i]->tensor());" << endl;
+  ss << "      t2all_[i] = update_amplitude(t2all_[i], res[i]->tensor());" << endl;
   ss << "    }" << endl;
   ss << "  }" << endl << endl;
 

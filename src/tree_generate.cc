@@ -131,23 +131,26 @@ OutStream Tree::generate_task(const int ic, const vector<string> ops, bool der) 
 OutStream Tree::generate_bc(const shared_ptr<BinaryContraction> i) const {
   OutStream out;
   if (depth() != 0) {
-    out.dd << "  if (!ta0_->initialized())" << endl;
-    out.dd << "    ta0_->fill_local(0.0);" << endl;
+    if (!(is_energy_tree() && depth() == 1)) {
+      out.dd << "  if (!ta0_->initialized())" << endl;
+      out.dd << "    ta0_->fill_local(0.0);" << endl;
+    }
     if (i->tensor()->label().find("Gamma") != string::npos)
       out.dd << "  ta1_->init();" << endl;
     if (i->next_target()->label().find("Gamma") != string::npos)
       out.dd << "  ta2_->init();" << endl;
 
     out.dd << "  madness::World::get_default().gop.fence();" << endl;
-    out.dd << "  " << target_->generate_ta("ta0_", true) << " += ";
+    if (!(is_energy_tree() && depth() == 1))
+      out.dd << "  " << target_->generate_ta("ta0_", true) << " += ";
+    else
+      out.dd << "  target_ += ";
     // retrieving tensor_
     out.dd << i->tensor()->generate_ta("ta1_") << (target_->index().size() == 0 ? ".dot(" : " * ");
     // retrieving subtree_
     string inlabel("ta"); inlabel += (same_tensor__(i->tensor()->label(), i->next_target()->label()) ? "1_" : "2_");
     out.dd << i->next_target()->generate_ta(inlabel) << (target_->index().size() == 0 ? ").get()" : "") << ";" << endl;
     out.dd << "  madness::World::get_default().gop.fence();" << endl;
-    if (is_energy_tree() && depth() == 1)
-      out.dd << "  target_ += (*ta0_)(\"\");" << endl;
   } else {  // now at bc depth 0
     assert(!is_energy_tree());
     // making residual vector...
