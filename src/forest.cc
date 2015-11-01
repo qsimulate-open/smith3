@@ -277,7 +277,7 @@ OutStream Forest::generate_algorithm() const {
   }
   if (forest_name_ == "CASPT2" || forest_name_ == "RelCASPT2") {
     out.ee << "  t2 = init_amplitude();" << endl;
-    out.ee << "  r = t2->clone();" << endl;
+    out.ee << "  r = init_residual();" << endl;
     if (forest_name_ == "CASPT2") {
       out.ee << "  den1 = h1_->clone();" << endl;
       out.ee << "  den2 = h1_->clone();" << endl;
