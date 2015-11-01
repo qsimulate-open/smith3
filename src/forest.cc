@@ -278,15 +278,8 @@ OutStream Forest::generate_algorithm() const {
   if (forest_name_ == "CASPT2" || forest_name_ == "RelCASPT2") {
     out.ee << "  t2 = init_amplitude();" << endl;
     out.ee << "  r = init_residual();" << endl;
-    if (forest_name_ == "CASPT2") {
-      out.ee << "  den1 = h1_->clone();" << endl;
-      out.ee << "  den2 = h1_->clone();" << endl;
-      out.ee << "  Den1 = v2_->clone();" << endl;
-      out.ee << "  if (info_->grad())" << endl;
-      out.ee << "    deci = make_shared<TATensor<" << DataType << ",1>>(vector<IndexRange>{ci_});" << endl;
-    } else if (forest_name_ == "RelCASPT2") {
-      out.ee << "  s = t2->clone();" << endl;
-    }
+    if (forest_name_ == "RelCASPT2")
+      out.ee << "  s = init_amplitude();" << endl;
   }
   out.ee << "}" << endl << endl;
 
@@ -313,17 +306,26 @@ OutStream Forest::generate_algorithm() const {
     out.ee << "  correlated_norm_ = accumulate(corrq);" << endl;
     out.ee << "  timer.tick_print(\"T1 norm evaluation\");" << endl;
     out.ee << endl;
+    out.ee << "  den2 = h1_->clone();" << endl;
+    out.ee << "  den2->fill_local(0.0);" << endl;
     out.ee << "  shared_ptr<Queue> dens2 = make_densityq();" << endl;
     out.ee << "  while (!dens2->done())" << endl;
     out.ee << "    dens2->next_compute();" << endl;
+    out.ee << endl;
+    out.ee << "  den1 = h1_->clone();" << endl;
+    out.ee << "  den1->fill_local(0.0);" << endl;
     out.ee << "  shared_ptr<Queue> dens1 = make_density1q();" << endl;
     out.ee << "  while (!dens1->done())" << endl;
     out.ee << "    dens1->next_compute();" << endl;
+    out.ee << endl;
+    out.ee << "  Den1 = init_residual();" << endl;
     out.ee << "  shared_ptr<Queue> Dens1 = make_density2q();" << endl;
     out.ee << "  while (!Dens1->done())" << endl;
     out.ee << "    Dens1->next_compute();" << endl;
     out.ee << "  timer.tick_print(\"Correlated density matrix evaluation\");" << endl;
     out.ee << endl;
+    out.ee << "  deci = make_shared<TATensor<double,1>>(vector<IndexRange>{ci_});" << endl;
+    out.ee << "  deci->fill_local(0.0);" << endl;
     out.ee << "  shared_ptr<Queue> dec = make_deciq();" << endl;
     out.ee << "  while (!dec->done())" << endl;
     out.ee << "    dec->next_compute();" << endl;
