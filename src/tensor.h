@@ -35,6 +35,7 @@
 
 // this object should generate some codes.
 
+#include <algorithm>
 #include "active.h"
 #include "output.h"
 
@@ -120,7 +121,7 @@ class Tensor {
     const std::shared_ptr<Active> active() const { return active_; }
 
     /// Returns true if all the indices are of active orbitals.
-    bool all_active() const;
+    bool all_active() const { std::all_of(index_.begin(), index_.end(), [](std::shared_ptr<const Index> i){ return i->active(); }); }
 
     /// Used for factorization of trees.
     bool operator==(const Tensor& o) const;
@@ -132,7 +133,7 @@ class Tensor {
     /// if tensor is a repeat.
     bool has_alias() const { return !!alias_; }
     /// Checks if tensor is gamma.
-    bool is_gamma() const;
+    bool is_gamma() const { return label_.find("Gamma") != std::string::npos; }
     /// if deriviative tensor
     bool der() { return !der_.empty(); }
 
