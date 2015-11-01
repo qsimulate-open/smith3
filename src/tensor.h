@@ -142,6 +142,8 @@ class Tensor {
 
     /// Generates string for constructor for tensors in Method.cc file
     std::string constructor_str(const bool diagonal = false) const;
+    /// Generates string for constructor for tensors in Method.cc file
+    std::string constructor_str_old() const;
     /// Generates code for this tensor using TA expressions
     std::string generate_ta(const std::string, const bool noscale = false) const;
 

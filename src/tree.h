@@ -183,6 +183,20 @@ class Tree {
         assert(label_ == "energy" || label_ == "corr");
       return out;
     }
+    int target_index_size() const {
+      int out;
+      if (label_ == "residual" || label_ == "source" || label_ == "density2") {
+        out = 4;
+      } else if (label_ == "density" || label_ == "density1") {
+        out = 2;
+      } else if (label_ == "deci") {
+        out = 1;
+      } else if (label_ == "energy" || label_ == "corr") {
+        out = 0;
+      } else
+        assert(false);
+      return out;
+    }
 
     /// Returns depth, 0 is top of graph.
     int depth() const;
@@ -255,8 +269,6 @@ class Tree {
     /// Generate code by stepping through op and bc.
     std::tuple<OutStream, int, int, std::vector<std::shared_ptr<Tensor>>>
         generate_steps(int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
-    /// Generate task in dependency file with ic as task number. Caution also have a virtual generate_task.
-    OutStream generate_task(const int ic, const std::vector<std::shared_ptr<Tensor>>, const std::list<std::shared_ptr<Tensor>> g, const int i0 = 0, const bool diagonal = false) const;
 
     /// Generate task for operator task (ie not a binary contraction task). Dagger arguement refers to front subtree used at top level.
     OutStream generate_compute_operators(const std::shared_ptr<Tensor>, const std::vector<std::shared_ptr<Tensor>>, const bool dagger = false) const;
@@ -264,8 +276,10 @@ class Tree {
     /// Needed for zero level target tensors. Generates a Task '0' ie task to initialize top (zero depth) target tensor also sets up dependency queue.
     OutStream create_target(const int i) const;
 
-    /// Generate a task. Here ip is the tag of parent, ic is the tag of this.
-    OutStream generate_task(const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0, bool der = false, bool diagonal = false) const;
+    /// Generate task in dependency file with ic as task number. Caution also have a virtual generate_task.
+    OutStream generate_task(const int ic, const std::vector<std::shared_ptr<Tensor>>, const std::list<std::shared_ptr<Tensor>> g, const int i0 = 0, const bool diagonal = false) const;
+    /// Generate a task for Gamma!
+    OutStream generate_task(const int ic, const std::vector<std::string>, bool der) const;
     /// Generate task header.
     OutStream generate_compute_header(const int, const std::vector<std::shared_ptr<Tensor>>) const;
     /// Generate task footer.

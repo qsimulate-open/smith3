@@ -136,6 +136,16 @@ bool Tensor::operator==(const Tensor& o) const {
 }
 
 
+string Tensor::constructor_str_old() const {
+  stringstream ss;
+  ss << "  auto " << label() << " = make_shared<Tensor>(std::vector<IndexRange>{";
+  for (auto i = index_.rbegin(); i != index_.rend(); ++i)
+    ss << (i != index_.rbegin() ? ", " : "") << (*i)->generate();
+  ss << "});";
+  return ss.str();
+}
+
+
 string Tensor::constructor_str(const bool diagonal) const {
   stringstream ss;
   string indent = "";
@@ -144,7 +154,7 @@ string Tensor::constructor_str(const bool diagonal) const {
     ss << "  shared_ptr<TATensor<" << DataType << "," << index_.size() << ">> " << label() << ";" << endl;
     ss << "  if (diagonal) {" << endl;
   }
-  ss << indent << "  " << (diagonal ? "" : "auto ") << label() << " = make_shared<TATensor<" << DataType << "," << index_.size() << ">>({";
+  ss << indent << "  " << (diagonal ? "" : "auto ") << label() << " = make_shared<TATensor<" << DataType << "," << index_.size() << ">>(std::vector<IndexRange>{";
   for (auto i = index_.rbegin(); i != index_.rend(); ++i)
     ss << (i != index_.rbegin() ? ", " : "") << (*i)->generate();
   ss << "});";

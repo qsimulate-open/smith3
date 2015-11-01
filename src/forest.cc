@@ -204,7 +204,7 @@ OutStream Forest::generate_gammas() const {
     out.ss << "    std::shared_ptr<FutureTATensor<" << DataType << "," << i->index().size() << ">> " << i->label() << "_();" << endl;
 
     out.gg << "shared_ptr<FutureTATensor<" << DataType << "," << i->index().size() << ">> " << forest_name_ << "::" << forest_name_ << "::" << i->label() << "_() {" << endl;
-    out.gg << i->constructor_str() << endl;
+    out.gg << i->constructor_str_old() << endl;
     out.gg << "  auto TA" << i->label() << " = " << i->label() << "->tiledarray<" << i->index().size() << ">();" << endl;
 
     if (!i->der())
@@ -239,13 +239,7 @@ OutStream Forest::generate_gammas() const {
         tmp.push_back(mm.str());
       }
     }
-    // virtual generate_task
-    if (i->der()) {
-      out << trees_.front()->generate_task(0, icnt, tmp, "", 0, true);
-    } else {
-      out << trees_.front()->generate_task(0, icnt, tmp);
-    }
-
+    out << trees_.front()->generate_task(icnt, tmp, i->der());
     out.gg << "  return make_shared<FutureTATensor<" << DataType << "," << i->index().size() << ">>(*TA" << i->label() << ", " << i->label() << ", task" << icnt << ");" << endl;
     out.gg << "}" << endl << endl;
     ++icnt;
@@ -289,7 +283,7 @@ OutStream Forest::generate_algorithm() const {
       out.ee << "  den2 = h1_->clone();" << endl;
       out.ee << "  Den1 = v2_->clone();" << endl;
       out.ee << "  if (info_->grad())" << endl;
-      out.ee << "    deci = make_shared<TATensor<" << DataType << ",1>>({ci_});" << endl;
+      out.ee << "    deci = make_shared<TATensor<" << DataType << ",1>>(vector<IndexRange>{ci_});" << endl;
     } else if (forest_name_ == "RelCASPT2") {
       out.ee << "  s = t2->clone();" << endl;
     }

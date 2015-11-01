@@ -119,6 +119,32 @@ std::string merge__(std::vector<std::string> array, std::string name = "") {
   return ss.str();
 }
 
+std::string merge2__(std::vector<std::string> array, std::string name = "") {
+  std::stringstream ss;
+  std::vector<std::string> done;
+  for (auto& label : array) {
+    size_t found = label.find("dagger");
+    if (found != std::string::npos) {
+      std::string tmp(label.begin(), label.begin() + found);
+      label = tmp;
+    }
+    // we only register once
+    if (std::find(done.begin(), done.end(), label) != done.end()) continue;
+    done.push_back(label);
+
+    // some tweaks
+    if (label == "f1" || label == "v2" || label == "h1")
+      label = label + "_";
+    else if (label != array.front() && label.find("Gamma") != std::string::npos)
+      label = label + "_()";
+
+    ss << (label != array.front() ? ", make_shared<Tensor>(*" : "") << ((label == "proj") ? target_name__(name) : label)
+       << (label != array.front() ? ")" : "");
+  }
+  return ss.str();
+}
+
+
 bool same_tensor__(std::string a, std::string b) {
   auto strip = [](const std::string& label) {
     size_t found = label.find("dagger");
