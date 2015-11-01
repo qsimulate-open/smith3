@@ -111,7 +111,7 @@ std::string merge__(std::vector<std::string> array, std::string name = "") {
     // some tweaks
     if (label == "f1" || label == "v2" || label == "h1")
       label = label + "_";
-    else if (label != array.front() && label.find("Gamma") != std::string::npos)
+    else if (label.find("Gamma") != std::string::npos)
       label = label + "_()";
 
     ss << (label != array.front() ? ", " : "") << ((label == "proj") ? target_name__(name) : label);

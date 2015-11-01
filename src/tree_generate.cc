@@ -71,7 +71,12 @@ OutStream Tree::create_target(const int i) const {
 
 OutStream Tree::generate_task(const int ic, const vector<shared_ptr<Tensor>> op, const list<shared_ptr<Tensor>> g, const int i0, const bool diagonal) const {
   vector<string> ops;
-  for (auto& i : op) ops.push_back(i->label());
+  const bool skipfirst = is_energy_tree() && depth() == 1;
+  auto ifirst = op.begin();
+  if (skipfirst)
+    ++ifirst;
+  for (auto i = ifirst; i != op.end(); ++i)
+    ops.push_back((*i)->label());
   int ip = -1;
   if (parent_) ip = parent_->parent()->num();
 
@@ -84,9 +89,7 @@ OutStream Tree::generate_task(const int ic, const vector<shared_ptr<Tensor>> op,
     }
   }
 
-  assert(ops.front().find("Gamma") == string::npos);
   stringstream tmp;
-
   string indent = "";
   if (diagonal) {
     tmp << "  shared_ptr<Task" << ic << "> task" << ic << ";" << endl;
@@ -256,8 +259,6 @@ string Tree::add_depend(const shared_ptr<const Tensor> o, const list<shared_ptr<
 tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
   BinaryContraction::generate_task_list(int tcnt, int t0, const list<shared_ptr<Tensor>> gamma, vector<shared_ptr<Tensor>> itensors) const {
   OutStream out, tmp;
-  string depends, tasks, specials;
-
   for (auto& i : subtree_) {
     tie(tmp, tcnt, t0, itensors) = i->generate_task_list(tcnt, t0, gamma, itensors);
     out << tmp;
@@ -399,7 +400,9 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
       // if it contains a new intermediate tensor, dump a constructor
       if (find(itensors.begin(), itensors.end(), s) == itensors.end() && s->label().find("I") != string::npos) {
         itensors.push_back(s);
-        out.ee << s->constructor_str(diagonal) << endl;
+        // hacky code -- we won't generate at the bottom of the energy trees
+        if (!(is_energy_tree() && depth() == 1 && s->label() == source_tensors.front()->label()))
+          out.ee << s->constructor_str(diagonal) << endl;
       }
     }
     // saving a counter to a protected member for dependency checks
@@ -444,9 +447,14 @@ OutStream Tree::generate_compute_header(const int ic, const vector<shared_ptr<Te
   OutStream out;
   out.tt << "class Task" << ic << " : public " << (is_energy_tree() ? "Acc" : "") << "Task {" << endl;
   out.tt << "  protected:" << endl;
-  int cnt = 0;
-  for (auto& i : labels)
-    out.tt << "    std::shared_ptr<TATensor<" << DataType << "," << ranks.at(i) << ">> ta" << cnt++ << "_;" << endl;
+
+  const bool skipfirst = is_energy_tree() && depth() == 1;
+  int cnt = skipfirst ? 1 : 0;
+  auto ifirst = labels.begin();
+  if (skipfirst)
+    ++ifirst;
+  for (auto i = ifirst; i != labels.end(); ++i)
+    out.tt << "    std::shared_ptr<TATensor<" << DataType << "," << ranks.at(*i) << ">> ta" << cnt++ << "_;" << endl;
   if (need_e0)
     out.tt << "    const double e0_;" << endl;
   out.tt << "    void compute_() override;" << endl;
@@ -477,14 +485,21 @@ OutStream Tree::generate_compute_footer(const int ic, const vector<shared_ptr<Te
   OutStream out;
   out.dd << "}" << endl << endl << endl;
 
+  const bool skipfirst = is_energy_tree() && depth() == 1;
+
   out.tt << "  public:" << endl;
   out.tt << "    Task" << ic << "(";
-  for (auto i = labels.begin(); i != labels.end(); ++i)
-    out.tt << (i == labels.begin() ? "" : ", ") << "std::shared_ptr<TATensor<" << DataType << "," << ranks.at(*i) << ">> " << *i;
+
+  auto ifirst = labels.begin();
+  if (skipfirst)
+    ++ifirst;
+  for (auto i = ifirst; i != labels.end(); ++i)
+    out.tt << (i == ifirst ? "" : ", ") << "std::shared_ptr<TATensor<" << DataType << "," << ranks.at(*i) << ">> " << *i;
   out.tt << (need_e0 ? ", const double e" : "") << ")" << endl << "   : ";
-  int cnt = 0;
-  for (auto i = labels.begin(); i != labels.end(); ++i)
-    out.tt << (i == labels.begin() ? "" : ", ") << "ta" << cnt++ << "_(" << *i << ")";
+
+  int cnt = skipfirst ? 1 : 0;
+  for (auto i = ifirst; i != labels.end(); ++i)
+    out.tt << (i == ifirst ? "" : ", ") << "ta" << cnt++ << "_(" << *i << ")";
   out.tt << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
   out.tt << "};" << endl << endl;
   return out;
