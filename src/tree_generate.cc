@@ -174,14 +174,7 @@ OutStream Tree::generate_bc(const shared_ptr<BinaryContraction> i) const {
     vector<shared_ptr<Tensor>> op2 = { i->next_target() };
     out << generate_compute_operators(residual, op2, i->dagger());
   }
-
-
   return out;
-}
-
-
-shared_ptr<Tensor> Tree::create_tensor(list<shared_ptr<const Index>> dm) const {
- return is_energy_tree() ? std::shared_ptr<Tensor>() : make_shared<Tensor>(1.0, "r", dm);
 }
 
 

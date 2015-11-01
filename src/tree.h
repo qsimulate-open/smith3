@@ -263,8 +263,6 @@ class Tree {
 
     /// Needed for zero level target tensors. Generates a Task '0' ie task to initialize top (zero depth) target tensor also sets up dependency queue.
     OutStream create_target(const int i) const;
-    /// Create new tensor
-    std::shared_ptr<Tensor> create_tensor(std::list<std::shared_ptr<const Index>>) const;
 
     /// Generate a task. Here ip is the tag of parent, ic is the tag of this.
     OutStream generate_task(const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0, bool der = false, bool diagonal = false) const;
