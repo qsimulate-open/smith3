@@ -91,23 +91,6 @@ string Tensor::str() const {
 }
 
 
-// returns if all the indices are of active orbitals
-bool Tensor::all_active() const {
-  bool out = true;
-  for (auto i = index_.begin(); i != index_.end(); ++i) {
-    out &= (*i)->active();
-  }
-  return out;
-}
-
-
-bool Tensor::is_gamma() const {
-  bool found = false;
-  if (label_.find("Gamma") != std::string::npos) found = true;
-  return found;
-}
-
-
 // adds all-active tensor to Active_;
 void Tensor::merge(shared_ptr<Tensor> a) {
   assert(active_);
