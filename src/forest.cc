@@ -130,10 +130,10 @@ OutStream Forest::generate_headers() const {
     out.ss << "    int nstates_;" << endl;
     out.ss << "    std::vector<double> energy_;" << endl << endl;
 
-    out.ss << "    std::vector<std::shared_ptr<MultiTensor>> t2all_;" << endl;
-    out.ss << "    std::vector<std::shared_ptr<MultiTensor>> rall_;" << endl;
-    out.ss << "    std::vector<std::shared_ptr<MultiTensor>> sall_;" << endl;
-    out.ss << "    std::vector<std::shared_ptr<MultiTensor>> nall_;" << endl;
+    out.ss << "    std::vector<std::shared_ptr<MultiTATensor<" << DataType << ",4>>> t2all_;" << endl;
+    out.ss << "    std::vector<std::shared_ptr<MultiTATensor<" << DataType << ",4>>> rall_;" << endl;
+    out.ss << "    std::vector<std::shared_ptr<MultiTATensor<" << DataType << ",4>>> sall_;" << endl;
+    out.ss << "    std::vector<std::shared_ptr<MultiTATensor<" << DataType << ",4>>> nall_;" << endl;
   }
   if (forest_name_ == "RelCASPT2")
     out.ss << "    std::shared_ptr<TATensor<" << DataType << ",4>> s;" << endl;
@@ -263,12 +263,12 @@ OutStream Forest::generate_algorithm() const {
     out.ee << "  nstates_ = ref->ciwfn()->nstates();" << endl << endl;
 
     out.ee << "  for (int i = 0; i != nstates_; ++i) {" << endl;
-    out.ee << "    auto tmp = make_shared<MultiTensor>(nstates_);" << endl;
+    out.ee << "    auto tmp = make_shared<MultiTATensor<" << DataType << ",4>>(nstates_);" << endl;
     out.ee << "    for (auto& j : *tmp)" << endl;
     out.ee << "      j = init_amplitude();" << endl;
     out.ee << "    t2all_.push_back(tmp);" << endl << endl;
 
-    out.ee << "    auto tmp2 = make_shared<MultiTensor>(nstates_);" << endl;
+    out.ee << "    auto tmp2 = make_shared<MultiTATensor<" << DataType << ",4>>(nstates_);" << endl;
     out.ee << "    for (auto& j : *tmp2)" << endl;
     out.ee << "      j = init_residual();" << endl;
     out.ee << "    sall_.push_back(tmp2);" << endl;
@@ -456,7 +456,7 @@ string Forest::msmrci_main_driver_() {
   ss << "    }" << endl;
   ss << "  }" << endl << endl;
 
-  ss << "  shared_ptr<MultiTensor> rtmp = nall_[0]->copy();" << endl;
+  ss << "  shared_ptr<MultiTATensor<" << DataType << ",4>> rtmp = nall_[0]->copy();" << endl;
   ss << "  rtmp->zero();" << endl << endl;
 
   ss << "  Timer mtimer;" << endl;
@@ -508,7 +508,7 @@ string Forest::msmrci_main_driver_() {
 
   ss << "      // <ab/ij| T |0_ist> Eref_ist." << endl;
   ss << "      {" << endl;
-  ss << "        shared_ptr<MultiTensor> m = t2all_[istate]->copy();" << endl;
+  ss << "        shared_ptr<MultiTATensor<" << DataType << ",4>> m = t2all_[istate]->copy();" << endl;
   ss << "        for (int ist = 0; ist != nstates_; ++ist) {" << endl;
   ss << "          // First weighted T2 amplitude" << endl;
   ss << "          m->at(ist)->scale(info_->ciwfn()->energy(ist) - core_nuc);" << endl;
@@ -525,7 +525,7 @@ string Forest::msmrci_main_driver_() {
   ss << "      }" << endl << endl;
 
   ss << "      {" << endl;
-  ss << "        shared_ptr<MultiTensor> m = rtmp->copy();" << endl;
+  ss << "        shared_ptr<MultiTATensor<" << DataType << ",4>> m = rtmp->copy();" << endl;
   ss << "        for (int ist = 0; ist != nstates_; ++ist)" << endl;
   ss << "          m->fac(ist) = dot_product_transpose(sall_[ist], t2all_[istate]);" << endl;
   ss << "        r0.push_back(make_shared<Residual<" << DataType << ">>(m, this));" << endl;
