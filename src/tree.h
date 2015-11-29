@@ -185,7 +185,7 @@ class Tree {
     }
     int target_index_size() const {
       int out;
-      if (label_ == "residual" || label_ == "source" || label_ == "density2") {
+      if (label_ == "residual" || label_ == "source" || label_ == "density2" || label_ == "norm") {
         out = 4;
       } else if (label_ == "density" || label_ == "density1") {
         out = 2;
