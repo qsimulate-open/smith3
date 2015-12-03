@@ -296,7 +296,7 @@ OutStream Forest::generate_algorithm() const {
     out.ee << "  t2 = init_amplitude();" << endl;
     out.ee << "  r = init_residual();" << endl;
     if (forest_name_ == "RelCASPT2")
-      out.ee << "  s = init_amplitude();" << endl;
+      out.ee << "  s = init_residual();" << endl;
   }
   out.ee << "}" << endl << endl;
 
