@@ -143,7 +143,6 @@ OutStream Tree::generate_bc(const shared_ptr<BinaryContraction> i) const {
     if (i->next_target()->label().find("Gamma") != string::npos)
       out.dd << "  ta2_->init();" << endl;
 
-    out.dd << "  madness::World::get_default().gop.fence();" << endl;
     if (!(is_energy_tree() && depth() == 1))
       out.dd << "  " << target_->generate_ta("ta0_", true) << " += ";
     else
@@ -153,7 +152,6 @@ OutStream Tree::generate_bc(const shared_ptr<BinaryContraction> i) const {
     // retrieving subtree_
     string inlabel("ta"); inlabel += (same_tensor__(i->tensor()->label(), i->next_target()->label()) ? "1_" : "2_");
     out.dd << i->next_target()->generate_ta(inlabel) << (target_->index().size() == 0 ? ").get()" : "") << ";" << endl;
-    out.dd << "  madness::World::get_default().gop.fence();" << endl;
   } else {  // now at bc depth 0
     assert(!is_energy_tree());
     // making residual vector...
@@ -197,7 +195,6 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
     out.dd << "  if (!ta0_->initialized())" << endl;
     out.dd << "    ta0_->fill_local(0.0);" << endl;
   }
-  out.dd << "  madness::World::get_default().gop.fence();" << endl;
   out.dd << "  " << target->generate_ta("ta0_", true) << " += ";
 
   // add the source data to the target
@@ -237,7 +234,6 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
     }
   }
   out.dd << ";" << endl;
-  out.dd << "  madness::World::get_default().gop.fence();" << endl;
   return out;
 }
 
