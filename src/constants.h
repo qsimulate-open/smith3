@@ -146,8 +146,17 @@ int count_distinct_tensors__(const std::vector<std::string>& labels) {
   return out;
 }
 
+#define _CASPT2
+//#define _MRCI
+//#define _RELCASPT2
+//#define _RELMRCI
+#if defined(_CASPT2) || defined(_MRCI)
 static const std::string DataType = "double";
-//static const std::string DataType = "std::complex<double>";
+#elif defined(_RELCASPT2) || defined(_RELMRCI)
+static const std::string DataType = "std::complex<double>";
+#else
+static_assert(false, "Please compile using make.sh");
+#endif
 static const double fac2 = (DataType == "double" ? 2.0 : 1.0);
 static const std::string GEMM = (DataType == "double" ? "dgemm_" : "zgemm3m_");
 static const std::string SCAL = (DataType == "double" ? "dscal_" : "zscal_");

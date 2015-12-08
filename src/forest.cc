@@ -92,6 +92,8 @@ OutStream Forest::generate_code() const {
 OutStream Forest::generate_headers() const {
   OutStream out;
   string indent = "      ";
+  string forest_name_lower = forest_name_;
+  transform(forest_name_lower.begin(), forest_name_lower.end(), forest_name_lower.begin(), ::tolower);
   // save task zero
   icnt = 0;
   i0 = icnt;
@@ -126,8 +128,8 @@ OutStream Forest::generate_headers() const {
   out.ss << "  protected:" << endl;
   out.ss << "    std::shared_ptr<Tensor> t2;" << endl;
   out.ss << "    std::shared_ptr<Tensor> r;" << endl;
+  out.ss << "    std::shared_ptr<Tensor> s;" << endl;
   if (forest_name_ == "MRCI" || forest_name_ == "RelMRCI") {
-    out.ss << "    std::shared_ptr<Tensor> s;" << endl;
     out.ss << "    std::shared_ptr<Tensor> n;" << endl << endl;;
 
     out.ss << "    int nstates_;" << endl;
@@ -138,27 +140,26 @@ OutStream Forest::generate_headers() const {
     out.ss << "    std::vector<std::shared_ptr<MultiTensor>> sall_;" << endl;
     out.ss << "    std::vector<std::shared_ptr<MultiTensor>> nall_;" << endl;
   }
-  if (forest_name_ == "RelCASPT2")
-    out.ss << "    std::shared_ptr<Tensor> s;" << endl;
   if (forest_name_ == "CASPT2") {
     out.ss << "    std::shared_ptr<Tensor> den1;" << endl;
     out.ss << "    std::shared_ptr<Tensor> den2;" << endl;
     out.ss << "    std::shared_ptr<Tensor> Den1;" << endl;
     out.ss << "    double correlated_norm_;" << endl;
-    out.ss << "    std::shared_ptr<Tensor> deci;" << endl;
+    out.ss << "    std::shared_ptr<Tensor> deci;" << endl << endl;
   }
+  out.ss << "    void diagonal(std::shared_ptr<Tensor> r, std::shared_ptr<const Tensor> t) const;" << endl;
   out.ss << "" << endl;
 
   out.ee << "#include <src/util/math/davidson.h>" << endl;
   out.ee << "#include <src/smith/extrap.h>" << endl;
-  out.ee << "#include <src/smith/" << forest_name_ << ".h>" << endl;
-  out.ee << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl;
+  out.ee << "#include <src/smith/" << forest_name_lower << "/" << forest_name_ << ".h>" << endl;
+  out.ee << "#include <src/smith/" << forest_name_lower << "/" << forest_name_ << "_tasks.h>" << endl << endl;
   out.ee << "using namespace std;" << endl;
   out.ee << "using namespace bagel;" << endl;
   out.ee << "using namespace bagel::SMITH;" << endl << endl;
 
-  out.tt << "#ifndef __SRC_SMITH_" << forest_name_ << "_TASKS_H" << endl;
-  out.tt << "#define __SRC_SMITH_" << forest_name_ << "_TASKS_H" << endl << endl;
+  out.tt << "#ifndef __SRC_SMITH_" << forest_name_ << "_" << forest_name_ << "_TASKS_H" << endl;
+  out.tt << "#define __SRC_SMITH_" << forest_name_ << "_" << forest_name_ << "_TASKS_H" << endl << endl;
 
   out.tt << "#include <src/smith/indexrange.h>" << endl;
   out.tt << "#include <src/smith/tensor.h>" << endl;
@@ -170,20 +171,20 @@ OutStream Forest::generate_headers() const {
   out.tt << "namespace SMITH {" << endl;
   out.tt << "namespace " << forest_name_ << "{" << endl << endl;
 
-  out.cc << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl;
+  out.cc << "#include <src/smith/" << forest_name_lower << "/" << forest_name_ << "_tasks.h>" << endl << endl;
   out.cc << "using namespace std;" << endl;
   out.cc << "using namespace bagel;" << endl;
   out.cc << "using namespace bagel::SMITH;" << endl;
   out.cc << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
 
-  out.dd << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl;
+  out.dd << "#include <src/smith/" << forest_name_lower << "/" << forest_name_ << "_tasks.h>" << endl << endl;
   out.dd << "using namespace std;" << endl;
   out.dd << "using namespace bagel;" << endl;
   out.dd << "using namespace bagel::SMITH;" << endl;
   out.dd << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
 
-  out.gg << "#include <src/smith/" << forest_name_ << ".h>" << endl;
-  out.gg << "#include <src/smith/" << forest_name_ << "_tasks.h>" << endl << endl;
+  out.gg << "#include <src/smith/" << forest_name_lower << "/" << forest_name_ << ".h>" << endl;
+  out.gg << "#include <src/smith/" << forest_name_lower << "/" << forest_name_ << "_tasks.h>" << endl << endl;
   out.gg << "using namespace std;" << endl;
   out.gg << "using namespace bagel;" << endl;
   out.gg << "using namespace bagel::SMITH;" << endl;
@@ -516,6 +517,7 @@ string Forest::msmrci_main_driver_() {
   ss << "          auto queue = make_residualq(false, jst == ist);" << endl;
   ss << "          while (!queue->done())" << endl;
   ss << "            queue->next_compute();" << endl;
+  ss << "          diagonal(r, t2);" << endl;
   ss << "        }" << endl;
   ss << "      }" << endl << endl;
 

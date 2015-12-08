@@ -127,7 +127,7 @@ fout = open("CASPT2_tasks.h", "w")
 out = header2
 for i in range(n+1):
     if (i > 0):
-        out += "#include <src/smith/CASPT2_tasks" + str(i) + ".h>\n"
+        out += "#include <src/smith/caspt2/CASPT2_tasks" + str(i) + ".h>\n"
 out += footer2
 fout.write(out)
 fout.close()

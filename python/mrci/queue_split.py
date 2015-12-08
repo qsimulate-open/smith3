@@ -39,11 +39,11 @@ def header(n) :
 #include <src/util/math/davidson.h>\n\
 #include <src/smith/extrap.h>\n"
     out += "\
-#include <src/smith/MRCI.h>\n"
+#include <src/smith/mrci/MRCI.h>\n"
     return out
 
 def insert():
-    return "#include <src/smith/MRCI_tasks.h>\n"
+    return "#include <src/smith/mrci/MRCI_tasks.h>\n"
 
 def header2():
     return "\n\

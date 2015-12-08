@@ -32,7 +32,7 @@ def header(n) :
 #include <bagel_config.h>\n\
 #ifdef COMPILE_SMITH\n\
 \n\
-#include <src/smith/RelMRCI_tasks" + str(n) + ".h>\n\
+#include <src/smith/relmrci/RelMRCI_tasks" + str(n) + ".h>\n\
 \n\
 using namespace std;\n\
 using namespace bagel;\n\

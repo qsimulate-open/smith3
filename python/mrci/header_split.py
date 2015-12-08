@@ -127,7 +127,7 @@ fout = open("MRCI_tasks.h", "w")
 out = header2
 for i in range(n+1):
     if (i > 0):
-        out += "#include <src/smith/MRCI_tasks" + str(i) + ".h>\n"
+        out += "#include <src/smith/mrci/MRCI_tasks" + str(i) + ".h>\n"
 out += footer2
 fout.write(out)
 fout.close()
