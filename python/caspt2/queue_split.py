@@ -34,10 +34,10 @@ def header(n) :
 #ifdef COMPILE_SMITH\n\
 \n\
 \n\
-#include <src/smith/CASPT2.h>\n"
+#include <src/smith/caspt2/CASPT2.h>\n"
 
 def insert():
-    return "#include <src/smith/CASPT2_tasks.h>\n"
+    return "#include <src/smith/caspt2/CASPT2_tasks.h>\n"
 
 def header2():
     return "\n\

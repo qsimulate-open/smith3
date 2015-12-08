@@ -25,6 +25,7 @@
 
 
 #include "equation.h"
+#include "constants.h"
 
 using namespace std;
 using namespace smith;
@@ -60,6 +61,21 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
     // collect target indices from excitation operators.
     for (auto& i : diagram_) i->refresh_indices();
   }
+
+  // 4-external contributions are done through optimized code
+#if defined(_RELMRCI) || defined(_MRCI)
+  for (auto it = diagram_.begin(); it != diagram_.end(); ) {
+    bool four = false;
+    for (auto& j : (*it)->op()) {
+      if (j->op().size() != 4) continue;
+      four |= all_of(j->op().begin(), j->op().end(), [](const tuple<shared_ptr<Index>*,int,int>& o) { return (*get<0>(o))->label() == "a"; });
+    }
+    if (four)
+      it = diagram_.erase(it);
+    else
+      ++it;
+  }
+#endif
 }
 
 
