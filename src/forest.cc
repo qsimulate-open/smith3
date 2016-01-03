@@ -145,11 +145,8 @@ OutStream Forest::generate_headers() const {
     out.ss << "    std::shared_ptr<TATensor<" << DataType << ",4>> Den1;" << endl;
     out.ss << "    double correlated_norm_;" << endl;
     out.ss << "    std::shared_ptr<TATensor<" << DataType << ",1>> deci;" << endl << endl;
-    out.ss << "    void diagonal(std::shared_ptr<TATensor<" << DataType << ",4>> r, std::shared_ptr<const TATensor<" << DataType << ",4>> t) const;" << endl;
   }
-  if (forest_name_ == "RelMRCI" || forest_name_ == "MRCI") {
-    out.ss << "    void diagonal(std::shared_ptr<TATensor<" << DataType << ",4>> r, std::shared_ptr<const TATensor<" << DataType << ",4>> t) const;" << endl;
-  }
+  out.ss << "    void diagonal(std::shared_ptr<TATensor<" << DataType << ",4>> r, std::shared_ptr<const TATensor<" << DataType << ",4>> t) const;" << endl;
   out.ss << "" << endl;
 
   out.ee << "#include <src/util/math/davidson.h>" << endl;
@@ -330,7 +327,7 @@ OutStream Forest::generate_algorithm() const {
     out.ee << "    Dens1->next_compute();" << endl;
     out.ee << "  timer.tick_print(\"Correlated density matrix evaluation\");" << endl;
     out.ee << endl;
-    out.ee << "  deci = make_shared<TATensor<double,1>>(vector<IndexRange>{ci_});" << endl;
+    out.ee << "  deci = make_shared<TATensor<double,1>>({ci_});" << endl;
     out.ee << "  deci->fill_local(0.0);" << endl;
     out.ee << "  shared_ptr<Queue> dec = make_deciq();" << endl;
     out.ee << "  while (!dec->done())" << endl;
@@ -397,8 +394,7 @@ string Forest::caspt2_main_driver_() {
   ss << "    shared_ptr<Queue> queue = make_residualq();" << endl;
   ss << "    while (!queue->done())" << endl;
   ss << "      queue->next_compute();" << endl;
-  if (DataType == "double")
-    ss << "    diagonal(r, t2);" << endl;
+  ss << "    diagonal(r, t2);" << endl;
   ss << "    energy_ += detail::real(dot_product_transpose(r, t2));" << endl;
   ss << "    const double err = r->rms();" << endl;
   ss << "    print_iteration(iter, energy_, err, mtimer.tick());" << endl;

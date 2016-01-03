@@ -154,7 +154,7 @@ string Tensor::constructor_str(const bool diagonal) const {
     ss << "  shared_ptr<TATensor<" << DataType << "," << index_.size() << ">> " << label() << ";" << endl;
     ss << "  if (diagonal) {" << endl;
   }
-  ss << indent << "  " << (diagonal ? "" : "auto ") << label() << " = make_shared<TATensor<" << DataType << "," << index_.size() << ">>(std::vector<IndexRange>{";
+  ss << indent << "  " << (diagonal ? "" : "auto ") << label() << " = make_shared<TATensor<" << DataType << "," << index_.size() << ">>({";
   for (auto i = index_.rbegin(); i != index_.rend(); ++i)
     ss << (i != index_.rbegin() ? ", " : "") << (*i)->generate();
   ss << "});";

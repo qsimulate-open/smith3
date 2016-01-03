@@ -57,8 +57,8 @@ class Equation {
         for (auto i = current.begin(); i != current.end(); ++i, ++inp)
           cc.push_back((*inp)[*i]);
         // diagonal cc/aa will be removed from the CASPT2 residual equation for efficiency.
-        if ((method_ != "CASPT2") || label_[0] != 'r' || !(cc.back()->external() && cc.front()->tag() == "proje" && (*(++cc.begin()))->external())) {
-//      if ((method_ != "CASPT2" && method_ != "RelCASPT2") || label_[0] != 'r' || !(cc.back()->external() && cc.front()->tag() == "proje" && (*(++cc.begin()))->external())) {
+//      if ((method_ != "CASPT2") || label_[0] != 'r' || !(cc.back()->external() && cc.front()->tag() == "proje" && (*(++cc.begin()))->external())) {
+        if ((method_ != "CASPT2" && method_ != "RelCASPT2") || label_[0] != 'r' || !(cc.back()->external() && cc.front()->tag() == "proje" && (*(++cc.begin()))->external())) {
           out.push_back(cc);
         }
 
