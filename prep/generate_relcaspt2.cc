@@ -113,11 +113,7 @@ int main() {
   // residual equations //
   shared_ptr<Equation> eq0(new Equation(theory, "ra", {dum, proj_list, f, t_list}));
   shared_ptr<Equation> eq1(new Equation(theory, "rb", {dum, proj_list, t_list}, -1.0, "e0"));
-  shared_ptr<Equation> eq2(new Equation(theory, "rc", {dum, proj_list, H}, 0.5));
-  shared_ptr<Equation> eq2a(new Equation(theory, "rd", {dum, proj_list, hc}));
   eq0->merge(eq1);
-  eq0->merge(eq2);
-  eq0->merge(eq2a);
   eq0->set_tree_type("residual");
   cout << eq0->generate();
 

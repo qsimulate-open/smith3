@@ -125,8 +125,9 @@ OutStream Forest::generate_headers() const {
   out.ss << "  protected:" << endl;
   out.ss << "    std::shared_ptr<TATensor<" << DataType << ",4>> t2;" << endl;
   out.ss << "    std::shared_ptr<TATensor<" << DataType << ",4>> r;" << endl;
+  out.ss << "    std::shared_ptr<TATensor<" << DataType << ",4>> s;" << endl;
+
   if (forest_name_ == "MRCI" || forest_name_ == "RelMRCI") {
-    out.ss << "    std::shared_ptr<TATensor<" << DataType << ",4>> s;" << endl;
     out.ss << "    std::shared_ptr<TATensor<" << DataType << ",4>> n;" << endl << endl;;
 
     out.ss << "    int nstates_;" << endl;
@@ -137,8 +138,6 @@ OutStream Forest::generate_headers() const {
     out.ss << "    std::vector<std::shared_ptr<MultiTATensor<" << DataType << ",4>>> sall_;" << endl;
     out.ss << "    std::vector<std::shared_ptr<MultiTATensor<" << DataType << ",4>>> nall_;" << endl;
   }
-  if (forest_name_ == "RelCASPT2")
-    out.ss << "    std::shared_ptr<TATensor<" << DataType << ",4>> s;" << endl;
   if (forest_name_ == "CASPT2") {
     out.ss << "    std::shared_ptr<TATensor<" << DataType << ",2>> den1;" << endl;
     out.ss << "    std::shared_ptr<TATensor<" << DataType << ",2>> den2;" << endl;
@@ -281,8 +280,7 @@ OutStream Forest::generate_algorithm() const {
   if (forest_name_ == "CASPT2" || forest_name_ == "RelCASPT2") {
     out.ee << "  t2 = init_amplitude();" << endl;
     out.ee << "  r = init_residual();" << endl;
-    if (forest_name_ == "RelCASPT2")
-      out.ee << "  s = init_residual();" << endl;
+    out.ee << "  s = init_residual();" << endl;
   }
   out.ee << "}" << endl << endl;
 
@@ -377,35 +375,37 @@ OutStream Forest::generate_algorithm() const {
 
 string Forest::caspt2_main_driver_() {
   stringstream ss;
+
   ss << "  Timer timer;" << endl;
   ss << "  print_iteration();" << endl;
+
+  ss << "  shared_ptr<Queue> sourceq = make_sourceq();" << endl;
+  ss << "  while (!sourceq->done())" << endl;
+  ss << "    sourceq->next_compute();" << endl;
+
   ss << "  Timer mtimer;" << endl;
   ss << "  int iter = 0;" << endl;
   ss << "  for ( ; iter != info_->maxiter(); ++iter) {" << endl;
-  if (DataType == "double") {
-    ss << "    shared_ptr<Queue> energyq = make_energyq();" << endl;
-    ss << "    energy_ = accumulate(energyq);" << endl;
-  } else {
-    ss << "    shared_ptr<Queue> source = make_sourceq();" << endl;
-    ss << "    while (!source->done())" << endl;
-    ss << "      source->next_compute();" << endl;
-    ss << "    energy_ = detail::real(dot_product_transpose(s, t2));" << endl;
-  }
+  ss << "    energy_ = detail::real(dot_product_transpose(s, t2));" << endl;
+
   ss << "    shared_ptr<Queue> queue = make_residualq();" << endl;
   ss << "    while (!queue->done())" << endl;
   ss << "      queue->next_compute();" << endl;
   ss << "    diagonal(r, t2);" << endl;
+  ss << "    r->ax_plus_y(1.0, s); " << endl;
+
   ss << "    energy_ += detail::real(dot_product_transpose(r, t2));" << endl;
+
   ss << "    const double err = r->rms();" << endl;
   ss << "    print_iteration(iter, energy_, err, mtimer.tick());" << endl;
-  ss << endl;
-  ss << "    t2 = update_amplitude(t2, r);" << endl;
+
+  ss << "    t2 = update_amplitude(t2, r); " << endl;
   ss << "    r->zero();" << endl;
   ss << "    if (err < info_->thresh()) break;" << endl;
   ss << "  }" << endl;
   ss << "  print_iteration(iter == info_->maxiter());" << endl;
   ss << "  timer.tick_print(\"CASPT2 energy evaluation\");" << endl;
-  ss << endl;
+
   ss << "  cout << \"    * CASPT2 energy : \" << fixed << setw(20) << setprecision(10) << energy_+info_->ciwfn()->energy(0) << endl;" << endl;
   return ss.str();
 }
