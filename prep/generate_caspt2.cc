@@ -114,21 +114,17 @@ int main() {
   // residual equations //
   shared_ptr<Equation> eq0(new Equation(theory, "ra", {dum, proj_list, f, t_list}));
   shared_ptr<Equation> eq1(new Equation(theory, "rb", {dum, proj_list, t_list}, -1.0, "e0"));
-  shared_ptr<Equation> eq2(new Equation(theory, "rc", {dum, proj_list, H}, 0.5));
-  shared_ptr<Equation> eq2a(new Equation(theory, "rd", {dum, proj_list, hc}));
   eq0->merge(eq1);
-  eq0->merge(eq2);
-  eq0->merge(eq2a);
   eq0->set_tree_type("residual");
   cout << eq0->generate();
 
   // energy equations //
   // second order energy correction
-  // E2 = <1|H|0>. <R|T> will be added in bagel
-  shared_ptr<Equation> eq3(new Equation(theory, "ec", {dum, t_dagger, H}, 0.5));
-  shared_ptr<Equation> eq3a(new Equation(theory, "ed", {dum, t_dagger, hc}));
+  // S = <proj|H|0>. <R|T> will be added in bagel
+  shared_ptr<Equation> eq3(new Equation(theory, "ec", {dum, proj_list, H}, 0.5));
+  shared_ptr<Equation> eq3a(new Equation(theory, "ed", {dum, proj_list, hc}));
   eq3->merge(eq3a);
-  eq3->set_tree_type("energy");
+  eq3->set_tree_type("residual", "source");
   cout << eq3->generate();
 
   // generate Norm <1|1> to be used in various places
