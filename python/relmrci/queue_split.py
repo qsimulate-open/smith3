@@ -55,7 +55,7 @@ using namespace bagel::SMITH;\n\
 footer = "#endif\n"
 
 f = open('RelMRCI.cc', 'r')
-lines = f.read().split("\n")[35:]
+lines = f.read().split("\n")[34:]
 
 tasks = []
 tmp = ""

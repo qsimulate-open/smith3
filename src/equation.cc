@@ -69,6 +69,9 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
       if (j->op().size() != 4) continue;
       four |= all_of(j->op().begin(), j->op().end(), [](const tuple<shared_ptr<Index>*,int,int>& o) { return (*get<0>(o))->label() == "a"; });
     }
+    for (auto& j : (*it)->op())
+      four &= none_of(j->op().begin(), j->op().end(), [](const tuple<shared_ptr<Index>*,int,int>& o) { return (*get<0>(o))->label() == "x"; });
+
     if (four)
       it = diagram_.erase(it);
     else

@@ -566,7 +566,23 @@ string Forest::msmrci_main_driver_() {
   ss << "    if (all_of(conv.begin(), conv.end(), [](bool i){ return i;})) break;" << endl;
   ss << "  }" << endl;
   ss << "  print_iteration(iter == info_->maxiter());" << endl;
-  ss << "  timer.tick_print(\"MRCI energy evaluation\");" << endl;
+  ss << "  timer.tick_print(\"MRCI energy evaluation\");" << endl << endl;
+
+  ss << "  // Davidson corrections..." << endl;
+  ss << "  {" << endl;
+  ss << "    cout << endl;" << endl;
+  ss << "    vector<double> energy_q(nstates_);" << endl;
+  ss << "    vector<shared_ptr<Amplitude<" << DataType << ">>> ci = davidson.civec();" << endl;
+  ss << "    for (int i = 0; i != nstates_; ++i) {" << endl;
+  ss << "      const double c = norm(ci[i]->tensor()->fac(i));" << endl;
+  ss << "      const double eref = info_->ciwfn()->energy(i);" << endl;
+  ss << "      const double eq = energy_[i]+core_nuc + (energy_[i]+core_nuc-eref)*(1.0-c)/c;" << endl;
+  ss << "      print_iteration(0, eq, 0.0, 0.0, i);" << endl;
+  ss << "    }   " << endl;
+  ss << "    cout << endl;" << endl;
+  ss << "  }" << endl;
+  ss << "  timer.tick_print(\"MRCI+Q energy evaluation\");" << endl;
+
 
   return ss.str();
 }
