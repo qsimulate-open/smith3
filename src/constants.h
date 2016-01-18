@@ -40,7 +40,7 @@ namespace {
 std::string header(const std::string& filename) {
   std::stringstream ss;
   ss << "//" << std::endl;
-  ss << "// BAGEL - Parallel electron correlation program." << std::endl;
+  ss << "// BAGEL - Brilliantly Advanced General Electronic Structure Library" << std::endl;
   ss << "// Filename: " << filename << std::endl;
   ss << "// Copyright (C) 2014 Shiozaki group" << std::endl;
   ss << "//" << std::endl;
@@ -49,19 +49,18 @@ std::string header(const std::string& filename) {
   ss << "//" << std::endl;
   ss << "// This file is part of the BAGEL package." << std::endl;
   ss << "//" << std::endl;
-  ss << "// The BAGEL package is free software; you can redistribute it and/or modify" << std::endl;
-  ss << "// it under the terms of the GNU Library General Public License as published by" << std::endl;
-  ss << "// the Free Software Foundation; either version 3, or (at your option)" << std::endl;
-  ss << "// any later version." << std::endl;
+  ss << "// This program is free software; you can redistribute it and/or modify" << std::endl;
+  ss << "// it under the terms of the GNU General Public License as published by" << std::endl;
+  ss << "// the Free Software Foundation, either version 3 of the License, or" << std::endl;
+  ss << "// (at your option) any later version." << std::endl;
   ss << "//" << std::endl;
-  ss << "// The BAGEL package is distributed in the hope that it will be useful," << std::endl;
+  ss << "// This program is distributed in the hope that it will be useful," << std::endl;
   ss << "// but WITHOUT ANY WARRANTY; without even the implied warranty of" << std::endl;
   ss << "// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the" << std::endl;
-  ss << "// GNU Library General Public License for more details." << std::endl;
+  ss << "// GNU General Public License for more details." << std::endl;
   ss << "//" << std::endl;
-  ss << "// You should have received a copy of the GNU Library General Public License" << std::endl;
-  ss << "// along with the BAGEL package; see COPYING.  If not, write to" << std::endl;
-  ss << "// the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA." << std::endl;
+  ss << "// You should have received a copy of the GNU General Public License" << std::endl;
+  ss << "// along with this program.  If not, see <http://www.gnu.org/licenses/>." << std::endl;
   ss << "//" << std::endl;
   ss << "" << std::endl;
   ss << "" << std::endl;
@@ -148,8 +147,8 @@ int count_distinct_tensors__(const std::vector<std::string>& labels) {
   return out;
 }
 
-//static const std::string DataType = "double";
-static const std::string DataType = "std::complex<double>";
+static const std::string DataType = "double";
+//static const std::string DataType = "std::complex<double>";
 static const double fac2 = (DataType == "double" ? 2.0 : 1.0);
 static const std::string GEMM = (DataType == "double" ? "dgemm_" : "zgemm3m_");
 static const std::string SCAL = (DataType == "double" ? "dscal_" : "zscal_");
