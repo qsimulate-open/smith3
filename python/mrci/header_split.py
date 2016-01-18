@@ -4,28 +4,27 @@ import os
 
 def header(n) :
     return "//\n\
-// BAGEL - Parallel electron correlation program.\n\
+// BAGEL - Brilliantly Advanced General Electronic Structure Library\n\
 // Filename: MRCI_tasks" + str(n) + ".h\n\
-// Copyright (C) 2014 Shiozaki group\n\
+// Copyright (C) 2014 Toru Shiozaki\n\
 //\n\
-// Author: Shiozaki group <shiozaki@northwestern.edu>\n\
+// Author: Toru Shiozaki <shiozaki@northwestern.edu>\n\
 // Maintainer: Shiozaki group\n\
 //\n\
 // This file is part of the BAGEL package.\n\
 //\n\
-// The BAGEL package is free software; you can redistribute it and/or modify\n\
-// it under the terms of the GNU Library General Public License as published by\n\
-// the Free Software Foundation; either version 3, or (at your option)\n\
-// any later version.\n\
+// This program is free software: you can redistribute it and/or modify\n\
+// it under the terms of the GNU General Public License as published by\n\
+// the Free Software Foundation, either version 3 of the License, or\n\
+// (at your option) any later version.\n\
 //\n\
-// The BAGEL package is distributed in the hope that it will be useful,\n\
+// This program is distributed in the hope that it will be useful,\n\
 // but WITHOUT ANY WARRANTY; without even the implied warranty of\n\
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n\
-// GNU Library General Public License for more details.\n\
+// GNU General Public License for more details.\n\
 //\n\
-// You should have received a copy of the GNU Library General Public License\n\
-// along with the BAGEL package; see COPYING.  If not, write to\n\
-// the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.\n\
+// You should have received a copy of the GNU General Public License\n\
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\
 //\n\
 \n\
 #include <bagel_config.h>\n\
@@ -52,28 +51,27 @@ footer = "\n}\n}\n}\n\
 
 
 header2 = "//\n\
-// BAGEL - Parallel electron correlation program.\n\
-// Filename: MRCI_tasks.h\n\
-// Copyright (C) 2014 Shiozaki group\n\
+// BAGEL - Brilliantly Advanced General Electronic Structure Library\n\
+// Filename: CASPT2_tasks.h\n\
+// Copyright (C) 2014 Toru Shiozaki\n\
 //\n\
-// Author: Shiozaki group <shiozaki@northwestern.edu>\n\
+// Author: Toru Shiozaki <shiozaki@northwestern.edu>\n\
 // Maintainer: Shiozaki group\n\
 //\n\
 // This file is part of the BAGEL package.\n\
 //\n\
-// The BAGEL package is free software; you can redistribute it and/or modify\n\
-// it under the terms of the GNU Library General Public License as published by\n\
-// the Free Software Foundation; either version 3, or (at your option)\n\
-// any later version.\n\
+// This program is free software: you can redistribute it and/or modify\n\
+// it under the terms of the GNU General Public License as published by\n\
+// the Free Software Foundation, either version 3 of the License, or\n\
+// (at your option) any later version.\n\
 //\n\
-// The BAGEL package is distributed in the hope that it will be useful,\n\
+// This program is distributed in the hope that it will be useful,\n\
 // but WITHOUT ANY WARRANTY; without even the implied warranty of\n\
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n\
-// GNU Library General Public License for more details.\n\
+// GNU General Public License for more details.\n\
 //\n\
-// You should have received a copy of the GNU Library General Public License\n\
-// along with the BAGEL package; see COPYING.  If not, write to\n\
-// the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.\n\
+// You should have received a copy of the GNU General Public License\n\
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\
 //\n\
 \n\
 #include <bagel_config.h>\n\
@@ -86,7 +84,7 @@ header2 = "//\n\
 footer2 = "\n#endif\n#endif\n\n"
 
 f = open('MRCI_tasks.h', 'r')
-lines = f.read().split("\n")[39:][:-6]
+lines = f.read().split("\n")[38:][:-6]
 
 tasks = []
 tmp = ""
