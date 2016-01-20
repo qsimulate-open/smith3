@@ -193,11 +193,14 @@ OutStream Residual::generate_compute_footer(const int ic, const list<shared_ptr<
   out.tt << "" << endl;
 
   out.tt << "    void compute_() override {" << endl;
+  out.tt << "      auto out = subtasks_.front()->out_tensor();" << endl;
+  out.tt << "      if (!out->allocated())" << endl;
+  out.tt << "        out->allocate();" << endl;
   out.tt << "      for (auto& i : subtasks_) i->compute();" << endl;
   out.tt << "    }" << endl << endl;
 
   out.tt << "  public:" << endl;
-  out.tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t,  std::array<std::shared_ptr<const IndexRange>," << arraysize << "> range" << (need_e0 ? ", const double e" : "") << ");" << endl;
+  out.tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t, std::array<std::shared_ptr<const IndexRange>," << arraysize << "> range" << (need_e0 ? ", const double e" : "") << ");" << endl;
 
   out.cc << "Task" << ic << "::Task" << ic << "(vector<shared_ptr<Tensor>> t, array<shared_ptr<const IndexRange>," << arraysize << "> range" << (need_e0 ? ", const double e" : "") << ") {" << endl;
   out.cc << "  array<shared_ptr<const Tensor>," << ninptensors << "> in = {{";
@@ -218,13 +221,17 @@ OutStream Residual::generate_compute_footer(const int ic, const list<shared_ptr<
   string indent = "  ";
   for (auto i = ti.begin(); i != ti.end(); ++i, indent += "  ")
     out.cc << indent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
+  // parallel if
+  string listind = "";
+  for (auto i = ti.rbegin(); i != ti.rend(); ++i) {
+    if (i != ti.rbegin()) listind += ", ";
+    listind += (*i)->str_gen();
+  }
+  out.cc << indent << "if (t[0]->is_local("<< listind << "))" << endl;
+  indent += "  ";
   // add subtasks
   if (!ti.empty()) {
-    out.cc << indent  << "subtasks_.push_back(make_shared<Task_local>(array<const Index," << ti.size() << ">{{";
-    for (auto i = ti.rbegin(); i != ti.rend(); ++i) {
-      if (i != ti.rbegin()) out.cc << ", ";
-      out.cc << (*i)->str_gen();
-    }
+    out.cc << indent  << "subtasks_.push_back(make_shared<Task_local>(array<const Index," << ti.size() << ">{{" << listind;
     out.cc << "}}, in, t[0], range" << (need_e0 ? ", e" : "") << "));" << endl;
   } else {
     out.cc << indent  << "subtasks_.push_back(make_shared<Task_local>(in, t[0], range" << (need_e0 ? ", e" : "") << "));" << endl;

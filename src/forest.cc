@@ -405,7 +405,7 @@ string Forest::caspt2_main_driver_() {
   ss << "    while (!queue->done())" << endl;
   ss << "      queue->next_compute();" << endl;
   ss << "    diagonal(r, t2);" << endl;
-  ss << "    r->ax_plus_y(1.0, s); " << endl;
+  ss << "    r->ax_plus_y(1.0, s);" << endl;
 
   ss << "    energy_ += detail::real(dot_product_transpose(r, t2));" << endl;
 

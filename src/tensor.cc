@@ -558,11 +558,14 @@ OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool d
   out.tt << "" << endl;
 
   out.tt << "    void compute_() override {" << endl;
+  out.tt << "      auto out = subtasks_.front()->out_tensor();" << endl;
+  out.tt << "      if (!out->allocated())" << endl;
+  out.tt << "        out->allocate();" << endl;
   out.tt << "      for (auto& i : subtasks_) i->compute();" << endl;
   out.tt << "    }" << endl << endl;
 
   out.tt << "  public:" << endl;
-  out.tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t,  std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range);" << endl;
+  out.tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t, std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range);" << endl;
 
   out.cc << "Task" << ic << "::Task" << ic << "(vector<shared_ptr<Tensor>> t, array<shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range) {" << endl;
   out.cc << "  array<shared_ptr<const Tensor>," << ninptensors << "> in = {{";
@@ -595,12 +598,16 @@ OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool d
     for (auto i = merged.begin(); i != merged.end(); ++i, cindent += "  ")
       out.cc << cindent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   }
-  // add subtasks
-  out.cc << cindent  << "subtasks_.push_back(make_shared<Task_local>(array<const Index," << nindex << ">{{";
+  // parallel if
+  string listind = "";
   for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
-    if (i != index_.rbegin()) out.cc << ", ";
-    out.cc << (*i)->str_gen();
+    if (i != index_.rbegin()) listind += ", ";
+    listind += (*i)->str_gen();
   }
+  out.cc << cindent << "if (t[0]->is_local("<< listind << "))" << endl;
+  cindent += "  ";
+  // add subtasks
+  out.cc << cindent  << "subtasks_.push_back(make_shared<Task_local>(array<const Index," << nindex << ">{{" << listind;
   if (merged_) {
     out.cc << (index_.empty() ? "" : ", ");
     for (auto i = merged.rbegin(); i != merged.rend(); ++i) {
