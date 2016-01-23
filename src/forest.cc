@@ -578,7 +578,7 @@ string Forest::msmrci_main_driver_() {
   ss << "      const double eref = info_->ciwfn()->energy(i);" << endl;
   ss << "      const double eq = energy_[i]+core_nuc + (energy_[i]+core_nuc-eref)*(1.0-c)/c;" << endl;
   ss << "      print_iteration(0, eq, 0.0, 0.0, i);" << endl;
-  ss << "    }   " << endl;
+  ss << "    }" << endl;
   ss << "    cout << endl;" << endl;
   ss << "  }" << endl;
   ss << "  timer.tick_print(\"MRCI+Q energy evaluation\");" << endl;
