@@ -497,14 +497,16 @@ OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool d
   out.tt << "class Task" << ic << " : public Task {" << endl;
 #endif
   out.tt << "  protected:" << endl;
+  out.tt << "    std::shared_ptr<Tensor> out_;" << endl;
+  out.tt << "    std::array<std::shared_ptr<const Tensor>," << ninptensors << "> in_;" << endl;
   out.tt << "    class Task_local : public SubTask<" << nindex << "," << ninptensors << "> {" << endl;
   out.tt << "      protected:" << endl;
   out.tt << "        const std::array<std::shared_ptr<const IndexRange>," << (der ? "4" : "3") << "> range_;" << endl;
   out.tt << endl;
 
   out.tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
-  out.tt << "        const std::shared_ptr<const Tensor>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
-  out.tt << "        const std::shared_ptr<Tensor>& out() const { return this->out_tensor(); }" << endl;
+  out.tt << "        std::shared_ptr<const Tensor> in(const size_t& i) const { return this->in_tensor(i); }" << endl;
+  out.tt << "        std::shared_ptr<Tensor> out() { return this->out_tensor(); }" << endl;
   out.tt << endl;
   out.tt << "      public:" << endl;
   out.tt << "        Task_local(const std::array<const Index," << nindex << ">& block, const std::array<std::shared_ptr<const Tensor>," << ninptensors <<  ">& in, std::shared_ptr<Tensor>& out," << endl;
@@ -558,9 +560,8 @@ OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool d
   out.tt << "" << endl;
 
   out.tt << "    void compute_() override {" << endl;
-  out.tt << "      auto out = subtasks_.front()->out_tensor();" << endl;
-  out.tt << "      if (!out->allocated())" << endl;
-  out.tt << "        out->allocate();" << endl;
+  out.tt << "      if (!out_->allocated())" << endl;
+  out.tt << "        out_->allocate();" << endl;
   out.tt << "      for (auto& i : subtasks_) i->compute();" << endl;
   out.tt << "    }" << endl << endl;
 
@@ -573,8 +574,10 @@ OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool d
   // write out tensors in increasing order
   for (auto i = 1;  i < ninptensors + 1; ++i)
     out.cc << "t[" << i << "]" << (i == ninptensors ? "" : ", ");
-  out.cc << "}};" << endl << endl;
+  out.cc << "}};" << endl;
 
+  out.cc << "  out_ = t[0];" << endl;
+  out.cc << "  in_ = in;" << endl << endl;
 
   // over original outermost indices
   if (!index_.empty()) {

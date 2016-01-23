@@ -125,14 +125,16 @@ OutStream Residual::generate_compute_header(const int ic, const list<shared_ptr<
   OutStream out;
   out.tt << "class Task" << ic << " : public Task {" << endl;
   out.tt << "  protected:" << endl;
+  out.tt << "    std::shared_ptr<Tensor> out_;" << endl;
+  out.tt << "    std::array<std::shared_ptr<const Tensor>," << ninptensors << "> in_;" << endl;
   // if index is empty give dummy arg
   out.tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << "," << ninptensors << "> {" << endl;
   out.tt << "      protected:" << endl;
   out.tt << "        const std::array<std::shared_ptr<const IndexRange>," << arraysize << "> range_;" << endl << endl;
 
   out.tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
-  out.tt << "        const std::shared_ptr<const Tensor>& in(const size_t& i) const { return this->in_tensor(i); }" << endl;
-  out.tt << "        const std::shared_ptr<Tensor>& out() const { return this->out_tensor(); }" << endl;
+  out.tt << "        std::shared_ptr<const Tensor> in(const size_t& i) const { return this->in_tensor(i); }" << endl;
+  out.tt << "        std::shared_ptr<Tensor> out() { return this->out_tensor(); }" << endl;
   if (need_e0)
     out.tt << "        const double e0_;" << endl;
   out.tt << endl;
@@ -193,9 +195,10 @@ OutStream Residual::generate_compute_footer(const int ic, const list<shared_ptr<
   out.tt << "" << endl;
 
   out.tt << "    void compute_() override {" << endl;
-  out.tt << "      auto out = subtasks_.front()->out_tensor();" << endl;
-  out.tt << "      if (!out->allocated())" << endl;
-  out.tt << "        out->allocate();" << endl;
+  out.tt << "      if (!out_->allocated())" << endl;
+  out.tt << "        out_->allocate();" << endl;
+  out.tt << "      for (auto& i : in_)" << endl;
+  out.tt << "        i->init();" << endl;
   out.tt << "      for (auto& i : subtasks_) i->compute();" << endl;
   out.tt << "    }" << endl << endl;
 
@@ -206,7 +209,10 @@ OutStream Residual::generate_compute_footer(const int ic, const list<shared_ptr<
   out.cc << "  array<shared_ptr<const Tensor>," << ninptensors << "> in = {{";
   for (auto i = 1; i < ninptensors + 1; ++i)
     out.cc << "t[" << i << "]" << (i < ninptensors ? ", " : "");
-  out.cc << "}};" << endl << endl;
+  out.cc << "}};" << endl;
+
+  out.cc << "  out_ = t[0];" << endl;
+  out.cc << "  in_ = in;" << endl << endl;
 
   // over original outermost indices
   if (!ti.empty()) {
