@@ -574,11 +574,10 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
               assert(depth() != 0);
               // sending inner indices
               list<shared_ptr<const Index>> di = j->loop_indices();
-              di.reverse();
-              out << generate_compute_footer(num_, di, source_tensors);
+              out << generate_compute_footer(num_, di, source_tensors, true);
             } else {
               // sending outer indices
-              out << generate_compute_footer(num_, ti, source_tensors);
+              out << generate_compute_footer(num_, ti, source_tensors, false);
             }
           }
           // increment task counter
@@ -645,7 +644,7 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
 
     out << generate_compute_header(tcnt, ti, uniq_tensors);
     out << generate_compute_operators(target_, op_);
-    out << generate_compute_footer(tcnt, ti, uniq_tensors);
+    out << generate_compute_footer(tcnt, ti, uniq_tensors, false);
 
     ++tcnt;
   }
@@ -694,11 +693,10 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
         assert(depth() != 0);
         // sending inner indices
         list<shared_ptr<const Index>> di = (*i)->loop_indices();
-        di.reverse();
-        out << generate_compute_footer(num_, di, source_tensors);
+        out << generate_compute_footer(num_, di, source_tensors, true);
       } else {
         // sending outer indices
-        out << generate_compute_footer(num_, ti, source_tensors);
+        out << generate_compute_footer(num_, ti, source_tensors, false);
       }
     }
 

@@ -173,7 +173,7 @@ OutStream Residual::generate_compute_header(const int ic, const list<shared_ptr<
 }
 
 
-OutStream Residual::generate_compute_footer(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors) const {
+OutStream Residual::generate_compute_footer(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors, const bool dot) const {
   vector<string> labels;
   for (auto i = ++tensors.begin(); i != tensors.end(); ++i)
     labels.push_back((*i)->label());
@@ -233,7 +233,7 @@ OutStream Residual::generate_compute_footer(const int ic, const list<shared_ptr<
     if (i != ti.rbegin()) listind += ", ";
     listind += (*i)->str_gen();
   }
-  out.cc << indent << "if (t[0]->is_local("<< listind << "))" << endl;
+  out.cc << indent << "if (t[" << (dot ? 1 : 0) << "]->is_local("<< listind << "))" << endl;
   indent += "  ";
   // add subtasks
   if (!ti.empty()) {
