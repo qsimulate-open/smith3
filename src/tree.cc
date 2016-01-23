@@ -425,7 +425,7 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
   {
     string label = target->label();
     list<shared_ptr<const Index>> ti = target->index();
-    out.dd << cindent << "out()->put_block(odata";
+    out.dd << cindent << "out()->add_block(odata";
     for (auto i = ti.rbegin(); i != ti.rend(); ++i)
       out.dd << ", " << (*i)->str_gen();
     out.dd << ");" << endl;

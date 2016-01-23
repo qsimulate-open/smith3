@@ -269,7 +269,7 @@ OutStream Energy::generate_bc(const shared_ptr<BinaryContraction> i) const {
       {
         string label = target_->label();
         // new interface requires indices for put_block
-        out.dd << bindent << "out()->put_block(odata";
+        out.dd << bindent << "out()->add_block(odata";
         list<shared_ptr<const Index>> ti = depth() != 0 ? i->target_indices() : i->tensor()->index();
         for (auto i = ti.rbegin(); i != ti.rend(); ++i)
           out.dd << ", " << (*i)->str_gen();

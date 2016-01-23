@@ -181,23 +181,31 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
 #ifdef debug_tasks // if needed, eg debug
     tt  << cindent << "// tensor label: " << lbl << endl;
 #endif
-    tt << cindent << "std::unique_ptr<" << DataType << "[]> " << lab << "data = "
-                  << tlab << (move ? "->move" : "->get") << "_block(";
+    if (!move)
+      tt << cindent << "std::unique_ptr<" << DataType << "[]> " << lab << "data = " << tlab << "->get_block(";
+    else
+      tt << cindent << "std::unique_ptr<" << DataType << "[]> " << lab << "data(new " << DataType << "[" << tlab << "->get_size(";
+    string listind = "";
     if (found != string::npos) {
       for (auto i = index_.begin(); i != index_.end(); ++i) {
-        if (i != index_.begin()) tt << ", ";
-        tt << (*i)->str_gen();
+        if (i != index_.begin()) listind += ", ";
+        listind += (*i)->str_gen();
       }
-      tt << ");" << endl;
     } else {
       for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
-        if (i != index_.rbegin()) tt << ", ";
-        tt << (*i)->str_gen();
+        if (i != index_.rbegin()) listind += ", ";
+        listind += (*i)->str_gen();
       }
-      tt << ");" << endl;
+    }
+    if (!move) {
+      tt << listind << ");" << endl;
+    } else {
+      tt << listind << ")]);" << endl;
+      tt << cindent << "std::fill_n(" << lab << "data.get(), " << tlab << "->get_size(" << listind << "), 0.0);" << endl;
     }
   }
   if (!scalar_.empty() && !noscale) {
+    assert(!move);
     tt << cindent << SCAL << "(";
     for (auto i = index_.rbegin(); i != index_.rend(); ++i)
       tt << (i != index_.rbegin() ? "*" : "") << (*i)->str_gen() << ".size()";
@@ -547,7 +555,7 @@ OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool d
   out.dd << generate_active(indent, "o", ninptensors, use_blas);
 
   // generate gamma put block
-  out.dd << indent << "out()->put_block(odata";
+  out.dd << indent << "out()->add_block(odata";
   for (auto i = index_.rbegin(); i != index_.rend(); ++i)
     out.dd << ", " << (*i)->str_gen();
   out.dd << ");" << endl;
