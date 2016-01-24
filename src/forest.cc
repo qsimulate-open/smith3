@@ -355,6 +355,7 @@ OutStream Forest::generate_algorithm() const {
   out.ss << "      double sum = 0.0;" << endl;
   out.ss << "      while (!queue->done())" << endl;
   out.ss << "        sum += queue->next_compute()->target();" << endl;  // prefactors included in main.cc
+  out.ss << "      mpi__->allreduce(&sum, 1);" << endl;
   out.ss << "      return sum;" << endl;
   out.ss << "    }" << endl;
   out.ss << endl;  // end comparison correction

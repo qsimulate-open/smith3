@@ -537,6 +537,7 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
             if (ti.size() == 0) {
               assert(depth() != 0);
               list<shared_ptr<const Index>> di = j->loop_indices();
+              di.reverse();
               out << generate_compute_header(num_, di, source_tensors, true);
             } else {
               out << generate_compute_header(num_, ti, source_tensors);
@@ -674,6 +675,7 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
       if (ti.size() == 0) {
         assert(depth() != 0);
         list<shared_ptr<const Index>> di = (*i)->loop_indices();
+        di.reverse();
         out << generate_compute_header(num_, di, source_tensors, true);
       } else {
         out << generate_compute_header(num_, ti, source_tensors);
