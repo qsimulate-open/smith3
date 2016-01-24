@@ -530,20 +530,11 @@ OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool d
   string indent ="  ";
   // map indices
   int bcnt = 0;
-  if (der) {
-    for (auto i = index_.rbegin(); i != index_.rend(); ++i, bcnt++)
+  for (auto i = index_.rbegin(); i != index_.rend(); ++i, bcnt++)
+    out.dd << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
+  if (merged_) {
+    for (auto i = merged.rbegin(); i != merged.rend(); ++i, bcnt++)
       out.dd << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
-    if (merged_) {
-      for (auto i = merged.rbegin(); i != merged.rend(); ++i, bcnt++)
-        out.dd << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
-    }
-  } else {
-    for (auto i = index_.begin(); i != index_.end(); ++i, bcnt++)
-      out.dd << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
-    if (merged_) {
-      for (auto i = merged.begin(); i != merged.end(); ++i, bcnt++)
-        out.dd << indent << "const Index " << (*i)->str_gen() << " = b(" << bcnt << ");" << endl;
-    }
   }
 
   // generate gamma get block, true does a move_block
@@ -590,12 +581,12 @@ OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool d
   // over original outermost indices
   if (!index_.empty()) {
     out.cc << "  subtasks_.reserve(";
-    for (auto i =index_.begin(); i != index_.end(); ++i) {
-      if (i != index_.begin()) out.cc << "*";
+    for (auto i =index_.rbegin(); i != index_.rend(); ++i) {
+      if (i != index_.rbegin()) out.cc << "*";
       out.cc << (*i)->generate_range() << "->nblock()";
     }
     if (merged_){
-      for (auto i = merged.begin(); i != merged.end(); ++i) {
+      for (auto i = merged.rbegin(); i != merged.rend(); ++i) {
         out.cc << "*" << (*i)->generate_range() << "->nblock()";
       }
     }
@@ -603,10 +594,10 @@ OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool d
   }
   // loops
   string cindent = "  ";
-  for (auto i = index_.begin(); i != index_.end(); ++i, cindent += "  ")
+  for (auto i = index_.rbegin(); i != index_.rend(); ++i, cindent += "  ")
     out.cc << cindent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   if (merged_) {
-    for (auto i = merged.begin(); i != merged.end(); ++i, cindent += "  ")
+    for (auto i = merged.rbegin(); i != merged.rend(); ++i, cindent += "  ")
       out.cc << cindent << "for (auto& " << (*i)->str_gen() << " : *" << (*i)->generate_range() << ")" << endl;
   }
   // parallel if
