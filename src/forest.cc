@@ -324,11 +324,13 @@ OutStream Forest::generate_algorithm() const {
     out.ee << "  timer.tick_print(\"T1 norm evaluation\");" << endl;
     out.ee << endl;
     out.ee << "  den2 = h1_->clone();" << endl;
+    out.ee << "  den2->allocate();" << endl;
     out.ee << "  shared_ptr<Queue> dens2 = make_densityq();" << endl;
     out.ee << "  while (!dens2->done())" << endl;
     out.ee << "    dens2->next_compute();" << endl;
     out.ee << endl;
     out.ee << "  den1 = h1_->clone();" << endl;
+    out.ee << "  den1->allocate();" << endl;
     out.ee << "  shared_ptr<Queue> dens1 = make_density1q();" << endl;
     out.ee << "  while (!dens1->done())" << endl;
     out.ee << "    dens1->next_compute();" << endl;
@@ -340,6 +342,7 @@ OutStream Forest::generate_algorithm() const {
     out.ee << "  timer.tick_print(\"Correlated density matrix evaluation\");" << endl;
     out.ee << endl;
     out.ee << "  deci = make_shared<Tensor>(vector<IndexRange>{ci_});" << endl;
+    out.ee << "  deci->allocate();" << endl;
     out.ee << "  shared_ptr<Queue> dec = make_deciq();" << endl;
     out.ee << "  while (!dec->done())" << endl;
     out.ee << "    dec->next_compute();" << endl;
