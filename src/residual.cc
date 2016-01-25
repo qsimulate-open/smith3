@@ -274,7 +274,8 @@ OutStream Residual::generate_bc(const shared_ptr<BinaryContraction> i) const {
       }
     } else {
       int cnt = 0;
-      for (auto k = di.begin(); k != di.end(); ++k, cnt++) out.dd << dindent << "const Index " <<  (*k)->str_gen() << " = b(" << cnt << ");" << endl;
+      for (auto k = di.rbegin(); k != di.rend(); ++k, cnt++)
+        out.dd << dindent << "const Index " <<  (*k)->str_gen() << " = b(" << cnt << ");" << endl;
       out.dd << endl;
     }
 
