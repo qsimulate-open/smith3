@@ -128,8 +128,8 @@ int main() {
   cout << eq3->generate();
 
   // generate Norm <1|1> to be used in various places
-  shared_ptr<Equation> eq5(new Equation(theory, "ca", {dum, t_dagger, t_list}));
-  eq5->set_tree_type("energy", "corr");
+  shared_ptr<Equation> eq5(new Equation(theory, "ca", {dum, proj_list, t_list}));
+  eq5->set_tree_type("residual", "norm");
   cout << eq5->generate();
 
   // density matrix equations //
