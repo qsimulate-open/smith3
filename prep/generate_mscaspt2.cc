@@ -121,6 +121,15 @@ int main() {
   shared_ptr<Equation> eq6(new Equation(theory, "da", {dum, t_dagger, ex1b, l_list}));
   eq6->set_tree_type("residual", "density");
   cout << eq6->generate();
+  // one-body contribution d1
+  shared_ptr<Equation> eq6a(new Equation(theory, "db", {dum, ex1b, l_list}));
+  eq6a->set_tree_type("residual", "density1");
+  cout << eq6a->generate();
+
+  // two-body contribution D1
+  shared_ptr<Equation> eq7(new Equation(theory, "d2a", {dum, proj_list, l_list}));
+  eq7->set_tree_type("residual", "density2");
+  cout << eq7->generate();
 
   // cI derivative equations, dedci = dE/dcI  //
   // test hylleraas eqn:   d/dc( <0|T^+fT|0> -e0<0|T^+T|0> +2<0|T^+h1|0> + 2<0|T^+V2|0>) =>
@@ -145,7 +154,10 @@ int main() {
   cout << eq4->generate();
 
   // done. generate the footer
-  cout << footer("", "", "", eq6->tree_label(), "", "", eq4->tree_label()) << endl;
+  cout << footer("", "", "", eq6->tree_label(), "", "", "") << endl;
+//cout << footer("", "", "", "", "", "", eq4->tree_label()) << endl;
+//cout << footer("", "", "", eq6->tree_label(), eq6a->tree_label(), eq7->tree_label(), eq4->tree_label()) << endl;
+
 
   return 0;
 }

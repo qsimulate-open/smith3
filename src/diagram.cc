@@ -149,6 +149,8 @@ void Diagram::reorder_tensors() {
                                  else if (b->label() == "proj") out = false;
                                  else if (a->label() == "t2dagger")   out = true;
                                  else if (b->label() == "t2dagger")   out = false;
+                                 else if (a->label() == "l2dagger")   out = true;
+                                 else if (b->label() == "l2dagger")   out = false;
                                  else if (a->label() == "h1")   out = true;
                                  else if (b->label() == "h1")   out = false;
                                  else if (a->label() == "f1")   out = true;
@@ -157,6 +159,8 @@ void Diagram::reorder_tensors() {
                                  else if (b->label() == "v2")   out = false;
                                  else if (a->label() == "t2")   out = true;
                                  else if (b->label() == "t2")   out = false;
+                                 else if (a->label() == "l2")   out = true;
+                                 else if (b->label() == "l2")   out = false;
                                  else {
                                     cout << a->label() << " " << b->label() << endl;
                                     throw logic_error("I have not thought about this yet");

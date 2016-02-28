@@ -140,7 +140,7 @@ class Equation {
       if (ci_derivative_) ss << "  " << diagram_.front()->eqn_label() << "->absorb_ket();" << std::endl;
       ss << "  " << diagram_.front()->eqn_label() << "->duplicates();" << std::endl;
       ss << "  " << diagram_.front()->eqn_label() << "->active();" << std::endl;
-      if (method_ != "CASPT2" && method_ != "RelCASPT2") {
+      if (method_ != "CASPT2" && method_ != "RelCASPT2" && method_ != "MSCASPT2") {
         ss << "  " << diagram_.front()->eqn_label() << "->reorder_tensors();" << std::endl;
         ss << "  " << diagram_.front()->eqn_label() << "->simplify();" << std::endl;
       }
