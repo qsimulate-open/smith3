@@ -25,6 +25,7 @@
 #ifndef __CONSTANTS_H
 #define __CONSTANTS_H
 
+#include <atomic>
 #include <sstream>
 #include <string>
 
@@ -79,15 +80,18 @@ static std::string footer(const std::string res, const std::string energy = "", 
                           const std::string dedci = "", const std::string source = "", const std::string norm = "") {
   std::stringstream mm;
 
-  mm << "  list<shared_ptr<Tree>> trees = {" << res;
-  if (!source.empty())     mm << ", " << source;
-  if (!energy.empty())     mm << ", " << energy;
-  if (!correction.empty()) mm << ", " << correction;
-  if (!density.empty())    mm << ", " << density;
-  if (!density1.empty())   mm << ", " << density1;
-  if (!density2.empty())   mm << ", " << density2;
-  if (!dedci.empty())      mm << ", " << dedci;
-  if (!norm.empty())       mm << ", " << norm;
+  mm << "  list<shared_ptr<Tree>> trees = {";
+  std::atomic_flag done;
+  done.clear();
+  if (!res.empty())        mm << (done.test_and_set() ? ", " : "") << res;
+  if (!source.empty())     mm << (done.test_and_set() ? ", " : "") << source;
+  if (!energy.empty())     mm << (done.test_and_set() ? ", " : "") << energy;
+  if (!correction.empty()) mm << (done.test_and_set() ? ", " : "") << correction;
+  if (!density.empty())    mm << (done.test_and_set() ? ", " : "") << density;
+  if (!density1.empty())   mm << (done.test_and_set() ? ", " : "") << density1;
+  if (!density2.empty())   mm << (done.test_and_set() ? ", " : "") << density2;
+  if (!dedci.empty())      mm << (done.test_and_set() ? ", " : "") << dedci;
+  if (!norm.empty())       mm << (done.test_and_set() ? ", " : "") << norm;
   mm <<  "};" << std::endl;
   mm << "  auto fr = make_shared<Forest>(trees);" << std::endl;
 
@@ -121,8 +125,10 @@ static std::string footer(const std::string res, const std::string energy = "", 
   mm << "  cout << std::endl;" << std::endl;
   mm << "" <<  std::endl;
   mm << "  // output" << std::endl;
-  mm << "  cout << std::endl << \"   ***  Residual  ***\" << std::endl << std::endl;" << std::endl;
-  mm << "  " << res << "->print();" << std::endl;
+  if (!res.empty()) {
+    mm << "  cout << std::endl << \"   ***  Residual  ***\" << std::endl << std::endl;" << std::endl;
+    mm << "  " << res << "->print();" << std::endl;
+  }
   if (!source.empty()) {
     mm << "  " << source << "->print();" << std::endl;
   }

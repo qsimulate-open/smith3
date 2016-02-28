@@ -34,11 +34,13 @@ using namespace smith;
 void Forest::filter_gamma() {
   shared_ptr<Tree> res;
 
+  bool first = true;
   for (auto& i : trees_) {
     list<shared_ptr<Tensor>> g;
-    if (i->label() == "residual") {
+    if (first) {
       i->sort_gamma();
       res = i;
+      first = false;
     } else {
       i->sort_gamma(res->gamma());
     }
