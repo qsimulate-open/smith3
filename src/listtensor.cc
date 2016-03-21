@@ -269,7 +269,7 @@ shared_ptr<Cost> ListTensor::calculate_cost() const {
 void ListTensor::reorder() {
   // I need to sort list_ first
   vector<shared_ptr<Tensor>> tmp(list_.begin(), list_.end());
-  sort(tmp.begin(), tmp.end());
+  sort(tmp.begin(), tmp.end(), Tensor::comp);
   list<shared_ptr<Tensor>> out(tmp.begin(), tmp.end());
   list_ = out;
 
@@ -280,7 +280,13 @@ void ListTensor::reorder() {
       out = list_;
       current = cost;
     }
-  } while (next_permutation(list_.begin(), list_.end()));
+  } while (next_permutation(list_.begin(), list_.end(), Tensor::comp));
+
+  if (out.size() > 1) {
+    auto o0 = out.rbegin();
+    auto o1 = o0; ++o1;
+    if (Tensor::comp(*o0, *o1)) swap(*o0, *o1);
+  }
   list_ = out;
 }
 

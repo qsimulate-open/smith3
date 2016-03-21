@@ -69,7 +69,6 @@ class Tensor {
     // For tensor reindexing in case of ket.
     std::map<int, int> num_map_;
 
-
   public:
     /// Constructor for intermediate tensors, and also ci tensor. todo what about scalar--needed for intermediates or ci tensor? check!
     Tensor(const double& d, const std::string& l, const std::list<std::shared_ptr<const Index>>& i)
@@ -162,6 +161,32 @@ class Tensor {
     int num() const { assert(is_gamma()); return num_; }
     /// Set Gamma number.
     void set_num(const int n) const { assert(is_gamma()); num_ = n; }
+
+    /// Static function for determining canonical ordering of Tensor
+    static bool comp(std::shared_ptr<const Tensor> a, std::shared_ptr<const Tensor> b) {
+      bool out;
+      const std::string alabel = a->label();
+      const std::string blabel = b->label();
+           if (alabel.find("Gamma") != std::string::npos) out = true;
+      else if (blabel.find("Gamma") != std::string::npos) out = false;
+      else if (alabel == "h1") out = true;
+      else if (blabel == "h1") out = false;
+      else if (alabel == "f1") out = true;
+      else if (blabel == "f1") out = false;
+      else if (alabel == "v2") out = true;
+      else if (blabel == "v2") out = false;
+      else if (alabel == "t2dagger") out = true;
+      else if (blabel == "t2dagger") out = false;
+      else if (alabel == "t2") out = true;
+      else if (blabel == "t2") out = false;
+      else if (alabel == "l2") out = true;
+      else if (blabel == "l2") out = false;
+      else {
+         std::cout << alabel << " " << blabel << std::endl;
+         throw std::logic_error("I have not thought about this yet");
+      }
+      return out;
+    }
 
 };
 
