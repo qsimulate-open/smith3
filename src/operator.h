@@ -65,8 +65,8 @@ class Operator {
     std::vector<int> perm_;
 
   public:
-    /// Create one-body base operator.
-    Operator(const std::string& ta, const std::string& tb);
+    /// Create one-body base operator. alpha = true means this operator is alpha spin only (for spin RDMs).
+    Operator(const std::string& ta, const std::string& tb, const bool alpha = false);
     /// Create two-body base operator.
     Operator(const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td);
     /// Create one-body base with spin information. No operator is created.

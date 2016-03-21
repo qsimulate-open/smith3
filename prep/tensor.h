@@ -44,15 +44,16 @@ class Tensor {
     std::string tag_;
     std::string base_;
     std::list<std::string> indices_;
+    bool alpha_;
 
   public:
     Tensor(const std::string b, const std::string postfix, const std::initializer_list<std::string> o)
-     : tag_(b+postfix), base_(b) {
+     : tag_(b+postfix), base_(b), alpha_(false) {
       for (auto& i : o) indices_.push_back(i);
     }
 
-    Tensor(const std::string postfix, const std::initializer_list<std::string> o)
-     : tag_("ex_" + postfix), base_("") {
+    Tensor(const std::string postfix, const std::initializer_list<std::string> o, const bool a = false)
+     : tag_("ex_" + postfix), base_(""), alpha_(a) {
       for (auto& i : o) indices_.push_back(i);
     }
 
@@ -67,10 +68,11 @@ class Tensor {
 
     std::string generate() const {
       std::stringstream ss;
+      std::string al = alpha_ ? ", true" : "";
       if (!base_.empty()) {
-        ss << "  shared_ptr<Operator> " << tag_ << " = make_shared<Op>(\"" << base_ << "\"" << (indices_.empty() ? "" : ", ") << str_index() << ");" << std::endl;
+        ss << "  shared_ptr<Operator> " << tag_ << " = make_shared<Op>(\"" << base_ << "\"" << (indices_.empty() ? "" : ", ") << str_index() << al << ");" << std::endl;
       } else {
-        ss << "  shared_ptr<Operator> " << tag_ << " = make_shared<Op>(" << str_index() << ");" << std::endl;
+        ss << "  shared_ptr<Operator> " << tag_ << " = make_shared<Op>(" << str_index() << al << ");" << std::endl;
       }
       return ss.str();
     }

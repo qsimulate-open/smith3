@@ -269,10 +269,12 @@ bool Diagram::reduce_one_noactive(const int skip) {
       cnt += (*j)->num_nodagger();
     }
   }
-  for (auto& j : op_) {
-    for (auto& k : j->rho()) {
-      if (k == oldspin) k = newspin;
-    }
+  if (found) {
+    // if oldspin is restricted to alpha spin, we have to pass along that information
+    if (oldspin->alpha()) swap(oldspin, newspin);
+    for (auto& j : op_)
+      for (auto& k : j->rho())
+        if (k == oldspin) k = newspin;
   }
   return found;
 }

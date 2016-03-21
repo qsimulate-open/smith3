@@ -30,11 +30,11 @@
 using namespace std;
 using namespace smith;
 
-Operator::Operator(const string& ta, const string& tb)
+Operator::Operator(const string& ta, const string& tb, const bool alpha)
   : a_(make_shared<Index>(ta,true)), b_(make_shared<Index>(tb,false)) {
   op_.push_back(make_tuple(&a_, ta!="x"?0:2, 0)); // index, dagger, spin
   op_.push_back(make_tuple(&b_, tb!="x"?0:2, 0));
-  rho_.push_back(make_shared<Spin>());
+  rho_.push_back(make_shared<Spin>(alpha));
 
   perm_.push_back(0);
 }
@@ -215,7 +215,8 @@ tuple<double, shared_ptr<Spin>, shared_ptr<Spin>>
 
         *get<0>(*i) = *survive(get<0>(*i), dat.first);
         *dat.first = *get<0>(*i);
-        fac *= (*dat.second == rho(get<2>(*i))) ? fac2 : 1.0;
+        // if closing a spin loop, multiply 2
+        fac *= (*dat.second == rho(get<2>(*i)) && !(*dat.second)->alpha()) ? fac2 : 1.0;
         a = *dat.second;
         b = rho(get<2>(*i));
         set_rho(get<2>(*i), *dat.second);

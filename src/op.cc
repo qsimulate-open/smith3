@@ -33,8 +33,8 @@ Op::Op(const std::string lab, const std::string& ta, const std::string& tb, cons
   : Operator(ta, tb, tc, td), label_(lab) { }
 
 
-Op::Op(const std::string lab, const std::string& ta, const std::string& tb)
-  : Operator(ta, tb), label_(lab) { }
+Op::Op(const std::string lab, const std::string& ta, const std::string& tb, const bool alpha)
+  : Operator(ta, tb, alpha), label_(lab) { }
 
 
 // Constructing one-body tensor. No operator is created. Careful...

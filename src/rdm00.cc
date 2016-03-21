@@ -43,7 +43,7 @@ shared_ptr<RDM> RDM00::copy() const {
     if (dict.find(o) == dict.end()) {
       (*j)->set_spin(o);
     } else {
-      auto s = make_shared<Spin>();
+      auto s = make_shared<Spin>(o->alpha());
       s->set_num(o->num());
       dict.insert(make_pair(o,s));
       (*j)->set_spin(s);
@@ -98,11 +98,16 @@ list<shared_ptr<RDM>> RDM00::reduce_one(list<int>& done) const {
       // Please note that this procedure does not change the sign (you can prove it in 30sec)
       tmp->fac() *= ((cnt0-1)&1 ? -1.0 : 1.0);
       if ((*i)->same_spin(*j)) {
-        tmp->fac() *= fac2;
+        // if spin loop closes, we multiply 2 in spin-free cases
+        if (!(*i)->spin()->alpha())
+          tmp->fac() *= fac2;
       } else {
         // this case we need to replace a spin
-        const shared_ptr<Spin> s0 = (*rml[0])->spin();
-        const shared_ptr<Spin> s1 = (*rml[1])->spin();
+        shared_ptr<Spin> s0 = (*rml[0])->spin();
+        shared_ptr<Spin> s1 = (*rml[1])->spin();
+        // if one of then is alpha only, then that information should survive this step
+        if (s0->alpha()) swap(s0, s1);
+        // find the one and replace with the other
         for (auto& k : tmp->index()) {
           if (k->spin() == s0)
             k->set_spin(s1);
@@ -281,6 +286,7 @@ string RDM00::generate_merged(string indent, const string tag, const list<shared
     // mulitiply data and merge on the fly
     tt << multiply_merge(itag, indent, merged);
   } else {
+#if 0
     if (rank() != 0) {
       tt << make_get_block(indent, "i0", inlab[rlab]);
       tt << make_sort_indices(indent, "i0", merged);
@@ -436,6 +442,9 @@ string RDM00::generate_merged(string indent, const string tag, const list<shared
       }
       tt << ");" << endl;
     }
+#else
+    assert(false);
+#endif
   }
   // close loops
   for (auto iter = close.rbegin(); iter != close.rend(); ++iter)

@@ -109,6 +109,8 @@ list<shared_ptr<RDM>> RDMI0::reduce_one(list<int>& done) const {
       // Please note that this procedure does not change the sign (you can prove it in 30sec)
       tmp->fac() *= ((cnt0-1)&1 ? -1.0 : 1.0);
       if ((*i)->same_spin(*j)) {
+        // TODO RDMI0 is not adapted for spin-dependent operators as this was for spin RDMs...
+        assert(!(*i)->spin()->alpha() && !(*j)->spin()->alpha());
         tmp->fac() *= fac2;
       } else {
         // this case we need to replace a spin

@@ -40,15 +40,19 @@ class Spin {
   protected:
     /// Spin number.
     int num_;
+    /// Partial spin
+    bool alpha_;
   public:
     /// Construct spin, initialize number information.
-    Spin() : num_(0) { }
+    Spin(const bool a = false) : num_(0), alpha_(a) { }
     ~Spin() { }
 
     /// Returns spin.
     int num() const { return num_; }
     /// Sets spin.
     void set_num(const int i) { num_ = i; }
+    /// Returns alpha.
+    bool alpha() const { return alpha_; }
 
     /// Returns spin in parenthesis (number).
     std::string str() const {
@@ -133,11 +137,8 @@ class Index {
       std::stringstream ss;
       ss << label() << num();
       if (dagger() && opr) ss << "+";
-      if (opr) {
-//      assert(spin_);
-        if (spin_)
-        ss << spin_->str();
-      }
+      if (opr && spin_)    ss << spin_->str();
+      if (spin_ && spin_->alpha()) ss << "*";
       return ss.str();
     }
     /// Returns string with index label_ and num_.
