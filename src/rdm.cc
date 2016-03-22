@@ -70,7 +70,7 @@ void RDM::sort() {
 
   // first we align indices so that
   // 0+ 0 1+ 1 2+ 2...
-  // actually this might be better for actually implementation.
+  // actually this might be better for implementation.
   vector<shared_ptr<Spin>> done_spin;
   while (!done()) {
 
@@ -127,6 +127,20 @@ void RDM::sort() {
       throw logic_error("RDM::sort()");
     }
     index_ = buf;
+  }
+
+  // move alpha indices to the front
+  list<shared_ptr<const Index>> buf = index_;
+  index_.clear();
+  for (auto ii = buf.begin(); ii != buf.end(); ) {
+    if (!(*ii)->spin()->alpha()) {
+      index_.push_back(*ii++);
+      index_.push_back(*ii++);
+    } else {
+      index_.push_front(*++ii);
+      index_.push_front(*--ii);
+      ++ii; ++ii;
+    }
   }
 }
 
