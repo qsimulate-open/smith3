@@ -69,7 +69,7 @@ shared_ptr<Operator> Op::copy() const {
   if (c_) {
     return make_shared<Op>(label_, a_->label(), b_->label(), c_->label(), d_->label());
   } else if (a_)  {
-    return make_shared<Op>(label_, a_->label(), b_->label());
+    return make_shared<Op>(label_, a_->label(), b_->label(), rho(get<2>(op_.front()))->alpha());
   } else {
     return make_shared<Op>(label_);
   }

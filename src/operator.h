@@ -70,7 +70,7 @@ class Operator {
     /// Create two-body base operator.
     Operator(const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td);
     /// Create one-body base with spin information. No operator is created.
-    Operator(std::shared_ptr<Index> ta, std::shared_ptr<Index> tb, std::shared_ptr<Spin> ts = std::make_shared<Spin>());
+    Operator(std::shared_ptr<Index> ta, std::shared_ptr<Index> tb, std::shared_ptr<Spin> ts);
     Operator() { }
     virtual ~Operator() { }
 

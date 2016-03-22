@@ -43,7 +43,7 @@ class Op : public Operator {
     /// Create one-body tensor operator. When alpha is true, the operators are alpha only.
     Op(const std::string lab, const std::string& ta, const std::string& tb, const bool alpha = false);
     /// Create one-body tensor with spin information. No operator is created.
-    Op(const std::string lab, std::shared_ptr<Index> ta, std::shared_ptr<Index> tb, std::shared_ptr<Spin> ts = std::make_shared<Spin>());
+    Op(const std::string lab, std::shared_ptr<Index> ta, std::shared_ptr<Index> tb, std::shared_ptr<Spin> ts);
     /// Create operator with label.
     Op(const std::string lab = "") : label_(lab) { }
 
