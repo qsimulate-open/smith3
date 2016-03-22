@@ -271,7 +271,8 @@ bool Diagram::reduce_one_noactive(const int skip) {
   }
   if (found) {
     // if oldspin is restricted to alpha spin, we have to pass along that information
-    if (oldspin->alpha()) swap(oldspin, newspin);
+    if (oldspin->alpha())
+      newspin->set_alpha(oldspin->alpha());
     for (auto& j : op_)
       for (auto& k : j->rho())
         if (k == oldspin) k = newspin;

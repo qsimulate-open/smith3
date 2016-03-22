@@ -40,7 +40,7 @@ Operator::Operator(const string& ta, const string& tb, const bool alpha)
 }
 
 
-Operator::Operator(const string& ta, const string& tb, const string& tc, const string& td)
+Operator::Operator(const string& ta, const string& tb, const string& tc, const string& td, const bool alpha1, const bool alpha2)
   : a_(make_shared<Index>(ta,true)), b_(make_shared<Index>(tb,true)), c_(make_shared<Index>(tc,false)), d_(make_shared<Index>(td,false)) {
   // accept aa,ii and rearrange it to ai,ai
   op_.push_back(make_tuple(&a_, ta!="x"?0:2, 0)); // index, no-active/active, spin
@@ -48,8 +48,8 @@ Operator::Operator(const string& ta, const string& tb, const string& tc, const s
   op_.push_back(make_tuple(&b_, tb!="x"?0:2, 1));
   op_.push_back(make_tuple(&c_, tc!="x"?0:2, 1));
 
-  rho_.push_back(make_shared<Spin>());
-  rho_.push_back(make_shared<Spin>());
+  rho_.push_back(make_shared<Spin>(alpha1));
+  rho_.push_back(make_shared<Spin>(alpha2));
 
   perm_.push_back(0);
   perm_.push_back(1);

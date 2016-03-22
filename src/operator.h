@@ -68,7 +68,7 @@ class Operator {
     /// Create one-body base operator. alpha = true means this operator is alpha spin only (for spin RDMs).
     Operator(const std::string& ta, const std::string& tb, const bool alpha = false);
     /// Create two-body base operator.
-    Operator(const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td);
+    Operator(const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td, const bool alpha1 = false, const bool alpha2 = false);
     /// Create one-body base with spin information. No operator is created.
     Operator(std::shared_ptr<Index> ta, std::shared_ptr<Index> tb, std::shared_ptr<Spin> ts);
     Operator() { }

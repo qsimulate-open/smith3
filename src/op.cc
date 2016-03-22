@@ -29,8 +29,8 @@
 using namespace std;
 using namespace smith;
 
-Op::Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td)
-  : Operator(ta, tb, tc, td), label_(lab) { }
+Op::Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td, const bool alpha1, const bool alpha2)
+  : Operator(ta, tb, tc, td, alpha1, alpha2), label_(lab) { }
 
 
 Op::Op(const std::string lab, const std::string& ta, const std::string& tb, const bool alpha)
@@ -67,9 +67,9 @@ void Op::print() const {
 shared_ptr<Operator> Op::copy() const {
   // in the case of two-body operators
   if (c_) {
-    return make_shared<Op>(label_, a_->label(), b_->label(), c_->label(), d_->label());
+    return make_shared<Op>(label_, a_->label(), b_->label(), c_->label(), d_->label(), rho(0)->alpha(), rho(1)->alpha());
   } else if (a_)  {
-    return make_shared<Op>(label_, a_->label(), b_->label(), rho(get<2>(op_.front()))->alpha());
+    return make_shared<Op>(label_, a_->label(), b_->label(), rho(0)->alpha());
   } else {
     return make_shared<Op>(label_);
   }

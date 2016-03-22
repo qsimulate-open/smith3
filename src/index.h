@@ -44,7 +44,7 @@ class Spin {
     bool alpha_;
   public:
     /// Construct spin, initialize number information.
-    Spin(const bool a = false) : num_(0), alpha_(a) { }
+    Spin(const bool al) : num_(0), alpha_(al) { }
     ~Spin() { }
 
     /// Returns spin.
@@ -53,11 +53,13 @@ class Spin {
     void set_num(const int i) { num_ = i; }
     /// Returns alpha.
     bool alpha() const { return alpha_; }
+    /// Sets alpha
+    void set_alpha(const bool a) { alpha_ = a; }
 
     /// Returns spin in parenthesis (number).
     std::string str() const {
       std::stringstream ss;
-      ss << "(" << num_ << ")";
+      ss << "(" << num_ << (alpha_ ? "*" : "") << ")";
       return ss.str();
     }
 };

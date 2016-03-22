@@ -39,7 +39,8 @@ class Op : public Operator {
 
   public:
     /// Create two-body tensor operator.
-    Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td);
+    Op(const std::string lab, const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td,
+       const bool alpha1 = false, const bool alpha2 = false);
     /// Create one-body tensor operator. When alpha is true, the operators are alpha only.
     Op(const std::string lab, const std::string& ta, const std::string& tb, const bool alpha = false);
     /// Create one-body tensor with spin information. No operator is created.
@@ -48,7 +49,8 @@ class Op : public Operator {
     Op(const std::string lab = "") : label_(lab) { }
 
     /// Create operator without label.
-    Op(const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td) : Op("", ta, tb, tc, td) { }
+    Op(const std::string& ta, const std::string& tb, const std::string& tc, const std::string& td, const bool alpha1, const bool alpha2)
+     : Op("", ta, tb, tc, td, alpha1, alpha2) { }
     /// Create operator without label. When alpha is true, the operators are alpha only.
     Op(const std::string& ta, const std::string& tb, const bool alpha = false) : Op("", ta, tb, alpha) { }
 

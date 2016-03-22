@@ -43,7 +43,7 @@ shared_ptr<RDM> RDMI0::copy() const {
     if (dict.find(o) == dict.end()) {
       (*j)->set_spin(o);
     } else {
-      auto s = make_shared<Spin>();
+      auto s = make_shared<Spin>(/*TODO alpha*/false);
       s->set_num(o->num());
       dict.insert(make_pair(o,s));
       (*j)->set_spin(s);
