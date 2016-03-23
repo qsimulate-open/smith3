@@ -169,7 +169,7 @@ class Index {
 
     /// Check if indices are equal by comparing num() and label(). Be careful that this does not check dagger! Should not check, actually.
     bool identical(std::shared_ptr<const Index> o) const {
-      return num() == o->num() && label() == o->label();
+      return num() == o->num() && label() == o->label() && ((!spin_ && !o->spin_) || (spin()->alpha() == o->spin()->alpha()));
     }
 
     /// Gives orbital space name (closed_, virt_, active_) based on index label_.
