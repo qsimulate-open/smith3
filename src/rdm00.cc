@@ -158,6 +158,9 @@ string RDM00::generate_not_merged(string indent, const string tag, const list<sh
     tt << make_delta_if(indent, close);
 
     stringstream zz;
+    // when alpha-only indices are present, we change the name to "ardm"
+    if (!index_.empty() && index_.front()->spin()->alpha())
+      zz << "a";
     zz << "rdm" << rank();
     string rlab = zz.str();
 
@@ -201,6 +204,9 @@ string RDM00::generate_not_merged(string indent, const string tag, const list<sh
 
     if (rank() != 0) {
       stringstream zz;
+      // when alpha-only indices are present, we change the name to "ardm"
+      if (index_.front()->spin()->alpha())
+        zz << "a";
       zz << "rdm" << rank();
       string rlab = zz.str();
       tt << make_get_block(indent, "i0", inlab[rlab]);
@@ -270,6 +276,9 @@ string RDM00::generate_merged(string indent, const string tag, const list<shared
 
   indent += "  ";
   stringstream zz;
+  // when alpha-only indices are present, we change the name to "ardm"
+  if (!index_.empty() && index_.front()->spin()->alpha())
+    zz << "a";
   zz << "rdm" << rank();
   string rlab = zz.str();
 

@@ -223,23 +223,23 @@ OutStream Forest::generate_gammas() const {
     out << i->generate_gamma(icnt, use_blas, i->der());
 
     vector<string> tmp = {i->label()};
-    vector<int> rdms = i->active()->required_rdm();
+    vector<string> rdms = i->active()->required_rdm();
     if (i->der()) { // derivative rdm
       for (auto& j : rdms) {
         stringstream zz;
-        zz << "rdm" << j << "deriv_";
+        zz << j << "deriv_";
         tmp.push_back(zz.str());
       }
     } else {  // normal rdms
       for (auto& j : rdms) {
         stringstream zz;
-        zz << "rdm" << j << "_";
+        zz << j << "_";
         tmp.push_back(zz.str());
       }
     }
     if (i->merged()) {
       // 4RDM derivative is a priori contracted with the fock operator
-      if (!i->der() || !(rdms.size() == 1 && rdms[0] == 4)) {
+      if (!i->der() || !(rdms.size() == 1 && rdms[0] == "rdm4")) {
         stringstream mm;
         mm << i->merged()->label() << "_";
         tmp.push_back(mm.str());

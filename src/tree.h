@@ -122,7 +122,7 @@ class BinaryContraction {
     bool nogamma_upstream() const;
 
     /// Returns the ranks of RDMs in subtree_.
-    std::vector<int> required_rdm(std::vector<int> input = std::vector<int>()) const;
+    std::vector<std::string> required_rdm(std::vector<std::string> input = {}) const;
 
     /// Returns depth in graph.
     int depth() const;
@@ -241,7 +241,7 @@ class Tree {
     bool nogamma_upstream() const { return !parent_ || parent_->nogamma_upstream(); }
 
     /// This function returns the rank of required RDMs here + inp. Goes through bc_ and op_ tensor lists.
-    std::vector<int> required_rdm(std::vector<int> inp) const;
+    std::vector<std::string> required_rdm(std::vector<std::string> inp) const;
 
 
     // code generators!

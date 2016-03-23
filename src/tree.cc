@@ -742,8 +742,8 @@ bool BinaryContraction::nogamma_upstream() const {
 }
 
 
-vector<int> BinaryContraction::required_rdm(vector<int> orig) const {
-  vector<int> out = orig;
+vector<string> BinaryContraction::required_rdm(vector<string> orig) const {
+  vector<string> out = orig;
   for (auto& i : subtree_)
     out = i->required_rdm(out);
 
@@ -751,14 +751,14 @@ vector<int> BinaryContraction::required_rdm(vector<int> orig) const {
   return out;
 }
 
-vector<int> Tree::required_rdm(vector<int> orig) const {
-  vector<int> out = orig;
+vector<string> Tree::required_rdm(vector<string> orig) const {
+  vector<string> out = orig;
   for (auto& i : bc_)
     out = i->required_rdm(out);
 
   for (auto& i : op_) {
     if (i->label().find("Gamma") == string::npos) continue;
-    vector<int> rdmn = i->active()->required_rdm();
+    vector<string> rdmn = i->active()->required_rdm();
     for (auto& j: rdmn)
       if (find(out.begin(), out.end(), j) == out.end()) out.push_back(j);
   }

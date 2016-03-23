@@ -77,7 +77,7 @@ class Active {
     /// This generate does get_block, sort_indices, and the merged (fock) multiplication for Gamma summation.
     std::string generate(const std::string indent, const std::string tag, const std::list<std::shared_ptr<const Index>> index, const std::list<std::shared_ptr<const Index>> merged = std::list<std::shared_ptr<const Index>>(), const std::string mlab = "", const bool use_blas = false) const;
     /// Returns vector of int cooresponding to RDM numbers in Gamma. RDM0 is not included for non derivative trees.
-    std::vector<int> required_rdm() const;
+    std::vector<std::string> required_rdm() const;
 
 
     /// Map from ket reindexing.

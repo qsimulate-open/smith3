@@ -489,7 +489,7 @@ OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool d
   }
 
   // determine number of tensors
-  vector<int> rdmn = active()->required_rdm();
+  vector<string> rdmn = active()->required_rdm();
   int ninptensors;
   if (merged_) {
     ninptensors = rdmn.size()+1;

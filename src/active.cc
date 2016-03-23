@@ -139,12 +139,7 @@ bool Active::operator==(const Active& o) const {
 string Active::generate(const string indent, const string tag, const list<shared_ptr<const Index>> index, const list<shared_ptr<const Index>> merged, const string mlab, const bool use_blas) const {
   stringstream tt;
 
-  vector<string> in_tensors;
-  vector<int> req_rdm = required_rdm();
-  for (auto& i : req_rdm) {
-    stringstream ss; ss << "rdm" << i;
-    in_tensors.push_back(ss.str());
-  }
+  vector<string> in_tensors = required_rdm();
   if (!merged.empty()) {
     in_tensors.push_back(mlab);
   }
@@ -155,19 +150,27 @@ string Active::generate(const string indent, const string tag, const list<shared
 }
 
 
-vector<int> Active::required_rdm() const {
-  vector<int> out;
+vector<string> Active::required_rdm() const {
+  vector<string> out;
   if (bra_ || ket_) {
     for (auto& i : rdm_) {
       // rdm0 needs to be included as an additional tensor is now needed, <I|0>
-      if (find(out.begin(), out.end(), i->rank()) == out.end())
-        out.push_back(i->rank());
+      stringstream ss;
+      if (i->rank() != 0 && i->index().front()->spin()->alpha())
+        ss << "a";
+      ss << "rdm" << i->rank();
+      if (find(out.begin(), out.end(), ss.str()) == out.end())
+        out.push_back(ss.str());
     }
   } else {
     for (auto& i : rdm_) {
       // rdm0 does need to be included in header for multistate cases
-      if (i->rank() < 5 && find(out.begin(), out.end(), i->rank()) == out.end())
-        out.push_back(i->rank());
+      stringstream ss;
+      if (i->rank() != 0 && i->index().front()->spin()->alpha())
+        ss << "a";
+      ss << "rdm" << i->rank();
+      if (i->rank() < 5 && find(out.begin(), out.end(), ss.str()) == out.end())
+        out.push_back(ss.str());
     }
   }
   sort(out.begin(), out.end());

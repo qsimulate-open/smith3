@@ -172,7 +172,17 @@ OutStream Energy::generate_compute_footer(const int ic, const list<shared_ptr<co
     if (i != ti.rbegin()) listind += ", ";
     listind += (*i)->str_gen();
   }
-  out.cc << indent << "if (t[" << (dot ? 1 : 0) << "]->is_local("<< listind << "))" << endl;
+  // if t[1] in the dot case is t2dagger, we further need to reverse the order
+  string listind2 = "";
+  if (dot && tensors[1]->label().find("dagger") != string::npos) {
+    for (auto i = ti.begin(); i != ti.end(); ++i) {
+      if (i != ti.begin()) listind2 += ", ";
+      listind2 += (*i)->str_gen();
+    }
+  } else {
+    listind2 = listind;
+  }
+  out.cc << indent << "if (t[" << (dot ? 1 : 0) << "]->is_local("<< listind2 << "))" << endl;
   indent += "  ";
   // add subtasks
   if (!ti.empty()) {
