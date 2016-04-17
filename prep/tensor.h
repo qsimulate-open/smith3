@@ -61,7 +61,9 @@ class Tensor {
       std::stringstream ss;
       for (auto i = indices_.begin(); i != indices_.end(); ++i) {
         if (i != indices_.begin()) ss << ", ";
-        ss << "\"" << *i << "\"";
+        std::string j = *i;
+        std::transform(j.begin(), j.end(), j.begin(), ::toupper);
+        ss << "_" << j;
       }
       return ss.str();
     }

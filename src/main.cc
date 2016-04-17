@@ -28,6 +28,7 @@
 // Spin averaged quantities assumed.
 
 #include <fstream>
+#include "constants.h"
 #include "forest.h"
 #include "residual.h"
 #include "energy.h"
@@ -39,38 +40,38 @@ int main() {
 
   string theory="CASPT2";
 
-  shared_ptr<Operator> ex_0 = make_shared<Op>("c", "c", "x", "x");
-  shared_ptr<Operator> ex_1 = make_shared<Op>("x", "c", "x", "x");
-  shared_ptr<Operator> ex_2 = make_shared<Op>("c", "c", "x", "a");
-  shared_ptr<Operator> ex_3 = make_shared<Op>("x", "c", "x", "a");
-  shared_ptr<Operator> ex_4 = make_shared<Op>("c", "x", "x", "a");
-  shared_ptr<Operator> ex_5 = make_shared<Op>("x", "x", "x", "a");
-  shared_ptr<Operator> ex_6 = make_shared<Op>("c", "c", "a", "a");
-  shared_ptr<Operator> ex_7 = make_shared<Op>("x", "c", "a", "a");
-  shared_ptr<Operator> ex_8 = make_shared<Op>("x", "x", "a", "a");
-  shared_ptr<Operator> t20 = make_shared<Op>("t2", "x", "x", "c", "c");
-  shared_ptr<Operator> t21 = make_shared<Op>("t2", "x", "x", "x", "c");
-  shared_ptr<Operator> t22 = make_shared<Op>("t2", "x", "a", "c", "c");
-  shared_ptr<Operator> t23 = make_shared<Op>("t2", "x", "a", "x", "c");
-  shared_ptr<Operator> t24 = make_shared<Op>("t2", "x", "a", "c", "x");
-  shared_ptr<Operator> t25 = make_shared<Op>("t2", "x", "a", "x", "x");
-  shared_ptr<Operator> t26 = make_shared<Op>("t2", "a", "a", "c", "c");
-  shared_ptr<Operator> t27 = make_shared<Op>("t2", "a", "a", "x", "c");
-  shared_ptr<Operator> t28 = make_shared<Op>("t2", "a", "a", "x", "x");
-  shared_ptr<Operator> f1 = make_shared<Op>("f1", "g", "g");
-  shared_ptr<Operator> v2 = make_shared<Op>("v2", "g", "g", "g", "g");
-  shared_ptr<Operator> h1 = make_shared<Op>("h1", "g", "g");
+  shared_ptr<Operator> ex_0 = make_shared<Op>(_C, _C, _X, _X);
+  shared_ptr<Operator> ex_1 = make_shared<Op>(_X, _C, _X, _X);
+  shared_ptr<Operator> ex_2 = make_shared<Op>(_C, _C, _X, _A);
+  shared_ptr<Operator> ex_3 = make_shared<Op>(_X, _C, _X, _A);
+  shared_ptr<Operator> ex_4 = make_shared<Op>(_C, _X, _X, _A);
+  shared_ptr<Operator> ex_5 = make_shared<Op>(_X, _X, _X, _A);
+  shared_ptr<Operator> ex_6 = make_shared<Op>(_C, _C, _A, _A);
+  shared_ptr<Operator> ex_7 = make_shared<Op>(_X, _C, _A, _A);
+  shared_ptr<Operator> ex_8 = make_shared<Op>(_X, _X, _A, _A);
+  shared_ptr<Operator> t20 = make_shared<Op>("t2", _X, _X, _C, _C);
+  shared_ptr<Operator> t21 = make_shared<Op>("t2", _X, _X, _X, _C);
+  shared_ptr<Operator> t22 = make_shared<Op>("t2", _X, _A, _C, _C);
+  shared_ptr<Operator> t23 = make_shared<Op>("t2", _X, _A, _X, _C);
+  shared_ptr<Operator> t24 = make_shared<Op>("t2", _X, _A, _C, _X);
+  shared_ptr<Operator> t25 = make_shared<Op>("t2", _X, _A, _X, _X);
+  shared_ptr<Operator> t26 = make_shared<Op>("t2", _A, _A, _C, _C);
+  shared_ptr<Operator> t27 = make_shared<Op>("t2", _A, _A, _X, _C);
+  shared_ptr<Operator> t28 = make_shared<Op>("t2", _A, _A, _X, _X);
+  shared_ptr<Operator> f1 = make_shared<Op>("f1", _G, _G);
+  shared_ptr<Operator> v2 = make_shared<Op>("v2", _G, _G, _G, _G);
+  shared_ptr<Operator> h1 = make_shared<Op>("h1", _G, _G);
   shared_ptr<Operator> proje = make_shared<Op>("proj");
-  shared_ptr<Operator> t2dagger0 = make_shared<Op>("t2dagger", "c", "c", "x", "x");
-  shared_ptr<Operator> t2dagger1 = make_shared<Op>("t2dagger", "x", "c", "x", "x");
-  shared_ptr<Operator> t2dagger2 = make_shared<Op>("t2dagger", "c", "c", "x", "a");
-  shared_ptr<Operator> t2dagger3 = make_shared<Op>("t2dagger", "x", "c", "x", "a");
-  shared_ptr<Operator> t2dagger4 = make_shared<Op>("t2dagger", "c", "x", "x", "a");
-  shared_ptr<Operator> t2dagger5 = make_shared<Op>("t2dagger", "x", "x", "x", "a");
-  shared_ptr<Operator> t2dagger6 = make_shared<Op>("t2dagger", "c", "c", "a", "a");
-  shared_ptr<Operator> t2dagger7 = make_shared<Op>("t2dagger", "x", "c", "a", "a");
-  shared_ptr<Operator> t2dagger8 = make_shared<Op>("t2dagger", "x", "x", "a", "a");
-  shared_ptr<Operator> ex_1b = make_shared<Op>("g", "g");
+  shared_ptr<Operator> t2dagger0 = make_shared<Op>("t2dagger", _C, _C, _X, _X);
+  shared_ptr<Operator> t2dagger1 = make_shared<Op>("t2dagger", _X, _C, _X, _X);
+  shared_ptr<Operator> t2dagger2 = make_shared<Op>("t2dagger", _C, _C, _X, _A);
+  shared_ptr<Operator> t2dagger3 = make_shared<Op>("t2dagger", _X, _C, _X, _A);
+  shared_ptr<Operator> t2dagger4 = make_shared<Op>("t2dagger", _C, _X, _X, _A);
+  shared_ptr<Operator> t2dagger5 = make_shared<Op>("t2dagger", _X, _X, _X, _A);
+  shared_ptr<Operator> t2dagger6 = make_shared<Op>("t2dagger", _C, _C, _A, _A);
+  shared_ptr<Operator> t2dagger7 = make_shared<Op>("t2dagger", _X, _C, _A, _A);
+  shared_ptr<Operator> t2dagger8 = make_shared<Op>("t2dagger", _X, _X, _A, _A);
+  shared_ptr<Operator> ex_1b = make_shared<Op>(_G, _G);
 
   list<shared_ptr<Operator>> ra0 = {proje, ex_0, f1, t20};
   list<shared_ptr<Operator>> ra1 = {proje, ex_0, f1, t21};

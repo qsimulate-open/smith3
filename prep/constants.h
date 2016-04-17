@@ -64,6 +64,7 @@ static std::string header() {
   mm << "// Spin averaged quantities assumed." << std::endl;
   mm << "" << std::endl;
   mm << "#include <fstream>" << std::endl;
+  mm << "#include \"constants.h\"" << std::endl;
   mm << "#include \"forest.h\"" << std::endl;
   mm << "#include \"residual.h\"" << std::endl;
   mm << "#include \"energy.h\"" << std::endl;

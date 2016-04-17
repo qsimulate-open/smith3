@@ -163,6 +163,12 @@ static const std::string SCAL = (DataType == "double" ? "dscal_" : "zscal_");
 static const std::string DOT = (DataType == "double" ? "ddot_" : "zdotu_");
 static const std::string MatType = (DataType == "double" ? "Matrix" : "ZMatrix");
 
+// used in main.cc
+static const std::string _C = "c";
+static const std::string _X = "x";
+static const std::string _A = "a";
+static const std::string _G = "g";
+
 }
 }
 
