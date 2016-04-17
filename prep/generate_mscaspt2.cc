@@ -154,8 +154,7 @@ int main() {
   cout << eq4->generate();
 
   // done. generate the footer
-  cout << footer("", "", "", eq6->tree_label(), "", "", "") << endl;
-//cout << footer("", "", "", "", "", "", eq4->tree_label()) << endl;
+  cout << footer("", "", "", eq6->tree_label(), eq6a->tree_label(), eq7->tree_label(), "") << endl;
 //cout << footer("", "", "", eq6->tree_label(), eq6a->tree_label(), eq7->tree_label(), eq4->tree_label()) << endl;
 
 
