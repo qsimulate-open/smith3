@@ -145,6 +145,7 @@ int main() {
   eq4->set_tree_type("residual", "deci");
   cout << eq4->generate();
 
+  //  cI derivative equations for the source term
   shared_ptr<Equation> eq4d(new Equation(theory, "dedcie", {dum, l_dagger, H}, 1.0, make_pair(true, false)));
   shared_ptr<Equation> eq4e(new Equation(theory, "dedcif", {dum, l_dagger, H}, 1.0, make_pair(false, true)));
   shared_ptr<Equation> eq4f(new Equation(theory, "dedcig", {dum, l_dagger, hc}, 2.0, make_pair(true, false)));
@@ -152,12 +153,11 @@ int main() {
   eq4d->merge(eq4e);
   eq4d->merge(eq4f);
   eq4d->merge(eq4g);
-  eq4d->set_tree_type("residual", "source");
+  eq4d->set_tree_type("residual", "deci2");
   cout << eq4d->generate();
 
   // done. generate the footer
   cout << footer("", "", "", eq6->tree_label(), eq6a->tree_label(), eq7->tree_label(), eq4->tree_label(), eq4d->tree_label()) << endl;
-
 
   return 0;
 }

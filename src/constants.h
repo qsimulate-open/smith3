@@ -88,6 +88,7 @@ std::string target_name__(std::string label) {
   else if (label == "density1") out = "den1";
   else if (label == "density2") out = "Den1";
   else if (label == "deci")     out = "deci";
+  else if (label == "deci2")    out = "deci";
   else if (label == "norm")     out = "n";
   else throw std::logic_error("unrecognized label in constant.h static string target_name");
   return out;

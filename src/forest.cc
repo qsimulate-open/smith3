@@ -35,6 +35,7 @@ void Forest::filter_gamma() {
   shared_ptr<Tree> res;
 
   bool first = true;
+  list<shared_ptr<Tensor>> prev;
   for (auto& i : trees_) {
     list<shared_ptr<Tensor>> g;
     if (first) {
@@ -42,7 +43,7 @@ void Forest::filter_gamma() {
       res = i;
       first = false;
     } else {
-      i->sort_gamma(res->gamma());
+      i->sort_gamma(prev);
     }
 
     g = i->gamma();
@@ -57,6 +58,7 @@ void Forest::filter_gamma() {
       }
       if (!found) gamma_.push_back(j);
     }
+    prev = i->gamma();
   }
 
 }
@@ -73,7 +75,7 @@ OutStream Forest::generate_code() const {
     out.ss << "    std::shared_ptr<Queue> make_" << i->label() << "q(const bool reset = true, const bool diagonal = true);" << endl;
 
     out.ee << "shared_ptr<Queue> " << forest_name_ << "::" << forest_name_ << "::make_" << i->label() << "q(const bool reset, const bool diagonal) {" << endl << endl;
-    if (i->label() != "deci")
+    if (i->label() != "deci" && i->label() != "deci2")
       out.ee << "  array<shared_ptr<const IndexRange>,3> pindex = {{rclosed_, ractive_, rvirt_}};" << endl;
     else
       out.ee << "  array<shared_ptr<const IndexRange>,4> cindex = {{rclosed_, ractive_, rvirt_, rci_}};" << endl << endl;

@@ -54,7 +54,7 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
     // convert to tree and then bc
     shared_ptr<Tree> tr;
     if (label_ == "residual" || label_ == "source" || label_ == "density" || label_ == "density1"
-                             || label_ == "density2" || label_ == "deci" || label_ == "norm") {
+                             || label_ == "density2" || label_ == "deci" || label_ == "deci2" || label_ == "norm") {
       tr = make_shared<Residual>(rest, lab, rt_targets);
     } else if (label_ == "energy" || label_ == "corr") {
       tr = make_shared<Energy>(rest, label_, rt_targets);
@@ -96,7 +96,7 @@ BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor
 
   shared_ptr<Tree> tr;
   if (label_ == "residual" || label_ == "source" || label_ == "density" || label_ == "density1"
-                           || label_ == "density2" || label_ == "deci" || label_ == "norm") {
+                           || label_ == "density2" || label_ == "deci" || label_ == "deci2" ||  label_ == "norm") {
     tr = make_shared<Residual>(rest, lab, rt);
   } else if (label_ == "energy" || label_ == "corr") {
     tr = make_shared<Energy>(rest, lab, rt);

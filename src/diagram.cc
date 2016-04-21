@@ -342,6 +342,8 @@ void Diagram::active() {
     // Performs Wick in constructor of an Active object
     rdm_ = make_shared<Active>(ac, make_pair(bra_, ket_));
   }
+  // when reversed this has to be done again (?)
+  refresh_indices();
 }
 
 
