@@ -78,7 +78,8 @@ static std::string header() {
 
 static std::string footer(const std::string res, const std::string energy = "", const std::string correction = "",
                           const std::string density = "", const std::string density1 = "", const std::string density2 = "",
-                          const std::string dedci = "", const std::string dedci2 = "", const std::string source = "", const std::string norm = "") {
+                          const std::string dedci = "", const std::string dedci2 = "", const std::string dedci3 = "",
+                          const std::string source = "", const std::string norm = "") {
   std::stringstream mm;
 
   mm << "  list<shared_ptr<Tree>> trees = {";
@@ -93,6 +94,7 @@ static std::string footer(const std::string res, const std::string energy = "", 
   if (!density2.empty())   mm << (done.test_and_set() ? ", " : "") << density2;
   if (!dedci.empty())      mm << (done.test_and_set() ? ", " : "") << dedci;
   if (!dedci2.empty())     mm << (done.test_and_set() ? ", " : "") << dedci2;
+  if (!dedci3.empty())     mm << (done.test_and_set() ? ", " : "") << dedci3;
   if (!norm.empty())       mm << (done.test_and_set() ? ", " : "") << norm;
   mm <<  "};" << std::endl;
   mm << "  auto fr = make_shared<Forest>(trees);" << std::endl;
@@ -168,6 +170,10 @@ static std::string footer(const std::string res, const std::string energy = "", 
     mm << "  cout << std::endl << \"   ***  CI derivative 2 ***\" << std::endl << std::endl;" << std::endl;
     mm << "  " << dedci2 << "->print();" << std::endl;
   }
+  if (!dedci3.empty()) {
+    mm << "  cout << std::endl << \"   ***  CI derivative 3 ***\" << std::endl << std::endl;" << std::endl;
+    mm << "  " << dedci3 << "->print();" << std::endl;
+  }
   mm << "  cout << std::endl << std::endl;" << std::endl;
   mm << "" <<  std::endl;
   mm << "  return 0;" << std::endl;
@@ -176,7 +182,7 @@ static std::string footer(const std::string res, const std::string energy = "", 
 }
 
 static std::string footer_ci(const std::string res, const std::string source, const std::string norm) {
-  return footer(res, "", "", "", "", "", "", "", source, norm);
+  return footer(res, "", "", "", "", "", "", "", "", source, norm);
 }
 
 
