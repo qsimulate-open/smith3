@@ -141,14 +141,14 @@ int main() {
   eq4->set_tree_type("residual", "deci");
   cout << eq4->generate();
 
-  shared_ptr<Equation> eq4d(new Equation(theory, "dedcie", {dum, l_dagger, H}, 1.0, make_pair(true, false)));
-  shared_ptr<Equation> eq4f(new Equation(theory, "dedcig", {dum, l_dagger, hc}, 2.0, make_pair(true, false)));
+  shared_ptr<Equation> eq4d(new Equation(theory, "dedcie", {dum, l_dagger, H}, 0.5, make_pair(true, false)));
+  shared_ptr<Equation> eq4f(new Equation(theory, "dedcig", {dum, l_dagger, hc}, 1.0, make_pair(true, false)));
   eq4d->merge(eq4f);
   eq4d->set_tree_type("residual", "deci2");
   cout << eq4d->generate();
 
-  shared_ptr<Equation> eq4e(new Equation(theory, "dedcif", {dum, l_dagger, H}, 1.0, make_pair(false, true)));
-  shared_ptr<Equation> eq4g(new Equation(theory, "dedcih", {dum, l_dagger, hc}, 2.0, make_pair(false, true)));
+  shared_ptr<Equation> eq4e(new Equation(theory, "dedcif", {dum, l_dagger, H}, 0.5, make_pair(false, true)));
+  shared_ptr<Equation> eq4g(new Equation(theory, "dedcih", {dum, l_dagger, hc}, 1.0, make_pair(false, true)));
   eq4e->merge(eq4g);
   eq4e->set_tree_type("residual", "deci3");
   cout << eq4e->generate();
