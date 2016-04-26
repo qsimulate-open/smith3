@@ -179,11 +179,13 @@ class Tensor {
       else if (blabel == "t2dagger") out = false;
       else if (alabel == "t2") out = true;
       else if (blabel == "t2") out = false;
+      else if (alabel == "l2dagger") out = true;
+      else if (blabel == "l2dagger") out = false;
       else if (alabel == "l2") out = true;
       else if (blabel == "l2") out = false;
       else {
          std::cout << alabel << " " << blabel << std::endl;
-         throw std::logic_error("I have not thought about this yet");
+         throw std::logic_error("I have not thought about this yet - tensor.h");
       }
       return out;
     }

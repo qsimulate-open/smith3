@@ -163,7 +163,7 @@ void Diagram::reorder_tensors() {
                                  else if (b->label() == "l2")   out = false;
                                  else {
                                     cout << a->label() << " " << b->label() << endl;
-                                    throw logic_error("I have not thought about this yet");
+                                    throw logic_error("I have not thought about this yet - diagram.cc");
                                  }
                                  return out;
                                });

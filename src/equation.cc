@@ -45,11 +45,15 @@ Equation::Equation(shared_ptr<Diagram> in, std::string nam) : name_(nam) {
             out2.push_back(n);
             if (n->done_noactive()) {
               // drop <I|0> terms
+#ifndef _MULTI_DERIV
               if (n->braket().first || n->braket().second) {
                 if (n->gamma_derivative()) diagram_.push_back(n);
               } else {
                 diagram_.push_back(n);
               }
+#else
+              diagram_.push_back(n);
+#endif
             }
           }
         }

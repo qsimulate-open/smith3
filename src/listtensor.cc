@@ -47,7 +47,7 @@ ListTensor::ListTensor(shared_ptr<Diagram> d) {
   // add a ci tensor if braket and if no rdm derivatives. This tensor is the overlap, cI coefficients.
   if ((d->braket().first || d->braket().second) && !d->rdm()) {
     list<shared_ptr<const Index>> in = d->target_index();
-    shared_ptr<Tensor> t = make_shared<Tensor>(fac_,"dci",in);
+    shared_ptr<Tensor> t = make_shared<Tensor>(fac_,"rdm0deriv_",in);
     list_.push_back(t);
   }
 
