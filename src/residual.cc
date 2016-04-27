@@ -39,7 +39,7 @@ OutStream Residual::create_target(const int i) const {
   out.tt << "    IndexRange closed_;" << endl;
   out.tt << "    IndexRange active_;" << endl;
   out.tt << "    IndexRange virt_;" << endl;
-  if (label_ == "deci" || label_ == "deci2" || label_=="deci3")
+  if (label_.find("deci") != string::npos)
     out.tt << "    IndexRange ci_;" << endl;
   out.tt << "    const bool reset_;" << endl;
   out.tt << "" << endl;
@@ -79,7 +79,7 @@ OutStream Residual::generate_task(const int ip, const int ic, const vector<strin
   }
   tmp << indent << "  auto tensor" << ic << " = vector<shared_ptr<Tensor>>{" << merge__(op, label_) << "};" << endl;
   tmp << indent << "  " << (diagonal ? "" : "auto ") << "task" << ic
-                << " = make_shared<Task" << ic << ">(tensor" << ic << (der || (label_=="deci" || label_=="deci2" || label_=="deci3") ? ", cindex" : ", pindex")
+                << " = make_shared<Task" << ic << ">(tensor" << ic << (der || label_.find("deci") != string::npos ? ", cindex" : ", pindex")
                 << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
 
   const bool is_gamma = op.front().find("Gamma") != string::npos;
@@ -120,7 +120,7 @@ OutStream Residual::generate_compute_header(const int ic, const list<shared_ptr<
   for (auto& s : tensors)
     if (!s->scalar().empty()) need_e0 = true;
 
-  const int arraysize = (label_ == "deci" || label_ == "deci2" || label_=="deci3") ? 4 : 3;
+  const int arraysize = label_.find("deci") != string::npos ? 4 : 3;
 
   const int nindex = ti.size();
   OutStream out;
@@ -185,7 +185,7 @@ OutStream Residual::generate_compute_footer(const int ic, const list<shared_ptr<
   for (auto& s : tensors)
     if (!s->scalar().empty()) need_e0 = true;
 
-  const int arraysize = (label_ == "deci" || label_ == "deci2" || label_=="deci3") ? 4 : 3;
+  const int arraysize = label_.find("deci") != string::npos ? 4 : 3;
 
   OutStream out;
   out.dd << "}" << endl << endl << endl;
