@@ -26,6 +26,7 @@
 #ifndef __CONSTANTS_H
 #define __CONSTANTS_H
 
+#include <vector>
 #include <string>
 #include <sstream>
 #include <stdexcept>
