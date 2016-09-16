@@ -155,7 +155,7 @@ int count_distinct_tensors__(const std::vector<std::string>& labels) {
 //#define _RELMRCI
 #if defined(_CASPT2) || defined(_MRCI)
 static const std::string DataType = "double";
-#elif defined(_RELCASPT2) || defined(_RELMRCI) || defined(_RELMSCASPT2)
+#elif defined(_RELCASPT2) || defined(_RELMRCI)
 static const std::string DataType = "std::complex<double>";
 #else
 static_assert(false, "Please compile using make.sh");
