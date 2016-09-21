@@ -130,15 +130,8 @@ int main() {
   eq5->set_tree_type("residual", "norm");
   cout << eq5->generate();
 
-  // source equations //
-  shared_ptr<Equation> eq6(new Equation(theory, "sa", {dum, proj_list, hc}));
-  shared_ptr<Equation> eq7(new Equation(theory, "sb", {dum, proj_list, H}, 0.5));
-  eq6->merge(eq7);
-  eq6->set_tree_type("residual", "source");
-  cout << eq6->generate();
-
   // done. generate the footer
-  cout << footer(eq0->tree_label(), eq3->tree_label(), eq5->tree_label(), "", "", "", "", "", "", "", eq6->tree_label(), "") << endl;
+  cout << footer(eq0->tree_label(), eq3->tree_label(), eq5->tree_label()) << endl;
 
   return 0;
 }
