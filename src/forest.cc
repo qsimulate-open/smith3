@@ -297,7 +297,7 @@ OutStream Forest::generate_algorithm() const {
     out.ee << "    nall_.push_back(tmp2->copy());" << endl;
     out.ee << "  }" << endl;
   }
-  if (forest_name_ == "CASPT2" || forest_name_ == "RelCASPT2") {
+  if (forest_name_ == "CASPT2" || forest_name_ == "RelCASPT2" || forest_name_ == "CASA" || forest_name_ == "RelCASA") {
     out.ee << "  t2 = init_amplitude();" << endl;
     out.ee << "  r = init_residual();" << endl;
     out.ee << "  s = init_residual();" << endl;
@@ -311,7 +311,7 @@ OutStream Forest::generate_algorithm() const {
 
   out.ee << "void " << forest_name_ << "::" << forest_name_ << "::solve() {" << endl;
 
-  if (forest_name_ == "CASPT2" || forest_name_ == "RelCASPT2")
+  if (forest_name_ == "CASPT2" || forest_name_ == "RelCASPT2" || forest_name_ == "CASA" || forest_name_ == "RelCASA")
     out.ee << caspt2_main_driver_();
   else if (forest_name_ == "MRCI" || forest_name_ == "RelMRCI")
     out.ee << msmrci_main_driver_();
