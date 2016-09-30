@@ -33,10 +33,10 @@ def header(n) :
 #ifdef COMPILE_SMITH\n\
 \n\
 \n\
-#include <src/smith/relcaspt2/RelCASA.h>\n"
+#include <src/smith/relcasa/RelCASA.h>\n"
 
 def insert():
-    return "#include <src/smith/relcaspt2/RelCASA_tasks.h>\n"
+    return "#include <src/smith/relcasa/RelCASA_tasks.h>\n"
 
 def header2():
     return "\n\

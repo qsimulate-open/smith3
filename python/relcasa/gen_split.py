@@ -31,7 +31,7 @@ def header(n) :
 #include <bagel_config.h>\n\
 #ifdef COMPILE_SMITH\n\
 \n\
-#include <src/smith/relcaspt2/RelCASA_tasks" + str(n) + ".h>\n\
+#include <src/smith/relcasa/RelCASA_tasks" + str(n) + ".h>\n\
 \n\
 using namespace std;\n\
 using namespace bagel;\n\

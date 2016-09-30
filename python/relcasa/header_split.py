@@ -125,7 +125,7 @@ fout = open("RelCASA_tasks.h", "w")
 out = header2
 for i in range(n+1):
     if (i > 0):
-        out += "#include <src/smith/relcaspt2/RelCASA_tasks" + str(i) + ".h>\n"
+        out += "#include <src/smith/relcasa/RelCASA_tasks" + str(i) + ".h>\n"
 out += footer2
 fout.write(out)
 fout.close()
