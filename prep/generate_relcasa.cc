@@ -106,6 +106,7 @@ int main() {
 
   vector<shared_ptr<Tensor>> hca  = {shared_ptr<Tensor>(new Tensor("h1", "1", {"x", "x"}))};
   vector<shared_ptr<Tensor>> Ha   = {shared_ptr<Tensor>(new Tensor("v2", "1", {"x", "x", "x", "x"}))};
+  vector<shared_ptr<Tensor>> fc  = {shared_ptr<Tensor>(new Tensor("f1", "8", {"c", "c"}))};
 
   cout << "  string theory=\"" << theory << "\";" << endl;
   cout << endl;
@@ -120,13 +121,14 @@ int main() {
   for (auto& i : ex1b)      cout << i->generate();
   for (auto& i : hca)       cout << i->generate();
   for (auto& i : Ha)        cout << i->generate();
+  for (auto& i : fc)        cout << i->generate();
   cout << endl;
 
   // residual equations //
   // <Omega| F T |0> for all except active-active part 
   shared_ptr<Equation> eq0(new Equation(theory, "ra", {dum, proj_list, f, t_list}));
 
-  // -<Omega| T |0> * E(0) 
+  // -<Omega| T |0> * E(0)
   for (int i = 0; i != proj_list.size(); ++i) {
     for (int j = 0; j != t_list.size(); ++j) {
       stringstream uu;
@@ -139,26 +141,33 @@ int main() {
     }
   }
 
-  // <Omega| [H,T] |0> for active part
-  // + <Omega| T H |0> = <Omega| T |0> * E(0) for active part
+  // <Omega| H T |0> for active part
   shared_ptr<Equation> eq0x(new Equation(theory, "rax", {dum, proj_list, hca, t_list}));
   shared_ptr<Equation> eq1x(new Equation(theory, "rbx", {dum, proj_list, Ha, t_list}, 0.5));
   eq0->merge(eq0x);
   eq0->merge(eq1x);
+
+  // - <Omega| T H |0> for matching sectors, to generate [H, T]
+  // - <Omega| F T |0> over closed orbitals
   for (int i = 0; i != proj_list.size(); ++i) {
     if (i == 3 || i == 4) continue;
-    stringstream ss, tt;
+    stringstream ss, tt, uu;
     ss << "rax_" << i;
     tt << "rbx_" << i;
+    uu << "rcc_" << i;
     shared_ptr<Equation> eq0m(new Equation(theory, ss.str(), {dum, vector<shared_ptr<Tensor>>{proj_list[i]}, vector<shared_ptr<Tensor>>{t_list[i]}, hca}, -1.0));
     shared_ptr<Equation> eq1m(new Equation(theory, tt.str(), {dum, vector<shared_ptr<Tensor>>{proj_list[i]}, vector<shared_ptr<Tensor>>{t_list[i]}, Ha},  -0.5));
+    shared_ptr<Equation> eq2m(new Equation(theory, uu.str(), {dum, vector<shared_ptr<Tensor>>{proj_list[i]}, fc, vector<shared_ptr<Tensor>>{t_list[i]}},  -1.0));
     eq0->merge(eq0m);
     eq0->merge(eq1m);
+    eq0->merge(eq2m);
   }
   shared_ptr<Equation> eq0m(new Equation(theory, "rax_3", {dum, vector<shared_ptr<Tensor>>{proj_list[3], proj_list[4]}, vector<shared_ptr<Tensor>>{t_list[3], t_list[4]}, hca}, -1.0));
   shared_ptr<Equation> eq1m(new Equation(theory, "rbx_3", {dum, vector<shared_ptr<Tensor>>{proj_list[3], proj_list[4]}, vector<shared_ptr<Tensor>>{t_list[3], t_list[4]}, Ha},  -0.5));
+  shared_ptr<Equation> eq2m(new Equation(theory, "rcc_3", {dum, vector<shared_ptr<Tensor>>{proj_list[3], proj_list[4]}, fc, vector<shared_ptr<Tensor>>{t_list[3], t_list[4]}},  -1.0));
   eq0->merge(eq0m);
   eq0->merge(eq1m);
+  eq0->merge(eq2m);
 
   eq0->set_tree_type("residual");
   cout << eq0->generate();
