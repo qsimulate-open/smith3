@@ -179,7 +179,6 @@ void Equation::duplicates_(const bool proj) {
           if (!proj) {
             (*j)->fac() += (*i)->fac();
             rm.push_back(i);
-            if ((*j)->fac() == 0) throw logic_error("I don't think that this happens. Check! Equation::factorize1_");
           } else {
             (*j)->add_dagger();
             rm.push_back(i);
@@ -191,6 +190,13 @@ void Equation::duplicates_(const bool proj) {
     } while ((*i)->permute(proj));
   }
   for (auto& it : rm) diagram_.erase(it);
+
+  // Now if diagrams cancel each other out, remove them
+  list<list<shared_ptr<Diagram>>::iterator> rm2;
+  for (auto i = diagram_.begin(); i != diagram_.end(); ++i)
+    if ((*i)->fac() == 0)
+      rm2.push_back(i);
+  for (auto& it : rm2) diagram_.erase(it);
 }
 
 
