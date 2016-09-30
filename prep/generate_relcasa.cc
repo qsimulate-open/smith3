@@ -106,7 +106,6 @@ int main() {
 
   vector<shared_ptr<Tensor>> hca  = {shared_ptr<Tensor>(new Tensor("h1", "1", {"x", "x"}))};
   vector<shared_ptr<Tensor>> Ha   = {shared_ptr<Tensor>(new Tensor("v2", "1", {"x", "x", "x", "x"}))};
-  vector<shared_ptr<Tensor>> fc  = {shared_ptr<Tensor>(new Tensor("f1", "8", {"c", "c"}))};
 
   cout << "  string theory=\"" << theory << "\";" << endl;
   cout << endl;
@@ -121,7 +120,6 @@ int main() {
   for (auto& i : ex1b)      cout << i->generate();
   for (auto& i : hca)       cout << i->generate();
   for (auto& i : Ha)        cout << i->generate();
-  for (auto& i : fc)        cout << i->generate();
   cout << endl;
 
   // residual equations //
@@ -157,14 +155,14 @@ int main() {
     uu << "rcc_" << i;
     shared_ptr<Equation> eq0m(new Equation(theory, ss.str(), {dum, vector<shared_ptr<Tensor>>{proj_list[i]}, vector<shared_ptr<Tensor>>{t_list[i]}, hca}, -1.0));
     shared_ptr<Equation> eq1m(new Equation(theory, tt.str(), {dum, vector<shared_ptr<Tensor>>{proj_list[i]}, vector<shared_ptr<Tensor>>{t_list[i]}, Ha},  -0.5));
-    shared_ptr<Equation> eq2m(new Equation(theory, uu.str(), {dum, vector<shared_ptr<Tensor>>{proj_list[i]}, fc, vector<shared_ptr<Tensor>>{t_list[i]}},  -1.0));
+    shared_ptr<Equation> eq2m(new Equation(theory, uu.str(), {dum, vector<shared_ptr<Tensor>>{proj_list[i]}, vector<shared_ptr<Tensor>>{t_list[i]}, f}, -1.0));
     eq0->merge(eq0m);
     eq0->merge(eq1m);
     eq0->merge(eq2m);
   }
   shared_ptr<Equation> eq0m(new Equation(theory, "rax_3", {dum, vector<shared_ptr<Tensor>>{proj_list[3], proj_list[4]}, vector<shared_ptr<Tensor>>{t_list[3], t_list[4]}, hca}, -1.0));
   shared_ptr<Equation> eq1m(new Equation(theory, "rbx_3", {dum, vector<shared_ptr<Tensor>>{proj_list[3], proj_list[4]}, vector<shared_ptr<Tensor>>{t_list[3], t_list[4]}, Ha},  -0.5));
-  shared_ptr<Equation> eq2m(new Equation(theory, "rcc_3", {dum, vector<shared_ptr<Tensor>>{proj_list[3], proj_list[4]}, fc, vector<shared_ptr<Tensor>>{t_list[3], t_list[4]}},  -1.0));
+  shared_ptr<Equation> eq2m(new Equation(theory, "rcc_3", {dum, vector<shared_ptr<Tensor>>{proj_list[3], proj_list[4]}, vector<shared_ptr<Tensor>>{t_list[3], t_list[4]}, f},  -1.0));
   eq0->merge(eq0m);
   eq0->merge(eq1m);
   eq0->merge(eq2m);
