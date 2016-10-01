@@ -55,7 +55,7 @@ tasks = []
 tmp = ""
 
 for line in lines:
-    if (len(line) >= 17 and (line[0:17] == "shared_ptr<Queue>" or line[0:17] == "RelCASA::RelCAS")):
+    if (len(line) >= 17 and (line[0:17] == "shared_ptr<Queue>" or line[0:17] == "RelCASA::RelCASA:")):
         if (tmp != ""):
             tasks.append(tmp)
             tmp = ""
