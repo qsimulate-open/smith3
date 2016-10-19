@@ -127,17 +127,9 @@ int main() {
   shared_ptr<Equation> eq0(new Equation(theory, "ra", {dum, proj_list, f, t_list}));
 
   // -<Omega| T |0> * E(0)
-  for (int i = 0; i != proj_list.size(); ++i) {
-    for (int j = 0; j != t_list.size(); ++j) {
-      stringstream uu;
-      uu << "rcx_" << i << "_" << j;
-      if (i == j) continue;
-      if (i == 3 && j == 4) continue;
-      if (i == 4 && j == 3) continue;
-      shared_ptr<Equation> eq1(new Equation(theory, uu.str(), {dum, vector<shared_ptr<Tensor>>{proj_list[i]}, vector<shared_ptr<Tensor>>{t_list[j]}}, -1.0, "e0"));
-      eq0->merge(eq1);
-    }
-  }
+  // Due to use of commutator later on, for matching sectors we want the constant "e0" to be E_L^(0) - E_N^(0)
+  shared_ptr<Equation> eq1(new Equation(theory, "rb", {dum, proj_list, t_list}, -1.0, "e0"));
+  eq0->merge(eq1);
 
   // <Omega| H T |0> for active part
   shared_ptr<Equation> eq0x(new Equation(theory, "rax", {dum, proj_list, hca, t_list}));
