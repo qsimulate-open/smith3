@@ -126,8 +126,8 @@ int main() {
   // <Omega| F T |0> for all except active-active part 
   shared_ptr<Equation> eq0(new Equation(theory, "ra", {dum, proj_list, f, t_list}));
 
-  // -<Omega| T |0> * E(0)
-  // Due to use of commutator later on, for matching sectors we want the constant "e0" to be E_L^(0) - E_N^(0)
+  // For matching sectors:  -<Omega| T |N> * [E_L^(0) - E_N^(0)] due to the use of commutator to avoid 5RDM
+  // For unmatched sectors:  -<Omega| T |N> * E_L^(0), but these terms are zero so we can get away with just one constant "e0"
   shared_ptr<Equation> eq1(new Equation(theory, "rb", {dum, proj_list, t_list}, -1.0, "e0"));
   eq0->merge(eq1);
 
@@ -137,8 +137,7 @@ int main() {
   eq0->merge(eq0x);
   eq0->merge(eq1x);
 
-  // - <Omega| T H |0> for matching sectors, to generate [H, T]
-  // - <Omega| F T |0> over closed orbitals
+  // - <Omega| T F(A) |0> for matching sectors, to generate [F(A), T]  (F(A) = H for active-active part, F for all others)
   for (int i = 0; i != proj_list.size(); ++i) {
     if (i == 3 || i == 4) continue;
     stringstream ss, tt, uu;
