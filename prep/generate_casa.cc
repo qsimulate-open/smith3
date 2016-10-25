@@ -170,13 +170,8 @@ int main() {
   eq3->set_tree_type("residual", "source");
   cout << eq3->generate();
 
-  // generate Norm <1|1> to be used in various places
-  shared_ptr<Equation> eq5(new Equation(theory, "ca", {dum, proj_list, t_list}));
-  eq5->set_tree_type("residual", "norm");
-  cout << eq5->generate();
-
   // done. generate the footer
-  cout << footer(eq0->tree_label(), eq3->tree_label(), eq5->tree_label()) << endl;
+  cout << footer(eq0->tree_label(), eq3->tree_label()) << endl;
 
   return 0;
 }
