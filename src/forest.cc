@@ -50,12 +50,12 @@ void Forest::filter_gamma() {
 
     for (auto& j : g) {
       bool found = false;
-      for (auto& k : gamma_) {
-        if ((*j) == (*k)) {
-          found = true;
-          break;
+        for (auto& k : gamma_) {
+          if ((*j) == (*k)) {
+            found = true;
+            break;
+          }
         }
-      }
       if (!found) gamma_.push_back(j);
     }
     prev = i->gamma();

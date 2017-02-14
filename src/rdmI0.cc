@@ -143,9 +143,276 @@ string RDMI0::generate(string indent, const string tag, const list<shared_ptr<co
 }
 
 
+string RDMI0::generate_sources(string indent, const string tag, const list<shared_ptr<const Index>>& index, const list<shared_ptr<const Index>>& merged,
+                       const string mlab, vector<string> in_tensors, const bool use_blas) {
+  if (fabs(fac_) < 1.e-15)
+    return "";
+  else
+    return merged.empty() ? generate_not_merged_sources(indent, tag, index, in_tensors) : generate_merged_sources(indent, tag, index, merged, mlab, in_tensors, use_blas);
+}
+
+
+string RDMI0::generate_not_merged_sources(string indent, const string tag, const list<shared_ptr<const Index>>& index, vector<string> in_tensors) {
+  stringstream dd;
+  dd << indent << "{" << endl;
+  const string lindent = indent;
+
+  indent += "  ";
+  const string itag = "i";
+  const string outputlabel = "o" + to_string(rank());
+  const string olabel = "out(" + to_string(rank()) + ")";
+
+  list<shared_ptr<const Index>> dindex = index;
+  list<shared_ptr<const Index>> ci_index;
+  for (auto& i : index) if (i->label() == "ci") ci_index.push_back(i);
+
+  list<shared_ptr<const Index>> delta_index ;
+  // first delta loops for blocks
+  for (auto d = delta_.begin(); d != delta_.end(); ++d) {
+    delta_index.push_back(d->first);
+    delta_index.push_back(d->second);
+  }
+
+  // get rdm indices
+  list<shared_ptr<const Index>>  rindex;
+  for (auto& i : index_) {
+    bool found = false;
+    for (auto& j: delta_index) {
+      if ((i)->identical(j)) found = true;
+    }
+    if (!found) rindex.push_back(i);
+  }
+  for (auto& i : index) if (i->label() == "ci") rindex.push_back(i);
+
+  // now do the sort
+  vector<string> close;
+
+  // in case delta_ is not empty
+  if (!delta_.empty()) {
+#define debug_rdm_tasks
+#ifdef debug_rdm_tasks
+    if (rank() == 0) dd << indent <<  "// rdm0 non-merged ci derivative case" << endl;
+#endif
+    // first delta if statement
+    dd << make_delta_if(indent, close);
+
+    // rdm0 contributes for derivative so can have rank 0
+    if (!dindex.empty()) {
+      stringstream zz;
+      zz << "rdm" << rank();
+      string rlab = zz.str();
+
+      // make map of in_tensors
+      map<string, string> inlab;
+      map_in_tensors(in_tensors, inlab);
+      // only use ci index for rdm0
+      dd << make_get_out_block(indent, outputlabel, olabel, rindex);
+    }
+
+    // loops over delta indices
+    dd << make_sort_loops(itag, indent, index, close);
+
+    // make data part of summation
+    if (dindex.empty()) {
+      dd << setprecision(1) << fixed << factor() << ";" << endl;
+    } else {
+      if (rank() == 0) {
+        dd << indent << tag << rank() << "data[0] +=" << endl;
+        dd << indent << "  " <<  setprecision(1) << fixed << factor();
+      } else {
+        dd << indent << tag << rank() << "data[";
+        for (auto riter = rindex.rbegin(); riter != rindex.rend(); ++riter) {
+          int inum = (*riter)->num();
+          for (auto& d : delta_)
+            if ((*riter)->label() != "ci" && d.first->num() == inum) inum = d.second->num();
+          const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
+          dd << itag << (*riter)->label() << inum << (riter != --rindex.rend() ? tmp : "");
+        }
+        for (auto riter = ++rindex.begin(); riter != rindex.end(); ++riter)
+          dd << ")";
+        dd << "] +=" << endl;
+        dd << indent << "  " << setprecision(1) << fixed << factor();
+      }
+    }
+
+    // make odata part of summation for target
+    dd << make_odata_sources(itag, indent, index);
+
+    // close loops
+    int csize = close.size();
+    int ig = 0;
+    for (auto iter = close.rbegin(); iter != close.rend(); ++iter, ++ig) {
+      dd << *iter << endl;
+      if (ig==csize-2)
+        dd << make_out_block("      ", outputlabel, olabel, rindex);
+    }
+
+  // if delta_ is empty call sort_indices
+  } else {
+    // make map of in_tensors
+    map<string, string> inlab;
+    map_in_tensors(in_tensors, inlab);
+
+    // rank can be zero in derivative case
+    {
+      stringstream zz;
+      zz << "rdm" << rank();
+      string rlab = zz.str();
+      dd << make_get_out_block(indent, outputlabel, olabel, rindex);
+    }
+
+    // do sort_indices here
+    vector<int> done;
+    dd << indent << "sort_indices<";
+    for (auto i = index.rbegin(); i != index.rend(); ++i) {
+      int cnt = 0;
+      for (auto j = dindex.rbegin(); j != dindex.rend(); ++j, ++cnt) {
+        if ((*i)->identical(*j)) break;
+      }
+      if (cnt == index.size()) throw logic_error("should not happen in sort RDMI0::generate");
+      done.push_back(cnt);
+    }
+    // then fill out others
+    for (int i = 0; i != index.size(); ++i) {
+      if (find(done.begin(), done.end(), i) == done.end())
+        done.push_back(i);
+    }
+    // write out
+    for (auto& i : done)
+      dd << i << ",";
+
+    // add factor information
+    dd << "1,1," << prefac__(fac_);
+
+    // add source data dimensions
+    dd << ">(i0data_sorted, " << tag << rank() << "data, " ;
+    for (auto iter = index.rbegin(); iter != index.rend(); ++iter) {
+      if (iter != index.rbegin()) dd << ", ";
+        dd << (*iter)->str_gen() << ".size()";
+    }
+    dd << ");" << endl;
+    dd << make_out_block("    ", outputlabel, olabel, rindex);
+  }
+
+  dd << lindent << "}" << endl;
+
+  return dd.str();
+}
+
+
+string RDMI0::generate_merged_sources(string indent, const string tag, const list<shared_ptr<const Index>>& index, const list<shared_ptr<const Index>>& merged, const string mlab, vector<string> in_tensors, const bool use_blas) {
+  stringstream dd;
+  //indent += "  ";
+  const string itag = "i";
+  const string lindent = indent;
+  const string outputlabel = "o" + to_string(rank());
+  const string olabel = "out(" + to_string(rank()) + ")";
+  // now do the sort
+  vector<string> close;
+
+#if 1
+  if (rank() == 0) dd << indent << "// rdm0 merged ci derivative case" << endl;
+#endif
+
+  list<shared_ptr<const Index>> dindex = index;
+
+  list<shared_ptr<const Index>> delta_index;
+  // first delta loops for blocks
+  if (!delta_.empty()) {
+    dd << indent << "if (";
+    for (auto d = delta_.begin(); d != delta_.end(); ++d) {
+      delta_index.push_back(d->first);
+      delta_index.push_back(d->second);
+      dd << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? " && " : "");
+    }
+    dd << ") {" << endl;
+    close.push_back(indent + "}");
+  } else {
+    dd << indent << "{" << endl;
+  }
+
+  indent += "  ";
+  stringstream zz;
+  zz << "rdm" << rank();
+  string rlab = zz.str();
+
+  // get rdm indices
+  list<shared_ptr<const Index>> rindex;
+  for (auto& i : index_) {
+    bool found = false;
+    for (auto& j: delta_index) {
+      if ((i)->identical(j)) found = true;
+    }
+    if (!found) rindex.push_back(i);
+  }
+  for (auto& i : index) if (i->label() == "ci") rindex.push_back(i);
+
+  // make map of in_tensors
+  map<string, string> inlab;
+  map_in_tensors(in_tensors, inlab);
+
+  // total index list
+  list<shared_ptr<const Index>>  tindex;
+  for (auto& i : merged) tindex.push_back(i);
+  for (auto& i : index)  tindex.push_back(i);
+
+  // if this is 4RDM derivative
+  if (rank() == 4) {
+    assert(delta_.empty());
+    // remove merge index from rindex, dindex
+    list<list<shared_ptr<const Index>>::iterator> rm, rm2;
+    for (auto& i : merged) {
+      for (auto r = rindex.begin(); r != rindex.end(); ++r)
+        if (i->num() == (*r)->num())
+          rm.push_back(r);
+      for (auto d = dindex.begin(); d != dindex.end(); ++d)
+        if (i->num() == (*d)->num())
+          rm.push_back(d);
+    }
+    for (auto i = rm.rbegin(); i != rm.rend(); ++i)
+      rindex.erase(*i);
+    for (auto i = rm2.rbegin(); i != rm2.rend(); ++i)
+      dindex.erase(*i);
+
+    // to simplify we do not use blas here
+    dd << make_get_out_block(indent, outputlabel, olabel, rindex);
+    // loops for index and merged
+    dd << make_merged_loops(indent, itag, close, dindex, true);
+    // add the data.
+    dd << multiply_merge_sources(itag, indent, list<shared_ptr<const Index>>(), rindex);
+    // make odata part of summation for target
+    dd << make_odata_sources(itag, indent, index);
+  } else if (!use_blas) {
+    // to simplify we do not use blas here
+    dd << make_get_out_block(indent, outputlabel, olabel, rindex);
+    // loops for index and merged
+    dd << make_merged_loops(indent, itag, close, dindex);
+    // mulitiply data and merge on the fly
+    dd << multiply_merge_sources(itag, indent, merged, rindex);
+    // make odata part of summation for target
+    dd << make_odata_sources(itag, indent, index);
+  } else {
+    throw logic_error("RDMI0::multiply merge, this code needs to be checked for rdm ci derivatives");
+  }
+  // close loops
+  int csize = close.size();
+  int ig = 0;
+  for (auto iter = close.rbegin(); iter != close.rend(); ++iter, ++ig) {
+    dd << *iter << endl;
+    if (ig==(delta_.empty()? csize-1 : csize-2))
+      dd << make_out_block("    ", outputlabel, olabel, rindex);
+  }
+
+  if (delta_.empty()) dd << lindent << "}" << endl << endl;
+
+  return dd.str();
+}
+
+
+
 string RDMI0::generate_not_merged(string indent, const string tag, const list<shared_ptr<const Index>>& index, vector<string> in_tensors) {
-  stringstream tt;
-  tt << indent << "{" << endl;
+  stringstream dd;
+  dd << indent << "{" << endl;
   const string lindent = indent;
 
   indent += "  ";
@@ -180,11 +447,11 @@ string RDMI0::generate_not_merged(string indent, const string tag, const list<sh
   if (!delta_.empty()) {
 #define debug_rdm_tasks
 #ifdef debug_rdm_tasks
-    if (rank() == 0) tt << indent <<  "// rdm0 non-merged ci derivative case" << endl;
+    if (rank() == 0) dd << indent <<  "// rdm0 non-merged ci derivative case" << endl;
 #endif
 
     // first delta if statement
-    tt << make_delta_if(indent, close);
+    dd << make_delta_if(indent, close);
 
     // rdm0 contributes for derivative so can have rank 0
     if (!dindex.empty()) {
@@ -196,46 +463,46 @@ string RDMI0::generate_not_merged(string indent, const string tag, const list<sh
       map<string, string> inlab;
       map_in_tensors(in_tensors, inlab);
       // only use ci index for rdm0
-      tt << make_get_block(indent, "i0", inlab[rlab], (rank() == 0 ? ci_index : rindex));
+      dd << make_get_block(indent, "i0", inlab[rlab], (rank() == 0 ? ci_index : rindex));
     }
 
     // loops over delta indices
-    tt << make_sort_loops(itag, indent, index, close);
+    dd << make_sort_loops(itag, indent, index, close);
 
     // make odata part of summation for target
-    tt << make_odata(itag, indent, index);
+    dd << make_odata(itag, indent, index);
 
     // make data part of summation
     if (dindex.empty()) {
-      tt << "  += " << setprecision(1) << fixed << factor() << ";" << endl;
+      dd << "  += " << setprecision(1) << fixed << factor() << ";" << endl;
     } else {
       if (rank() == 0) {
-        tt << "  += (" << setprecision(1) << fixed << factor() << ") * i0data[";
+        dd << "  += (" << setprecision(1) << fixed << factor() << ") * i0data[";
         for (auto riter = ci_index.rbegin(); riter != ci_index.rend(); ++riter) {
           const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
-          tt << itag << (*riter)->str_gen() << (riter != --ci_index.rend() ? tmp : "");
+          dd << itag << (*riter)->str_gen() << (riter != --ci_index.rend() ? tmp : "");
         }
         for (auto riter = ++ci_index.begin(); riter != ci_index.end(); ++riter)
-          tt << ")";
-        tt << "];" << endl;
+          dd << ")";
+        dd << "];" << endl;
       } else {
-        tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * i0data[";
+        dd << indent << "  += (" << setprecision(1) << fixed << factor() << ") * i0data[";
         for (auto riter = rindex.rbegin(); riter != rindex.rend(); ++riter) {
           int inum = (*riter)->num();
           for (auto& d : delta_)
             if ((*riter)->label() != "ci" && d.first->num() == inum) inum = d.second->num();
           const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
-          tt << itag << (*riter)->label() << inum << (riter != --rindex.rend() ? tmp : "");
+          dd << itag << (*riter)->label() << inum << (riter != --rindex.rend() ? tmp : "");
         }
         for (auto riter = ++rindex.begin(); riter != rindex.end(); ++riter)
-          tt << ")";
-        tt << "];" << endl;
+          dd << ")";
+        dd << "];" << endl;
       }
     }
 
     // close loops
     for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-      tt << *iter << endl;
+      dd << *iter << endl;
 
   // if delta_ is empty call sort_indices
   } else {
@@ -250,12 +517,12 @@ string RDMI0::generate_not_merged(string indent, const string tag, const list<sh
       stringstream zz;
       zz << "rdm" << rank();
       string rlab = zz.str();
-      tt << make_get_block(indent, "i0", inlab[rlab], index);
+      dd << make_get_block(indent, "i0", inlab[rlab], index);
     }
 
     // do sort_indices here
     vector<int> done;
-    tt << indent << "sort_indices<";
+    dd << indent << "sort_indices<";
     for (auto i = index.rbegin(); i != index.rend(); ++i) {
       int cnt = 0;
       for (auto j = dindex.rbegin(); j != dindex.rend(); ++j, ++cnt) {
@@ -271,28 +538,28 @@ string RDMI0::generate_not_merged(string indent, const string tag, const list<sh
     }
     // write out
     for (auto& i : done)
-      tt << i << ",";
+      dd << i << ",";
 
     // add factor information
-    tt << "1,1," << prefac__(fac_);
+    dd << "1,1," << prefac__(fac_);
 
     // add source data dimensions
-    tt << ">(i0data, " << tag << "data, " ;
+    dd << ">(i0data, " << tag << "data, " ;
     for (auto iter = index.rbegin(); iter != index.rend(); ++iter) {
-      if (iter != index.rbegin()) tt << ", ";
-        tt << (*iter)->str_gen() << ".size()";
+      if (iter != index.rbegin()) dd << ", ";
+        dd << (*iter)->str_gen() << ".size()";
     }
-    tt << ");" << endl;
+    dd << ");" << endl;
   }
 
-  tt << lindent << "}" << endl;
+  dd << lindent << "}" << endl;
 
-  return tt.str();
+  return dd.str();
 }
 
 
 string RDMI0::generate_merged(string indent, const string tag, const list<shared_ptr<const Index>>& index, const list<shared_ptr<const Index>>& merged, const string mlab, vector<string> in_tensors, const bool use_blas) {
-  stringstream tt;
+  stringstream dd;
   //indent += "  ";
   const string itag = "i";
   const string lindent = indent;
@@ -300,7 +567,7 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
   vector<string> close;
 
 #if 1
-  if (rank() == 0) tt << indent << "// rdm0 merged ci derivative case" << endl;
+  if (rank() == 0) dd << indent << "// rdm0 merged ci derivative case" << endl;
 #endif
 
   list<shared_ptr<const Index>> dindex = index;
@@ -308,16 +575,16 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
   list<shared_ptr<const Index>> delta_index ;
   // first delta loops for blocks
   if (!delta_.empty()) {
-    tt << indent << "if (";
+    dd << indent << "if (";
     for (auto d = delta_.begin(); d != delta_.end(); ++d) {
       delta_index.push_back(d->first);
       delta_index.push_back(d->second);
-      tt << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? " && " : "");
+      dd << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? " && " : "");
     }
-    tt << ") {" << endl;
+    dd << ") {" << endl;
     close.push_back(indent + "}");
   } else {
-    tt << indent << "{" << endl;
+    dd << indent << "{" << endl;
   }
 
   indent += "  ";
@@ -364,30 +631,30 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
       dindex.erase(*i);
 
     // to simplify we do not use blas here
-    tt << make_get_block(indent, "i0", inlab[rlab], rindex);
+    dd << make_get_block(indent, "i0", inlab[rlab], rindex);
     // loops for index and merged
-    tt << make_merged_loops(indent, itag, close, dindex, true);
+    dd << make_merged_loops(indent, itag, close, dindex, true);
     // make odata part of summation for target
-    tt << make_odata(itag, indent, index);
+    dd << make_odata(itag, indent, index);
     // add the data.
-    tt << multiply_merge(itag, indent, list<shared_ptr<const Index>>(), rindex);
+    dd << multiply_merge(itag, indent, list<shared_ptr<const Index>>(), rindex);
   } else if (!use_blas) {
-    tt << make_get_block(indent, "i0", inlab[rlab], rindex);
+    dd << make_get_block(indent, "i0", inlab[rlab], rindex);
     // loops for index and merged
-    tt << make_merged_loops(indent, itag, close, dindex);
+    dd << make_merged_loops(indent, itag, close, dindex);
     // make odata part of summation for target
-    tt << make_odata(itag, indent, index);
+    dd << make_odata(itag, indent, index);
     // mulitiply data and merge on the fly
-    tt << multiply_merge(itag, indent, merged, rindex);
+    dd << multiply_merge(itag, indent, merged, rindex);
   } else {
     throw logic_error("RDMI0::multiply merge, this code needs to be checked for rdm ci derivatives");
     if (rank() != 0) {
-      tt << make_get_block(indent, "i0", inlab[rlab], tindex);  // todo check if should be using index here
-      tt << make_sort_indices(indent, "i0", merged, dindex);
-      tt << endl;
+      dd << make_get_block(indent, "i0", inlab[rlab], tindex);  // todo check if should be using index here
+      dd << make_sort_indices(indent, "i0", merged, dindex);
+      dd << endl;
 
-      tt << make_blas_multiply(indent, merged, tindex); // todo check if should be using index here
-      tt << endl;
+      dd << make_blas_multiply(indent, merged, tindex); // todo check if should be using index here
+      dd << endl;
 
       if (!index.empty()) {
         // determine mapping
@@ -450,23 +717,23 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
             done.push_back(cnt);
           }
         }
-        tt << indent << "sort_indices<";
+        dd << indent << "sort_indices<";
         for (auto& i : done) {
-          tt << i << ",";
+          dd << i << ",";
         }
-        tt << "1,1,1,1>(odata_sorted, odata";
-        for (auto i = source.begin(); i != source.end(); ++i) tt << ", " << (*i)->str_gen() << ".size()";
-        tt << ");" << endl;
-        tt << endl;
+        dd << "1,1,1,1>(odata_sorted, odata";
+        for (auto i = source.begin(); i != source.end(); ++i) dd << ", " << (*i)->str_gen() << ".size()";
+        dd << ");" << endl;
+        dd << endl;
       }
 
     } else {
       // for rdm0 case
       // add dscal
-      tt << indent << SCAL << "(";
+      dd << indent << SCAL << "(";
       for (auto i = merged.rbegin(); i != merged.rend(); ++i)
-        tt << (i != merged.rbegin() ? "*" : "") << (*i)->str_gen() << ".size()";
-      tt << ", " << setprecision(1) << fixed << factor() << ", " << "fdata_sorted.get(), 1);" << endl;
+        dd << (i != merged.rbegin() ? "*" : "") << (*i)->str_gen() << ".size()";
+      dd << ", " << setprecision(1) << fixed << factor() << ", " << "fdata_sorted.get(), 1);" << endl;
 
       // sort back to target layout (odata layout)
       list<shared_ptr<const Index>> source;
@@ -523,27 +790,27 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
           done.push_back(i);
       }
       // write out
-      tt << indent << "sort_indices<";
+      dd << indent << "sort_indices<";
       for (auto& i : done)
-        tt << i << ",";
+        dd << i << ",";
       // add factor information
-      tt << "1,1,1,1";
+      dd << "1,1,1,1";
       // add source data dimensions
-      tt << ">(fdata_sorted, odata, " ;
+      dd << ">(fdata_sorted, odata, " ;
       for (auto iter = source.begin(); iter != source.end(); ++iter) {
-        if (iter != source.begin()) tt << ", ";
-          tt << (*iter)->str_gen() << ".size()";
+        if (iter != source.begin()) dd << ", ";
+          dd << (*iter)->str_gen() << ".size()";
       }
-      tt << ");" << endl;
+      dd << ");" << endl;
     }
   }
   // close loops
   for (auto iter = close.rbegin(); iter != close.rend(); ++iter)
-    tt << *iter << endl;
+    dd << *iter << endl;
 
-  if (delta_.empty()) tt << lindent << "}" << endl;
+  if (delta_.empty()) dd << lindent << "}" << endl;
 
-  return tt.str();
+  return dd.str();
 }
 
 
@@ -569,6 +836,38 @@ string RDMI0::make_get_block(string indent, string tag, string lbl, const list<s
   tt << ");" << endl;
   return tt.str();
 }
+
+
+string RDMI0::make_get_out_block(string indent, string tag, string lbl, const list<shared_ptr<const Index>>& index) {
+  stringstream tt;
+  tt << indent << "std::unique_ptr<" << DataType << "[]> " << tag << "data(new double[" << lbl << "->get_size(";
+  for (auto i = index.rbegin(); i != index.rend(); ++i) {
+    if (i != index.rbegin()) tt << ", ";
+    tt << (*i)->str_gen();
+  }
+  tt << ")]);" << endl;
+  tt << indent << "std::fill_n(" << tag << "data.get(), " << lbl << "->get_size(";
+  for (auto i = index.rbegin(); i != index.rend(); ++i) {
+    if (i != index.rbegin()) tt << ", ";
+    tt << (*i)->str_gen();
+  }
+  tt << "), 0.0);" << endl;
+  return tt.str();
+}
+
+
+
+string RDMI0::make_out_block(string indent, string tag, string lbl, const list<shared_ptr<const Index>>& index) {
+  stringstream tt;
+  tt << indent << lbl << "->add_block(" << tag << "data";
+  for (auto i = index.rbegin(); i != index.rend(); ++i) {
+    tt << ", ";
+    tt << (*i)->str_gen();
+  }
+  tt << ");" << endl;
+  return tt.str();
+}
+
 
 
 string RDMI0::make_blas_multiply(string dindent, const list<shared_ptr<const Index>>& loop, const list<shared_ptr<const Index>>& index) {
@@ -692,6 +991,39 @@ string RDMI0::make_merged_loops(string& indent, const string itag, vector<string
 }
 
 
+string RDMI0::multiply_merge_sources(const string itag, string& indent, const list<shared_ptr<const Index>>& merged, const list<shared_ptr<const Index>>& index) {
+  stringstream tt;
+  list<shared_ptr<const Index>>  ci_index;
+  for (auto& i : index) if (i->label() == "ci") ci_index.push_back(i);
+
+  if (rank() == 0) {
+    tt << indent << "o" << rank() << "data[0]";
+    tt << " += " << endl << indent << "  " << setprecision(1) << fixed << factor();
+    tt << fdata_mult(itag, merged, ci_index, /*end=*/false);
+  } else {
+
+    // make data part of summation
+    tt << indent << "o" << rank() << "data[";
+    for (auto riter = index.rbegin(); riter != index.rend(); ++riter) {
+      int inum = (*riter)->num();
+      for (auto& d : delta_)
+        if ((*riter)->label() != "ci" && d.first->num() == inum) inum = d.second->num();
+      const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
+      tt << itag <<  (*riter)->label() << inum << (riter != --index.rend() ? tmp : "");
+    }
+    for (auto riter = ++index.begin(); riter != index.end(); ++riter)
+      tt << ")";
+    tt << "] += " << endl << indent << "  ";
+    tt << setprecision(1) << fixed << factor();
+    // multiply merge
+    if (!merged.empty())
+      tt << fdata_mult(itag, merged, ci_index, /*end=*/false);
+  }
+  return tt.str();
+}
+
+
+
 string RDMI0::multiply_merge(const string itag, string& indent, const list<shared_ptr<const Index>>& merged, const list<shared_ptr<const Index>>& index) {
   stringstream tt;
   list<shared_ptr<const Index>>  ci_index;
@@ -724,7 +1056,7 @@ string RDMI0::multiply_merge(const string itag, string& indent, const list<share
 }
 
 
-string RDMI0::fdata_mult(const string itag, const list<shared_ptr<const Index>>& merged, const list<shared_ptr<const Index>>& ci_index) {
+string RDMI0::fdata_mult(const string itag, const list<shared_ptr<const Index>>& merged, const list<shared_ptr<const Index>>& ci_index, const bool end) {
   stringstream tt;
 
   tt << " * " << "fdata" << "[";
@@ -739,7 +1071,8 @@ string RDMI0::fdata_mult(const string itag, const list<shared_ptr<const Index>>&
   for (auto mi = ++merged.begin(); mi != merged.end()  ; ++mi)
     tt << ")";
   tt << "]";
-  if (rank() != 0) {
+  if (rank() != 0 || !end) {
+    if (end)
     tt << ";" << endl;
   } else {
     tt << " * i0data[";
@@ -750,6 +1083,32 @@ string RDMI0::fdata_mult(const string itag, const list<shared_ptr<const Index>>&
     tt << "];" << endl;
   }
 
+  return tt.str();
+}
+
+
+string RDMI0::make_odata_sources(const string itag, string& indent, const list<shared_ptr<const Index>>& index) {
+  stringstream tt;
+
+  // a little tweak is used here
+
+  tt  << " * i0data_sorted[";
+  if (index.empty()) {
+    tt << "0" ;
+  } else {
+    for (auto ri = index.rbegin(); ri != index.rend(); ++ri) {
+      int inum = (*ri)->num();
+      for (auto& d : delta_)
+        if ((*ri)->label() != "ci" && d.first->num() == inum) inum = d.second->num();
+      const string tmp = "+" + (*ri)->str_gen() + ".size()*(";
+      tt << itag <<  (*ri)->label() << inum << (ri != --index.rend() ? tmp : "");
+    }
+  }
+  for (auto ri = ++index.begin(); ri != index.end(); ++ri)
+    tt << ")";
+  // factor will now be added on same line in rdm0 case
+  tt << "];";
+  tt << endl;
   return tt.str();
 }
 

@@ -137,16 +137,31 @@ bool Active::operator==(const Active& o) const {
 
 
 string Active::generate(const string indent, const string tag, const list<shared_ptr<const Index>> index, const list<shared_ptr<const Index>> merged, const string mlab, const bool use_blas) const {
-  stringstream tt;
+  stringstream dd;
 
   vector<string> in_tensors = required_rdm();
   if (!merged.empty()) {
     in_tensors.push_back(mlab);
   }
 
-  for (auto& i : rdm_)
-    tt << i->generate(indent, tag, index, merged, mlab, in_tensors, use_blas);
-  return tt.str();
+  for (auto& i : rdm_) {
+    dd << i->generate(indent, tag, index, merged, mlab, in_tensors, use_blas);
+  }
+  return dd.str();
+}
+
+string Active::generate_sources(const string indent, const string tag, const list<shared_ptr<const Index>> index, const list<shared_ptr<const Index>> merged, const string mlab, const bool use_blas) const {
+  stringstream dd;
+
+  vector<string> in_tensors = required_rdm();
+  if (!merged.empty()) {
+    in_tensors.push_back(mlab);
+  }
+
+  for (auto& i : rdm_) {
+    dd << i->generate_sources(indent, tag, index, merged, mlab, in_tensors, use_blas);
+  }
+  return dd.str();
 }
 
 

@@ -295,4 +295,3 @@ OutStream Energy::generate_bc(const shared_ptr<BinaryContraction> i) const {
 
   return out;
 }
-

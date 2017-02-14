@@ -251,8 +251,27 @@ class Tree {
     /// Generate code by stepping through op and bc.
     std::tuple<OutStream, int, int, std::vector<std::shared_ptr<Tensor>>>
         generate_steps(const std::string indent, int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
+    /// Generate task header for only CI in Residual.
+    OutStream generate_task_ci(const int ic, const std::vector<std::shared_ptr<Tensor>>, const std::list<std::shared_ptr<Tensor>> g, const int i0 = 0, const bool diagonal = false) const;
+    OutStream generate_task_gamma(const int ic, const std::vector<std::shared_ptr<Tensor>>, const std::list<std::shared_ptr<Tensor>> g, const int i0 = 0, const bool diagonal = false, const bool gamma = true, const bool merged = false) const;
     /// Generate task in dependency file with ic as task number. Caution also have a virtual generate_task.
     OutStream generate_task(const int ic, const std::vector<std::shared_ptr<Tensor>>, const std::list<std::shared_ptr<Tensor>> g, const int i0 = 0, const bool diagonal = false) const;
+
+    /// These functions are separated out for readability
+    std::tuple<OutStream, int, int, std::vector<std::shared_ptr<Tensor>>>
+        generate_task_list_zero(int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
+
+    std::tuple<OutStream, int, int, std::vector<std::shared_ptr<Tensor>>>
+        binarycontraction_generate_zero_ci(std::shared_ptr<BinaryContraction> j, int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
+
+    std::tuple<OutStream, int, int, std::vector<std::shared_ptr<Tensor>>>
+        binarycontraction_generate_zero(std::shared_ptr<BinaryContraction> j, int tcnt, int t0, const std::list<std::shared_ptr<Tensor>> gamma, std::vector<std::shared_ptr<Tensor>> itensors) const;
+
+    std::tuple<OutStream, int, std::vector<std::shared_ptr<Tensor>>>
+        binarycontraction_generate_gamma(std::shared_ptr<BinaryContraction> i, int tcnt, const std::list<std::shared_ptr<Tensor>> gamma, int t0, std::vector<std::shared_ptr<Tensor>> itensors) const;
+
+    std::tuple<OutStream, int, std::vector<std::shared_ptr<Tensor>>>
+        binarycontraction_generate(std::shared_ptr<BinaryContraction> i, int tcnt, const std::list<std::shared_ptr<Tensor>> gamma, int t0, std::vector<std::shared_ptr<Tensor>> itensors) const;
 
     /// Generate task for operator task (ie not a binary contraction task). Dagger arguement refers to front subtree used at top level.
     OutStream generate_compute_operators(const std::shared_ptr<Tensor>, const std::vector<std::shared_ptr<Tensor>>, const bool dagger = false) const;
@@ -260,17 +279,21 @@ class Tree {
     // Tree specific code generation moved to derived classes.
     /// Needed for zero level target tensors. Generates a Task '0' ie task to initialize top (zero depth) target tensor also sets up dependency queue.
     virtual OutStream create_target(const int i) const = 0;
+    virtual OutStream create_target_ci(const int i) const = 0;
     /// Create new tensor based on derived tree.
     virtual std::shared_ptr<Tensor> create_tensor(std::list<std::shared_ptr<const Index>>) const = 0;
 
     /// Generate a task. Here ip is the tag of parent, ic is the tag of this.
     virtual OutStream generate_task(const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0, bool der = false, bool diagonal = false) const = 0;
+    virtual OutStream generate_task_gamma(const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0, bool der = false, bool diagonal = false) const = 0;
     /// Generate task header.
     virtual OutStream generate_compute_header(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool = false) const = 0;
     /// Generate task footer.
     virtual OutStream generate_compute_footer(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool dot) const = 0;
     /// Generate Binary contraction code.
     virtual OutStream generate_bc(const std::shared_ptr<BinaryContraction>) const = 0;
+    /// With sources
+    virtual OutStream generate_bc_sources(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool, const bool, const std::shared_ptr<BinaryContraction>) const = 0;
 
 };
 
