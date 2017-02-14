@@ -86,6 +86,8 @@ class RDM00 : public RDM {
 
     /// Generate Gamma summation task, for both non-merged and merged case (RDM * f1 tensor multiplication).
     std::string generate(std::string indent, const std::string itag, const std::list<std::shared_ptr<const Index>>& index, const std::list<std::shared_ptr<const Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas) override;
+    /// Generate Gamma summation task, for both non-merged and merged case (RDM * f1 tensor multiplication).
+    std::string generate_sources(std::string indent, const std::string itag, const std::list<std::shared_ptr<const Index>>& index, const std::list<std::shared_ptr<const Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas) override;
     /// Should not be needed for non-derivative rdms.
     std::list<std::shared_ptr<const Index>> conjugate() override { return std::list<std::shared_ptr<const Index>>(); }
 

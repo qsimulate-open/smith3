@@ -23,6 +23,7 @@
 //
 
 
+#include <iomanip>
 #include "constants.h"
 #include "residual.h"
 
@@ -65,6 +66,101 @@ OutStream Residual::create_target(const int i) const {
   return out;
 }
 
+OutStream Residual::create_target_ci(const int i) const {
+  OutStream out;
+
+  out.tt << "class Task" << i << " : public Task {" << endl;
+  out.tt << "  protected:" << endl;
+  out.tt << "    std::shared_ptr<Tensor> den0ci_;" << endl;
+  out.tt << "    std::shared_ptr<Tensor> den1ci_;" << endl;
+  out.tt << "    std::shared_ptr<Tensor> den2ci_;" << endl;
+  out.tt << "    std::shared_ptr<Tensor> den3ci_;" << endl;
+  out.tt << "    std::shared_ptr<Tensor> den4ci_;" << endl;
+  out.tt << "    IndexRange closed_;" << endl;
+  out.tt << "    IndexRange active_;" << endl;
+  out.tt << "    IndexRange virt_;" << endl;
+  if (label_.find("deci") != string::npos)
+    out.tt << "    IndexRange ci_;" << endl;
+  out.tt << "    const bool reset_;" << endl;
+  out.tt << "" << endl;
+  out.tt << "    void compute_() {" << endl;
+  out.tt << "      if (reset_) {" << endl;
+  out.tt << "        den0ci_->zero();" << endl;
+  out.tt << "        den1ci_->zero();" << endl;
+  out.tt << "        den2ci_->zero();" << endl;
+  out.tt << "        den3ci_->zero();" << endl;
+  out.tt << "        den4ci_->zero();" << endl;
+  out.tt << "      }" << endl;
+  out.tt << "    }" << endl;
+  out.tt << "" << endl;
+  out.tt << "  public:" << endl;
+  out.tt << "    Task" << i << "(std::vector<std::shared_ptr<Tensor>> t, const bool reset);" << endl;
+
+  out.cc << "Task" << i << "::Task" << i << "(vector<shared_ptr<Tensor>> t, const bool reset) : reset_(reset) {" << endl;
+  out.cc << "  den0ci_ =  t[0];" << endl;
+  out.cc << "  den1ci_ =  t[1];" << endl;
+  out.cc << "  den2ci_ =  t[2];" << endl;
+  out.cc << "  den3ci_ =  t[3];" << endl;
+  out.cc << "  den4ci_ =  t[4];" << endl;
+  out.cc << "}" << endl << endl << endl;
+
+  out.tt << "    ~Task" << i << "() {}" << endl;
+  out.tt << "};" << endl << endl;
+
+  out.ee << "  auto " << label_ << "q = make_shared<Queue>();" << endl;
+  out.ee << "  auto tensor" << i << " = vector<shared_ptr<Tensor>>{den0ci, den1ci, den2ci, den3ci, den4ci};" << endl;
+  out.ee << "  auto task" << i << " = make_shared<Task" << i << ">(tensor" << i << ", reset);" << endl;
+  out.ee << "  " << label_ << "q->add_task(task" << i << ");" << endl << endl;
+
+  return out;
+}
+
+
+OutStream Residual::generate_task_gamma(const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der, bool diagonal) const {
+  stringstream tmp;
+
+  // when there is no gamma under this, we must skip for off-digonal
+  string indent = "";
+
+  if (diagonal) {
+    tmp << "  shared_ptr<Task" << ic << "> task" << ic << ";" << endl;
+    tmp << "  if (diagonal) {" << endl;
+    indent += "  ";
+  }
+  const bool is_gamma = op.front().find("Gamma") != string::npos;
+  tmp << indent << "  auto tensor" << ic << " = vector<shared_ptr<Tensor>>{" << merge__(op, label_) << "};" << endl;
+  tmp << indent << "  " << (diagonal ? "" : "auto ") << "task" << ic
+                << " = make_shared<Task" << ic << ">(tensor" << ic << (der || label_.find("deci") != string::npos ? ", cindex" : ", pindex")
+                << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
+
+  if (!is_gamma) {
+    if (parent_) {
+      assert(parent_->parent());
+//      tmp << indent << "  task" << ip << "->add_dep(task" << ic << ");" << endl;
+      tmp << indent << "  task" << ic << "->add_dep(task" << i0 << ");" << endl;
+    } else {
+      assert(depth() == 0);
+      tmp << indent << "  task" << ic << "->add_dep(task" << i0 << ");" << endl;
+    }
+    tmp << indent << "  " << label_ << "q->add_task(task" << ic << ");" << endl;
+  }
+  if (diagonal)
+    tmp << "  }" << endl;
+
+  if (!is_gamma)
+    tmp << endl;
+
+  OutStream out;
+  if (!is_gamma) {
+    out.ee << tmp.str();
+  } else {
+    out.gg << tmp.str();
+  }
+  return out;
+}
+
+
+
 
 OutStream Residual::generate_task(const int ip, const int ic, const vector<string> op, const string scalar, const int i0, bool der, bool diagonal) const {
   stringstream tmp;
@@ -77,12 +173,12 @@ OutStream Residual::generate_task(const int ip, const int ic, const vector<strin
     tmp << "  if (diagonal) {" << endl;
     indent += "  ";
   }
+  const bool is_gamma = op.front().find("Gamma") != string::npos;
   tmp << indent << "  auto tensor" << ic << " = vector<shared_ptr<Tensor>>{" << merge__(op, label_) << "};" << endl;
   tmp << indent << "  " << (diagonal ? "" : "auto ") << "task" << ic
                 << " = make_shared<Task" << ic << ">(tensor" << ic << (der || label_.find("deci") != string::npos ? ", cindex" : ", pindex")
                 << (scalar.empty() ? "" : ", this->e0_") << ");" << endl;
 
-  const bool is_gamma = op.front().find("Gamma") != string::npos;
   if (!is_gamma) {
     if (parent_) {
       assert(parent_->parent());
@@ -298,7 +394,7 @@ OutStream Residual::generate_bc(const shared_ptr<BinaryContraction> i) const {
     out.dd << i->next_target()->generate_get_block(dindent, "i1", inlabel);
     out.dd << i->next_target()->generate_sort_indices(dindent, "i1", inlabel, di) << endl;
 
-    // call dgemm
+    // call dgemm or ddot (if only vector - vector contraction is made)
     {
       pair<string, string> t0 = i->tensor()->generate_dim(di);
       pair<string, string> t1 = i->next_target()->generate_dim(di);
@@ -358,13 +454,149 @@ OutStream Residual::generate_bc(const shared_ptr<BinaryContraction> i) const {
 }
 
 
+OutStream Residual::generate_bc_sources(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors, const bool no_outside, const bool dot, const shared_ptr<BinaryContraction> i) const {
+  OutStream out;
+  const string bindent = "  ";
+  string dindent = bindent;
+
+  out << generate_header_sources(ic, ti, tensors, no_outside);
+
+  out.dd << target_->generate_get_block(dindent, "o", "out()", true, true, -1) << endl;
+
+//  list<shared_ptr<const Index>> ti = depth() != 0 ? i->target_indices() : i->tensor()->index();
+
+  // inner loop will show up here
+  // but only if outer loop is not empty
+  list<shared_ptr<const Index>> di = i->loop_indices();
+
+  // retrieving subtree_
+  out.dd << i->next_target()->generate_get_block(dindent, "i0", "in(0)") << endl;
+
+  {
+    pair<string, string> t0 = i->tensor()->generate_dim(di);
+    pair<string, string> t1 = i->next_target()->generate_dim(di);
+    string ss0 = t1.second== "" ? "1" : t1.second;
+    out.dd << dindent << "odata[0] += " << setprecision(1) << fixed << i->tensor()->factor() << " * i0data[0];" << endl;
+  }
+
+  // put buffer
+  {
+    string label = target_->label();
+    // new interface requires indices for put_block
+    out.dd << bindent << "out()->add_block(odata);" << endl;
+  }
+
+  out << generate_footer_sources(ic, ti, tensors, dot);
+
+  return out;
+}
+
+
 shared_ptr<Tensor> Residual::create_tensor(list<shared_ptr<const Index>> dm) const {
  return make_shared<Tensor>(1.0, "r", dm);
 }
 
 
 
+OutStream Residual::generate_header_sources(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors, const bool no_outside) const {
+  vector<string> labels;
+  for (auto i = ++tensors.begin(); i != tensors.end(); ++i)
+    labels.push_back((*i)->label());
+  const int ninptensors = count_distinct_tensors__(labels);
+
+  bool need_e0 = false;
+  for (auto& s : tensors)
+    if (!s->scalar().empty()) need_e0 = true;
+
+  const int arraysize = label_.find("deci") != string::npos ? 4 : 3;
+
+  const int nindex = ti.size();
+  OutStream out;
+  out.tt << "class Task" << ic << " : public Task {" << endl;
+  out.tt << "  protected:" << endl;
+  out.tt << "    std::shared_ptr<Tensor> out_;" << endl;
+  out.tt << "    std::array<std::shared_ptr<const Tensor>,1> in_;" << endl;
+  // if index is empty give dummy arg
+  out.tt << "    class Task_local : public SubTask<" << (ti.empty() ? 1 : nindex) << ",1> {" << endl;
+  out.tt << "      protected:" << endl;
+  out.tt << "        const std::array<std::shared_ptr<const IndexRange>," << arraysize << "> range_;" << endl << endl;
+
+  out.tt << "        const Index& b(const size_t& i) const { return this->block(i); }" << endl;
+  out.tt << "        std::shared_ptr<const Tensor> in(const size_t& i) const { return this->in_tensor(i); }" << endl;
+  out.tt << "        std::shared_ptr<Tensor> out() { return this->out_tensor(); }" << endl;
+  if (need_e0)
+    out.tt << "        const double e0_;" << endl;
+  out.tt << endl;
+
+  out.tt << "      public:" << endl;
+  // if index is empty use dummy index 1 to subtask
+  out.tt << "        Task_local(const std::array<std::shared_ptr<const Tensor>,1>& in, std::shared_ptr<Tensor>& out," << endl;
+  out.tt << "                   std::array<std::shared_ptr<const IndexRange>," << arraysize << ">& ran" << (need_e0 ? ", const double e" : "") << ")" << endl;
+  out.tt << "          : SubTask<1,1>(std::array<const Index, 1>(), in, out), range_(ran)" << (need_e0 ? ", e0_(e)" : "") << " { }" << endl;
+  out.tt << endl;
+  out.tt << "        void compute() override;" << endl;
+
+  out.dd << "void Task" << ic << "::Task_local::compute() {" << endl;
+
+  if (!no_outside) {
+    list<shared_ptr<const Index>> ti_copy = ti;
+    if (depth() == 0) {
+      if (ti.size() > 1)
+        for (auto i = ti_copy.begin(), j = ++ti_copy.begin(); i != ti_copy.end(); ++i, ++i, ++j, ++j)
+          swap(*i, *j);
+    }
+
+    int cnt = 0;
+  }
+
+  return out;
+}
 
 
+OutStream Residual::generate_footer_sources(const int ic, const list<shared_ptr<const Index>> ti, const vector<shared_ptr<Tensor>> tensors, const bool dot) const {
+  vector<string> labels;
+  for (auto i = ++tensors.begin(); i != tensors.end(); ++i)
+    labels.push_back((*i)->label());
+  const int ninptensors = count_distinct_tensors__(labels);
+  assert(ninptensors > 0);
+
+  bool need_e0 = false;
+  for (auto& s : tensors)
+    if (!s->scalar().empty()) need_e0 = true;
+
+  const int arraysize = label_.find("deci") != string::npos ? 4 : 3;
+
+  OutStream out;
+  out.dd << "}" << endl << endl << endl;
+
+  out.tt << "    };" << endl;
+  out.tt << "" << endl;
+  out.tt << "    std::vector<std::shared_ptr<Task_local>> subtasks_;" << endl;
+  out.tt << "" << endl;
+
+  out.tt << "    void compute_() override {" << endl;
+  out.tt << "      if (!out_->allocated())" << endl;
+  out.tt << "        out_->allocate();" << endl;
+  out.tt << "      for (auto& i : in_)" << endl;
+  out.tt << "        i->init();" << endl;
+  out.tt << "      for (auto& i : subtasks_) i->compute();" << endl;
+  out.tt << "    }" << endl << endl;
+
+  out.tt << "  public:" << endl;
+  out.tt << "    Task" << ic << "(std::vector<std::shared_ptr<Tensor>> t, std::array<std::shared_ptr<const IndexRange>," << arraysize << "> range" << (need_e0 ? ", const double e" : "") << ");" << endl;
+
+  out.cc << "Task" << ic << "::Task" << ic << "(vector<shared_ptr<Tensor>> t, array<shared_ptr<const IndexRange>," << arraysize << "> range" << (need_e0 ? ", const double e" : "") << ") {" << endl;
+  out.cc << "  array<shared_ptr<const Tensor>,1> in = {{t[1]}};" << endl;
+
+  out.cc << "  out_ = t[0];" << endl;
+  out.cc << "  in_ = in;" << endl << endl;
+
+  out.cc << "  subtasks_.push_back(make_shared<Task_local>(in, t[0], range" << (need_e0 ? ", e" : "") << "));" << endl;
+  out.cc << "}" << endl << endl << endl;
+
+  out.tt << "    ~Task" << ic << "() {}" << endl;
+  out.tt << "};" << endl << endl;
+  return out;
+}
 
 

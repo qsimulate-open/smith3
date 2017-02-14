@@ -135,6 +135,12 @@ string RDM00::generate(string indent, const string tag, const list<shared_ptr<co
 }
 
 
+string RDM00::generate_sources(string indent, const string tag, const list<shared_ptr<const Index>>& index, const list<shared_ptr<const Index>>& merged,
+                       const string mlab, vector<string> in_tensors, const bool use_blas) {
+  return "";
+}
+
+
 string RDM00::generate_not_merged(string indent, const string tag, const list<shared_ptr<const Index>>& index, vector<string> in_tensors) {
   stringstream tt;
   tt << indent << "{" << endl;

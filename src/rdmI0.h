@@ -36,20 +36,32 @@ class RDMI0 : public RDM {
 
     /// Generate get block - source data to be added to target (move block).
     std::string make_get_block(std::string indent, std::string tag, std::string lbl, const std::list<std::shared_ptr<const Index>>& index);
+    /// Generate get block - source data to be added to target (move block).
+    std::string make_get_out_block(std::string indent, std::string tag, std::string lbl, const std::list<std::shared_ptr<const Index>>& index);
+    /// Generate get block - source data to be added to target (move block).
+    std::string make_out_block(std::string indent, std::string tag, std::string lbl, const std::list<std::shared_ptr<const Index>>& index);
     /// Generate sort_indices which makes array. This version has no addition (or factor multiplication-0111).
     std::string make_sort_indices(std::string indent, std::string tag, const std::list<std::shared_ptr<const Index>>& loop, const std::list<std::shared_ptr<const Index>>& index);
+    /// Generates RDM and merged (fock) tensor multipication.
+    std::string multiply_merge_sources(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<const Index>>& merged, const std::list<std::shared_ptr<const Index>>& index);
     /// Generates RDM and merged (fock) tensor multipication.
     std::string multiply_merge(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<const Index>>& merged, const std::list<std::shared_ptr<const Index>>& index);
     /// If delta case, also makes index loops then checks to see if merged-or-delta indices are in loops..
     std::string make_merged_loops(std::string& indent, const std::string tag, std::vector<std::string>& close, const std::list<std::shared_ptr<const Index>>& index, const bool overwrite = false);
     /// Adds merged (fock) tensor with indices, used by muliply_merge member, as well as ci index tensor multiplication in case of rdm0.
-    std::string fdata_mult(const std::string itag, const std::list<std::shared_ptr<const Index>>& merged, const std::list<std::shared_ptr<const Index>>& ci_index);
+    std::string fdata_mult(const std::string itag, const std::list<std::shared_ptr<const Index>>& merged, const std::list<std::shared_ptr<const Index>>& ci_index, const bool end = true);
 
     // virtual
     /// Generate entire task code for Gamma RDM summation.
     std::string generate_not_merged(std::string indent, const std::string tlab, const std::list<std::shared_ptr<const Index>>& loop, std::vector<std::string> in_tensors) override;
     /// Generates entire task code for Gamma RDM summation with merged object (additional tensor, here fock tensor) multiplication.
     std::string generate_merged(std::string indent, const std::string itag, const std::list<std::shared_ptr<const Index>>& index, const std::list<std::shared_ptr<const Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas) override;
+
+    // for gamma - merged
+    /// Generate entire task code for Gamma RDM summation.
+    std::string generate_not_merged_sources(std::string indent, const std::string tlab, const std::list<std::shared_ptr<const Index>>& loop, std::vector<std::string> in_tensors);
+    /// Generates entire task code for Gamma RDM summation with merged object (additional tensor, here fock tensor) multiplication.
+    std::string generate_merged_sources(std::string indent, const std::string itag, const std::list<std::shared_ptr<const Index>>& index, const std::list<std::shared_ptr<const Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas);
 
     /// Makes if statement in delta cases ie index equivalency check line.
     std::string make_delta_if(std::string& indent, std::vector<std::string>& close) override;
@@ -61,6 +73,7 @@ class RDMI0 : public RDM {
 
     // for task summation line
     /// Generates odata (Gamma) part of for summation ie LHS in equations gamma += rdm or gamma += rdm * f1
+    std::string make_odata_sources(const std::string itag, std::string& indent, const std::list<std::shared_ptr<const Index>>& index);
     std::string make_odata(const std::string itag, std::string& indent, const std::list<std::shared_ptr<const Index>>& index) override;
 
     /// Do blas multiplication of Gamma and fock tensors...not implemented yet for subtask code!
@@ -91,6 +104,9 @@ class RDMI0 : public RDM {
 
     /// Generate Gamma summation task, for both non-merged and merged case (RDM * f1 tensor multiplication).
     std::string generate(std::string indent, const std::string itag, const std::list<std::shared_ptr<const Index>>& index, const std::list<std::shared_ptr<const Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas) override;
+
+    /// Generate Gamma summation task, for both non-merged and merged case (RDM * f1 tensor multiplication).
+    std::string generate_sources(std::string indent, const std::string itag, const std::list<std::shared_ptr<const Index>>& index, const std::list<std::shared_ptr<const Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas) override;
 
 
 };

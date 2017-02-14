@@ -282,22 +282,39 @@ string BinaryContraction::target_index_str() const {
 
 void BinaryContraction::print() const {
   string indent = "";
+  // I think \"+=\" is more obvious
   for (int i = 0; i != depth(); ++i) indent += "  ";
   cout << indent << (target_ ? (target_->str() + " = ") : "") << tensor_->str() << (depth() == 0 ? target_index_str() : "") << " * "
                  << (subtree_.empty() ? source_->str() : subtree_.front()->target()->str()) << endl;
-  for (auto& i : subtree_) i->print();
+  // in binary contraction, it has subtrees
+//  int count = 0;
+  for (auto& i : subtree_) {
+//    cout << " subtree number " << count <<" in depth " << depth() <<  "  ";
+    i->print();
+//    count++;
+  }
 }
 
 
 void Tree::print() const {
   string indent = "";
   for (int i = 0; i != depth(); ++i) indent += "  ";
+  // print tree contraction
+//  int countop = 0;
   if (target_) {
-    for (auto i = op_.begin(); i != op_.end(); ++i)
+    for (auto i = op_.begin(); i != op_.end(); ++i) {
+//      cout << "operator tensor number " << countop << " in depth " << depth() << "  " ;
       cout << indent << target_->str() << " += " << (*i)->str() << (dagger_ ? " *" : "") << endl;
+//      countop++;
+    }
   }
-  for (auto i = bc_.begin(); i != bc_.end(); ++i)
+  // and all possible binary contractions
+//  int count = 0;
+  for (auto i = bc_.begin(); i != bc_.end(); ++i) {
+//    cout << "binary contraction number " << count << " in depth " << depth() << "  " ;
+//    ++count;
     (*i)->print();
+  }
 }
 
 
@@ -436,6 +453,45 @@ OutStream Tree::generate_compute_operators(shared_ptr<Tensor> target, const vect
 }
 
 
+OutStream Tree::generate_task_ci(const int ic, const vector<shared_ptr<Tensor>> op, const list<shared_ptr<Tensor>> g, const int iz, const bool diagonal) const {
+  OutStream out;
+
+  vector<string> ops;
+  for (int j = 0; j != 5; ++j)
+    ops.push_back("den" + to_string(j) + "ci");
+  for (int j = 0; j != 5; ++j)
+    ops.push_back(op[1]->label() + "_" + to_string(j));
+  int ip = -1;
+  if (parent_) ip = parent_->parent()->num();
+
+  string scalar;
+  out << generate_task(ip, ic, ops, scalar, iz, /*der*/false, /*diagonal*/diagonal);
+
+  return out;
+}
+
+OutStream Tree::generate_task_gamma(const int ic, const vector<shared_ptr<Tensor>> op, const list<shared_ptr<Tensor>> g, const int iz, const bool diagonal, const bool gamma, const bool merged) const {
+  OutStream out;
+
+  vector<string> ops;
+  if (gamma)
+    for (int j = 0; j != 5; ++j)
+      ops.push_back("den" + to_string(j) + "ci");
+  else
+    ops.push_back("den0ci");
+  // Gamma is absorbed in the task, therefore we do not have op[1] here
+  ops.push_back(op[2]->label());
+  if (merged)
+    ops.push_back("f1_");
+  int ip = -1;
+  if (parent_) ip = parent_->parent()->num();
+
+  string scalar;
+  out << generate_task_gamma(ip, ic, ops, scalar, iz, /*der*/false, /*diagonal*/diagonal);
+
+  return out;
+}
+
 OutStream Tree::generate_task(const int ic, const vector<shared_ptr<Tensor>> op, const list<shared_ptr<Tensor>> g, const int iz, const bool diagonal) const {
   OutStream out;
 
@@ -496,6 +552,179 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
   return make_tuple(out, tcnt, t0, itensors);
 }
 
+tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
+  Tree::binarycontraction_generate_zero_ci(std::shared_ptr<BinaryContraction> j, int tcnt, int t0, const list<shared_ptr<Tensor>> gamma, vector<shared_ptr<Tensor>> itensors) const {
+  OutStream out, tmp;
+  vector<shared_ptr<Tensor>> source_tensors = j->tensors_vec();
+  const bool diagonal = j->diagonal_only();
+
+  num_ = tcnt;
+  for (auto& s : source_tensors) {
+    // if it contains a new intermediate tensor, dump a constructor
+    if (find(itensors.begin(), itensors.end(), s) == itensors.end() && s->label().find("I") != string::npos) {
+      itensors.push_back(s);
+//      out.ee << s->constructor_str_ci(diagonal) << endl;
+    }
+  }
+//  out.ee << " // in generate_task_ci" << endl;
+//  out << generate_task_ci(num_, source_tensors, gamma, t0, diagonal);
+
+  list<shared_ptr<const Index>> proj = j->target_index();
+  // write out headers
+  {
+    list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
+//    out << generate_compute_header(num_, ti, source_tensors);
+  }
+
+  list<shared_ptr<const Index>> dm;
+  if (proj.size() > 1) {
+    for (auto i = proj.begin(); i != proj.end(); ++i, ++i) {
+      auto k = i; ++k;
+      dm.push_back(*k);
+      dm.push_back(*i);
+    }
+  } else if (proj.size() == 1) {
+    for (auto& i : proj) dm.push_back(i);
+  } else {
+    throw logic_error("Tree::binarycontraction_generate_zero, should not have empty target index here.");
+  }
+
+  // virtual
+  shared_ptr<Tensor> proj_tensor = create_tensor(dm);
+
+  vector<shared_ptr<Tensor>> op2 = { j->next_target() };
+// blame 2
+//  out << generate_compute_operators(proj_tensor, op2, j->dagger());
+
+  {
+    // send outer loop indices if outer loop indices exist, otherwise send inner indices
+    list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
+    if (depth() == 0)
+      if (ti.size() > 1) {
+        for (auto m = ti.begin(), n = ++ti.begin(); m != ti.end(); ++m, ++m, ++n, ++n)
+          swap(*m, *n);
+      }
+// blame 3
+//    out << generate_compute_footer(num_, ti, source_tensors, false);
+  }
+
+  ++tcnt;
+
+  return make_tuple(out, tcnt, t0, itensors);
+}
+
+
+tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
+  Tree::binarycontraction_generate_zero(std::shared_ptr<BinaryContraction> j, int tcnt, int t0, const list<shared_ptr<Tensor>> gamma, vector<shared_ptr<Tensor>> itensors) const {
+  OutStream out, tmp;
+  vector<shared_ptr<Tensor>> source_tensors = j->tensors_vec();
+  const bool diagonal = j->diagonal_only();
+
+  num_ = tcnt;
+  for (auto& s : source_tensors) {
+    // if it contains a new intermediate tensor, dump a constructor
+    if (find(itensors.begin(), itensors.end(), s) == itensors.end() && s->label().find("I") != string::npos) {
+      itensors.push_back(s);
+      out.ee << s->constructor_str(diagonal) << endl;
+    }
+  }
+  out << generate_task(num_, source_tensors, gamma, t0, diagonal);
+
+  list<shared_ptr<const Index>> proj = j->target_index();
+  // write out headers
+  {
+    list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
+    // if outer loop is empty, send inner loop indices to header
+    if (ti.size() == 0) {
+      assert(depth() != 0);
+      list<shared_ptr<const Index>> di = j->loop_indices();
+      di.reverse();
+      out << generate_compute_header(num_, di, source_tensors, true);
+
+    } else {
+      out << generate_compute_header(num_, ti, source_tensors);
+    }
+  }
+
+  list<shared_ptr<const Index>> dm;
+  if (proj.size() > 1) {
+    for (auto i = proj.begin(); i != proj.end(); ++i, ++i) {
+      auto k = i; ++k;
+      dm.push_back(*k);
+      dm.push_back(*i);
+    }
+  } else if (proj.size() == 1) {
+    for (auto& i : proj) dm.push_back(i);
+  } else {
+    throw logic_error("Tree::binarycontraction_generate_zero, should not have empty target index here.");
+  }
+
+  // virtual
+  shared_ptr<Tensor> proj_tensor = create_tensor(dm);
+
+  vector<shared_ptr<Tensor>> op2 = { j->next_target() };
+  out << generate_compute_operators(proj_tensor, op2, j->dagger());
+
+  {
+    // send outer loop indices if outer loop indices exist, otherwise send inner indices
+    list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
+    if (depth() == 0)
+      if (ti.size() > 1) {
+        for (auto m = ti.begin(), n = ++ti.begin(); m != ti.end(); ++m, ++m, ++n, ++n)
+          swap(*m, *n);
+      }
+    if (ti.size() == 0) {
+      assert(depth() != 0);
+      // sending inner indices
+      list<shared_ptr<const Index>> di = j->loop_indices();
+      out << generate_compute_footer(num_, di, source_tensors, true);
+    } else {
+      // sending outer indices
+      out << generate_compute_footer(num_, ti, source_tensors, false);
+    }
+  }
+
+  ++tcnt;
+
+  return make_tuple(out, tcnt, t0, itensors);
+}
+
+tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
+  Tree::generate_task_list_zero(int tcnt, int t0, const list<shared_ptr<Tensor>> gamma, vector<shared_ptr<Tensor>> itensors) const {
+    OutStream out, tmp;
+
+   // process tree with target indices eg, ci derivative, density matrix
+   num_ = tcnt;
+   // save density task zero
+   t0 = tcnt;
+
+   // virtual target
+   bool cicontraction = (this->label().find("deci") != string::npos);
+   if (cicontraction)
+     out << create_target_ci(tcnt);
+   else
+     out << create_target(tcnt);
+   ++tcnt;
+
+   /////////////////////////////////////////////////////////////////
+   // walk through BinaryContraction
+   /////////////////////////////////////////////////////////////////
+   for (auto& j : bc_) {
+     // if at top bc, add a task to for top level contraction (proj)
+
+     if (cicontraction)
+       tie(tmp, tcnt, t0, itensors) = binarycontraction_generate_zero_ci(j, tcnt, t0, gamma, itensors);
+     else
+       tie(tmp, tcnt, t0, itensors) = binarycontraction_generate_zero(j, tcnt, t0, gamma, itensors);
+
+     out << tmp;
+
+     tie(tmp, tcnt, t0, itensors) = j->generate_task_list(tcnt, t0, gamma, itensors);
+     out << tmp;
+
+   }
+  return make_tuple(out, tcnt, t0, itensors);
+}
 
 tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
   Tree::generate_task_list(int tcnt, int t0, const list<shared_ptr<Tensor>> gamma, vector<shared_ptr<Tensor>> itensors) const {
@@ -505,90 +734,8 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
 
   if (depth() == 0) { //////////////////// zero depth /////////////////////////////
     if (root_targets()) {
-      // process tree with target indices eg, ci derivative, density matrix
-      num_ = tcnt;
-      // save density task zero
-      t0 = tcnt;
-
-      // virtual
-      out << create_target(tcnt);
-      ++tcnt;
-
-      for (auto& j : bc_) {
-        // if at top bc, add a task to for top level contraction (proj)
-        if (depth() == 0 ) {
-          vector<shared_ptr<Tensor>> source_tensors = j->tensors_vec();
-          const bool diagonal = j->diagonal_only();
-          num_ = tcnt;
-          for (auto& s : source_tensors) {
-            // if it contains a new intermediate tensor, dump a constructor
-            if (find(itensors.begin(), itensors.end(), s) == itensors.end() && s->label().find("I") != string::npos) {
-              itensors.push_back(s);
-              out.ee << s->constructor_str(diagonal) << endl;
-            }
-          }
-          out << generate_task(num_, source_tensors, gamma, t0, diagonal);
-
-          list<shared_ptr<const Index>> proj = j->target_index();
-          // write out headers
-          {
-            list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
-            // if outer loop is empty, send inner loop indices to header
-            if (ti.size() == 0) {
-              assert(depth() != 0);
-              list<shared_ptr<const Index>> di = j->loop_indices();
-              di.reverse();
-              out << generate_compute_header(num_, di, source_tensors, true);
-            } else {
-              out << generate_compute_header(num_, ti, source_tensors);
-            }
-          }
-
-          list<shared_ptr<const Index>> dm;
-          if (proj.size() > 1) {
-            for (auto i = proj.begin(); i != proj.end(); ++i, ++i) {
-              auto k = i; ++k;
-              dm.push_back(*k);
-              dm.push_back(*i);
-            }
-          } else if (proj.size() == 1) {
-            for (auto& i : proj) dm.push_back(i);
-          } else {
-            throw logic_error("Tree::generate_task_list, should not have empty target index here.");
-          }
-
-          // virtual
-          shared_ptr<Tensor> proj_tensor = create_tensor(dm);
-
-          vector<shared_ptr<Tensor>> op2 = { j->next_target() };
-          out << generate_compute_operators(proj_tensor, op2, j->dagger());
-
-          {
-            // send outer loop indices if outer loop indices exist, otherwise send inner indices
-            list<shared_ptr<const Index>> ti = depth() != 0 ? j->target_indices() : proj;
-            if (depth() == 0)
-              if (ti.size() > 1) {
-                for (auto m = ti.begin(), n = ++ti.begin(); m != ti.end(); ++m, ++m, ++n, ++n)
-                  swap(*m, *n);
-              }
-            if (ti.size() == 0) {
-              assert(depth() != 0);
-              // sending inner indices
-              list<shared_ptr<const Index>> di = j->loop_indices();
-              out << generate_compute_footer(num_, di, source_tensors, true);
-            } else {
-              // sending outer indices
-              out << generate_compute_footer(num_, ti, source_tensors, false);
-            }
-          }
-          // increment task counter
-          ++tcnt;
-        }
-
-        tie(tmp, tcnt, t0, itensors) = j->generate_task_list(tcnt, t0, gamma, itensors);
-        out << tmp;
-
-      }
+      tie(tmp, tcnt, t0, itensors) = generate_task_list_zero(tcnt, t0, gamma, itensors);
+      out << tmp;
 
     } else {  // trees without root target indices
       out.ee << "  auto " << label() << "q = make_shared<Queue>();" << endl;
@@ -604,6 +751,150 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
   }
 
   return make_tuple(out, tcnt, t0, itensors);
+}
+
+tuple<OutStream, int, vector<shared_ptr<Tensor>>>
+    Tree::binarycontraction_generate_gamma(shared_ptr<BinaryContraction> i, int tcnt, const list<shared_ptr<Tensor>> gamma, int t0, vector<shared_ptr<Tensor>> itensors) const {
+
+  OutStream out;
+  OutStream tmp;
+
+  // Claim that we do CI contraction
+//  out.ee << "// CI contraction, depth = " << depth() << endl;
+
+  vector<shared_ptr<Tensor>> source_tensors = i->tensors_vec();
+
+//  out.ee << "// Task" << tcnt << " ::: " << source_tensors[0]->label() << " = "
+//    << source_tensors[1]->factor() * source_tensors[2]->factor() << " * " << source_tensors[1]->label()
+//    << " * " << source_tensors[2]->label() << endl;
+  list<shared_ptr<const Index>> ti = depth() != 0 ? i->target_indices() : i->target_index();
+  list<shared_ptr<const Index>> di = i->loop_indices();
+//  out.ee << "// Contraction index: " << di.size() << " , ";
+//  if (ti.size() != 0) {
+//    for (auto iter = di.rbegin(); iter != di.rend(); ++iter) {
+//      string index = (*iter)->str_gen();
+//      out.ee << index << " ";
+//    }
+//  }
+//  out.ee << endl;
+  (source_tensors[1])->index().pop_back();
+
+  const bool diagonal = i->diagonal_only();
+  for (auto& s : source_tensors) {
+    // if it contains a new intermediate tensor, dump a constructor -- somehow this does not work now
+    if (find(itensors.begin(), itensors.end(), s) == itensors.end() && s->label().find("I") != string::npos) {
+      itensors.push_back(s);
+      out.ee << s->constructor_str(diagonal) << endl;
+    }
+  }
+  // saving a counter to a protected member for dependency checks
+  num_ = tcnt;
+  bool merged = false;
+  if (source_tensors[1]->merged()) merged = true;
+  // if gamma, output is _0 ... _5. if rdm0deriv_, output is only _0
+  if (source_tensors[1]->label().find("Gamma") != string::npos)
+    out << generate_task_gamma(num_, source_tensors, gamma, t0, diagonal, true, merged);
+  else
+    out << generate_task_gamma(num_, source_tensors, gamma, t0, diagonal, false, merged);
+
+  // use virtual function to generate a task for this binary contraction
+  bool use_blas = false;
+  if (source_tensors[1]->label().find("Gamma") != string::npos) {
+    // we remove "ci0" index, and go for generate_gamma_sources to make the merged task
+    out << (source_tensors[1])->generate_gamma_sources(num_, use_blas, true, source_tensors[2], di);
+  } else {
+    // it becomes rdm0deriv_, which takes extremely simple form
+    list<shared_ptr<const Index>> ti = depth() != 0 ? i->target_indices() : i->target_index();
+    out << generate_bc_sources(num_, ti, source_tensors, false, false, i);
+  }
+
+  // increment tcnt before going to subtrees
+  ++tcnt;
+  // triggers a recursive call
+  tie(tmp, tcnt, t0, itensors) = i->generate_task_list(tcnt, t0, gamma, itensors);
+  out << tmp;
+
+  return make_tuple(out, tcnt, itensors);
+}
+
+
+tuple<OutStream, int, vector<shared_ptr<Tensor>>>
+    Tree::binarycontraction_generate(shared_ptr<BinaryContraction> i, int tcnt, const list<shared_ptr<Tensor>> gamma, int t0, vector<shared_ptr<Tensor>> itensors) const {
+  OutStream out;
+  OutStream tmp;
+
+  vector<shared_ptr<Tensor>> source_tensors = i->tensors_vec();
+
+//  if (depth() != 0) {
+//    out.ee << "// Task" << tcnt << " ::: " << source_tensors[0]->label() << " = "
+//      << source_tensors[1]->factor() * source_tensors[2]->factor() << " * " << source_tensors[1]->label()
+//      << " * " << source_tensors[2]->label() << endl;
+//    out.ee << "// Contractions: ";
+//    list<shared_ptr<const Index>> ti = depth() != 0 ? i->target_indices() : i->target_index();
+//    list<shared_ptr<const Index>> di = i->loop_indices();
+//    if (ti.size() != 0) {
+//      for (auto iter = di.rbegin(); iter != di.rend(); ++iter) {
+//        string index = (*iter)->str_gen();
+//        out.ee << index;
+//      }
+//    }
+//    out.ee << endl;
+//  }
+
+  const bool diagonal = i->diagonal_only();
+  for (auto& s : source_tensors) {
+    // if it contains a new intermediate tensor, dump a constructor -- somehow this does not work now
+    if (find(itensors.begin(), itensors.end(), s) == itensors.end() && s->label().find("I") != string::npos) {
+      itensors.push_back(s);
+      out.ee << s->constructor_str(diagonal) << endl;
+    }
+  }
+  // saving a counter to a protected member for dependency checks
+  num_ = tcnt;
+  out << generate_task(num_, source_tensors, gamma, t0, diagonal);
+
+  // write out headers
+  {
+    list<shared_ptr<const Index>> ti = depth() != 0 ? i->target_indices() : i->target_index();
+    // if outer loop is empty, send inner loop indices to header
+    if (ti.size() == 0) {
+      assert(depth() != 0);
+      list<shared_ptr<const Index>> di = i->loop_indices();
+      di.reverse();
+      out << generate_compute_header(num_, di, source_tensors, true);
+    } else {
+      out << generate_compute_header(num_, ti, source_tensors);
+    }
+  }
+
+  // use virtual function to generate a task for this binary contraction
+  out << generate_bc(i);
+
+  {
+    // send outer loop indices if outer loop indices exist, otherwise send inner indices
+    list<shared_ptr<const Index>> ti = depth() != 0 ? i->target_indices() : i->target_index();
+    if (depth() == 0)
+      for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
+        swap(*i, *j);
+    if (ti.size() == 0) {
+      assert(depth() != 0);
+      // sending inner indices
+      list<shared_ptr<const Index>> di = i->loop_indices();
+      out << generate_compute_footer(num_, di, source_tensors, true);
+    } else {
+      // sending outer indices
+      out << generate_compute_footer(num_, ti, source_tensors, false);
+    }
+  }
+  ///////////////////////////////////////////////////////////////////////
+
+  // increment tcnt before going to subtrees
+  ++tcnt;
+  // triggers a recursive call
+  tie(tmp, tcnt, t0, itensors) = i->generate_task_list(tcnt, t0, gamma, itensors);
+  out << tmp;
+
+  return make_tuple(out, tcnt, itensors);
 }
 
 
@@ -653,63 +944,19 @@ tuple<OutStream, int, int, vector<shared_ptr<Tensor>>>
   /////////////////////////////////////////////////////////////////
   // step through BinaryContraction
   /////////////////////////////////////////////////////////////////
-  for (auto i = bc_.begin(); i != bc_.end(); ++i) {
-    vector<shared_ptr<Tensor>> source_tensors = (*i)->tensors_vec();
+  for (auto& i : bc_) {
+    vector<shared_ptr<Tensor>> source_tensors = i->tensors_vec();
 
-    const bool diagonal = (*i)->diagonal_only();
-    for (auto& s : source_tensors) {
-      // if it contains a new intermediate tensor, dump a constructor
-      if (find(itensors.begin(), itensors.end(), s) == itensors.end() && s->label().find("I") != string::npos) {
-        itensors.push_back(s);
-        out.ee << s->constructor_str(diagonal) << endl;
-      }
-    }
-    // saving a counter to a protected member for dependency checks
-    num_ = tcnt;
-    out << generate_task(num_, source_tensors, gamma, t0, diagonal);
+    bool cicontraction = (((source_tensors[1]->label().find("Gamma") != string::npos) || (source_tensors[1]->label().find("rdm0") != string::npos))
+        && (this->label().find("deci") != string::npos));
 
-    // write out headers
-    {
-      list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->target_index();
-      // if outer loop is empty, send inner loop indices to header
-      if (ti.size() == 0) {
-        assert(depth() != 0);
-        list<shared_ptr<const Index>> di = (*i)->loop_indices();
-        di.reverse();
-        out << generate_compute_header(num_, di, source_tensors, true);
-      } else {
-        out << generate_compute_header(num_, ti, source_tensors);
-      }
-    }
+    if (cicontraction)
+      tie(tmp, tcnt, itensors) = binarycontraction_generate_gamma(i, tcnt, gamma, t0, itensors);
+    else
+      tie(tmp, tcnt, itensors) = binarycontraction_generate(i, tcnt, gamma, t0, itensors);
 
-    // use virtual function to generate a task for this binary contraction
-    out << generate_bc(*i);
-
-    {
-      // send outer loop indices if outer loop indices exist, otherwise send inner indices
-      list<shared_ptr<const Index>> ti = depth() != 0 ? (*i)->target_indices() : (*i)->target_index();
-      if (depth() == 0)
-        for (auto i = ti.begin(), j = ++ti.begin(); i != ti.end(); ++i, ++i, ++j, ++j)
-          swap(*i, *j);
-      if (ti.size() == 0) {
-        assert(depth() != 0);
-        // sending inner indices
-        list<shared_ptr<const Index>> di = (*i)->loop_indices();
-        out << generate_compute_footer(num_, di, source_tensors, true);
-      } else {
-        // sending outer indices
-        out << generate_compute_footer(num_, ti, source_tensors, false);
-      }
-    }
-
-    ///////////////////////////////////////////////////////////////////////
-
-    // increment tcnt before going to subtrees
-    ++tcnt;
-    // triggers a recursive call
-    tie(tmp, tcnt, t0, itensors) = (*i)->generate_task_list(tcnt, t0, gamma, itensors);
     out << tmp;
-  } // end bc
+  }
 
   return make_tuple(out, tcnt, t0, itensors);
 }

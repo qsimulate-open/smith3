@@ -68,7 +68,7 @@ p = re.compile('make_[a-z0-9]+q')
 for task in tasks[0:-1]:
     tag = p.search(task).group()[5:]
     fout = open("MSCASPT2_" + tag + ".cc", "w")
-    out = header("_" + tag + "q") + insert() + header2() + task + footer
+    out = header("_" + tag) + insert() + header2() + task + footer
     fout.write(out)
     fout.close()
 
