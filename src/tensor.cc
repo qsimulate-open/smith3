@@ -575,6 +575,9 @@ OutStream Tensor::generate_gamma(const int ic, const bool use_blas, const bool d
   assert(label_.find("Gamma") != string::npos);
   OutStream out;
 
+  // if it is derivative code, do not generate anything
+  if (der) return out;
+
   // determine number of task loops to be separeted, if merged combine
   int nindex;
   list<shared_ptr<const Index>> merged;

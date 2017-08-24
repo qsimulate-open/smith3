@@ -206,6 +206,7 @@ OutStream Forest::generate_gammas() const {
   // All the gamma tensors (for all trees) should be defined here. Only distinct Gammas are computed.
   out.ss << endl;
   for (auto& i : gamma_) {
+    if (i->der()) continue;
 
     i->set_num(icnt);
     assert(i->label().find("Gamma") != string::npos);
