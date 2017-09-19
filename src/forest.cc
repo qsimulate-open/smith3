@@ -193,7 +193,7 @@ OutStream Forest::generate_headers() const {
   out.gg << "using namespace std;" << endl;
   out.gg << "using namespace bagel;" << endl;
   out.gg << "using namespace bagel::SMITH;" << endl;
-  out.gg << "using namespace bagel::SMITH::" << forest_name_ << ";" << endl << endl;
+  out.gg << "using bagel::SMITH::" << forest_name_ << "::FutureTensor;" << endl << endl;
 
   return out;
 }
@@ -206,6 +206,7 @@ OutStream Forest::generate_gammas() const {
   // All the gamma tensors (for all trees) should be defined here. Only distinct Gammas are computed.
   out.ss << endl;
   for (auto& i : gamma_) {
+    if (i->der()) continue;
 
     i->set_num(icnt);
     assert(i->label().find("Gamma") != string::npos);
