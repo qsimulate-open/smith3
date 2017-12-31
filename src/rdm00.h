@@ -35,13 +35,13 @@ class RDM00 : public RDM {
   protected:
 
     /// Generate get block - source data to be added to target (move block).
-    std::string make_get_block(std::string indent, std::string tag, std::string lbl);
+    std::string make_get_block(std::string indent, std::string tag, std::string lbl, const std::list<std::shared_ptr<const Index>>& index);
     /// Generates RDM and merged (fock) tensor multipication.
-    std::string multiply_merge(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<const Index>>& merged);
+    std::string multiply_merge(const std::string itag, std::string& indent,  const std::list<std::shared_ptr<const Index>>& merged, const std::list<std::shared_ptr<const Index>>& index);
     /// Generate sort_indices which makes array. This version has no addition (or factor multiplication-0111).
     std::string make_sort_indices(std::string indent, std::string tag, const std::list<std::shared_ptr<const Index>>& loop);
     /// If delta case, also makes index loops then checks to see if merged-or-delta indices are in loops..
-    std::string make_merged_loops(std::string& indent, const std::string tag, std::vector<std::string>& close);
+    std::string make_merged_loops(std::string& indent, const std::string tag, std::vector<std::string>& close, const std::list<std::shared_ptr<const Index>>& index, const bool overwrite = false);
     /// Adds merged (fock) tensor with indices, used by muliply_merge member.
     std::string fdata_mult(const std::string itag, const std::list<std::shared_ptr<const Index>>& merged);
 

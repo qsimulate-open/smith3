@@ -226,7 +226,8 @@ OutStream Forest::generate_gammas() const {
     out << i->generate_gamma(icnt, use_blas, i->der());
 
     vector<string> tmp = {i->label()};
-    vector<string> rdms = i->active()->required_rdm();
+    const bool merged = i->merged() ? true : false;
+    vector<string> rdms = i->active()->required_rdm(merged);
     if (i->der()) { // derivative rdm
       for (auto& j : rdms) {
         stringstream zz;

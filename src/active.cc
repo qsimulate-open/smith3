@@ -139,7 +139,7 @@ bool Active::operator==(const Active& o) const {
 string Active::generate(const string indent, const string tag, const list<shared_ptr<const Index>> index, const list<shared_ptr<const Index>> merged, const string mlab, const bool use_blas) const {
   stringstream dd;
 
-  vector<string> in_tensors = required_rdm();
+  vector<string> in_tensors = required_rdm(!merged.empty());
   if (!merged.empty()) {
     in_tensors.push_back(mlab);
   }
@@ -150,10 +150,11 @@ string Active::generate(const string indent, const string tag, const list<shared
   return dd.str();
 }
 
+
 string Active::generate_sources(const string indent, const string tag, const list<shared_ptr<const Index>> index, const list<shared_ptr<const Index>> merged, const string mlab, const bool use_blas) const {
   stringstream dd;
 
-  vector<string> in_tensors = required_rdm();
+  vector<string> in_tensors = required_rdm(!merged.empty());
   if (!merged.empty()) {
     in_tensors.push_back(mlab);
   }
@@ -165,7 +166,7 @@ string Active::generate_sources(const string indent, const string tag, const lis
 }
 
 
-vector<string> Active::required_rdm() const {
+vector<string> Active::required_rdm(const bool merged) const {
   vector<string> out;
   if (bra_ || ket_) {
     for (auto& i : rdm_) {
@@ -184,6 +185,8 @@ vector<string> Active::required_rdm() const {
       if (i->rank() != 0 && i->index().front()->spin()->alpha())
         ss << "a";
       ss << "rdm" << i->rank();
+      if (i->rank() == 4 && merged)
+        ss << "f";
       if (i->rank() < 5 && find(out.begin(), out.end(), ss.str()) == out.end())
         out.push_back(ss.str());
     }
