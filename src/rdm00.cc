@@ -266,7 +266,6 @@ string RDM00::generate_merged(string indent, const string tag, const list<shared
 
 #if 1
   if (rank() == 0) tt << indent << "// rdm0 merged case" << endl;
-  if (rank() == 4) tt << indent << "// rdm4 merged case" << endl;
 #endif
 
   list<shared_ptr<const Index>> dindex = index;
