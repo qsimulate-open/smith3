@@ -129,6 +129,9 @@ class RDM {
     /// Generate Gamma summation task, for both non-merged and merged case (RDM * f1 tensor multiplication).
     virtual std::string generate(std::string indent, const std::string itag, const std::list<std::shared_ptr<const Index>>& index, const std::list<std::shared_ptr<const Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas) = 0;
 
+    /// Generate Gamma summation task, for both non-merged and merged case (RDM * f1 tensor multiplication).
+    virtual std::string generate_sources(std::string indent, const std::string itag, const std::list<std::shared_ptr<const Index>>& index, const std::list<std::shared_ptr<const Index>>& merged, const std::string mlab, std::vector<std::string> in_tensors, const bool use_blas) = 0;
+
     /// Copies this rdm, needs to be virtual as creates derived rdms.
     virtual std::shared_ptr<RDM> copy() const = 0;
 

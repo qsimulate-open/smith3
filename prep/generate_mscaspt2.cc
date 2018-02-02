@@ -136,25 +136,27 @@ int main() {
   //  =   1/2(1/4<I|T^+fT|0> + 1/4<0|T^+fT|I>) - 1/2*(e0/4<I|T^+T|0> + e0/4<0|T^+T|I>) + 2*1/2 (1/4<I|T^+V|0> + 1/4<0|T^+V|I>) + 2*1/2 (1/4<I|T^+h1|0> + 1/4<0|T^+h1|I>)
   // using bracket symmetry in some terms
   shared_ptr<Equation> eq4(new Equation(theory, "dedcia", {dum, l_dagger, f, t_list}, 1.0, make_pair(true, false)));
-  shared_ptr<Equation> eq4b(new Equation(theory, "dedcic", {dum, l_dagger, t_list}, -1.0, "e0", make_pair(true, false)));
-  eq4->merge(eq4b);
   eq4->set_tree_type("residual", "deci");
   cout << eq4->generate();
+
+  shared_ptr<Equation> eq4b(new Equation(theory, "dedcic", {dum, l_dagger, t_list}, -1.0, "e0", make_pair(true, false)));
+  eq4b->set_tree_type("residual", "deci2");
+  cout << eq4b->generate();
 
   shared_ptr<Equation> eq4d(new Equation(theory, "dedcie", {dum, l_dagger, H}, 0.5, make_pair(true, false)));
   shared_ptr<Equation> eq4f(new Equation(theory, "dedcig", {dum, l_dagger, hc}, 1.0, make_pair(true, false)));
   eq4d->merge(eq4f);
-  eq4d->set_tree_type("residual", "deci2");
+  eq4d->set_tree_type("residual", "deci3");
   cout << eq4d->generate();
 
   shared_ptr<Equation> eq4e(new Equation(theory, "dedcif", {dum, l_dagger, H}, 0.5, make_pair(false, true)));
   shared_ptr<Equation> eq4g(new Equation(theory, "dedcih", {dum, l_dagger, hc}, 1.0, make_pair(false, true)));
   eq4e->merge(eq4g);
-  eq4e->set_tree_type("residual", "deci3");
+  eq4e->set_tree_type("residual", "deci4");
   cout << eq4e->generate();
 
   // done. generate the footer
-  cout << footer("", "", "", eq6->tree_label(), eq6a->tree_label(), eq7->tree_label(), eq4->tree_label(), eq4d->tree_label(), eq4e->tree_label()) << endl;
+  cout << footer("", "", "", eq6->tree_label(), eq6a->tree_label(), eq7->tree_label(), eq4->tree_label(), eq4b->tree_label(), eq4d->tree_label(), eq4e->tree_label()) << endl;
 
 
   return 0;

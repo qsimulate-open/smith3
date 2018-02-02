@@ -3,7 +3,6 @@ import string
 import os
 import re
 
-
 def header(n) :
     return "//\n\
 // BAGEL - Brilliantly Advanced General Electronic Structure Library\n\

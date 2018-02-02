@@ -117,14 +117,19 @@ int main() {
   cout << eq0->generate();
 
   // source equations //
-  shared_ptr<Equation> eq3(new Equation(theory, "sa", {dum, proj_list, hc}));
-  shared_ptr<Equation> eq4(new Equation(theory, "sb", {dum, proj_list, H}, 0.5));
+  shared_ptr<Equation> eq3(new Equation(theory, "sb", {dum, proj_list, H}, 0.5));
+  shared_ptr<Equation> eq4(new Equation(theory, "sa", {dum, proj_list, hc}));
   eq3->merge(eq4);
   eq3->set_tree_type("residual", "source");
   cout << eq3->generate();
 
+  // generate Norm <1|1> to be used in various places
+  shared_ptr<Equation> eq5(new Equation(theory, "ca", {dum, proj_list, t_list}));
+  eq5->set_tree_type("residual", "norm");
+  cout << eq5->generate();
+
   // done. generate the footer
-  cout << footer_ci(eq0->tree_label(), eq3->tree_label(), "") << endl;
+  cout << footer_ci(eq0->tree_label(), eq3->tree_label(), eq5->tree_label()) << endl;
 
   return 0;
 }

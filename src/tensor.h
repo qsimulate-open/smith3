@@ -106,7 +106,6 @@ class Tensor {
     /// Used to reindex tensor in absorb_ket().
     void set_index(std::list<std::shared_ptr<const Index>> i) { index_ = i; }
 
-
     /// Returns tensor prefactor.
     double factor() const { return factor_; }
     /// Returns scalar name.
@@ -139,9 +138,11 @@ class Tensor {
     std::map<int, int> num_map() const { return num_map_; }
 
     /// Generates string for constructor for tensors in Method.cc file
+    std::string constructor_str_ci(const bool diagonal = false) const;
+    /// Generates string for constructor for tensors in Method.cc file
     std::string constructor_str(const bool diagonal = false) const;
     /// Generates code for get_block - source block to be added later to target (move) block.
-    std::string generate_get_block(const std::string, const std::string, const std::string, const bool move = false, const bool noscale = false) const;
+    std::string generate_get_block(const std::string, const std::string, const std::string, const bool move = false, const bool noscale = false, int number = -2, bool merged = false, const std::list<std::shared_ptr<const Index>>& mergedlist = (std::list<std::shared_ptr<const Index>>())) const;
     /// Generate code for unique_ptr scratch arrays.
     std::string generate_scratch_area(const std::string, const std::string, const std::string tensor_lab, const bool zero = false) const;
     /// Generate code for sort_indices. Based on operations needed to sort input tensor to output tensor.
@@ -153,10 +154,19 @@ class Tensor {
     std::pair<std::string, std::string> generate_dim(const std::list<std::shared_ptr<const Index>>&) const;
     /// Generates code for RDMs.
     std::string generate_active(const std::string indent, const std::string tag, const int ninptensors, const bool) const;
+    std::string generate_active_sources(const std::string indent, const std::string tag, const int ninptensors, const bool, const std::shared_ptr<Tensor>) const;
     /// Generate for loops.
     std::string generate_loop(std::string&, std::vector<std::string>&) const;
     /// Generate code for Gamma task.
+    OutStream generate_gamma_sources(const int, const bool use_blas, const bool der, const std::shared_ptr<Tensor> source, const std::list<std::shared_ptr<const Index>> di) const;
+    OutStream generate_gamma_header_sources(const int, const bool use_blas, const bool der, const int nindex) const;
+    OutStream generate_gamma_body_sources(const int, const bool, const bool, const int, const int, const std::list<std::shared_ptr<const Index>>&, const std::shared_ptr<Tensor> source, const std::list<std::shared_ptr<const Index>> di) const;
+    OutStream generate_gamma_footer_sources(const int, const bool, const bool, const int, const int, const std::list<std::shared_ptr<const Index>>&) const;
+
     OutStream generate_gamma(const int, const bool use_blas, const bool der) const;
+    OutStream generate_gamma_header(const int, const bool use_blas, const bool der, const int nindex, const int ninptensors) const;
+    OutStream generate_gamma_body(const int, const bool, const bool, const int, const int, const std::list<std::shared_ptr<const Index>>&) const;
+    OutStream generate_gamma_footer(const int, const bool, const bool, const int, const int, const std::list<std::shared_ptr<const Index>>&) const;
     /// Returns Gamma number.
     int num() const { assert(is_gamma()); return num_; }
     /// Set Gamma number.
