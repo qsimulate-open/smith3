@@ -149,7 +149,7 @@ int count_distinct_tensors__(const std::vector<std::string>& labels) {
 }
 
 #define _CASPT2
-//#define _MULTI_DERIV
+#define _MULTI_DERIV
 //#define _MRCI
 //#define _RELCASPT2
 //#define _RELMRCI
