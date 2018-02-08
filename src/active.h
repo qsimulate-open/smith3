@@ -78,7 +78,7 @@ class Active {
     std::string generate(const std::string indent, const std::string tag, const std::list<std::shared_ptr<const Index>> index, const std::list<std::shared_ptr<const Index>> merged = std::list<std::shared_ptr<const Index>>(), const std::string mlab = "", const bool use_blas = false) const;
     std::string generate_sources(const std::string indent, const std::string tag, const std::list<std::shared_ptr<const Index>> index, const std::list<std::shared_ptr<const Index>> merged = std::list<std::shared_ptr<const Index>>(), const std::string mlab = "", const bool use_blas = false) const;
     /// Returns vector of int cooresponding to RDM numbers in Gamma. RDM0 is not included for non derivative trees.
-    std::vector<std::string> required_rdm() const;
+    std::vector<std::string> required_rdm(const bool merged = false) const;
 
 
     /// Map from ket reindexing.

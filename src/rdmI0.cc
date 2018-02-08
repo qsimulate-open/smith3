@@ -572,7 +572,7 @@ string RDMI0::generate_merged(string indent, const string tag, const list<shared
 
   list<shared_ptr<const Index>> dindex = index;
 
-  list<shared_ptr<const Index>> delta_index ;
+  list<shared_ptr<const Index>> delta_index;
   // first delta loops for blocks
   if (!delta_.empty()) {
     dd << indent << "if (";

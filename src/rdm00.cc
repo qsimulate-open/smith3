@@ -174,7 +174,7 @@ string RDM00::generate_not_merged(string indent, const string tag, const list<sh
     map<string, string> inlab;
     map_in_tensors(in_tensors, inlab);
 
-    tt << make_get_block(indent, "i0", inlab[rlab]);
+    tt << make_get_block(indent, "i0", inlab[rlab], index_);
 
     // loops over delta indices
     tt << make_sort_loops(itag, indent, index, close);
@@ -215,7 +215,7 @@ string RDM00::generate_not_merged(string indent, const string tag, const list<sh
         zz << "a";
       zz << "rdm" << rank();
       string rlab = zz.str();
-      tt << make_get_block(indent, "i0", inlab[rlab]);
+      tt << make_get_block(indent, "i0", inlab[rlab], index_);
     }
 
     // do sort_indices here
@@ -268,10 +268,15 @@ string RDM00::generate_merged(string indent, const string tag, const list<shared
   if (rank() == 0) tt << indent << "// rdm0 merged case" << endl;
 #endif
 
+  list<shared_ptr<const Index>> dindex = index;
+
+  list<shared_ptr<const Index>> delta_index;
   // first delta loops for blocks
   if (!delta_.empty()) {
     tt << indent << "if (";
     for (auto d = delta_.begin(); d != delta_.end(); ++d) {
+      delta_index.push_back(d->first);
+      delta_index.push_back(d->second);
       tt << d->first->str_gen() << " == " << d->second->str_gen() << (d != --delta_.end() ? " && " : "");
     }
     tt << ") {" << endl;
@@ -285,21 +290,66 @@ string RDM00::generate_merged(string indent, const string tag, const list<shared
   // when alpha-only indices are present, we change the name to "ardm"
   if (!index_.empty() && index_.front()->spin()->alpha())
     zz << "a";
+
   zz << "rdm" << rank();
+  if (rank() == 4)
+    zz << "f";
   string rlab = zz.str();
 
   // make map of in_tensors
   map<string, string> inlab;
   map_in_tensors(in_tensors, inlab);
 
-  if (!use_blas) {
-    tt <<  make_get_block(indent, "i0", inlab[rlab]);
+  // total index list
+  list<shared_ptr<const Index>>  tindex;
+  for (auto& i : merged) tindex.push_back(i);
+  for (auto& i : index)  tindex.push_back(i);
+
+  // get rdm indices
+  list<shared_ptr<const Index>> rindex;
+  for (auto& i : index_) {
+    bool found = false;
+    for (auto& j: delta_index) {
+      if ((i)->identical(j)) found = true;
+    }
+    if (!found) rindex.push_back(i);
+  }
+
+
+  // if this is 4RDM
+  if (rank() == 4) {
+    assert(delta_.empty());
+    // remove merge index from rindex, dindex
+    list<list<shared_ptr<const Index>>::iterator> rm, rm2;
+    for (auto& i : merged) {
+      for (auto r = rindex.begin(); r != rindex.end(); ++r)
+        if (i->num() == (*r)->num())
+          rm.push_back(r);
+      for (auto d = dindex.begin(); d != dindex.end(); ++d)
+        if (i->num() == (*d)->num())
+          rm.push_back(d);
+    }
+    for (auto i = rm.rbegin(); i != rm.rend(); ++i)
+      rindex.erase(*i);
+    for (auto i = rm2.rbegin(); i != rm2.rend(); ++i)
+      dindex.erase(*i);
+
+    // to simplify we do not use blas here
+    tt << make_get_block(indent, "i0", inlab[rlab], rindex);
     // loops for index and merged
-    tt << make_merged_loops(indent, itag, close);
+    tt << make_merged_loops(indent, itag, close, dindex, true);
     // make odata part of summation for target
     tt << make_odata(itag, indent, index);
     // mulitiply data and merge on the fly
-    tt << multiply_merge(itag, indent, merged);
+    tt << multiply_merge(itag, indent, list<shared_ptr<const Index>>(), rindex);
+  } else if (!use_blas) {
+    tt << make_get_block(indent, "i0", inlab[rlab], rindex);
+    // loops for index and merged
+    tt << make_merged_loops(indent, itag, close, dindex);
+    // make odata part of summation for target
+    tt << make_odata(itag, indent, index);
+    // mulitiply data and merge on the fly
+    tt << multiply_merge(itag, indent, merged, rindex);
   } else {
 #if 0
     if (rank() != 0) {
@@ -482,11 +532,11 @@ void RDM00::map_in_tensors(std::vector<string> in_tensors, map<string,string>& i
   }
 }
 
-string RDM00::make_get_block(string indent, string tag, string lbl) {
+string RDM00::make_get_block(string indent, string tag, string lbl, const list<shared_ptr<const Index>>& index) {
   stringstream tt;
   tt << indent << "std::unique_ptr<" << DataType << "[]> " << tag << "data = " << lbl << "->get_block(";
-  for (auto i = index_.rbegin(); i != index_.rend(); ++i) {
-    if (i != index_.rbegin()) tt << ", ";
+  for (auto i = index.rbegin(); i != index.rend(); ++i) {
+    if (i != index.rbegin()) tt << ", ";
     tt << (*i)->str_gen();
   }
   tt << ");" << endl;
@@ -579,12 +629,13 @@ string RDM00::make_sort_indices(string indent, string tag, const list<shared_ptr
 }
 
 
-string RDM00::make_merged_loops(string& indent, const string itag, vector<string>& close) {
+string RDM00::make_merged_loops(string& indent, const string itag, vector<string>& close, const list<shared_ptr<const Index>>& index, const bool overwrite) {
   stringstream tt;
 
   // gather all the loop indices
   list<shared_ptr<const Index>> loop;
-  for (auto& i : index_) {
+
+  for (auto& i : (overwrite ? index : index_)) {
     bool found = false;
     for (auto& j : delta_) {
       // second index in deltas will not be looped
@@ -610,7 +661,7 @@ string RDM00::make_merged_loops(string& indent, const string itag, vector<string
 }
 
 
-string RDM00::multiply_merge(const string itag, string& indent, const list<shared_ptr<const Index>>& merged) {
+string RDM00::multiply_merge(const string itag, string& indent, const list<shared_ptr<const Index>>& merged, const list<shared_ptr<const Index>>& index) {
   stringstream tt;
   if (rank() == 0) {
     tt << "  += " << setprecision(1) << fixed << factor() << " * i0data[0]";
@@ -618,15 +669,18 @@ string RDM00::multiply_merge(const string itag, string& indent, const list<share
   } else {
     // make data part of summation
     tt << indent << "  += (" << setprecision(1) << fixed << factor() << ") * i0data[";
-    for (auto riter = index_.rbegin(); riter != index_.rend(); ++riter) {
+    for (auto riter = index.rbegin(); riter != index.rend(); ++riter) {
       const string tmp = "+" + (*riter)->str_gen() + ".size()*(";
-      tt << itag << (*riter)->num() << (riter != --index_.rend() ? tmp : "");
+      tt << itag << (*riter)->num() << (riter != --index.rend() ? tmp : "");
     }
-    for (auto riter = ++index_.begin(); riter != index_.end(); ++riter)
+    for (auto riter = ++index.begin(); riter != index.end(); ++riter)
       tt << ")";
     tt << "]";
     // multiply merge
-    tt << fdata_mult(itag, merged);
+    if (!merged.empty())
+      tt << fdata_mult(itag, merged);
+    else
+      tt << ";" << endl;
   }
   return tt.str();
 }

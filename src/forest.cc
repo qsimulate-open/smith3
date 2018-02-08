@@ -75,10 +75,7 @@ OutStream Forest::generate_code() const {
     out.ss << "    std::shared_ptr<Queue> make_" << i->label() << "q(const bool reset = true, const bool diagonal = true);" << endl;
 
     out.ee << "shared_ptr<Queue> " << forest_name_ << "::" << forest_name_ << "::make_" << i->label() << "q(const bool reset, const bool diagonal) {" << endl << endl;
-    if (i->label().find("deci") == string::npos)
-      out.ee << "  array<shared_ptr<const IndexRange>,3> pindex = {{rclosed_, ractive_, rvirt_}};" << endl;
-    else
-      out.ee << "  array<shared_ptr<const IndexRange>,4> cindex = {{rclosed_, ractive_, rvirt_, rci_}};" << endl << endl;
+    out.ee << "  array<shared_ptr<const IndexRange>,3> pindex = {{rclosed_, ractive_, rvirt_}};" << endl;
 
     tie(tmp, icnt, i0, itensors_) = i->generate_task_list(icnt, i0, gamma_, itensors_);
 
@@ -226,7 +223,8 @@ OutStream Forest::generate_gammas() const {
     out << i->generate_gamma(icnt, use_blas, i->der());
 
     vector<string> tmp = {i->label()};
-    vector<string> rdms = i->active()->required_rdm();
+    const bool merged = i->merged() ? true : false;
+    vector<string> rdms = i->active()->required_rdm(merged);
     if (i->der()) { // derivative rdm
       for (auto& j : rdms) {
         stringstream zz;
