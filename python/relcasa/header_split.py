@@ -5,7 +5,7 @@ import os
 def header(n) :
     return "//\n\
 // BAGEL - Brilliantly Advanced General Electronic Structure Library\n\
-// Filename: RelCASPT2_tasks" + str(n) + ".h\n\
+// Filename: RelCASA_tasks" + str(n) + ".h\n\
 // Copyright (C) 2014 Toru Shiozaki\n\
 //\n\
 // Author: Toru Shiozaki <shiozaki@northwestern.edu>\n\
@@ -30,8 +30,8 @@ def header(n) :
 #include <bagel_config.h>\n\
 #ifdef COMPILE_SMITH\n\
 \n\
-#ifndef __SRC_SMITH_RelCASPT2_TASKS" + str(n) + "_H\n\
-#define __SRC_SMITH_RelCASPT2_TASKS" + str(n) + "_H\n\
+#ifndef __SRC_SMITH_RelCASA_TASKS" + str(n) + "_H\n\
+#define __SRC_SMITH_RelCASA_TASKS" + str(n) + "_H\n\
 \n\
 #include <src/smith/indexrange.h>\n\
 #include <src/smith/tensor.h>\n\
@@ -41,7 +41,7 @@ def header(n) :
 \n\
 namespace bagel {\n\
 namespace SMITH {\n\
-namespace RelCASPT2{\n\
+namespace RelCASA{\n\
 \n"
 
 footer = "\n}\n}\n}\n\
@@ -52,7 +52,7 @@ footer = "\n}\n}\n}\n\
 
 header2 = "//\n\
 // BAGEL - Brilliantly Advanced General Electronic Structure Library\n\
-// Filename: RelCASPT2_tasks.h\n\
+// Filename: RelCASA_tasks.h\n\
 // Copyright (C) 2014 Toru Shiozaki\n\
 //\n\
 // Author: Toru Shiozaki <shiozaki@northwestern.edu>\n\
@@ -77,13 +77,13 @@ header2 = "//\n\
 #include <bagel_config.h>\n\
 #ifdef COMPILE_SMITH\n\
 \n\
-#ifndef __SRC_SMITH_RelCASPT2_TASKS_H\n\
-#define __SRC_SMITH_RelCASPT2_TASKS_H\n\
+#ifndef __SRC_SMITH_RelCASA_TASKS_H\n\
+#define __SRC_SMITH_RelCASA_TASKS_H\n\
 \n"
 
 footer2 = "\n#endif\n#endif\n\n"
 
-f = open('RelCASPT2_tasks.h', 'r')
+f = open('RelCASA_tasks.h', 'r')
 lines = f.read().split("\n")[38:][:-6]
 
 tasks = []
@@ -106,7 +106,7 @@ chunk = 50
 for i in range(len(tasks)):
     if (num != 0 and num % chunk == 0):
         n = num / chunk
-        fout = open("RelCASPT2_tasks" + str(n) + ".h", "w")
+        fout = open("RelCASA_tasks" + str(n) + ".h", "w")
         out = header(n) + tmp + footer
         fout.write(out)
         fout.close()
@@ -115,17 +115,17 @@ for i in range(len(tasks)):
     tmp = tmp + tasks[i];
 
 n = (num-1) / chunk + 1
-fout = open("RelCASPT2_tasks" + str(n) + ".h", "w")
+fout = open("RelCASA_tasks" + str(n) + ".h", "w")
 out = header(n) + tmp + footer
 fout.write(out)
 fout.close()
 
-os.remove("RelCASPT2_tasks.h")
-fout = open("RelCASPT2_tasks.h", "w")
+os.remove("RelCASA_tasks.h")
+fout = open("RelCASA_tasks.h", "w")
 out = header2
 for i in range(n+1):
     if (i > 0):
-        out += "#include <src/smith/relcaspt2/RelCASPT2_tasks" + str(i) + ".h>\n"
+        out += "#include <src/smith/relcasa/RelCASA_tasks" + str(i) + ".h>\n"
 out += footer2
 fout.write(out)
 fout.close()

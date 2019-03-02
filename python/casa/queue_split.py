@@ -1,12 +1,13 @@
 #!/usr/bin/python
 import string
 import os
+import re
 
 
 def header(n) :
     return "//\n\
 // BAGEL - Brilliantly Advanced General Electronic Structure Library\n\
-// Filename: RelCASPT2_gen" + str(n) + ".cc\n\
+// Filename: CASA" + n + ".cc\n\
 // Copyright (C) 2014 Toru Shiozaki\n\
 //\n\
 // Author: Toru Shiozaki <shiozaki@northwestern.edu>\n\
@@ -31,52 +32,49 @@ def header(n) :
 #include <bagel_config.h>\n\
 #ifdef COMPILE_SMITH\n\
 \n\
-#include <src/smith/relcaspt2/RelCASPT2_tasks" + str(n) + ".h>\n\
 \n\
+#include <src/smith/casa/CASA.h>\n"
+
+def insert():
+    return "#include <src/smith/casa/CASA_tasks.h>\n"
+
+def header2():
+    return "\n\
 using namespace std;\n\
 using namespace bagel;\n\
 using namespace bagel::SMITH;\n\
-using namespace bagel::SMITH::RelCASPT2;\n\
 \n\
 "
 
 footer = "#endif\n"
 
-f = open('RelCASPT2_gen.cc', 'r')
-lines = f.read().split("\n")[32:]
+f = open('CASA.cc', 'r')
+lines = f.read().split("\n")[34:]
 
 tasks = []
 tmp = ""
 
 for line in lines:
-    if (line[0:4] == "Task"):
+    if (len(line) >= 17 and (line[0:17] == "shared_ptr<Queue>" or line[0:15] == "CASA::CASA::CAS")):
         if (tmp != ""):
             tasks.append(tmp)
             tmp = ""
-    if (line != ""):
-        tmp += line + "\n"
-        if (line == "}"):
-            tmp += "\n"
+    tmp += line + "\n"
+    if (line == "}"):
+        tmp += "\n"
 tasks.append(tmp)
 
-tmp = ""
-num = 0
-chunk = 50
-for i in range(len(tasks)):
-    if (num != 0 and num % chunk == 0):
-        n = num / chunk
-        fout = open("RelCASPT2_gen" + str(n) + ".cc", "w")
-        out = header(n) + tmp + footer
-        fout.write(out)
-        fout.close()
-        tmp = ""
-    num = num+1
-    tmp = tmp + tasks[i];
+p = re.compile('make_[a-z0-9]+q')
+for task in tasks[0:-1]:
+    tag = p.search(task).group()[5:]
+    fout = open("CASA_" + tag + ".cc", "w")
+    out = header("_" + tag + "q") + insert() + header2() + task + footer
+    fout.write(out)
+    fout.close()
 
-n = (num-1) / chunk + 1
-fout = open("RelCASPT2_gen" + str(n) + ".cc", "w")
-out = header(n) + tmp + footer
+os.remove("CASA.cc")
+
+fout = open("CASA.cc", "w")
+out = header("") + header2() + tasks[len(tasks)-1] + footer
 fout.write(out)
 fout.close()
-
-os.remove("RelCASPT2_gen.cc")

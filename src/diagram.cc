@@ -258,7 +258,7 @@ bool Diagram::reduce_one_noactive(const int skip) {
     // all possible contraction pattern taken for *j (returned as a list).
     if (cnt + (*j)->num_nodagger() > skip) {
       tuple<double,shared_ptr<Spin>,shared_ptr<Spin>> tmp = (*j)->contract(data, skip-cnt);
-      if ((closed && (*data.first)->label() == "c") || (!closed && (*data.first)->label() == "a")) {
+      if (((closed && (*data.first)->label() == "c") || (!closed && (*data.first)->label() == "a")) && get<0>(tmp) != 0.0) {
         fac_ *= get<0>(tmp);
         newspin = get<1>(tmp);
         oldspin = get<2>(tmp);
