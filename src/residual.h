@@ -34,7 +34,6 @@ namespace smith {
 class Residual : public Tree {
   protected:
 
-
   public:
     /// Construct tree of equation pointers and set tree label.
     Residual(const std::shared_ptr<Equation> eq, std::string lab = "") : Tree(eq, lab) { }
@@ -46,12 +45,17 @@ class Residual : public Tree {
     std::string label() const override { return label_; }
 
     OutStream create_target(const int) const override;
+    OutStream create_target_ci(const int) const override;
     std::shared_ptr<Tensor> create_tensor(std::list<std::shared_ptr<const Index>>) const override;
 
     OutStream generate_task(const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0, bool der = false, bool diagonal = false) const override;
+    OutStream generate_task_gamma(const int ip, const int ic, const std::vector<std::string>, const std::string scalar = "", const int i0 = 0, bool der = false, bool diagonal = false) const override;
     OutStream generate_compute_header(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool = false) const override;
     OutStream generate_compute_footer(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool dot) const override;
     OutStream generate_bc(const std::shared_ptr<BinaryContraction>) const override;
+    OutStream generate_bc_sources(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool, const bool, const std::shared_ptr<BinaryContraction>) const override;
+    OutStream generate_header_sources(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool no_outside = false) const;
+    OutStream generate_footer_sources(const int, const std::list<std::shared_ptr<const Index>> ti, const std::vector<std::shared_ptr<Tensor>>, const bool dot) const;
 
 
 };

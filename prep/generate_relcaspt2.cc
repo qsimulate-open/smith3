@@ -131,7 +131,7 @@ int main() {
   cout << eq5->generate();
 
   // done. generate the footer
-  cout << footer(eq0->tree_label(), eq3->tree_label(), eq5->tree_label()) << endl;
+  cout << footer_ci(eq0->tree_label(), eq3->tree_label(), eq5->tree_label()) << endl;
 
   return 0;
 }
