@@ -1,4 +1,4 @@
-#!/opt/local/bin/python
+#!/usr/bin/python
 import string
 import os
 import re
@@ -33,6 +33,7 @@ def header(n) :
 #ifdef COMPILE_SMITH\n\
 \n\
 #include <src/smith/caspt2/CASPT2_tasks" + str(n) + ".h>\n\
+#include <src/smith/tblis_interface.h>\n\
 \n\
 using namespace std;\n\
 using namespace bagel;\n\
