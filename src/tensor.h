@@ -142,11 +142,12 @@ class Tensor {
     /// Generates string for constructor for tensors in Method.cc file
     std::string constructor_str(const bool diagonal = false) const;
     /// Generates code for get_block - source block to be added later to target (move) block.
-    std::string generate_get_block(const std::string, const std::string, const std::string, const bool move = false, const bool noscale = false, int number = -2, bool merged = false, const std::list<std::shared_ptr<const Index>>& mergedlist = (std::list<std::shared_ptr<const Index>>())) const;
+    std::string generate_get_block(const std::string, const std::string, const std::string, const bool move = false, const bool noscale = false, int number = -2, bool merged = false, const std::list<std::shared_ptr<const Index>>& mergedlist = (std::list<std::shared_ptr<const Index>>()), const bool nonblocking = false) const;
+    std::string generate_get_block_nb(const std::string a, const std::string b, const std::string c) const { return generate_get_block(a, b, c, false, true, -2, false, (std::list<std::shared_ptr<const Index>>()), true); }
     /// Generate code for unique_ptr scratch arrays.
     std::string generate_scratch_area(const std::string, const std::string, const std::string tensor_lab, const bool zero = false) const;
     /// Generate code for sort_indices. Based on operations needed to sort input tensor to output tensor.
-    std::string generate_sort_indices(const std::string, const std::string, const std::string, const std::list<std::shared_ptr<const Index>>&, const bool op = false) const;
+    std::string generate_sort_indices(const std::string, const std::string, const std::string, const std::list<std::shared_ptr<const Index>>&, const bool op = false, const bool scale = false) const;
     /// Generate code for final sort_indices back to target indices (those not summed over).
     std::string generate_sort_indices_target(const std::string, const std::string, const std::list<std::shared_ptr<const Index>>&,
                                              const std::shared_ptr<Tensor>, const std::shared_ptr<Tensor>) const;

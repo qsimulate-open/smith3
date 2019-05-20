@@ -186,7 +186,7 @@ string Tensor::constructor_str_ci(const bool diagonal) const {
 }
 
 
-string Tensor::generate_get_block(const string cindent, const string lab, const string tlab, const bool move, const bool noscale, const int number, const bool merged, const list<shared_ptr<const Index>>& mergedlist) const {
+string Tensor::generate_get_block(const string cindent, const string lab, const string tlab, const bool move, const bool noscale, const int number, const bool merged, const list<shared_ptr<const Index>>& mergedlist, const bool nonblocking) const {
   string lbl = label();
   if (lbl == "proj") lbl = "r";
   size_t found = lbl.find("dagger");
@@ -204,12 +204,11 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
   }
 
   {
-
-#ifdef debug_tasks // if needed, eg debug
-    tt  << cindent << "// tensor label: " << lbl << endl;
-#endif
     if (!move)
-      tt << cindent << "std::unique_ptr<" << DataType << "[]> " << lab << "data = " << tlab << "->get_block(";
+      if (!nonblocking)
+        tt << cindent << "std::unique_ptr<" << DataType << "[]> " << lab << "data = " << tlab << "->get_block(";
+      else
+        tt << cindent << lab << "data.push_back(" << tlab << "->get_block_nb(";
     else
       tt << cindent << "std::unique_ptr<" << DataType << "[]> " << lab << "data(new " << DataType << "[" << tlab << "->get_size(";
     string listind = "";
@@ -238,7 +237,10 @@ string Tensor::generate_get_block(const string cindent, const string lab, const 
       }
     }
     if (!move) {
-      tt << listind << ");" << endl;
+      if (!nonblocking)
+        tt << listind << ");" << endl;
+      else
+        tt << listind << "));" << endl;
     } else {
       tt << listind << ")]);" << endl;
       tt << cindent << "std::fill_n(" << lab << "data.get(), " << tlab << "->get_size(" << listind << "), 0.0);" << endl;
@@ -287,7 +289,7 @@ string Tensor::generate_scratch_area(const string cindent, const string lab, con
   return ss.str();
 }
 
-string Tensor::generate_sort_indices(const string cindent, const string lab, const string tensor_lab, const list<shared_ptr<const Index>>& loop, const bool op) const {
+string Tensor::generate_sort_indices(const string cindent, const string lab, const string tensor_lab, const list<shared_ptr<const Index>>& loop, const bool op, const bool doscale) const {
   stringstream ss;
   if (!op) ss << generate_scratch_area(cindent, lab, tensor_lab, false);
 
@@ -352,6 +354,14 @@ string Tensor::generate_sort_indices(const string cindent, const string lab, con
     }
   }
   ss << ");" << endl;
+
+  if (!scalar_.empty() && doscale) {
+    ss << cindent << SCAL << "(";
+    for (auto i = index_.rbegin(); i != index_.rend(); ++i)
+      ss << (i != index_.rbegin() ? "*" : "") << (*i)->str_gen() << ".size()";
+    // update scalar_ name directly
+    ss << ", " << scalar_ << "_, " << lab << "data_sorted.get(), 1);" << endl;
+  }
   return ss.str();
 }
 

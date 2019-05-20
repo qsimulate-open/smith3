@@ -364,27 +364,73 @@ OutStream Residual::generate_bc(const shared_ptr<BinaryContraction> i) const {
     // but only if outer loop is not empty
     list<shared_ptr<const Index>> di = i->loop_indices();
     vector<string> close2;
+    vector<string> close3;
+    string inlabel("in("); inlabel += (same_tensor__(i->tensor()->label(), i->next_target()->label()) ? "0)" : "1)");
+    const constexpr size_t buffersize = 5;
     if (ti.size() != 0) {
       out.dd << endl;
-      for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent += "  ") {
-        string index = (*iter)->str_gen();
-        out.dd << dindent << "for (auto& " << index << " : *" << (*iter)->generate_range("_") << ") {" << endl;
+      if (!di.empty()) {
+        string dindent2 = dindent;
+        out.dd << "#ifdef SMITH_NON_BLOCKING" << endl;
+        out.dd << dindent << "auto loop = LoopGenerator::gen({";
+        for (auto iter = di.rbegin(); iter != di.rend(); ++iter)
+          out.dd << (iter != di.rbegin() ? ", " : "") << "*" << (*iter)->generate_range("_");
+        out.dd << "});" << endl;
+        out.dd << dindent << "const size_t loopsize = loop.size();" << endl;
+        out.dd << dindent << "list<shared_ptr<RMATask<double>>> r0data;" << endl;
+        out.dd << dindent << "list<shared_ptr<RMATask<double>>> r1data;" << endl;
+        out.dd << dindent << "for (size_t i = 0; i != min(static_cast<size_t>(" << buffersize << "), loopsize); ++i) {" << endl; 
+        int cnt = 0;
+        for (auto iter = di.rbegin(); iter != di.rend(); ++iter, ++cnt)
+          out.dd << dindent << "  auto& " << (*iter)->str_gen() << " = loop[i][" << cnt << "];" << endl;
+        out.dd << i->tensor()->generate_get_block_nb(dindent + "  ", "r0", "in(0)");
+        out.dd << i->next_target()->generate_get_block_nb(dindent + "  ", "r1", inlabel);
+        out.dd << dindent << "}" << endl;
+        out.dd << dindent << "for (size_t l = 0; l < loopsize; ++l) {" << endl;
         close2.push_back(dindent + "}");
+        dindent += "  ";
+        cnt = 0;
+        for (auto iter = di.rbegin(); iter != di.rend(); ++iter, ++cnt)
+          out.dd << dindent << "auto& " << (*iter)->str_gen() << " = loop[l][" << cnt << "];" << endl;
+        out.dd << dindent << "r0data.front()->wait();" << endl;
+        out.dd << dindent << "r1data.front()->wait();" << endl;
+        out.dd << dindent << "std::unique_ptr<double[]> i0data = r0data.front()->move_buf();" << endl;
+        out.dd << dindent << "std::unique_ptr<double[]> i1data = r1data.front()->move_buf();" << endl;
+        out.dd << dindent << "r0data.pop_front();" << endl;
+        out.dd << dindent << "r1data.pop_front();" << endl;
+        out.dd << dindent << "if (l+" << buffersize << " < loopsize) {" << endl;
+        cnt = 0;
+        for (auto iter = di.rbegin(); iter != di.rend(); ++iter, ++cnt)
+          out.dd << dindent << "  auto& " << (*iter)->str_gen() << " = loop[l+" << buffersize << "][" << cnt << "];" << endl;
+        out.dd << i->tensor()->generate_get_block_nb(dindent + "  ", "r0", "in(0)");
+        out.dd << i->next_target()->generate_get_block_nb(dindent + "  ", "r1", inlabel);
+        out.dd << dindent << "}" << endl;
+        out.dd << "#else" << endl;
+        for (auto iter = di.rbegin(); iter != di.rend(); ++iter, dindent2 += "  ") {
+          string index = (*iter)->str_gen();
+          out.dd << dindent2 << "for (auto& " << index << " : *" << (*iter)->generate_range("_") << ") {" << endl;
+          close3.push_back(dindent2 + "}");
+        }
+        out.dd << i->tensor()->generate_get_block(dindent2, "i0", "in(0)", false, /*noscale*/true);
+        out.dd << i->next_target()->generate_get_block(dindent2, "i1", inlabel, false, /*noscale*/true);
+        out.dd << "#endif" << endl;
+      } else {
+        out.dd << i->tensor()->generate_get_block(dindent, "i0", "in(0)", false, /*noscale*/true);
+        out.dd << i->next_target()->generate_get_block(dindent, "i1", inlabel, false, /*noscale*/true);
       }
     } else {
       int cnt = 0;
       for (auto k = di.rbegin(); k != di.rend(); ++k, cnt++)
         out.dd << dindent << "const Index " <<  (*k)->str_gen() << " = b(" << cnt << ");" << endl;
       out.dd << endl;
+      out.dd << i->tensor()->generate_get_block(dindent, "i0", "in(0)", false, /*noscale*/true);
+      out.dd << i->next_target()->generate_get_block(dindent, "i1", inlabel, false, /*noscale*/true);
     }
 
     // retrieving tensor_
-    out.dd << i->tensor()->generate_get_block(dindent, "i0", "in(0)");
-    out.dd << i->tensor()->generate_sort_indices(dindent, "i0", "in(0)", di) << endl;
+    out.dd << i->tensor()->generate_sort_indices(dindent, "i0", "in(0)", di, false, true) << endl;
     // retrieving subtree_
-    string inlabel("in("); inlabel += (same_tensor__(i->tensor()->label(), i->next_target()->label()) ? "0)" : "1)");
-    out.dd << i->next_target()->generate_get_block(dindent, "i1", inlabel);
-    out.dd << i->next_target()->generate_sort_indices(dindent, "i1", inlabel, di) << endl;
+    out.dd << i->next_target()->generate_sort_indices(dindent, "i1", inlabel, di, false, true) << endl;
 
     // call dgemm or ddot (if only vector - vector contraction is made)
     {
@@ -406,8 +452,13 @@ OutStream Residual::generate_bc(const shared_ptr<BinaryContraction> i) const {
     }
 
     if (ti.size() != 0) {
+      out.dd << "#ifdef SMITH_NON_BLOCKING" << endl;
       for (auto iter = close2.rbegin(); iter != close2.rend(); ++iter)
         out.dd << *iter << endl;
+      out.dd << "#else" << endl;
+      for (auto iter = close3.rbegin(); iter != close3.rend(); ++iter)
+        out.dd << *iter << endl;
+      out.dd << "#endif" << endl;
       out.dd << endl;
     }
     // Inner loop ends here

@@ -998,7 +998,7 @@ string RDMI0::multiply_merge_sources(const string itag, string& indent, const li
 
   if (rank() == 0) {
     tt << indent << "o" << rank() << "data[0]";
-    tt << " += " << endl << indent << "  " << setprecision(1) << fixed << factor();
+    tt << " +=" << endl << indent << "  " << setprecision(1) << fixed << factor();
     tt << fdata_mult(itag, merged, ci_index, /*end=*/false);
   } else {
 
