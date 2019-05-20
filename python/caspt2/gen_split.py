@@ -1,6 +1,7 @@
-#!/opt/local/bin/python
+#!/usr/bin/python
 import string
 import os
+import re
 
 
 def header(n) :
@@ -59,19 +60,21 @@ for line in lines:
             tmp += "\n"
 tasks.append(tmp)
 
+p = re.compile('[0-9]+')
 tmp = ""
 num = 0
 chunk = 50
-for i in range(len(tasks)):
-    if (num != 0 and num % chunk == 0):
-        n = num / chunk
+n = 1
+for task in tasks:
+    num = int(p.search(task).group())
+    if (num != 0 and num >= n*chunk):
         fout = open("CASPT2_gen" + str(n) + ".cc", "w")
         out = header(n) + tmp + footer
         fout.write(out)
         fout.close()
         tmp = ""
-    num = num+1
-    tmp = tmp + tasks[i];
+        n = n+1
+    tmp = tmp + task;
 
 n = (num-1) / chunk + 1
 fout = open("CASPT2_gen" + str(n) + ".cc", "w")

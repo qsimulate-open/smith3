@@ -67,7 +67,6 @@ static std::string header() {
   mm << "#include \"constants.h\"" << std::endl;
   mm << "#include \"forest.h\"" << std::endl;
   mm << "#include \"residual.h\"" << std::endl;
-  mm << "#include \"energy.h\"" << std::endl;
   mm << "" << std::endl;
   mm << "using namespace std;" << std::endl;
   mm << "using namespace smith;" << std::endl;
