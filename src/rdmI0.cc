@@ -1013,7 +1013,7 @@ string RDMI0::multiply_merge_sources(const string itag, string& indent, const li
     }
     for (auto riter = ++index.begin(); riter != index.end(); ++riter)
       tt << ")";
-    tt << "] += " << endl << indent << "  ";
+    tt << "] +=" << endl << indent << "  ";
     tt << setprecision(1) << fixed << factor();
     // multiply merge
     if (!merged.empty())

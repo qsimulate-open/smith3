@@ -23,7 +23,6 @@
 //
 
 
-#include "energy.h"
 #include "residual.h"
 #include "constants.h"
 
@@ -57,7 +56,7 @@ Tree::Tree(shared_ptr<Equation> eq, string lab) : parent_(NULL), tree_name_(eq->
                              || label_ == "density2" || label_.find("deci") != string::npos || label_ == "norm") {
       tr = make_shared<Residual>(rest, lab, rt_targets);
     } else if (label_ == "energy" || label_ == "corr") {
-      tr = make_shared<Energy>(rest, label_, rt_targets);
+      throw logic_error("removed");
     } else {
       throw logic_error("Error Tree::Tree, code generation for this tree type not implemented");
     }
@@ -99,7 +98,7 @@ BinaryContraction::BinaryContraction(shared_ptr<Tensor> o, shared_ptr<ListTensor
                            || label_ == "density2" || label_.find("deci") != string::npos || label_ == "norm") {
     tr = make_shared<Residual>(rest, lab, rt);
   } else if (label_ == "energy" || label_ == "corr") {
-    tr = make_shared<Energy>(rest, lab, rt);
+    throw logic_error("removed");
   } else {
     throw logic_error("Error BinaryContraction::BinaryContraction, code generation for this tree type not implemented");
   }

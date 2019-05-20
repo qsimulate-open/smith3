@@ -31,7 +31,6 @@
 #include "constants.h"
 #include "forest.h"
 #include "residual.h"
-#include "energy.h"
 
 using namespace std;
 using namespace smith;

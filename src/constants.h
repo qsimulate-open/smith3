@@ -40,27 +40,7 @@ namespace {
 std::string header(const std::string& filename) {
   std::stringstream ss;
   ss << "//" << std::endl;
-  ss << "// BAGEL - Brilliantly Advanced General Electronic Structure Library" << std::endl;
-  ss << "// Filename: " << filename << std::endl;
-  ss << "// Copyright (C) 2014 Shiozaki group" << std::endl;
-  ss << "//" << std::endl;
-  ss << "// Author: Shiozaki group <shiozaki@northwestern.edu>" << std::endl;
-  ss << "// Maintainer: Shiozaki group" << std::endl;
-  ss << "//" << std::endl;
-  ss << "// This file is part of the BAGEL package." << std::endl;
-  ss << "//" << std::endl;
-  ss << "// This program is free software; you can redistribute it and/or modify" << std::endl;
-  ss << "// it under the terms of the GNU General Public License as published by" << std::endl;
-  ss << "// the Free Software Foundation, either version 3 of the License, or" << std::endl;
-  ss << "// (at your option) any later version." << std::endl;
-  ss << "//" << std::endl;
-  ss << "// This program is distributed in the hope that it will be useful," << std::endl;
-  ss << "// but WITHOUT ANY WARRANTY; without even the implied warranty of" << std::endl;
-  ss << "// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the" << std::endl;
-  ss << "// GNU General Public License for more details." << std::endl;
-  ss << "//" << std::endl;
-  ss << "// You should have received a copy of the GNU General Public License" << std::endl;
-  ss << "// along with this program.  If not, see <http://www.gnu.org/licenses/>." << std::endl;
+  ss << "// Copyright (C) 2019 Quantum Simulation Technologies, Inc. - All Rights Reserved" << std::endl;
   ss << "//" << std::endl;
   ss << "" << std::endl;
   ss << "" << std::endl;
