@@ -118,7 +118,7 @@ class Tensor {
     const std::shared_ptr<Active> active() const { return active_; }
 
     /// Returns true if all the indices are of active orbitals.
-    bool all_active() const { std::all_of(index_.begin(), index_.end(), [](std::shared_ptr<const Index> i){ return i->active(); }); }
+    bool all_active() const { return std::all_of(index_.begin(), index_.end(), [](std::shared_ptr<const Index> i){ return i->active(); }); }
 
     /// Used for factorization of trees.
     bool operator==(const Tensor& o) const;
