@@ -116,10 +116,12 @@ int main() {
   eq0->set_tree_type("residual");
   cout << eq0->generate();
 
-  // source equations //
-  shared_ptr<Equation> eq3(new Equation(theory, "sb", {dum, proj_list, H}, 0.5));
-  shared_ptr<Equation> eq4(new Equation(theory, "sa", {dum, proj_list, hc}));
-  eq3->merge(eq4);
+  // energy equations //
+  // second order energy correction
+  // S = <proj|H|0>. <R|T> will be added in bagel
+  shared_ptr<Equation> eq3(new Equation(theory, "ec", {dum, proj_list, H}, 0.5));
+  shared_ptr<Equation> eq3a(new Equation(theory, "ed", {dum, proj_list, hc}));
+  eq3->merge(eq3a);
   eq3->set_tree_type("residual", "source");
   cout << eq3->generate();
 

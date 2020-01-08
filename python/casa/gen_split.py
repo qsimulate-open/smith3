@@ -6,7 +6,7 @@ import os
 def header(n) :
     return "//\n\
 // BAGEL - Brilliantly Advanced General Electronic Structure Library\n\
-// Filename: RelCASPT2_gen" + str(n) + ".cc\n\
+// Filename: CASA_gen" + str(n) + ".cc\n\
 // Copyright (C) 2014 Toru Shiozaki\n\
 //\n\
 // Author: Toru Shiozaki <shiozaki@northwestern.edu>\n\
@@ -31,18 +31,18 @@ def header(n) :
 #include <bagel_config.h>\n\
 #ifdef COMPILE_SMITH\n\
 \n\
-#include <src/smith/relcaspt2/RelCASPT2_tasks" + str(n) + ".h>\n\
+#include <src/smith/casa/CASA_tasks" + str(n) + ".h>\n\
 \n\
 using namespace std;\n\
 using namespace bagel;\n\
 using namespace bagel::SMITH;\n\
-using namespace bagel::SMITH::RelCASPT2;\n\
+using namespace bagel::SMITH::CASA;\n\
 \n\
 "
 
 footer = "#endif\n"
 
-f = open('RelCASPT2_gen.cc', 'r')
+f = open('CASA_gen.cc', 'r')
 lines = f.read().split("\n")[32:]
 
 tasks = []
@@ -65,7 +65,7 @@ chunk = 50
 for i in range(len(tasks)):
     if (num != 0 and num % chunk == 0):
         n = num / chunk
-        fout = open("RelCASPT2_gen" + str(n) + ".cc", "w")
+        fout = open("CASA_gen" + str(n) + ".cc", "w")
         out = header(n) + tmp + footer
         fout.write(out)
         fout.close()
@@ -74,9 +74,9 @@ for i in range(len(tasks)):
     tmp = tmp + tasks[i];
 
 n = (num-1) / chunk + 1
-fout = open("RelCASPT2_gen" + str(n) + ".cc", "w")
+fout = open("CASA_gen" + str(n) + ".cc", "w")
 out = header(n) + tmp + footer
 fout.write(out)
 fout.close()
 
-os.remove("RelCASPT2_gen.cc")
+os.remove("CASA_gen.cc")

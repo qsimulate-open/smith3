@@ -128,14 +128,16 @@ int count_distinct_tensors__(const std::vector<std::string>& labels) {
   return out;
 }
 
-#define _CASPT2
-#define _MULTI_DERIV
+//#define _CASPT2
+//#define _CAS_A
+//#define _MULTI_DERIV
 //#define _MRCI
 //#define _RELCASPT2
+#define _RELCAS_A
 //#define _RELMRCI
-#if defined(_CASPT2) || defined(_MRCI)
+#if defined(_CASPT2) || defined(_MRCI) || defined(_CAS_A)
 static const std::string DataType = "double";
-#elif defined(_RELCASPT2) || defined(_RELMRCI)
+#elif defined(_RELCASPT2) || defined(_RELMRCI) || defined(_RELCAS_A)
 static const std::string DataType = "std::complex<double>";
 #else
 static_assert(false, "Please compile using make.sh");

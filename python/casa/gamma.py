@@ -2,13 +2,13 @@
 import string
 import os
 
-f = open('RelCASPT2_gamma.cc', 'r')
+f = open('CASA_gamma.cc', 'r')
 lines = f.read().split("\n")
 f.close()
 
-os.remove("RelCASPT2_gamma.cc")
+os.remove("CASA_gamma.cc")
 
-f = open('RelCASPT2_gamma.cc', 'w')
+f = open('CASA_gamma.cc', 'w')
 f.write("\n".join(lines[:25]))
 add1 = "\n#include <bagel_config.h>\n#ifdef COMPILE_SMITH\n"
 f.write(add1)
